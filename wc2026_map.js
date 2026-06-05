@@ -165,7 +165,7 @@ const applyDim = (sourceId, destIds, country) => {
   dimDestIds = destIds;
   g.selectAll('.flag-qualified').attr('opacity', function() {
     const id = +this.getAttribute('data-id');
-    return id === sourceId || destIds.has(id) ? 1 : 0.15;
+    return id === sourceId || destIds.has(id) ? 1 : 0.35;
   });
   // Arcs
   if (arcsGroup) {
