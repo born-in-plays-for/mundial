@@ -148,13 +148,16 @@ const T = {
     perMillion:    "/ million d'hab.",
     selections:    'Sélections',
     bornIn:        'Joueurs nés en',
+    imported:      'joueurs importés',
+    noImport:      'aucun joueur importé',
+    birthNations:  'Nés en',
     pop:           'pop.',
     caps:          'sél.',
     players:       n => `joueur${n > 1 ? 's' : ''}`,
     exported:      n => `joueur${n > 1 ? 's' : ''} exporté${n > 1 ? 's' : ''}`,
     pageTitle:     'Mondial 2026 — Joueurs "exportés" par pays de naissance',
     pageHeading:   'Mondial 2026 — joueurs "exportés" par pays de naissance',
-    pageSub:       "Couleur : joueurs exportés / million d'hab. · 284 joueurs au total · source : Wikipedia",
+    pageSub:       "Couleur : joueurs exportés / million d'hab. · 281 joueurs au total · source : Wikipedia",
     mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs exportés au Mondial 2026',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
     legendCaption: "joueurs exportés / million d'hab. · Gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026",
@@ -164,13 +167,16 @@ const T = {
     perMillion:    '/ milione di ab.',
     selections:    'Nazionali',
     bornIn:        'Giocatori nati in',
+    imported:      'giocatori importati',
+    noImport:      'nessun giocatore importato',
+    birthNations:  'Nati in',
     pop:           'ab.',
     caps:          'pres.',
     players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
     exported:      n => `giocator${n === 1 ? 'e esportato' : 'i esportati'}`,
     pageTitle:     'Mondiali 2026 — giocatori "esportati" per paese di nascita',
     pageHeading:   'Mondiali 2026 — giocatori "esportati" per paese di nascita',
-    pageSub:       'Colore: giocatori esportati / milione di ab. · 284 giocatori in totale · fonte: Wikipedia',
+    pageSub:       'Colore: giocatori esportati / milione di ab. · 281 giocatori in totale · fonte: Wikipedia',
     mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori esportati ai Mondiali 2026',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
     legendCaption: 'giocatori esportati / milione di ab. · Grigio: nessun giocatore esportato · bandiera = nazione qualificata ai Mondiali 2026',
@@ -180,13 +186,16 @@ const T = {
     perMillion:    '/ Mio. Einwohner',
     selections:    'Nationalteams',
     bornIn:        'Spieler geboren in',
+    imported:      'importierte Spieler',
+    noImport:      'kein importierter Spieler',
+    birthNations:  'Geb. in',
     pop:           'Einw.',
     caps:          'Sp.',
     players:       () => 'Spieler',
     exported:      n => n === 1 ? 'exportierter Spieler' : 'exportierte Spieler',
     pageTitle:     'WM 2026 — „exportierte“ Spieler nach Geburtsland',
     pageHeading:   'WM 2026 — „exportierte“ Spieler nach Geburtsland',
-    pageSub:       'Farbe: exportierte Spieler / Mio. Einwohner · 284 Spieler insgesamt · Quelle: Wikipedia',
+    pageSub:       'Farbe: exportierte Spieler / Mio. Einwohner · 281 Spieler insgesamt · Quelle: Wikipedia',
     mapAriaLabel:  'Choroplethenkarte der Geburtsländer exportierter Spieler bei der WM 2026',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
     legendCaption: 'exportierte Spieler / Mio. Einwohner · Grau: kein exportierter Spieler · Flagge = qualifizierte Nation bei der WM 2026',
@@ -196,13 +205,16 @@ const T = {
     perMillion:    '/ million inhab.',
     selections:    'Selections',
     bornIn:        'Players born in',
+    imported:      'imported players',
+    noImport:      'no players imported',
+    birthNations:  'Born in',
     pop:           'pop.',
     caps:          'caps',
     players:       n => `player${n > 1 ? 's' : ''}`,
     exported:      n => `player${n > 1 ? 's' : ''} exported`,
     pageTitle:     'World Cup 2026 — "exported" players by country of birth',
     pageHeading:   'World Cup 2026 — "exported" players by country of birth',
-    pageSub:       'Colour: exported players / million inhab. · 284 players total · source: Wikipedia',
+    pageSub:       'Colour: exported players / million inhab. · 281 players total · source: Wikipedia',
     mapAriaLabel:  'Choropleth map of birth countries of players exported to World Cup 2026',
     zoomHint:      'scroll to zoom · drag to pan',
     legendCaption: 'exported players / million inhab. · Grey: no exported player · flag = nation qualified for World Cup 2026',
@@ -244,9 +256,10 @@ const STANDALONE_FLAGS = [
 const STANDALONE_IDS = new Set(STANDALONE_FLAGS.map(f => f.id));
 
 // ── Tooltip helpers ───────────────────────────────────────────────────────────
-const positionTip = (event, height) => {
+const positionTip = (event, height, wide = false) => {
+  const w = wide ? 544 : 274;
   let x = event.clientX + 16, y = event.clientY + 16;
-  if (x + 270 > window.innerWidth)  x = event.clientX - 274;
+  if (x + w > window.innerWidth)  x = event.clientX - (w + 4);
   if (y + height > window.innerHeight) y = event.clientY - (height + 4);
   tt.style.left = x + 'px';
   tt.style.top  = y + 'px';
@@ -259,14 +272,17 @@ const hideTip = () => { tt.style.display = 'none'; lastTipKey = null; };
 
 const showQualifiedTip = (event, name, code) => {
   if (dimActive && !dimDestIds.has(QUALIFIED_BY_NAME[name])) { hideTip(); return; }
-  const hasExports = !!DATA_REF[QUALIFIED_BY_NAME[name]];
+  const nId = QUALIFIED_BY_NAME[name];
   if (lastTipKey !== name) {
     lastTipKey = name;
     const fi = code ? `<img class="tt-flag" src="${FLAG_CDN(code)}">` : '';
-    const note = hasExports ? '' : `<div class="tt-no-export">${T.noExport}</div>`;
-    tt.innerHTML = `<div class="tt-name">${fi}${countryName(QUALIFIED_BY_NAME[name], name)}</div>${note}`;
+    let html = `<div class="tt-name">${fi}${countryName(nId, name)}</div>`;
+    const hasImports = (IMPORT_BY_NATION[nId] ?? []).length > 0;
+    html += `<div class="tt-no-export">${T.noExport}</div>`;
+    html += hasImports ? buildImportColHtml(nId) : `<div class="tt-no-export">${T.noImport}</div>`;
+    tt.innerHTML = html;
   }
-  positionTip(event, hasExports ? 48 : 64);
+  positionTip(event, 200, false);
 };
 
 // ── Dim helpers (click destination highlight) ─────────────────────────────────
@@ -276,7 +292,29 @@ let dimSourceId = null;
 let dimDestIds = new Map(); // destId → player count
 let arcsGroup  = null;
 const centroids = {};
-let DATA_REF = {}; // set once data loads, used by applyDim
+let DATA_REF = {};          // set once data loads, used by applyDim
+let IMPORT_BY_NATION = {};  // nationId → [{name, birthCountry, birthCountryId, caps}]
+
+const buildImportColHtml = nationId => {
+  const players = (IMPORT_BY_NATION[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+  if (players.length === 0) return `<div class="tt-no-export">${T.noImport}</div>`;
+  const byBirth = {};
+  players.forEach(p => {
+    const label = countryName(p.birthCountryId, p.birthCountry);
+    if (!byBirth[label]) byBirth[label] = 0;
+    byBirth[label]++;
+  });
+  const nations = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
+  const top = players.slice(0, 5);
+  let html = `<div class="tt-count tt-count-imp">${players.length}</div>`;
+  html += `<div class="tt-label">${T.imported} / 26</div>`;
+  html += `<div class="tt-nations">${T.birthNations} : ${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>`;
+  top.forEach(p => {
+    html += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation">← ${countryName(p.birthCountryId, p.birthCountry)}</span></div>`;
+  });
+  if (players.length > 5) html += `<div class="tt-more">…</div>`;
+  return html;
+};
 
 const applyDim = (sourceId, destIds, country) => {
   dimActive = true;
@@ -417,10 +455,22 @@ Promise.all([
   });
   DATA_REF = byId;
 
+  DATA.forEach(rec => {
+    rec.players.forEach(p => {
+      const nId = QUALIFIED_BY_NAME[p.nation];
+      if (nId == null) return;
+      if (countryName(rec.id, rec.country) === countryName(nId, QUALIFIED_NAMES[nId])) return;
+      if (!IMPORT_BY_NATION[nId]) IMPORT_BY_NATION[nId] = [];
+      IMPORT_BY_NATION[nId].push({ name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps });
+    });
+  });
+
   // ── Shared tooltip/click helpers (used by both world and UK nation paths) ──────
+
   const showExportTip = (event, id) => {
     const rec = byId[id];
     if (!rec) { hideTip(); return; }
+    const hasImports = !!QUALIFIED_NAMES[id] && (IMPORT_BY_NATION[id] ?? []).length > 0;
     if (lastTipKey !== id) {
       lastTipKey = id;
       const _r2 = rec.ratio !== null ? rec.ratio.toFixed(2) : '?';
@@ -429,17 +479,24 @@ Promise.all([
       const fc = ISO2[rec.id];
       const fi = fc ? `<img class="tt-flag" src="${FLAG_CDN(fc)}">` : '';
       let html = `<div class="tt-name">${fi}${countryName(rec.id, rec.country)}</div>`;
-      html += `<div class="tt-count">${ratio}</div>`;
-      html += `<div class="tt-label">${T.exported(rec.count)} ${T.perMillion}</div>`;
-      html += `<div class="tt-sub">${rec.count} ${T.players(rec.count)} · ${T.pop} ${popStr}</div>`;
-      html += `<div class="tt-nations">${T.selections} : ${rec.nations.map(([n,c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>`;
+      let leftCol = '';
+      leftCol += `<div class="tt-count">${rec.count}</div>`;
+      leftCol += `<div class="tt-label">${T.exported(rec.count)}</div>`;
+      leftCol += `<div class="tt-sub">${ratio} ${T.perMillion} · ${T.pop} ${popStr}</div>`;
+      leftCol += `<div class="tt-nations">${T.selections} : ${rec.nations.map(([n,c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>`;
       rec.top.forEach(p => {
-        html += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation">→ ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span></div>`;
+        leftCol += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation">→ ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span></div>`;
       });
-      if (rec.count > rec.top.length) html += `<div class="tt-more">…</div>`;
+      if (rec.count > rec.top.length) leftCol += `<div class="tt-more">…</div>`;
+      if (hasImports) {
+        html += `<div class="tt-columns"><div class="tt-col">${leftCol}</div><div class="tt-vdiv"></div><div class="tt-col">${buildImportColHtml(id)}</div></div>`;
+      } else {
+        html += leftCol;
+        if (QUALIFIED_NAMES[id]) html += `<div class="tt-no-export">${T.noImport}</div>`;
+      }
       tt.innerHTML = html;
     }
-    positionTip(event, 240);
+    positionTip(event, 240, hasImports);
   };
 
   const showImportTip = (event, destId) => {
