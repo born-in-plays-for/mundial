@@ -78,8 +78,12 @@ g.append('path').datum({type:'Sphere'})
 g.append('path').datum(d3.geoGraticule()())
   .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
 
-// ── Flag CDN helper ───────────────────────────────────────────────────────────
-const FLAG_CDN = code => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${code}.svg`;
+// ── Flag CDN helpers ──────────────────────────────────────────────────────────
+const FLAG_CDN      = code => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${code}.svg`;
+// Rectangular flags for lists; flag-icons supports subdivision codes (gb-eng etc.)
+const FLAG_CDN_RECT = code => code.includes('-')
+  ? `https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${code}.svg`
+  : `https://flagcdn.com/w20/${code}.png`;
 
 // ── Qualified-nation lookups ──────────────────────────────────────────────────
 const QUALIFIED_NAMES = {
@@ -221,7 +225,7 @@ const applyDim = (sourceId, destIds, country) => {
   }).raise();
 
   // Player table
-  document.getElementById('pt-flag').src = fc ? FLAG_CDN(fc) : '';
+  document.getElementById('pt-flag').src = fc ? FLAG_CDN_RECT(fc) : '';
   document.getElementById('pt-title').textContent =
     `${country} — ${DATA_REF[sourceId]?.count ?? ''} joueur${(DATA_REF[sourceId]?.count ?? 1) > 1 ? 's' : ''} exporté${(DATA_REF[sourceId]?.count ?? 1) > 1 ? 's' : ''}`;
   const nationsEl = document.getElementById('pt-nations');
@@ -238,7 +242,7 @@ const applyDim = (sourceId, destIds, country) => {
     const nc = ISO2[QUALIFIED_BY_NAME[nation]];
     const header = document.createElement('div');
     header.className = 'pt-nation-header';
-    header.innerHTML = `${nc ? `<img src="${FLAG_CDN(nc)}">` : ''}<span class="pt-nation-name">${nation}</span><span class="pt-nation-count">${gp.length} joueur${gp.length > 1 ? 's' : ''}</span>`;
+    header.innerHTML = `${nc ? `<img src="${FLAG_CDN_RECT(nc)}">` : ''}<span class="pt-nation-name">${nation}</span><span class="pt-nation-count">${gp.length} joueur${gp.length > 1 ? 's' : ''}</span>`;
     nationsEl.appendChild(header);
     gp.forEach(p => {
       const row = document.createElement('div');

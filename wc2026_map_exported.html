@@ -18,7 +18,7 @@ body { background: #f5f2ec; color: #1a1a18; }
 .sub em { color: #555; font-style: normal; }
 svg { display: block; width: 100%; height: auto; touch-action: none; }
 .country { cursor: pointer; transition: opacity .12s; }
-body.dim-active * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><circle cx='11' cy='11' r='9' fill='none' stroke='%23555' stroke-width='1.5'/><line x1='7' y1='7' x2='15' y2='15' stroke='%23555' stroke-width='2' stroke-linecap='round'/><line x1='15' y1='7' x2='7' y2='15' stroke='%23555' stroke-width='2' stroke-linecap='round'/></svg>") 11 11, auto !important; }
+body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><circle cx='11' cy='11' r='9' fill='none' stroke='%23555' stroke-width='1.5'/><line x1='7' y1='7' x2='15' y2='15' stroke='%23555' stroke-width='2' stroke-linecap='round'/><line x1='15' y1='7' x2='7' y2='15' stroke='%23555' stroke-width='2' stroke-linecap='round'/></svg>") 11 11, auto !important; }
 .country:hover { opacity: .7; }
 #tooltip {
   position: fixed; pointer-events: none; display: none;
@@ -42,7 +42,7 @@ body.dim-active * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.or
 #legend-ticks { display: flex; justify-content: space-between; width: 280px; font-size: 10px; color: #aaa; margin-top: 3px; }
 #player-table { border-top: 1px solid #e8e4e0; margin-top: 4px; }
 .pt-nation-header { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; border-bottom: 1px solid #f0ede8; }
-.pt-nation-header img { width: 20px; height: 20px; border-radius: 50%; }
+.pt-nation-header img { height: 14px; width: auto; border-radius: 2px; }
 .pt-nation-name { font-size: 13px; font-weight: 500; color: #1a1a18; }
 .pt-nation-count { font-size: 11px; color: #aaa; }
 .pt-player-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0 4px 28px; border-bottom: 1px solid #f8f5f2; font-size: 12px; color: #444; }
@@ -71,7 +71,7 @@ body.dim-active * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.or
 
 <div id="player-table" class="container-xxl px-4 pb-5" style="display:none">
   <div class="d-flex align-items-center gap-2 mb-3">
-    <img id="pt-flag" style="width:28px;height:28px;border-radius:50%">
+    <img id="pt-flag" style="height:20px;width:auto;border-radius:2px">
     <h2 id="pt-title" class="mb-0" style="font-size:16px;font-weight:500"></h2>
   </div>
   <div id="pt-nations"></div>
