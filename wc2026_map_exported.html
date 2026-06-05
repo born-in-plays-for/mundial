@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,12 +53,12 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 </head>
 <body>
 <header class="container-xxl px-4 pt-4 pb-0">
-  <h1 style="font-size:20px;font-weight:500;letter-spacing:-.3px">Mondial 2026 — joueurs "exportés" par pays de naissance</h1>
-  <p class="sub mt-1">Couleur : joueurs exportés / million d'hab. · 284 joueurs au total · source : Wikipedia</p>
+  <h1 id="page-heading" style="font-size:20px;font-weight:500;letter-spacing:-.3px">Mondial 2026 — joueurs "exportés" par pays de naissance</h1>
+  <p id="page-sub" class="sub mt-1">Couleur : joueurs exportés / million d'hab. · 284 joueurs au total · source : Wikipedia</p>
 </header>
 <div class="container-xxl px-0 mt-3 position-relative">
   <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Carte choroplèthe des pays de naissance des joueurs exportés au Mondial 2026"></svg>
-  <span class="position-absolute bottom-0 end-0 pe-2 pb-1" style="font-size:10px;color:#aaa;pointer-events:none">scroll pour zoomer · glisser pour déplacer</span>
+  <span id="zoom-hint" class="position-absolute bottom-0 end-0 pe-2 pb-1" style="font-size:10px;color:#aaa;pointer-events:none">scroll pour zoomer · glisser pour déplacer</span>
 </div>
 <div id="legend" class="container-xxl px-4 d-flex align-items-center gap-2 mt-2 mb-1" style="font-size:11px;color:#888">
   <span>≈0</span>
@@ -68,7 +68,7 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
   </div>
   <span>1.1</span>
 </div>
-<p class="container-xxl px-4 mb-4" style="font-size:11px;color:#aaa">joueurs exportés / million d'hab. · Gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026</p>
+<p id="legend-caption" class="container-xxl px-4 mb-4" style="font-size:11px;color:#aaa">joueurs exportés / million d'hab. · Gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026</p>
 
 <div id="player-table" class="container-xxl px-4 pb-5" style="display:none">
   <div class="d-flex align-items-center gap-2 mb-3">

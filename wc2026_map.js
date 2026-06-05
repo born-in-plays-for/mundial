@@ -140,26 +140,47 @@ const countryName = (id, fallback = '') => {
 // UI label strings
 const T = {
   fr: {
-    noExport:   'aucun joueur exporté',
-    perMillion: "/ million d'hab.",
-    selections: 'Sélections',
-    bornIn:     'Joueurs nés en',
-    pop:        'pop.',
-    caps:       'sél.',
-    players:    n => `joueur${n > 1 ? 's' : ''}`,
-    exported:   n => `joueur${n > 1 ? 's' : ''} exporté${n > 1 ? 's' : ''}`,
+    noExport:      'aucun joueur exporté',
+    perMillion:    "/ million d'hab.",
+    selections:    'Sélections',
+    bornIn:        'Joueurs nés en',
+    pop:           'pop.',
+    caps:          'sél.',
+    players:       n => `joueur${n > 1 ? 's' : ''}`,
+    exported:      n => `joueur${n > 1 ? 's' : ''} exporté${n > 1 ? 's' : ''}`,
+    pageTitle:     'Mondial 2026 — Joueurs "exportés" par pays de naissance',
+    pageHeading:   'Mondial 2026 — joueurs "exportés" par pays de naissance',
+    pageSub:       "Couleur : joueurs exportés / million d'hab. · 284 joueurs au total · source : Wikipedia",
+    mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs exportés au Mondial 2026',
+    zoomHint:      'scroll pour zoomer · glisser pour déplacer',
+    legendCaption: "joueurs exportés / million d'hab. · Gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026",
   },
   en: {
-    noExport:   'no players exported',
-    perMillion: '/ million inhab.',
-    selections: 'Selections',
-    bornIn:     'Players born in',
-    pop:        'pop.',
-    caps:       'caps',
-    players:    n => `player${n > 1 ? 's' : ''}`,
-    exported:   n => `player${n > 1 ? 's' : ''} exported`,
+    noExport:      'no players exported',
+    perMillion:    '/ million inhab.',
+    selections:    'Selections',
+    bornIn:        'Players born in',
+    pop:           'pop.',
+    caps:          'caps',
+    players:       n => `player${n > 1 ? 's' : ''}`,
+    exported:      n => `player${n > 1 ? 's' : ''} exported`,
+    pageTitle:     'World Cup 2026 — "exported" players by country of birth',
+    pageHeading:   'World Cup 2026 — "exported" players by country of birth',
+    pageSub:       'Colour: exported players / million inhab. · 284 players total · source: Wikipedia',
+    mapAriaLabel:  'Choropleth map of birth countries of players exported to World Cup 2026',
+    zoomHint:      'scroll to zoom · drag to pan',
+    legendCaption: 'exported players / million inhab. · Grey: no exported player · flag = nation qualified for World Cup 2026',
   },
 }[LANG];
+
+// Apply locale to static page elements
+document.documentElement.lang = LANG;
+document.title = T.pageTitle;
+document.getElementById('page-heading').textContent   = T.pageHeading;
+document.getElementById('page-sub').textContent       = T.pageSub;
+document.getElementById('zoom-hint').textContent      = T.zoomHint;
+document.getElementById('legend-caption').textContent = T.legendCaption;
+document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
 
 const ISO2 = {
   12:'dz', 32:'ar', 36:'au', 40:'at', 56:'be', 70:'ba', 76:'br',
