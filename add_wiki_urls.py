@@ -44,31 +44,39 @@ all_players = [p for rec in data["data"] for p in rec["players"]]
 needed_titles = list({name_to_title[p["name"]] for p in all_players if p["name"] in name_to_title})
 print(f"  {len(needed_titles)} unique EN titles to query for langlinks")
 
-# ── Step 3: batch-fetch langlinks ─────────────────────────────────────────────
+# ── Step 3: batch-fetch langlinks (one language at a time) ────────────────────
+# lllimit=max is 500 *total across all pages* in a batch — with 50 articles
+# × ~60 langlinks each we'd hit the cap. Using lllang=<one lang> means each
+# article returns at most 1 langlink, so batching 50 is always safe.
 print(f"Step 2 — querying Wikipedia API for {LANGS} langlinks…")
-title_to_langs = {}   # en_title → {lang: localized_title}
+title_to_langs = {t: {} for t in needed_titles}
 
-for i in range(0, len(needed_titles), BATCH):
-    batch = needed_titles[i:i + BATCH]
-    params = {
-        "action":  "query",
-        "prop":    "langlinks",
-        "lllimit": "max",
-        "titles":  "|".join(batch),
-        "format":  "json",
-    }
-    resp = requests.get(WIKI_API, params=params, headers=HEADERS, timeout=20)
-    resp.raise_for_status()
-    pages = resp.json()["query"]["pages"]
-    for page in pages.values():
-        en_title  = page["title"]
-        lang_map  = {}
-        for ll in page.get("langlinks", []):
-            if ll["lang"] in LANGS:
-                lang_map[ll["lang"]] = ll["*"]
-        title_to_langs[en_title] = lang_map
-    print(f"  batch {i//BATCH + 1}/{-(-len(needed_titles)//BATCH)} done")
-    time.sleep(0.3)
+for lang in LANGS:
+    print(f"  language: {lang}")
+    for i in range(0, len(needed_titles), BATCH):
+        batch = needed_titles[i:i + BATCH]
+        params = {
+            "action":  "query",
+            "prop":    "langlinks",
+            "lllang":  lang,
+            "lllimit": "max",
+            "titles":  "|".join(batch),
+            "format":  "json",
+        }
+        for attempt in range(5):
+            resp = requests.get(WIKI_API, params=params, headers=HEADERS, timeout=20)
+            if resp.status_code == 429:
+                wait = 10 * (2 ** attempt)
+                print(f"    429 — waiting {wait}s…")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            break
+        for page in resp.json()["query"]["pages"].values():
+            lls = page.get("langlinks", [])
+            if lls:
+                title_to_langs[page["title"]][lang] = lls[0]["*"]
+        time.sleep(1.0)
 
 # ── Step 4: enrich player objects ─────────────────────────────────────────────
 print("Step 3 — enriching player objects…")
