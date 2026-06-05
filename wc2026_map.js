@@ -363,7 +363,10 @@ const applyDim = (sourceId, destIds, country) => {
     gp.forEach(p => {
       const row = document.createElement('div');
       row.className = 'pt-player-row';
-      row.innerHTML = `<span>${p.name}</span><span class="pt-caps">${p.caps} ${T.caps}</span>`;
+      const nameHtml = p.wiki
+        ? `<a href="${p.wiki}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
+        : p.name;
+      row.innerHTML = `<span>${nameHtml}</span><span class="pt-caps">${p.caps} ${T.caps}</span>`;
       nationsEl.appendChild(row);
     });
   });
