@@ -23,6 +23,7 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup tracking **player ex
 | File | Purpose |
 |---|---|
 | `wc2026_birthplaces.py` | Scraper: Wikipedia → `wc2026_players.csv` |
+| `add_wiki_urls.py` | Enriches JSON with per-language Wikipedia links (`wiki_langs`) |
 | `wc2026_players.csv` | Full squad roster with birth city/country (source of truth) |
 | `wc2026_by_birthcountry.csv` | Aggregated ranking by birth country |
 | `wc2026_make_ratio_chart.py` | Generates `wc2026_export_ratio.png` from JSON data |
@@ -61,3 +62,7 @@ The map uses `fetch()` and requires an HTTP server — `file://` will not work.
 ## i18n
 
 The UI language follows the browser locale. Supported: **French** (`fr`), **German** (`de`), **Italian** (`it`), English (fallback). Country names use the browser's `Intl.DisplayNames` API.
+
+## Tooltip
+
+Hovering a country shows a two-column tooltip when the country both exports players and is a qualified nation — export data on the left, import data on the right. Collapses to one column when either side is empty. Player names in the dim-mode table link to their Wikipedia page in the UI language, with an `(en)` fallback.
