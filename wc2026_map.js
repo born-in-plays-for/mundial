@@ -108,7 +108,9 @@ const QUALIFIED_BY_NAME = Object.fromEntries(
 
 // ── i18n ──────────────────────────────────────────────────────────────────────
 const LOCALE = navigator.languages?.[0] ?? navigator.language ?? 'fr';
-const LANG   = LOCALE.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+const LANG   = LOCALE.toLowerCase().startsWith('fr') ? 'fr'
+             : LOCALE.toLowerCase().startsWith('de') ? 'de'
+             : 'en';
 
 const _regionNames = (() => {
   try { return new Intl.DisplayNames([LOCALE], { type: 'region' }); } catch(e) { return null; }
@@ -116,12 +118,12 @@ const _regionNames = (() => {
 
 // Entries Intl.DisplayNames cannot handle (subdivision codes, historical states, edge cases)
 const _OVERRIDE = {
-  8260: { fr:'Angleterre',              en:'England' },
-  8261: { fr:'Écosse',                  en:'Scotland' },
-  8262: { fr:'Pays de Galles',          en:'Wales' },
-  8263: { fr:'Irlande du Nord',         en:'Northern Ireland' },
-  'Soviet Union':               { fr:'Union soviétique',          en:'Soviet Union' },
-  'Kingdom of the Netherlands': { fr:'Pays-Bas',                  en:'Netherlands' },
+  8260: { fr:'Angleterre',      de:'England',      en:'England' },
+  8261: { fr:'Écosse',          de:'Schottland',   en:'Scotland' },
+  8262: { fr:'Pays de Galles',  de:'Wales',        en:'Wales' },
+  8263: { fr:'Irlande du Nord', de:'Nordirland',   en:'Northern Ireland' },
+  'Soviet Union':               { fr:'Union soviétique', de:'Sowjetunion',  en:'Soviet Union' },
+  'Kingdom of the Netherlands': { fr:'Pays-Bas',         de:'Niederlande',  en:'Netherlands' },
 };
 
 // For id=null entries that do have a standard alpha-2 code
@@ -154,6 +156,22 @@ const T = {
     mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs exportés au Mondial 2026',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
     legendCaption: "joueurs exportés / million d'hab. · Gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026",
+  },
+  de: {
+    noExport:      'kein exportierter Spieler',
+    perMillion:    '/ Mio. Einwohner',
+    selections:    'Nationalteams',
+    bornIn:        'Spieler geboren in',
+    pop:           'Einw.',
+    caps:          'Sp.',
+    players:       () => 'Spieler',
+    exported:      n => n === 1 ? 'exportierter Spieler' : 'exportierte Spieler',
+    pageTitle:     'WM 2026 — „exportierte“ Spieler nach Geburtsland',
+    pageHeading:   'WM 2026 — „exportierte“ Spieler nach Geburtsland',
+    pageSub:       'Farbe: exportierte Spieler / Mio. Einwohner · 284 Spieler insgesamt · Quelle: Wikipedia',
+    mapAriaLabel:  'Choroplethenkarte der Geburtsländer exportierter Spieler bei der WM 2026',
+    zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
+    legendCaption: 'exportierte Spieler / Mio. Einwohner · Grau: kein exportierter Spieler · Flagge = qualifizierte Nation bei der WM 2026',
   },
   en: {
     noExport:      'no players exported',
