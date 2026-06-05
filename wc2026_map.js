@@ -363,10 +363,13 @@ const applyDim = (sourceId, destIds, country) => {
     gp.forEach(p => {
       const row = document.createElement('div');
       row.className = 'pt-player-row';
-      const wikiUrl = p.wiki_langs?.[LANG] ?? p.wiki_langs?.en ?? null;
-      const nameHtml = wikiUrl
-        ? `<a href="${wikiUrl}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
-        : p.name;
+      const wikiLang = p.wiki_langs?.[LANG];
+      const wikiEn   = p.wiki_langs?.en ?? null;
+      const nameHtml = wikiLang
+        ? `<a href="${wikiLang}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
+        : wikiEn
+          ? `${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki">en</a>)`
+          : p.name;
       row.innerHTML = `<span>${nameHtml}</span><span class="pt-caps">${p.caps} ${T.caps}</span>`;
       nationsEl.appendChild(row);
     });
