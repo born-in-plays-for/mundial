@@ -32,6 +32,7 @@ const CENTROID_OVERRIDE = {
   250:  [2.5,  46.5],   // France (without overseas territories)
   840:  [-98,  38],     // USA (without Alaska/Hawaii)
   8261: [-4.2, 56.8],  // Scotland (centroid pulled north by islands)
+  191:  [16.8, 45.8],  // Croatia (coastal strip drags centroid south into Bosnia)
 };
 
 const dotCentroid = d => {
