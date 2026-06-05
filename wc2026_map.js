@@ -365,24 +365,6 @@ Promise.all([
     .on('mouseleave', hideTip)
     .on('click',     (event, d) => onCountryClick(event, d._id));
 
-  // Flags for England and Scotland (qualified nations)
-  ukFeatures
-    .filter(f => f._id === 8260 || f._id === 8261)
-    .forEach(f => {
-      const ov = CENTROID_OVERRIDE[f._id];
-      const [cx, cy] = ov ? projection(ov) : path.centroid(f);
-      centroids[f._id] = [cx, cy];
-      g.append('image')
-        .call(placeFlag)
-        .attr('href', FLAG_CDN(ISO2[f._id]))
-        .attr('data-id', f._id)
-        .attr('data-cx', cx).attr('data-cy', cy)
-        .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
-        .attr('pointer-events', byId[f._id] ? 'none' : 'all')
-        .attr('cursor', byId[f._id] ? null : 'default')
-        .on('mousemove', (event) => showQualifiedTip(event, QUALIFIED_NAMES[f._id], ISO2[f._id]));
-    });
-
   g.selectAll('.flag-qualified')
     .data(topojson.feature(world, world.objects.countries).features
       .filter(d => QUALIFIED_NAMES[+d.id] && !STANDALONE_IDS.has(+d.id)))
@@ -411,11 +393,29 @@ Promise.all([
       .on('mousemove', (event) => showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]));
   });
 
+  // ── England & Scotland flags (after the .flag-qualified join so they aren't removed by its exit) ──
+  ukFeatures
+    .filter(f => f._id === 8260 || f._id === 8261)
+    .forEach(f => {
+      const ov = CENTROID_OVERRIDE[f._id];
+      const [cx, cy] = ov ? projection(ov) : path.centroid(f);
+      centroids[f._id] = [cx, cy];
+      g.append('image')
+        .call(placeFlag)
+        .attr('href', FLAG_CDN(ISO2[f._id]))
+        .attr('data-id', f._id)
+        .attr('data-cx', cx).attr('data-cy', cy)
+        .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
+        .attr('pointer-events', byId[f._id] ? 'none' : 'all')
+        .attr('cursor', byId[f._id] ? null : 'default')
+        .on('mousemove', (event) => showQualifiedTip(event, QUALIFIED_NAMES[f._id], ISO2[f._id]));
+    });
+
   // ── Centroids map (for arc drawing) ──────────────────────────────────────────
   topojson.feature(world, world.objects.countries).features
     .filter(f => +f.id !== 826)
     .forEach(f => { centroids[+f.id] = dotCentroid(f); });
-  // UK nation centroids are set when rendering their flags (above)
+  // UK nation centroids set above when placing flags
   STANDALONE_FLAGS.forEach(({ id, lon, lat }) => { centroids[id] = projection([lon, lat]); });
 
 
