@@ -146,6 +146,7 @@ let lastTipKey = null;
 const hideTip = () => { tt.style.display = 'none'; lastTipKey = null; };
 
 const showQualifiedTip = (event, name, code) => {
+  if (dimActive && !dimDestIds.has(QUALIFIED_BY_NAME[name])) { hideTip(); return; }
   const hasExports = !!DATA_REF[QUALIFIED_BY_NAME[name]];
   if (lastTipKey !== name) {
     lastTipKey = name;
@@ -159,6 +160,7 @@ const showQualifiedTip = (event, name, code) => {
 // ── Dim helpers (click destination highlight) ─────────────────────────────────
 let currentK = 1;
 let dimActive = false;
+let dimSourceId = null;
 let dimDestIds = new Map(); // destId → player count
 let arcsGroup  = null;
 const centroids = {};
@@ -166,6 +168,7 @@ let DATA_REF = {}; // set once data loads, used by applyDim
 
 const applyDim = (sourceId, destIds, country) => {
   dimActive = true;
+  dimSourceId = sourceId;
   dimDestIds = destIds;
   g.selectAll('.flag-qualified').attr('opacity', function() {
     const id = +this.getAttribute('data-id');
@@ -258,6 +261,7 @@ const applyDim = (sourceId, destIds, country) => {
 };
 const clearDim = () => {
   dimActive = false;
+  dimSourceId = null;
   dimDestIds = new Map();
   g.selectAll('.flag-qualified').attr('opacity', null);
   if (arcsGroup) arcsGroup.selectAll('.arc-line').remove();
@@ -311,17 +315,42 @@ Promise.all([
       rec.top.forEach(p => {
         html += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation">→ ${p.nation}</span></div>`;
       });
+      if (rec.count > rec.top.length) html += `<div class="tt-more">…</div>`;
       tt.innerHTML = html;
     }
     positionTip(event, 240);
   };
 
+  const showImportTip = (event, destId) => {
+    const key = `import-${dimSourceId}-${destId}`;
+    const srcRec = byId[dimSourceId];
+    if (!srcRec) { hideTip(); return; }
+    const destName = QUALIFIED_NAMES[destId];
+    const allPlayers = (srcRec.players ?? []).filter(p => p.nation === destName);
+    const players = allPlayers.slice(0, 5);
+    if (lastTipKey !== key) {
+      lastTipKey = key;
+      const destFc = ISO2[destId];
+      const destFi = destFc ? `<img class="tt-flag" src="${FLAG_CDN(destFc)}">` : '';
+      let html = `<div class="tt-name">${destFi}${destName}</div>`;
+      html += `<div class="tt-nations">Joueurs nés en ${srcRec.country} (${allPlayers.length})</div>`;
+      players.forEach(p => {
+        html += `<div class="tt-player"><span>${p.name}</span></div>`;
+      });
+      if (allPlayers.length > 5) html += `<div class="tt-more">…</div>`;
+      tt.innerHTML = html;
+    }
+    positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
+  };
+
   const onCountryMousemove = (event, id) => {
     if (dimActive) {
       if (!dimDestIds.has(id)) { hideTip(); return; }
-      if (!byId[id]) { showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]); return; }
+      showImportTip(event, id); return;
     }
-    if (byId[id]) showExportTip(event, id); else hideTip();
+    if (byId[id]) showExportTip(event, id);
+    else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
+    else hideTip();
   };
 
   const onCountryClick = (event, id) => {
@@ -381,7 +410,7 @@ Promise.all([
     .attr('data-id', d => +d.id)
     .attr('pointer-events', d => byId[+d.id] ? 'none' : 'all')
     .attr('cursor', d => byId[+d.id] ? null : 'default')
-    .on('mousemove', (event, d) => showQualifiedTip(event, QUALIFIED_NAMES[+d.id], ISO2[+d.id]));
+    .on('mousemove', (event, d) => onCountryMousemove(event, +d.id));
 
   STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
     const [cx, cy] = projection([lon, lat]);
@@ -393,7 +422,7 @@ Promise.all([
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
       .attr('cursor', 'default')
-      .on('mousemove', (event) => showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]));
+      .on('mousemove', (event) => onCountryMousemove(event, id));
   });
 
   // ── England & Scotland flags (after the .flag-qualified join so they aren't removed by its exit) ──
@@ -411,7 +440,7 @@ Promise.all([
         .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
         .attr('pointer-events', byId[f._id] ? 'none' : 'all')
         .attr('cursor', byId[f._id] ? null : 'default')
-        .on('mousemove', (event) => showQualifiedTip(event, QUALIFIED_NAMES[f._id], ISO2[f._id]));
+        .on('mousemove', (event) => onCountryMousemove(event, f._id));
     });
 
   // ── Centroids map (for arc drawing) ──────────────────────────────────────────
