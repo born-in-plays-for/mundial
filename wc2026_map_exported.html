@@ -46,9 +46,9 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 .tt-more { font-size: 10px; color: #bbb; text-align: center; padding-top: 2px; letter-spacing: 2px; }
 #legend-bar { height: 10px; border-radius: 5px; overflow: hidden; flex: 1; max-width: 280px; }
 #legend-ticks { display: flex; justify-content: space-between; width: 280px; font-size: 10px; color: #aaa; margin-top: 3px; }
-@media (max-width: 575.98px) {
-  #legend-bar { max-width: 110px; }
-  #legend-ticks { width: 110px; font-size: 8px; }
+@media (max-width: 767.98px) {
+  #legend-bar { max-width: 90px; }
+  #legend-ticks { width: 90px; font-size: 8px; }
 }
 #player-table { border-top: 1px solid #e8e4e0; margin-top: 4px; }
 .pt-nation-header { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; border-bottom: 1px solid #f0ede8; }
@@ -63,10 +63,10 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 </style>
 </head>
 <body>
-<header class="container-xxl px-4 pt-4 pb-0 d-none d-sm-flex align-items-start justify-content-between">
+<header class="container-xxl px-4 pt-4 pb-0 d-none d-md-flex align-items-start justify-content-between">
   <div>
     <h1 id="page-heading" style="font-size:20px;font-weight:500;letter-spacing:-.3px">Mondial 2026 — joueurs "exportés" par pays de naissance</h1>
-    <p id="page-sub" class="sub mt-1">Couleur : joueurs exportés / million d'hab. · 281 joueurs au total · source : Wikipedia</p>
+    <p id="page-sub" class="sub mt-1">281 joueurs au total · source : Wikipedia</p>
   </div>
   <a href="https://github.com/cthiebaud/mundial" target="_blank" rel="noopener" aria-label="GitHub" style="color:#bbb;opacity:.5;transition:opacity .2s;flex-shrink:0;margin-top:4px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">
     <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
@@ -79,21 +79,19 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 <div class="container-xxl px-4 mt-2 mb-4">
   <div class="d-flex gap-3 align-items-start">
     <!-- heading col: mobile only -->
-    <div class="d-sm-none" style="flex:1;min-width:0">
+    <div class="d-md-none" style="flex:1;min-width:0">
       <h2 id="page-heading-mob" style="font-size:13px;font-weight:500;letter-spacing:-.2px;line-height:1.3;margin-bottom:4px">Mondial 2026 — joueurs "exportés" par pays de naissance</h2>
-      <p id="page-sub-mob" class="sub mb-0">Couleur : joueurs exportés / million d'hab. · 281 joueurs au total · source : Wikipedia</p>
+      <p id="page-sub-mob" class="sub mb-0">281 joueurs au total · source : Wikipedia</p>
     </div>
     <!-- legend col -->
-    <div>
-      <div id="legend" class="d-flex align-items-center gap-2 mb-1" style="font-size:11px;color:#888">
-        <span>≈0</span>
+    <div style="flex:1;min-width:0">
+      <div id="legend" class="d-flex align-items-center justify-content-end justify-content-md-start gap-2 mb-1" style="font-size:11px;color:#888">
         <div>
           <div id="legend-bar"></div>
           <div id="legend-ticks"><span>0.01</span><span>0.03</span><span>0.10</span><span>0.30</span><span>1.0</span></div>
         </div>
-        <span>1.1</span>
       </div>
-      <p id="legend-caption" class="mb-0" style="font-size:11px;color:#aaa">joueurs exportés / million d'hab. · Gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026</p>
+      <p id="legend-caption" class="mb-0 text-end text-md-start" style="font-size:11px;color:#aaa">joueurs exportés / million d'hab. · gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026</p>
     </div>
   </div>
 </div>
