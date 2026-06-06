@@ -314,7 +314,7 @@ const showQualifiedTip = (event, name, code) => {
     const hasImps = (IMPORT_BY_NATION[nId] ?? []).length > 0;
 
     render(html`
-      <div class="tt-name">
+      <div class="tt-name tt-name-inner">
         <span class="tt-name-inner">${flagImg(code)}${countryName(nId, name)}</span>
         ${popTag(POP_REF[name])}
       </div>
@@ -402,11 +402,11 @@ const playerTableTemplate = sourceId => {
     <div class="d-flex align-items-center gap-2 mb-1 justify-content-between">
       <div class="d-flex align-items-center gap-2">
         ${fc ? html`<img class="pt-country-flag" src="${FLAG_CDN_RECT(fc)}">` : nothing}
-        <h2 class="mb-0 pt-country-name">${countryName(sourceId, country)}</h2>
+        <h2 class="mb-0 pt-title">${countryName(sourceId, country)}</h2>
       </div>
       ${pop ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing}
     </div>
-    <h2 id="pt-export-count" class="mb-3 color-exp">${cnt} ${T.exported(cnt)}</h2>
+    <h2 id="pt-export-count" class="mb-3 pt-title color-exp">${cnt} ${T.exported(cnt)}</h2>
     <div id="pt-nations">
       ${exportGroups.map(({ nation, players: gp }) => {
         const nc = ISO2[QUALIFIED_BY_NAME[nation]];
@@ -425,7 +425,7 @@ const playerTableTemplate = sourceId => {
     </div>
     ${importPlayers.length > 0 ? html`
       <div id="pt-import-section">
-        <h2 id="pt-import-title" class="mb-3 color-imp">${importPlayers.length} ${T.imported}</h2>
+        <h2 id="pt-import-title" class="mb-3 pt-title color-imp">${importPlayers.length} ${T.imported}</h2>
         <div id="pt-import-nations">
           ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
             const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
@@ -624,14 +624,14 @@ Promise.all([
         </div>`;
       const body = hasImports
         ? html`<div class="tt-columns">
-            <div class="tt-col">${leftCol}</div>
+            <div class="flex-col">${leftCol}</div>
             <div class="tt-vdiv"></div>
-            <div class="tt-col">${buildImportColHtml(id)}</div>
+            <div class="flex-col">${buildImportColHtml(id)}</div>
           </div>`
         : html`${leftCol}${QUALIFIED_NAMES[id] ? html`<div class="tt-no-export">${T.noImport}</div>` : nothing}`;
 
       render(html`
-        <div class="tt-name">
+        <div class="tt-name tt-name-inner">
           <span class="tt-name-inner">${flagImg(fc)}${countryName(rec.id, rec.country)}</span>
           ${popTag(rec.pop)}
         </div>
@@ -652,7 +652,7 @@ Promise.all([
       const destFc = ISO2[destId];
 
       render(html`
-        <div class="tt-name">
+        <div class="tt-name tt-name-inner">
           <span class="tt-name-inner">${flagImg(destFc)}${countryName(destId, destName)}</span>
           ${popTag(POP[destName])}
         </div>
@@ -678,7 +678,7 @@ Promise.all([
       const bFc = p0.birthCountryId != null ? ISO2[p0.birthCountryId] : (_NULL_CODE[p0.birthCountry] ?? null);
 
       render(html`
-        <div class="tt-name">
+        <div class="tt-name tt-name-inner">
           <span class="tt-name-inner">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
           ${popTag(POP[p0.birthCountry])}
         </div>
@@ -708,7 +708,7 @@ Promise.all([
       const hasBoth = exportPlayers.length > 0 && importPlayers.length > 0;
 
       render(html`
-        <div class="tt-name">
+        <div class="tt-name tt-name-inner">
           <span class="tt-name-inner">${flagImg(fc)}${countryName(id, destName)}</span>
           ${popTag(POP[destName])}
         </div>
