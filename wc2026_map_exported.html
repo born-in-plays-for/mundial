@@ -17,7 +17,7 @@
 <body>
 <header class="container-xxl px-4 pt-4 pb-0 d-none d-md-flex align-items-start justify-content-between">
   <div>
-    <h1 id="page-heading" style="font-size:20px;font-weight:500;letter-spacing:-.3px">World Cup 2026 — "exported" players by country of birth</h1>
+    <h1 id="page-heading">World Cup 2026 — "exported" players by country of birth</h1>
     <p id="page-sub" class="sub mt-1">281 players total · source: Wikipedia</p>
   </div>
   <a href="https://github.com/cthiebaud/mundial" target="_blank" rel="noopener" aria-label="GitHub" style="color:#bbb;opacity:.5;transition:opacity .2s;flex-shrink:0;margin-top:4px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">
@@ -26,18 +26,18 @@
 </header>
 <div class="container-xxl px-0 mt-3 position-relative">
   <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of birth countries of players exported to World Cup 2026"></svg>
-  <span id="zoom-hint" class="position-absolute bottom-0 end-0 pe-2 pb-1" style="font-size:10px;color:#aaa;pointer-events:none">scroll to zoom · drag to pan</span>
+  <span id="zoom-hint" class="position-absolute bottom-0 end-0 pe-2 pb-1">scroll to zoom · drag to pan</span>
 </div>
 <div class="container-xxl px-4 mt-2 mb-4">
   <div class="d-flex gap-3 align-items-start">
     <!-- heading col: mobile only -->
-    <div class="d-md-none" style="flex:1;min-width:0">
-      <h2 id="page-heading-mob" style="font-size:13px;font-weight:500;letter-spacing:-.2px;line-height:1.3;margin-bottom:4px">World Cup 2026 — "exported" players by country of birth</h2>
+    <div class="d-md-none flex-col">
+      <h2 id="page-heading-mob">World Cup 2026 — "exported" players by country of birth</h2>
       <p id="page-sub-mob" class="sub mb-0">281 players total · source: Wikipedia</p>
     </div>
     <!-- legend col -->
-    <div style="flex:1;min-width:0">
-      <div id="legend" class="d-flex align-items-center justify-content-end justify-content-md-start gap-2 mb-1" style="font-size:11px;color:#888">
+    <div class="flex-col">
+      <div id="legend" class="d-flex align-items-center justify-content-end justify-content-md-start gap-2 mb-1">
         <div>
           <div id="legend-bar"></div>
           <div id="legend-ticks"><span>0.01</span><span>0.03</span><span>0.10</span><span>0.30</span><span>1.0</span></div>

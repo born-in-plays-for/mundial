@@ -14,6 +14,8 @@ const svg = d3.select('#map');
 
 const ARC_EXPORT_COLOR = '#1d4ed8'; // blue
 const ARC_IMPORT_COLOR = '#dc2626'; // red
+document.documentElement.style.setProperty('--arc-export-color', ARC_EXPORT_COLOR);
+document.documentElement.style.setProperty('--arc-import-color', ARC_IMPORT_COLOR);
 const ARC_OFFSET = 1.0; // lateral separation: visual offset = sw * ARC_OFFSET / k
 const ARC_MID_T  = 0.65; // arrow at 65% toward destination — separates bidirectional pairs along the arc
 
@@ -313,7 +315,7 @@ const showQualifiedTip = (event, name, code) => {
 
     render(html`
       <div class="tt-name">
-        <span style="display:flex;align-items:center;gap:7px">${flagImg(code)}${countryName(nId, name)}</span>
+        <span class="tt-name-inner">${flagImg(code)}${countryName(nId, name)}</span>
         ${popTag(POP_REF[name])}
       </div>
       <div class="tt-no-export">${T.noExport}</div>
@@ -367,7 +369,7 @@ const buildImportColHtml = nationId => {
       ${top.map(p => html`
         <div class="tt-player">
           <span>${p.name}</span>
-          <span class="tt-nation"><span style="color:${ARC_IMPORT_COLOR}">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
+          <span class="tt-nation"><span class="tt-arc-import">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
         </div>`)}
     </div>`;
 };
@@ -397,14 +399,14 @@ const playerTableTemplate = sourceId => {
   const importGroups = [...importGroupMap.values()].sort((a, b) => b.players.length - a.players.length);
 
   return html`
-    <div class="d-flex align-items-center gap-2 mb-1" style="justify-content:space-between">
+    <div class="d-flex align-items-center gap-2 mb-1 justify-content-between">
       <div class="d-flex align-items-center gap-2">
-        ${fc ? html`<img style="height:20px;width:auto;border-radius:2px" src="${FLAG_CDN_RECT(fc)}">` : nothing}
-        <h2 class="mb-0" style="font-size:16px;font-weight:500">${countryName(sourceId, country)}</h2>
+        ${fc ? html`<img class="pt-country-flag" src="${FLAG_CDN_RECT(fc)}">` : nothing}
+        <h2 class="mb-0 pt-country-name">${countryName(sourceId, country)}</h2>
       </div>
       ${pop ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing}
     </div>
-    <h2 id="pt-export-count" class="mb-3" style="font-size:16px;font-weight:500;color:#1d4ed8">${cnt} ${T.exported(cnt)}</h2>
+    <h2 id="pt-export-count" class="mb-3">${cnt} ${T.exported(cnt)}</h2>
     <div id="pt-nations">
       ${exportGroups.map(({ nation, players: gp }) => {
         const nc = ISO2[QUALIFIED_BY_NAME[nation]];
@@ -423,7 +425,7 @@ const playerTableTemplate = sourceId => {
     </div>
     ${importPlayers.length > 0 ? html`
       <div id="pt-import-section">
-        <h2 id="pt-import-title" class="mb-3" style="font-size:16px;font-weight:500;color:#dc2626">${importPlayers.length} ${T.imported}</h2>
+        <h2 id="pt-import-title" class="mb-3">${importPlayers.length} ${T.imported}</h2>
         <div id="pt-import-nations">
           ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
             const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
@@ -617,7 +619,7 @@ Promise.all([
           ${rec.top.map(p => html`
             <div class="tt-player">
               <span>${p.name}</span>
-              <span class="tt-nation"><span style="color:${ARC_EXPORT_COLOR}">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
+              <span class="tt-nation"><span class="tt-arc-export">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
             </div>`)}
         </div>`;
       const body = hasImports
@@ -630,7 +632,7 @@ Promise.all([
 
       render(html`
         <div class="tt-name">
-          <span style="display:flex;align-items:center;gap:7px">${flagImg(fc)}${countryName(rec.id, rec.country)}</span>
+          <span class="tt-name-inner">${flagImg(fc)}${countryName(rec.id, rec.country)}</span>
           ${popTag(rec.pop)}
         </div>
         ${body}`, tt);
@@ -651,10 +653,10 @@ Promise.all([
 
       render(html`
         <div class="tt-name">
-          <span style="display:flex;align-items:center;gap:7px">${flagImg(destFc)}${countryName(destId, destName)}</span>
+          <span class="tt-name-inner">${flagImg(destFc)}${countryName(destId, destName)}</span>
           ${popTag(POP[destName])}
         </div>
-        <div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">←</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>
+        <div class="tt-nations"><span class="tt-arc-export">←</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>
         <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
           ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>`, tt);
@@ -677,10 +679,10 @@ Promise.all([
 
       render(html`
         <div class="tt-name">
-          <span style="display:flex;align-items:center;gap:7px">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
+          <span class="tt-name-inner">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
           ${popTag(POP[p0.birthCountry])}
         </div>
-        <div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>
+        <div class="tt-nations"><span class="tt-arc-import">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>
         <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
           ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>`, tt);
@@ -707,17 +709,17 @@ Promise.all([
 
       render(html`
         <div class="tt-name">
-          <span style="display:flex;align-items:center;gap:7px">${flagImg(fc)}${countryName(id, destName)}</span>
+          <span class="tt-name-inner">${flagImg(fc)}${countryName(id, destName)}</span>
           ${popTag(POP[destName])}
         </div>
         ${exportPlayers.length > 0 ? html`
-          <div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>
+          <div class="tt-nations"><span class="tt-arc-import">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>
           <div class="tt-players ${exportPlayers.length > 5 ? 'tt-more' : ''}">
             ${topExp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
           </div>` : nothing}
-        ${hasBoth ? html`<div style="border-top:1px solid #e8e4e0;margin:8px 0 4px"></div>` : nothing}
+        ${hasBoth ? html`<div class="tt-divider"></div>` : nothing}
         ${importPlayers.length > 0 ? html`
-          <div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">←</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>
+          <div class="tt-nations"><span class="tt-arc-export">←</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>
           <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
             ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
           </div>` : nothing}`, tt);
