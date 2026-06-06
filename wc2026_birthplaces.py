@@ -53,6 +53,23 @@ SPARQL_HEADERS = {
 OUT_PLAYERS = "wc2026_players.csv"
 OUT_RANKING = "wc2026_by_birthcountry.csv"
 
+# Exact nation names as they appear on the Wikipedia squads page.
+# Only these 48 nations qualified for WC 2026 — any other heading is rejected.
+QUALIFIED_NATIONS = frozenset({
+    'Algeria', 'Argentina', 'Australia', 'Austria',
+    'Belgium', 'Bosnia and Herzegovina', 'Brazil', 'Canada',
+    'Cape Verde', 'Colombia', 'Croatia', 'Curaçao',
+    'Czech Republic', 'DR Congo', 'Ecuador', 'England',
+    'France', 'Germany', 'Ghana', 'Haiti',
+    'Iran', 'Iraq', 'Ivory Coast', 'Japan',
+    'Jordan', 'Mexico', 'Morocco', 'Netherlands',
+    'New Zealand', 'Norway', 'Panama', 'Paraguay',
+    'Portugal', 'Qatar', 'Saudi Arabia', 'Scotland',
+    'Senegal', 'South Africa', 'South Korea', 'Spain',
+    'Sweden', 'Switzerland', 'Tunisia', 'Turkey',
+    'United States', 'Uruguay', 'Uzbekistan',
+})
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def clean(text: str) -> str:
@@ -111,6 +128,9 @@ def parse_wikipedia(soup: BeautifulSoup) -> list:
                 current_nation = re.sub(r'\s*\([A-Z]{3}\)', '', txt).strip()
             else:
                 current_nation = txt
+                current_code   = None
+            if current_nation not in QUALIFIED_NATIONS:
+                current_nation = None
                 current_code   = None
             continue
 
