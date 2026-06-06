@@ -361,7 +361,7 @@ const buildImportColHtml = nationId => {
   const ratio     = (players.length / squadSize * 100).toFixed(0) + '%';
 
   return html`
-    <div class="tt-count tt-count-imp">${players.length}</div>
+    <div class="tt-count color-imp">${players.length}</div>
     <div class="tt-label">${T.imported}</div>
     <div class="tt-sub">${ratio} ${T.ofSquad} (${squadSize})</div>
     <div class="tt-nations">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>
@@ -369,7 +369,7 @@ const buildImportColHtml = nationId => {
       ${top.map(p => html`
         <div class="tt-player">
           <span>${p.name}</span>
-          <span class="tt-nation"><span class="tt-arc-import">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
+          <span class="tt-nation"><span class="color-imp">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
         </div>`)}
     </div>`;
 };
@@ -406,7 +406,7 @@ const playerTableTemplate = sourceId => {
       </div>
       ${pop ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing}
     </div>
-    <h2 id="pt-export-count" class="mb-3">${cnt} ${T.exported(cnt)}</h2>
+    <h2 id="pt-export-count" class="mb-3 color-exp">${cnt} ${T.exported(cnt)}</h2>
     <div id="pt-nations">
       ${exportGroups.map(({ nation, players: gp }) => {
         const nc = ISO2[QUALIFIED_BY_NAME[nation]];
@@ -425,7 +425,7 @@ const playerTableTemplate = sourceId => {
     </div>
     ${importPlayers.length > 0 ? html`
       <div id="pt-import-section">
-        <h2 id="pt-import-title" class="mb-3">${importPlayers.length} ${T.imported}</h2>
+        <h2 id="pt-import-title" class="mb-3 color-imp">${importPlayers.length} ${T.imported}</h2>
         <div id="pt-import-nations">
           ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
             const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
@@ -611,7 +611,7 @@ Promise.all([
       const fc    = ISO2[rec.id];
 
       const leftCol = html`
-        <div class="tt-count tt-count-exp">${rec.count}</div>
+        <div class="tt-count color-exp">${rec.count}</div>
         <div class="tt-label">${T.exported(rec.count)}</div>
         <div class="tt-sub">${ratio} ${T.perMillion}</div>
         <div class="tt-nations">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
@@ -619,7 +619,7 @@ Promise.all([
           ${rec.top.map(p => html`
             <div class="tt-player">
               <span>${p.name}</span>
-              <span class="tt-nation"><span class="tt-arc-export">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
+              <span class="tt-nation"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
             </div>`)}
         </div>`;
       const body = hasImports
@@ -656,7 +656,7 @@ Promise.all([
           <span class="tt-name-inner">${flagImg(destFc)}${countryName(destId, destName)}</span>
           ${popTag(POP[destName])}
         </div>
-        <div class="tt-nations"><span class="tt-arc-export">←</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>
+        <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>
         <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
           ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>`, tt);
@@ -682,7 +682,7 @@ Promise.all([
           <span class="tt-name-inner">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
           ${popTag(POP[p0.birthCountry])}
         </div>
-        <div class="tt-nations"><span class="tt-arc-import">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>
+        <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>
         <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
           ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>`, tt);
@@ -713,13 +713,13 @@ Promise.all([
           ${popTag(POP[destName])}
         </div>
         ${exportPlayers.length > 0 ? html`
-          <div class="tt-nations"><span class="tt-arc-import">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>
+          <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>
           <div class="tt-players ${exportPlayers.length > 5 ? 'tt-more' : ''}">
             ${topExp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
           </div>` : nothing}
         ${hasBoth ? html`<div class="tt-divider"></div>` : nothing}
         ${importPlayers.length > 0 ? html`
-          <div class="tt-nations"><span class="tt-arc-export">←</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>
+          <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>
           <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
             ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
           </div>` : nothing}`, tt);
