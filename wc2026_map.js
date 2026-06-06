@@ -1,3 +1,5 @@
+import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+
 const RATIO_MIN = 0.03;
 const RATIO_MAX = 1.20;
 
@@ -105,10 +107,7 @@ g.append('path').datum(d3.geoGraticule()())
 
 // ── Flag CDN helpers ──────────────────────────────────────────────────────────
 const FLAG_CDN      = code => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${code}.svg`;
-// Rectangular flags for lists; flag-icons supports subdivision codes (gb-eng etc.)
-const FLAG_CDN_RECT = code => code.includes('-')
-  ? `https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${code}.svg`
-  : `https://flagcdn.com/w20/${code}.png`;
+const FLAG_CDN_RECT = code => `https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${code}.svg`;
 
 // ── Qualified-nation lookups ──────────────────────────────────────────────────
 const QUALIFIED_NAMES = {
@@ -310,12 +309,15 @@ const showQualifiedTip = (event, name, code) => {
   const nId = QUALIFIED_BY_NAME[name];
   if (lastTipKey !== name) {
     lastTipKey = name;
-    const fi = code ? `<img class="tt-flag" src="${FLAG_CDN(code)}">` : '';
-    let html = `<div class="tt-name"><span style="display:flex;align-items:center;gap:7px">${fi}${countryName(nId, name)}</span>${popTag(POP_REF[name])}</div>`;
-    const hasImports = (IMPORT_BY_NATION[nId] ?? []).length > 0;
-    html += `<div class="tt-no-export">${T.noExport}</div>`;
-    html += hasImports ? buildImportColHtml(nId) : `<div class="tt-no-export">${T.noImport}</div>`;
-    tt.innerHTML = html;
+    const hasImps = (IMPORT_BY_NATION[nId] ?? []).length > 0;
+
+    render(html`
+      <div class="tt-name">
+        <span style="display:flex;align-items:center;gap:7px">${flagImg(code)}${countryName(nId, name)}</span>
+        ${popTag(POP_REF[name])}
+      </div>
+      <div class="tt-no-export">${T.noExport}</div>
+      ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-no-export">${T.noImport}</div>`}`, tt);
   }
   positionTip(event, 200, false);
 };
@@ -334,32 +336,111 @@ let POP_REF  = {};          // country name → population in millions
 
 const fmtPop = pop => (pop < 1 ? parseFloat(pop.toFixed(2)) : parseFloat(pop.toFixed(1)))
   .toLocaleString(LOCALE, { maximumFractionDigits: pop < 1 ? 2 : 1, minimumFractionDigits: 0, useGrouping: false }) + 'M';
-const popTag = pop => pop ? `<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : '';
+const popTag  = pop  => pop  ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing;
+const flagImg = code => code ? html`<img class="tt-flag" src="${FLAG_CDN(code)}">` : nothing;
+const ptWikiRow = p => {
+  const wikiLang = p.wiki_langs?.[LANG];
+  const wikiEn   = p.wiki_langs?.en ?? null;
+  return wikiLang ? html`<a href="${wikiLang}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
+       : wikiEn   ? html`${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki">en</a>)`
+       : p.name;
+};
 
 const SQUAD_SIZE = { 40: 25, 124: 25 }; // Austria, Canada — injuries reduced squad to 25
 
 const buildImportColHtml = nationId => {
-  const players = (IMPORT_BY_NATION[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
-  if (players.length === 0) return `<div class="tt-no-export">${T.noImport}</div>`;
-  const byBirth = {};
-  players.forEach(p => {
-    const label = countryName(p.birthCountryId, p.birthCountry);
-    if (!byBirth[label]) byBirth[label] = 0;
-    byBirth[label]++;
-  });
-  const nations = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
-  const top = players.slice(0, 5);
+  const players   = (IMPORT_BY_NATION[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+  if (players.length === 0) return html`<div class="tt-no-export">${T.noImport}</div>`;
+  const byBirth   = {};
+  players.forEach(p => { const l = countryName(p.birthCountryId, p.birthCountry); byBirth[l] = (byBirth[l] ?? 0) + 1; });
+  const nations   = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
+  const top       = players.slice(0, 5);
   const squadSize = SQUAD_SIZE[nationId] ?? 26;
-  const importRatio = (players.length / squadSize * 100).toFixed(0) + '%';
-  let html = `<div class="tt-count tt-count-imp">${players.length}</div>`;
-  html += `<div class="tt-label">${T.imported}</div>`;
-  html += `<div class="tt-sub">${importRatio} ${T.ofSquad} (${squadSize})</div>`;
-  html += `<div class="tt-nations">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>`;
-  top.forEach(p => {
-    html += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation"><span style="color:${ARC_IMPORT_COLOR}">&larr;</span> ${countryName(p.birthCountryId, p.birthCountry)}</span></div>`;
+  const ratio     = (players.length / squadSize * 100).toFixed(0) + '%';
+
+  return html`
+    <div class="tt-count tt-count-imp">${players.length}</div>
+    <div class="tt-label">${T.imported}</div>
+    <div class="tt-sub">${ratio} ${T.ofSquad} (${squadSize})</div>
+    <div class="tt-nations">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>
+    <div class="tt-players ${players.length > 5 ? 'tt-more' : ''}">
+      ${top.map(p => html`
+        <div class="tt-player">
+          <span>${p.name}</span>
+          <span class="tt-nation"><span style="color:${ARC_IMPORT_COLOR}">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
+        </div>`)}
+    </div>`;
+};
+
+const playerTableTemplate = sourceId => {
+  const fc            = ISO2[sourceId];
+  const country       = DATA_REF[sourceId]?.country ?? QUALIFIED_NAMES[sourceId];
+  const pop           = DATA_REF[sourceId]?.pop ?? POP_REF[QUALIFIED_NAMES[sourceId]] ?? null;
+  const cnt           = DATA_REF[sourceId]?.count ?? 0;
+  const exportPlayers = DATA_REF[sourceId]?.players ?? [];
+  const importPlayers = (IMPORT_BY_NATION[sourceId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+
+  const exportGroups = [];
+  exportPlayers.forEach(p => {
+    if (!exportGroups.length || exportGroups[exportGroups.length - 1].nation !== p.nation)
+      exportGroups.push({ nation: p.nation, players: [] });
+    exportGroups[exportGroups.length - 1].players.push(p);
   });
-  if (players.length > 5) html += `<div class="tt-more">…</div>`;
-  return html;
+
+  const importGroupMap = new Map();
+  importPlayers.forEach(p => {
+    const label = countryName(p.birthCountryId, p.birthCountry);
+    if (!importGroupMap.has(label))
+      importGroupMap.set(label, { label, birthCountryId: p.birthCountryId, birthCountry: p.birthCountry, players: [] });
+    importGroupMap.get(label).players.push(p);
+  });
+  const importGroups = [...importGroupMap.values()].sort((a, b) => b.players.length - a.players.length);
+
+  return html`
+    <div class="d-flex align-items-center gap-2 mb-1" style="justify-content:space-between">
+      <div class="d-flex align-items-center gap-2">
+        ${fc ? html`<img style="height:20px;width:auto;border-radius:2px" src="${FLAG_CDN_RECT(fc)}">` : nothing}
+        <h2 class="mb-0" style="font-size:16px;font-weight:500">${countryName(sourceId, country)}</h2>
+      </div>
+      ${pop ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing}
+    </div>
+    <h2 id="pt-export-count" class="mb-3" style="font-size:16px;font-weight:500;color:#1d4ed8">${cnt} ${T.exported(cnt)}</h2>
+    <div id="pt-nations">
+      ${exportGroups.map(({ nation, players: gp }) => {
+        const nc = ISO2[QUALIFIED_BY_NAME[nation]];
+        return html`
+          <div class="pt-nation-header">
+            ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
+            <span class="pt-nation-name">${countryName(QUALIFIED_BY_NAME[nation], nation)}</span>
+            <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+          </div>
+          ${gp.map(p => html`
+            <div class="pt-player-row">
+              <span>${ptWikiRow(p)}</span>
+              <span class="pt-caps">${p.caps} ${T.caps}</span>
+            </div>`)}`;
+      })}
+    </div>
+    ${importPlayers.length > 0 ? html`
+      <div id="pt-import-section">
+        <h2 id="pt-import-title" class="mb-3" style="font-size:16px;font-weight:500;color:#dc2626">${importPlayers.length} ${T.imported}</h2>
+        <div id="pt-import-nations">
+          ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
+            const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
+            return html`
+              <div class="pt-nation-header">
+                ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
+                <span class="pt-nation-name">${label}</span>
+                <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+              </div>
+              ${gp.map(p => html`
+                <div class="pt-player-row">
+                  <span>${ptWikiRow(p)}</span>
+                  <span class="pt-caps">${p.caps} ${T.caps}</span>
+                </div>`)}`;
+          })}
+        </div>
+      </div>` : nothing}`;
 };
 
 const applyDim = (sourceId, destIds, country) => {
@@ -457,79 +538,11 @@ const applyDim = (sourceId, destIds, country) => {
     return +this.getAttribute('data-id') === sourceId;
   }).raise();
 
-  // ── Player table — export section ────────────────────────────────────────────
-  document.getElementById('pt-flag').src = fc ? FLAG_CDN_RECT(fc) : '';
-  document.getElementById('pt-title').textContent = countryDisplay;
-  const cnt = DATA_REF[sourceId]?.count ?? 0;
-  document.getElementById('pt-export-count').textContent = `${cnt} ${T.exported(cnt)}`;
-  const nationsEl = document.getElementById('pt-nations');
-  nationsEl.innerHTML = '';
-  const ptWikiRow = p => {
-    const wikiLang = p.wiki_langs?.[LANG];
-    const wikiEn   = p.wiki_langs?.en ?? null;
-    return wikiLang
-      ? `<a href="${wikiLang}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
-      : wikiEn
-        ? `${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki">en</a>)`
-        : p.name;
-  };
-  const exportPlayers = DATA_REF[sourceId]?.players ?? [];
-  const exportGroups = [];
-  exportPlayers.forEach(p => {
-    if (!exportGroups.length || exportGroups[exportGroups.length-1].nation !== p.nation)
-      exportGroups.push({ nation: p.nation, players: [] });
-    exportGroups[exportGroups.length-1].players.push(p);
-  });
-  exportGroups.forEach(({ nation, players: gp }) => {
-    const nc = ISO2[QUALIFIED_BY_NAME[nation]];
-    const header = document.createElement('div');
-    header.className = 'pt-nation-header';
-    header.innerHTML = `${nc ? `<img src="${FLAG_CDN_RECT(nc)}">` : ''}<span class="pt-nation-name">${countryName(QUALIFIED_BY_NAME[nation], nation)}</span><span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>`;
-    nationsEl.appendChild(header);
-    gp.forEach(p => {
-      const row = document.createElement('div');
-      row.className = 'pt-player-row';
-      row.innerHTML = `<span>${ptWikiRow(p)}</span><span class="pt-caps">${p.caps} ${T.caps}</span>`;
-      nationsEl.appendChild(row);
-    });
-  });
+  // ── Player table ──────────────────────────────────────────────────────────────
+  const ptEl = document.getElementById('player-table');
+  ptEl.style.display = '';
+  render(playerTableTemplate(sourceId), ptEl);
 
-  // ── Player table — import section ─────────────────────────────────────────────
-  const importPlayers = (IMPORT_BY_NATION[sourceId] ?? []).slice().sort((a,b) => b.caps - a.caps);
-  const importSection = document.getElementById('pt-import-section');
-  if (importPlayers.length > 0) {
-    document.getElementById('pt-import-title').textContent =
-      `${importPlayers.length} ${T.imported}`;
-    const importNationsEl = document.getElementById('pt-import-nations');
-    importNationsEl.innerHTML = '';
-    // Group by translated birth country name
-    const importGroupMap = new Map();
-    importPlayers.forEach(p => {
-      const label = countryName(p.birthCountryId, p.birthCountry);
-      if (!importGroupMap.has(label))
-        importGroupMap.set(label, { label, birthCountryId: p.birthCountryId, birthCountry: p.birthCountry, players: [] });
-      importGroupMap.get(label).players.push(p);
-    });
-    const importGroups = [...importGroupMap.values()].sort((a,b) => b.players.length - a.players.length);
-    importGroups.forEach(({ label, birthCountryId, birthCountry, players: gp }) => {
-      const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
-      const header = document.createElement('div');
-      header.className = 'pt-nation-header';
-      header.innerHTML = `${bc ? `<img src="${FLAG_CDN_RECT(bc)}">` : ''}<span class="pt-nation-name">${label}</span><span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>`;
-      importNationsEl.appendChild(header);
-      gp.forEach(p => {
-        const row = document.createElement('div');
-        row.className = 'pt-player-row';
-        row.innerHTML = `<span>${ptWikiRow(p)}</span><span class="pt-caps">${p.caps} ${T.caps}</span>`;
-        importNationsEl.appendChild(row);
-      });
-    });
-    importSection.style.display = '';
-  } else {
-    importSection.style.display = 'none';
-  }
-
-  document.getElementById('player-table').style.display = '';
   document.body.classList.add('dim-active');
   dimBadge.style('display', null);
 };
@@ -544,7 +557,6 @@ const clearDim = () => {
   document.body.classList.remove('dim-active');
   dimBadge.style('display', 'none');
   document.getElementById('player-table').style.display = 'none';
-  document.getElementById('pt-import-section').style.display = 'none';
 };
 
 // ── Flag join helpers ─────────────────────────────────────────────────────────
@@ -587,111 +599,128 @@ Promise.all([
   // ── Shared tooltip/click helpers (used by both world and UK nation paths) ──────
 
   const showExportTip = (event, id) => {
-    const rec = byId[id];
+    const rec        = byId[id];
     if (!rec) { hideTip(); return; }
     const hasImports = !!QUALIFIED_NAMES[id] && (IMPORT_BY_NATION[id] ?? []).length > 0;
     if (lastTipKey !== id) {
       lastTipKey = id;
-      const _r2 = rec.ratio !== null ? rec.ratio.toFixed(2) : '?';
+      const _r2   = rec.ratio !== null ? rec.ratio.toFixed(2) : '?';
       const ratio = _r2 === '0.00' ? rec.ratio.toPrecision(2) : _r2;
-      const fc = ISO2[rec.id];
-      const fi = fc ? `<img class="tt-flag" src="${FLAG_CDN(fc)}">` : '';
-      let html = `<div class="tt-name"><span style="display:flex;align-items:center;gap:7px">${fi}${countryName(rec.id, rec.country)}</span>${popTag(rec.pop)}</div>`;
-      let leftCol = '';
-      leftCol += `<div class="tt-count">${rec.count}</div>`;
-      leftCol += `<div class="tt-label">${T.exported(rec.count)}</div>`;
-      leftCol += `<div class="tt-sub">${ratio} ${T.perMillion}</div>`;
-      leftCol += `<div class="tt-nations">${rec.nations.map(([n,c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>`;
-      rec.top.forEach(p => {
-        leftCol += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation"><span style="color:${ARC_EXPORT_COLOR}">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span></div>`;
-      });
-      if (rec.count > rec.top.length) leftCol += `<div class="tt-more">…</div>`;
-      if (hasImports) {
-        html += `<div class="tt-columns"><div class="tt-col">${leftCol}</div><div class="tt-vdiv"></div><div class="tt-col">${buildImportColHtml(id)}</div></div>`;
-      } else {
-        html += leftCol;
-        if (QUALIFIED_NAMES[id]) html += `<div class="tt-no-export">${T.noImport}</div>`;
-      }
-      tt.innerHTML = html;
+      const fc    = ISO2[rec.id];
+
+      const leftCol = html`
+        <div class="tt-count">${rec.count}</div>
+        <div class="tt-label">${T.exported(rec.count)}</div>
+        <div class="tt-sub">${ratio} ${T.perMillion}</div>
+        <div class="tt-nations">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
+        <div class="tt-players ${rec.count > rec.top.length ? 'tt-more' : ''}">
+          ${rec.top.map(p => html`
+            <div class="tt-player">
+              <span>${p.name}</span>
+              <span class="tt-nation"><span style="color:${ARC_EXPORT_COLOR}">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
+            </div>`)}
+        </div>`;
+      const body = hasImports
+        ? html`<div class="tt-columns">
+            <div class="tt-col">${leftCol}</div>
+            <div class="tt-vdiv"></div>
+            <div class="tt-col">${buildImportColHtml(id)}</div>
+          </div>`
+        : html`${leftCol}${QUALIFIED_NAMES[id] ? html`<div class="tt-no-export">${T.noImport}</div>` : nothing}`;
+
+      render(html`
+        <div class="tt-name">
+          <span style="display:flex;align-items:center;gap:7px">${flagImg(fc)}${countryName(rec.id, rec.country)}</span>
+          ${popTag(rec.pop)}
+        </div>
+        ${body}`, tt);
     }
     positionTip(event, 240, hasImports);
   };
 
   const showImportTip = (event, destId) => {
-    const key = `import-${dimSourceId}-${destId}`;
-    const srcRec = byId[dimSourceId];
+    const key        = `import-${dimSourceId}-${destId}`;
+    const srcRec     = byId[dimSourceId];
     if (!srcRec) { hideTip(); return; }
-    const destName = QUALIFIED_NAMES[destId];
+    const destName   = QUALIFIED_NAMES[destId];
     const allPlayers = (srcRec.players ?? []).filter(p => p.nation === destName);
-    const players = allPlayers.slice(0, 5);
+    const players    = allPlayers.slice(0, 5);
     if (lastTipKey !== key) {
       lastTipKey = key;
       const destFc = ISO2[destId];
-      const destFi = destFc ? `<img class="tt-flag" src="${FLAG_CDN(destFc)}">` : '';
-      let html = `<div class="tt-name"><span style="display:flex;align-items:center;gap:7px">${destFi}${countryName(destId, destName)}</span>${popTag(POP[destName])}</div>`;
-      html += `<div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">&larr;</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>`;
-      players.forEach(p => {
-        html += `<div class="tt-player"><span>${p.name}</span></div>`;
-      });
-      if (allPlayers.length > 5) html += `<div class="tt-more">…</div>`;
-      tt.innerHTML = html;
+
+      render(html`
+        <div class="tt-name">
+          <span style="display:flex;align-items:center;gap:7px">${flagImg(destFc)}${countryName(destId, destName)}</span>
+          ${popTag(POP[destName])}
+        </div>
+        <div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">←</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>
+        <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
+          ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+        </div>`, tt);
     }
     positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
   };
 
   const showImportSourceTip = (event, centroidId) => {
-    const key = `impsrc-${dimSourceId}-${centroidId}`;
+    const key        = `impsrc-${dimSourceId}-${centroidId}`;
     const allPlayers = (IMPORT_BY_NATION[dimSourceId] ?? []).filter(p => {
       const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
       return bid === centroidId;
     });
     if (allPlayers.length === 0) { hideTip(); return; }
-    const players = allPlayers.slice(0, 5);
+    const players    = allPlayers.slice(0, 5);
     if (lastTipKey !== key) {
       lastTipKey = key;
-      const p0 = allPlayers[0];
-      const bName = countryName(p0.birthCountryId, p0.birthCountry);
+      const p0  = allPlayers[0];
       const bFc = p0.birthCountryId != null ? ISO2[p0.birthCountryId] : (_NULL_CODE[p0.birthCountry] ?? null);
-      const fi = bFc ? `<img class="tt-flag" src="${FLAG_CDN(bFc)}">` : '';
-      let html = `<div class="tt-name"><span style="display:flex;align-items:center;gap:7px">${fi}${bName}</span>${popTag(POP[p0.birthCountry])}</div>`;
-      html += `<div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">&rarr;</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>`;
-      players.forEach(p => { html += `<div class="tt-player"><span>${p.name}</span></div>`; });
-      if (allPlayers.length > 5) html += `<div class="tt-more">…</div>`;
-      tt.innerHTML = html;
+
+      render(html`
+        <div class="tt-name">
+          <span style="display:flex;align-items:center;gap:7px">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
+          ${popTag(POP[p0.birthCountry])}
+        </div>
+        <div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>
+        <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
+          ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+        </div>`, tt);
     }
     positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
   };
 
   const showCombinedTip = (event, id) => {
-    const key = `combined-${dimSourceId}-${id}`;
+    const key           = `combined-${dimSourceId}-${id}`;
     const exportPlayers = (IMPORT_BY_NATION[dimSourceId] ?? []).filter(p => {
       const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
       return bid === id;
     });
-    const srcRec = byId[dimSourceId];
-    const destName = QUALIFIED_NAMES[id];
+    const srcRec        = byId[dimSourceId];
+    const destName      = QUALIFIED_NAMES[id];
     const importPlayers = srcRec ? (srcRec.players ?? []).filter(p => p.nation === destName) : [];
     if (exportPlayers.length === 0 && importPlayers.length === 0) { hideTip(); return; }
-    const topExp = exportPlayers.slice(0, 5);
-    const topImp = importPlayers.slice(0, 5);
+    const topExp        = exportPlayers.slice(0, 5);
+    const topImp        = importPlayers.slice(0, 5);
     if (lastTipKey !== key) {
       lastTipKey = key;
-      const fc = ISO2[id];
-      const fi = fc ? `<img class="tt-flag" src="${FLAG_CDN(fc)}">` : '';
-      let html = `<div class="tt-name"><span style="display:flex;align-items:center;gap:7px">${fi}${countryName(id, destName)}</span>${popTag(POP[destName])}</div>`;
-      if (exportPlayers.length > 0) {
-        html += `<div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">&rarr;</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>`;
-        topExp.forEach(p => { html += `<div class="tt-player"><span>${p.name}</span></div>`; });
-        if (exportPlayers.length > 5) html += `<div class="tt-more">…</div>`;
-      }
-      if (exportPlayers.length > 0 && importPlayers.length > 0)
-        html += `<div style="border-top:1px solid #e8e4e0;margin:8px 0 4px"></div>`;
-      if (importPlayers.length > 0) {
-        html += `<div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">&larr;</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>`;
-        topImp.forEach(p => { html += `<div class="tt-player"><span>${p.name}</span></div>`; });
-        if (importPlayers.length > 5) html += `<div class="tt-more">…</div>`;
-      }
-      tt.innerHTML = html;
+      const fc      = ISO2[id];
+      const hasBoth = exportPlayers.length > 0 && importPlayers.length > 0;
+
+      render(html`
+        <div class="tt-name">
+          <span style="display:flex;align-items:center;gap:7px">${flagImg(fc)}${countryName(id, destName)}</span>
+          ${popTag(POP[destName])}
+        </div>
+        ${exportPlayers.length > 0 ? html`
+          <div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>
+          <div class="tt-players ${exportPlayers.length > 5 ? 'tt-more' : ''}">
+            ${topExp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+          </div>` : nothing}
+        ${hasBoth ? html`<div style="border-top:1px solid #e8e4e0;margin:8px 0 4px"></div>` : nothing}
+        ${importPlayers.length > 0 ? html`
+          <div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">←</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>
+          <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
+            ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+          </div>` : nothing}`, tt);
     }
     const h = 48 + (exportPlayers.length > 0 ? 20 + 24 * topExp.length : 0)
                   + (importPlayers.length > 0 ? 20 + 24 * topImp.length : 0)
