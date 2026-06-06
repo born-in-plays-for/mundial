@@ -297,7 +297,6 @@ let lastTipKey = null;
 const hideTip = () => { tt.style.display = 'none'; lastTipKey = null; };
 
 const showQualifiedTip = (event, name, code) => {
-  if (dimActive && !dimDestIds.has(QUALIFIED_BY_NAME[name])) { hideTip(); return; }
   const nId = QUALIFIED_BY_NAME[name];
   if (lastTipKey !== name) {
     lastTipKey = name;
@@ -333,11 +332,13 @@ const buildImportColHtml = nationId => {
   });
   const nations = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
   const top = players.slice(0, 5);
+  const importRatio = (players.length / 26 * 100).toFixed(0) + '%';
   let html = `<div class="tt-count tt-count-imp">${players.length}</div>`;
-  html += `<div class="tt-label">${T.imported} / 26</div>`;
+  html += `<div class="tt-label">${T.imported}</div>`;
+  html += `<div class="tt-sub">${importRatio}</div>`;
   html += `<div class="tt-nations">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>`;
   top.forEach(p => {
-    html += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation">← ${countryName(p.birthCountryId, p.birthCountry)}</span></div>`;
+    html += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation"><span style="color:${ARC_IMPORT_COLOR}">&larr;</span> ${countryName(p.birthCountryId, p.birthCountry)}</span></div>`;
   });
   if (players.length > 5) html += `<div class="tt-more">…</div>`;
   return html;
@@ -533,7 +534,7 @@ const clearDim = () => {
 const placeFlag = (sel) => {
   sel.attr('class','flag-qualified')
     .attr('width', FLAG).attr('height', FLAG)
-    .on('mouseleave', hideTip);
+    .on('mouseleave', () => { if (!dimActive) hideTip(); });
 };
 
 // ── Main render ───────────────────────────────────────────────────────────────
@@ -585,7 +586,7 @@ Promise.all([
       leftCol += `<div class="tt-sub">${ratio} ${T.perMillion} · ${T.pop} ${popStr}</div>`;
       leftCol += `<div class="tt-nations">${rec.nations.map(([n,c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>`;
       rec.top.forEach(p => {
-        leftCol += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation">→ ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span></div>`;
+        leftCol += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation"><span style="color:${ARC_EXPORT_COLOR}">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span></div>`;
       });
       if (rec.count > rec.top.length) leftCol += `<div class="tt-more">…</div>`;
       if (hasImports) {
@@ -611,7 +612,7 @@ Promise.all([
       const destFc = ISO2[destId];
       const destFi = destFc ? `<img class="tt-flag" src="${FLAG_CDN(destFc)}">` : '';
       let html = `<div class="tt-name">${destFi}${countryName(destId, destName)}</div>`;
-      html += `<div class="tt-nations">${T.bornIn} ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>`;
+      html += `<div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">&larr;</span>${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>`;
       players.forEach(p => {
         html += `<div class="tt-player"><span>${p.name}</span></div>`;
       });
@@ -636,7 +637,7 @@ Promise.all([
       const bFc = p0.birthCountryId != null ? ISO2[p0.birthCountryId] : (_NULL_CODE[p0.birthCountry] ?? null);
       const fi = bFc ? `<img class="tt-flag" src="${FLAG_CDN(bFc)}">` : '';
       let html = `<div class="tt-name">${fi}${bName}</div>`;
-      html += `<div class="tt-nations">${T.bornIn} ${bName} · ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>`;
+      html += `<div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">&rarr;</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>`;
       players.forEach(p => { html += `<div class="tt-player"><span>${p.name}</span></div>`; });
       if (allPlayers.length > 5) html += `<div class="tt-more">…</div>`;
       tt.innerHTML = html;
@@ -644,11 +645,49 @@ Promise.all([
     positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
   };
 
+  const showCombinedTip = (event, id) => {
+    const key = `combined-${dimSourceId}-${id}`;
+    const exportPlayers = (IMPORT_BY_NATION[dimSourceId] ?? []).filter(p => {
+      const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
+      return bid === id;
+    });
+    const srcRec = byId[dimSourceId];
+    const destName = QUALIFIED_NAMES[id];
+    const importPlayers = srcRec ? (srcRec.players ?? []).filter(p => p.nation === destName) : [];
+    if (exportPlayers.length === 0 && importPlayers.length === 0) { hideTip(); return; }
+    const topExp = exportPlayers.slice(0, 5);
+    const topImp = importPlayers.slice(0, 5);
+    if (lastTipKey !== key) {
+      lastTipKey = key;
+      const fc = ISO2[id];
+      const fi = fc ? `<img class="tt-flag" src="${FLAG_CDN(fc)}">` : '';
+      let html = `<div class="tt-name">${fi}${countryName(id, destName)}</div>`;
+      if (exportPlayers.length > 0) {
+        html += `<div class="tt-nations"><span style="color:${ARC_IMPORT_COLOR}">&rarr;</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>`;
+        topExp.forEach(p => { html += `<div class="tt-player"><span>${p.name}</span></div>`; });
+        if (exportPlayers.length > 5) html += `<div class="tt-more">…</div>`;
+      }
+      if (exportPlayers.length > 0 && importPlayers.length > 0)
+        html += `<div style="border-top:1px solid #e8e4e0;margin:8px 0 4px"></div>`;
+      if (importPlayers.length > 0) {
+        html += `<div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">&larr;</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>`;
+        topImp.forEach(p => { html += `<div class="tt-player"><span>${p.name}</span></div>`; });
+        if (importPlayers.length > 5) html += `<div class="tt-more">…</div>`;
+      }
+      tt.innerHTML = html;
+    }
+    const h = 48 + (exportPlayers.length > 0 ? 20 + 24 * topExp.length : 0)
+                  + (importPlayers.length > 0 ? 20 + 24 * topImp.length : 0)
+                  + (exportPlayers.length > 0 && importPlayers.length > 0 ? 20 : 0);
+    positionTip(event, h);
+  };
+
   const onCountryMousemove = (event, id) => {
     if (dimActive) {
-      if (dimDestIds.has(id)) { showImportTip(event, id); return; }
-      if (dimImportIds.has(id)) { showImportSourceTip(event, id); return; }
-      hideTip(); return;
+      const inDest = dimDestIds.has(id), inImport = dimImportIds.has(id);
+      if (inDest && inImport) { showCombinedTip(event, id); return; }
+      if (inDest)   { showImportTip(event, id); return; }
+      if (inImport) { showImportSourceTip(event, id); return; }
     }
     if (byId[id]) showExportTip(event, id);
     else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
@@ -660,14 +699,12 @@ Promise.all([
     if (dimActive) { clearDim(); return; }
     const rec = byId[id];
     if (rec) {
-      hideTip();
       const destIds = new Map(rec.nations.flatMap(([n,c]) => {
         const did = QUALIFIED_BY_NAME[n];
         return did !== undefined ? [[did, c]] : [];
       }));
       applyDim(id, destIds, rec.country);
     } else if (QUALIFIED_NAMES[id] && (IMPORT_BY_NATION[id] ?? []).length > 0) {
-      hideTip();
       applyDim(id, new Map(), QUALIFIED_NAMES[id]);
     }
   };
@@ -682,7 +719,7 @@ Promise.all([
     .attr('fill', d => { const r = byId[+d.id]; return r && r.ratio !== null ? color(r.ratio) : '#e8e4e0'; })
     .attr('stroke','#ccc8c0').attr('stroke-width',.3)
     .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
-    .on('mouseleave', hideTip)
+    .on('mouseleave', () => { if (!dimActive) hideTip(); })
     .on('click',     (event, d) => onCountryClick(event, +d.id));
 
   g.append('path')
@@ -700,7 +737,7 @@ Promise.all([
     .attr('fill', d => { const r = byId[d._id]; return r && r.ratio !== null ? color(r.ratio) : '#e8e4e0'; })
     .attr('stroke','#ccc8c0').attr('stroke-width',.3)
     .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
-    .on('mouseleave', hideTip)
+    .on('mouseleave', () => { if (!dimActive) hideTip(); })
     .on('click',     (event, d) => onCountryClick(event, d._id));
 
   g.selectAll('.flag-qualified')
