@@ -612,7 +612,7 @@ Promise.all([
       const destFc = ISO2[destId];
       const destFi = destFc ? `<img class="tt-flag" src="${FLAG_CDN(destFc)}">` : '';
       let html = `<div class="tt-name">${destFi}${countryName(destId, destName)}</div>`;
-      html += `<div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">&larr;</span>${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>`;
+      html += `<div class="tt-nations"><span style="color:${ARC_EXPORT_COLOR}">&larr;</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>`;
       players.forEach(p => {
         html += `<div class="tt-player"><span>${p.name}</span></div>`;
       });
@@ -688,6 +688,7 @@ Promise.all([
       if (inDest && inImport) { showCombinedTip(event, id); return; }
       if (inDest)   { showImportTip(event, id); return; }
       if (inImport) { showImportSourceTip(event, id); return; }
+      hideTip(); return;
     }
     if (byId[id]) showExportTip(event, id);
     else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
