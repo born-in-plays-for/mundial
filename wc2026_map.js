@@ -611,7 +611,7 @@ Promise.all([
       const fc    = ISO2[rec.id];
 
       const leftCol = html`
-        <div class="tt-count">${rec.count}</div>
+        <div class="tt-count tt-count-exp">${rec.count}</div>
         <div class="tt-label">${T.exported(rec.count)}</div>
         <div class="tt-sub">${ratio} ${T.perMillion}</div>
         <div class="tt-nations">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
