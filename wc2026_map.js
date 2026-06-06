@@ -186,9 +186,9 @@ const T = {
     pageTitle:     'Mondial 2026 — Joueurs "exportés" par pays de naissance',
     pageHeading:   'Mondial 2026 — joueurs "exportés" par pays de naissance',
     pageSub:       "281 joueurs au total · source : Wikipedia",
-    mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs exportés au Mondial 2026',
+    mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs exportés',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
-    legendCaption: "joueurs exportés / million d'hab. · gris = aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026",
+    legendCaption: "joueurs exportés / million d'hab. · gris = aucun joueur exporté · drapeau = nation qualifiée",
   },
   it: {
     noExport:      'nessun giocatore esportato',
@@ -206,9 +206,9 @@ const T = {
     pageTitle:     'Mondiali 2026 — giocatori "esportati" per paese di nascita',
     pageHeading:   'Mondiali 2026 — giocatori "esportati" per paese di nascita',
     pageSub:       '281 giocatori in totale · fonte: Wikipedia',
-    mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori esportati ai Mondiali 2026',
+    mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori esportati',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
-    legendCaption: 'giocatori esportati / milione di ab. · grigio = nessun giocatore esportato · bandiera = nazione qualificata ai Mondiali 2026',
+    legendCaption: 'giocatori esportati / milione di ab. · grigio = nessun giocatore esportato · bandiera = nazione qualificata',
   },
   de: {
     noExport:      'kein exportierter Spieler',
@@ -226,9 +226,9 @@ const T = {
     pageTitle:     'WM 2026 — „exportierte“ Spieler nach Geburtsland',
     pageHeading:   'WM 2026 — „exportierte“ Spieler nach Geburtsland',
     pageSub:       '281 Spieler insgesamt · Quelle: Wikipedia',
-    mapAriaLabel:  'Choroplethenkarte der Geburtsländer exportierter Spieler bei der WM 2026',
+    mapAriaLabel:  'Choroplethenkarte der Geburtsländer exportierter Spieler',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
-    legendCaption: 'exportierte Spieler / Mio. Einwohner · Grau = kein exportierter Spieler · Flagge = qualifizierte Nation bei der WM 2026',
+    legendCaption: 'exportierte Spieler / Mio. Einwohner · Grau = kein exportierter Spieler · Flagge = qualifizierte Nation',
   },
   en: {
     noExport:      'no players exported',
@@ -248,7 +248,7 @@ const T = {
     pageSub:       '281 players total · source: Wikipedia',
     mapAriaLabel:  'Choropleth map of birth countries of players exported to World Cup 2026',
     zoomHint:      'scroll to zoom · drag to pan',
-    legendCaption: 'exported players / million inhab. · grey = no exported player · flag = nation qualified for World Cup 2026',
+    legendCaption: 'exported players / million inhab. · grey = no exported player · flag = nation qualified',
   },
 }[LANG];
 
