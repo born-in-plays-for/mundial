@@ -287,7 +287,10 @@ const STANDALONE_FLAGS = [
 const STANDALONE_IDS = new Set(STANDALONE_FLAGS.map(f => f.id));
 
 // ── Tooltip helpers ───────────────────────────────────────────────────────────
+const DISABLE_TOOLTIP = /Mobi/i.test(navigator.userAgent);
+
 const positionTip = (event, height, wide = false) => {
+  if (DISABLE_TOOLTIP) return;
   const w = wide ? 544 : 274;
   let x = event.clientX + 16, y = event.clientY + 16;
   if (x + w > window.innerWidth)  x = event.clientX - (w + 4);
