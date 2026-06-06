@@ -97,7 +97,8 @@ svg.call(d3.zoom()
   }));
 
 g.append('path').datum({type:'Sphere'})
-  .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5);
+  .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5)
+  .on('mousemove', () => hideTip());
 
 g.append('path').datum(d3.geoGraticule()())
   .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
@@ -695,6 +696,11 @@ Promise.all([
       if (inDest && inImport) { showCombinedTip(event, id); return; }
       if (inDest)   { showImportTip(event, id); return; }
       if (inImport) { showImportSourceTip(event, id); return; }
+      if (id === dimSourceId) {
+        if (byId[id]) showExportTip(event, id);
+        else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
+        return;
+      }
       hideTip(); return;
     }
     if (byId[id]) showExportTip(event, id);
