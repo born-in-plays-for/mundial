@@ -175,6 +175,7 @@ const T = {
     selections:    'Sélections',
     bornIn:        'Joueurs nés en',
     imported:      'joueurs importés',
+    ofSquad:       'de la sélection',
     noImport:      'aucun joueur importé',
     birthNations:  'Nés en',
     pop:           'pop.',
@@ -194,6 +195,7 @@ const T = {
     selections:    'Nazionali',
     bornIn:        'Giocatori nati in',
     imported:      'giocatori importati',
+    ofSquad:       'della rosa',
     noImport:      'nessun giocatore importato',
     birthNations:  'Nati in',
     pop:           'ab.',
@@ -213,6 +215,7 @@ const T = {
     selections:    'Nationalteams',
     bornIn:        'Spieler geboren in',
     imported:      'importierte Spieler',
+    ofSquad:       'im Kader',
     noImport:      'kein importierter Spieler',
     birthNations:  'Geb. in',
     pop:           'Einw.',
@@ -232,6 +235,7 @@ const T = {
     selections:    'Selections',
     bornIn:        'Players born in',
     imported:      'imported players',
+    ofSquad:       'of the squad',
     noImport:      'no players imported',
     birthNations:  'Born in',
     pop:           'pop.',
@@ -321,6 +325,8 @@ const centroids = {};
 let DATA_REF = {};          // set once data loads, used by applyDim
 let IMPORT_BY_NATION = {};  // nationId → [{name, birthCountry, birthCountryId, caps}]
 
+const SQUAD_SIZE = { 40: 25, 124: 25 }; // Austria, Canada — injuries reduced squad to 25
+
 const buildImportColHtml = nationId => {
   const players = (IMPORT_BY_NATION[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
   if (players.length === 0) return `<div class="tt-no-export">${T.noImport}</div>`;
@@ -332,10 +338,11 @@ const buildImportColHtml = nationId => {
   });
   const nations = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
   const top = players.slice(0, 5);
-  const importRatio = (players.length / 26 * 100).toFixed(0) + '%';
+  const squadSize = SQUAD_SIZE[nationId] ?? 26;
+  const importRatio = (players.length / squadSize * 100).toFixed(0) + '%';
   let html = `<div class="tt-count tt-count-imp">${players.length}</div>`;
   html += `<div class="tt-label">${T.imported}</div>`;
-  html += `<div class="tt-sub">${importRatio}</div>`;
+  html += `<div class="tt-sub">${importRatio} ${T.ofSquad} (${squadSize})</div>`;
   html += `<div class="tt-nations">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>`;
   top.forEach(p => {
     html += `<div class="tt-player"><span>${p.name}</span><span class="tt-nation"><span style="color:${ARC_IMPORT_COLOR}">&larr;</span> ${countryName(p.birthCountryId, p.birthCountry)}</span></div>`;
