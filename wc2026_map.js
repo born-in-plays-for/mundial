@@ -188,7 +188,7 @@ const T = {
     pageSub:       "281 joueurs au total · source : Wikipedia",
     mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs exportés au Mondial 2026',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
-    legendCaption: "joueurs exportés / million d'hab. · gris : aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026",
+    legendCaption: "joueurs exportés / million d'hab. · gris = aucun joueur exporté · drapeau = nation qualifiée au Mondial 2026",
   },
   it: {
     noExport:      'nessun giocatore esportato',
@@ -208,7 +208,7 @@ const T = {
     pageSub:       '281 giocatori in totale · fonte: Wikipedia',
     mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori esportati ai Mondiali 2026',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
-    legendCaption: 'giocatori esportati / milione di ab. · grigio: nessun giocatore esportato · bandiera = nazione qualificata ai Mondiali 2026',
+    legendCaption: 'giocatori esportati / milione di ab. · grigio = nessun giocatore esportato · bandiera = nazione qualificata ai Mondiali 2026',
   },
   de: {
     noExport:      'kein exportierter Spieler',
@@ -228,7 +228,7 @@ const T = {
     pageSub:       '281 Spieler insgesamt · Quelle: Wikipedia',
     mapAriaLabel:  'Choroplethenkarte der Geburtsländer exportierter Spieler bei der WM 2026',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
-    legendCaption: 'exportierte Spieler / Mio. Einwohner · Grau: kein exportierter Spieler · Flagge = qualifizierte Nation bei der WM 2026',
+    legendCaption: 'exportierte Spieler / Mio. Einwohner · Grau = kein exportierter Spieler · Flagge = qualifizierte Nation bei der WM 2026',
   },
   en: {
     noExport:      'no players exported',
@@ -248,7 +248,7 @@ const T = {
     pageSub:       '281 players total · source: Wikipedia',
     mapAriaLabel:  'Choropleth map of birth countries of players exported to World Cup 2026',
     zoomHint:      'scroll to zoom · drag to pan',
-    legendCaption: 'exported players / million inhab. · grey: no exported player · flag = nation qualified for World Cup 2026',
+    legendCaption: 'exported players / million inhab. · grey = no exported player · flag = nation qualified for World Cup 2026',
   },
 }[LANG];
 
