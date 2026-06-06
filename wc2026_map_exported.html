@@ -32,7 +32,7 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 .tt-col { flex: 1; min-width: 0; }
 .tt-vdiv { width: 1px; background: #e8e4e0; flex-shrink: 0; margin: 0 10px; }
 .tt-count.tt-count-imp { color: #dc2626; }
-#pt-import-section { border-top: 2px solid #e8e4e0; margin-top: 24px; padding-top: 12px; }
+#pt-export-count, #pt-import-section { border-top: 2px solid #e8e4e0; margin-top: 24px; padding-top: 12px; }
 .tt-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; display: flex; align-items: center; gap: 7px; }
 .tt-flag { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
 .tt-count { font-size: 28px; font-weight: 500; line-height: 1; color: #1d4ed8; margin: 4px 0 2px; }
@@ -50,7 +50,7 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
   #legend-bar { max-width: 90px; }
   #legend-ticks { width: 90px; font-size: 8px; }
 }
-#player-table { border-top: 1px solid #e8e4e0; margin-top: 4px; }
+#player-table { margin-top: 4px; }
 .pt-nation-header { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; border-bottom: 1px solid #f0ede8; }
 .pt-nation-header img { height: 14px; width: auto; border-radius: 2px; }
 .pt-nation-name { font-size: 13px; font-weight: 500; color: #1a1a18; }
@@ -97,16 +97,14 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 </div>
 
 <div id="player-table" class="container-xxl px-4 pb-5" style="display:none">
-  <div class="d-flex align-items-center gap-2 mb-3">
+  <div class="d-flex align-items-center gap-2 mb-1">
     <img id="pt-flag" style="height:20px;width:auto;border-radius:2px">
-    <h2 id="pt-title" class="mb-0" style="font-size:16px;font-weight:500;color:#1d4ed8"></h2>
+    <h2 id="pt-title" class="mb-0" style="font-size:16px;font-weight:500"></h2>
   </div>
+  <h2 id="pt-export-count" class="mb-3" style="font-size:16px;font-weight:500;color:#1d4ed8"></h2>
   <div id="pt-nations"></div>
   <div id="pt-import-section" style="display:none">
-    <div class="d-flex align-items-center gap-2 mb-3">
-      <img id="pt-import-flag" style="height:20px;width:auto;border-radius:2px">
-      <h2 id="pt-import-title" class="mb-0" style="font-size:16px;font-weight:500;color:#dc2626"></h2>
-    </div>
+    <h2 id="pt-import-title" class="mb-3" style="font-size:16px;font-weight:500;color:#dc2626"></h2>
     <div id="pt-import-nations"></div>
   </div>
 </div>

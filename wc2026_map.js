@@ -454,9 +454,9 @@ const applyDim = (sourceId, destIds, country) => {
 
   // ── Player table — export section ────────────────────────────────────────────
   document.getElementById('pt-flag').src = fc ? FLAG_CDN_RECT(fc) : '';
+  document.getElementById('pt-title').textContent = countryDisplay;
   const cnt = DATA_REF[sourceId]?.count ?? 0;
-  document.getElementById('pt-title').textContent =
-    `${countryDisplay} — ${cnt} ${T.exported(cnt)}`;
+  document.getElementById('pt-export-count').textContent = `${cnt} ${T.exported(cnt)}`;
   const nationsEl = document.getElementById('pt-nations');
   nationsEl.innerHTML = '';
   const ptWikiRow = p => {
@@ -493,9 +493,8 @@ const applyDim = (sourceId, destIds, country) => {
   const importPlayers = (IMPORT_BY_NATION[sourceId] ?? []).slice().sort((a,b) => b.caps - a.caps);
   const importSection = document.getElementById('pt-import-section');
   if (importPlayers.length > 0) {
-    document.getElementById('pt-import-flag').src = fc ? FLAG_CDN_RECT(fc) : '';
     document.getElementById('pt-import-title').textContent =
-      `${countryDisplay} — ${importPlayers.length} ${T.imported}`;
+      `${importPlayers.length} ${T.imported}`;
     const importNationsEl = document.getElementById('pt-import-nations');
     importNationsEl.innerHTML = '';
     // Group by translated birth country name
