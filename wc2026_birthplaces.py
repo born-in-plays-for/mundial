@@ -59,7 +59,7 @@ QUALIFIED_NATIONS = frozenset({
     'Algeria', 'Argentina', 'Australia', 'Austria',
     'Belgium', 'Bosnia and Herzegovina', 'Brazil', 'Canada',
     'Cape Verde', 'Colombia', 'Croatia', 'Curaçao',
-    'Czech Republic', 'DR Congo', 'Ecuador', 'England',
+    'Czech Republic', 'DR Congo', 'Ecuador', 'Egypt', 'England',
     'France', 'Germany', 'Ghana', 'Haiti',
     'Iran', 'Iraq', 'Ivory Coast', 'Japan',
     'Jordan', 'Mexico', 'Morocco', 'Netherlands',

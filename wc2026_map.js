@@ -114,7 +114,7 @@ const QUALIFIED_NAMES = {
   12:'Algeria', 32:'Argentina', 36:'Australia', 40:'Austria',
   56:'Belgium', 70:'Bosnia and Herzegovina', 76:'Brazil', 124:'Canada',
   132:'Cape Verde', 170:'Colombia', 191:'Croatia', 203:'Czech Republic',
-  180:'DR Congo', 218:'Ecuador', 250:'France', 276:'Germany',
+  180:'DR Congo', 818:'Egypt', 218:'Ecuador', 250:'France', 276:'Germany',
   288:'Ghana', 332:'Haiti', 364:'Iran', 368:'Iraq', 384:'Ivory Coast',
   392:'Japan', 400:'Jordan', 484:'Mexico', 504:'Morocco', 528:'Netherlands',
   554:'New Zealand', 578:'Norway', 591:'Panama', 600:'Paraguay',
