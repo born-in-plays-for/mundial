@@ -211,6 +211,7 @@ const T = {
     pageHeading:   'Mondial 2026 - Joueurs nés dans un pays, et qui jouent pour un autre',
     pageSub:       n => `${n} joueurs au total · source : Wikipedia`,
     mapAriaLabel:  'Carte choroplèthe des joueurs nés dans un pays et jouant pour un autre',
+    pageDescription: 'Carte choroplèthe du Mondial 2026 — joueurs nés dans un pays, sélectionnés par un autre. Normalisé par population.',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
     legendCaption: "natifs / million d'hab.",
   },
@@ -233,6 +234,7 @@ const T = {
     pageHeading:   'Mondiali 2026 - Giocatori nati in un paese, che giocano per un altro',
     pageSub:       n => `${n} giocatori in totale · fonte: Wikipedia`,
     mapAriaLabel:  'Mappa coropletica dei giocatori nati in un paese e che giocano per un altro',
+    pageDescription: 'Mappa coropletica dei Mondiali 2026 — giocatori nati in un paese, selezionati da un altro. Normalizzato per popolazione.',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
     legendCaption: 'nativi / milione di ab.',
   },
@@ -255,6 +257,7 @@ const T = {
     pageHeading:   'WM 2026 - Spieler, die in einem Land geboren wurden und für ein anderes spielen',
     pageSub:       n => `${n} Spieler insgesamt · Quelle: Wikipedia`,
     mapAriaLabel:  'Choroplethenkarte der Spieler, die in einem Land geboren wurden und für ein anderes spielen',
+    pageDescription: 'Choroplethenkarte der WM 2026 — Spieler, die in einem Land geboren und für ein anderes ausgewählt wurden. Normiert nach Bevölkerungszahl.',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
     legendCaption: 'Einheimische / Mio. Einwohner',
   },
@@ -277,6 +280,7 @@ const T = {
     pageHeading:   'World Cup 2026 - Players born in one country, playing for another',
     pageSub:       n => `${n} players total · source: Wikipedia`,
     mapAriaLabel:  'Choropleth map of players born in one country, playing for another',
+    pageDescription: 'Choropleth map of the 2026 World Cup — players born in one country, selected for another. Normalised by population.',
     zoomHint:      'scroll to zoom · drag to pan',
     legendCaption: 'natives / million inhab.',
   },
@@ -285,6 +289,7 @@ const T = {
 // Apply locale to static page elements
 document.documentElement.lang = LANG;
 document.title = T.pageTitle;
+document.querySelector('meta[name="description"]')?.setAttribute('content', T.pageDescription);
 document.getElementById('page-heading').textContent   = T.pageHeading;
 document.getElementById('page-heading-mob').textContent = T.pageHeading;
 document.getElementById('zoom-hint').textContent      = T.zoomHint;
