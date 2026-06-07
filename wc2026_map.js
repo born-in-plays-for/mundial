@@ -341,7 +341,7 @@ const positionTip = (event, height, wide = false) => {
 
 let lastTipKey = null;
 
-const hideTip = () => { tt.style.display = 'none'; lastTipKey = null; };
+const hideTip = () => { tt.style.display = 'none'; tt.classList.remove('tt-non-qualified'); lastTipKey = null; };
 
 const showQualifiedTip = (event, name, code) => {
   const nId = QUALIFIED_BY_NAME[name];
@@ -713,6 +713,7 @@ Promise.all([
         ${body}
         ${hasMore ? html`<div class="tt-more-label">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
     }
+    tt.classList.toggle('tt-non-qualified', !QUALIFIED_NAMES[id]);
     positionTip(event, 240, hasImports);
   };
 
