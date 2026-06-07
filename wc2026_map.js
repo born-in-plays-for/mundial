@@ -377,6 +377,8 @@ let IMPORT_BY_NATION = {};  // nationId → [{name, birthCountry, birthCountryId
 let NATIVE_BY_NATION = {};  // nationId → [{name, caps}]
 let POP_REF  = {};          // country name → population in millions
 
+const enablesDim = id => !!(DATA_REF[id] || (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)));
+
 const fmtPop = pop => (pop < 1 ? parseFloat(pop.toFixed(2)) : parseFloat(pop.toFixed(1)))
   .toLocaleString(LOCALE, { maximumFractionDigits: pop < 1 ? 2 : 1, minimumFractionDigits: 0, useGrouping: false }) + 'M';
 const popTag  = pop  => pop  ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing;
@@ -462,7 +464,7 @@ const playerTableTemplate = sourceId => {
           const nationId = QUALIFIED_BY_NAME[nation];
           const nc = ISO2[nationId];
           return html`
-            <div class="pt-nation-header" @click=${() => activateCountry(nationId)}>
+            <div class="pt-nation-header" @click=${() => activateCountry(nationId, true)}>
               ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
               <span class="pt-nation-name">${countryName(nationId, nation)}</span>
               <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
@@ -493,7 +495,7 @@ const playerTableTemplate = sourceId => {
             const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
             const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
             return html`
-              <div class="pt-nation-header${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId) : null}>
+              <div class="pt-nation-header${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
                 ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
                 <span class="pt-nation-name">${label}</span>
                 <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
@@ -521,7 +523,8 @@ const applyDim = (sourceId, destIds, country) => {
     dimImportIds.set(cId, (dimImportIds.get(cId) ?? 0) + 1);
   });
 
-  // Flag opacity + CSS classes for visual differentiation
+  // Flag opacity + data-dim-visible for cursor/click control
+  const dimVisibleIds = new Set([...destIds.keys(), ...dimImportIds.keys()]);
   g.selectAll('.flag-qualified').each(function() {
     const id = +this.getAttribute('data-id');
     const isExport = destIds.has(id);
@@ -529,6 +532,11 @@ const applyDim = (sourceId, destIds, country) => {
     const visible = id === sourceId || isExport || isImport;
     d3.select(this)
       .attr('opacity', visible ? 1 : 0.35)
+      .attr('data-dim-visible', (isExport || isImport) ? '' : null);
+  });
+  g.selectAll('.country').attr('data-dim-visible', function(d) {
+    const id = d._id ?? +d.id;
+    return dimVisibleIds.has(id) ? '' : null;
   });
 
   // Arc drawing helper — smooth quadratic Bézier, laterally offset by type, mid arrowhead
@@ -616,8 +624,8 @@ const clearDim = () => {
   dimSourceId = null;
   dimDestIds = new Map();
   dimImportIds = new Map();
-  g.selectAll('.flag-qualified')
-    .attr('opacity', null)
+  g.selectAll('.flag-qualified').attr('opacity', null).attr('data-dim-visible', null);
+  g.selectAll('.country').attr('data-dim-visible', null);
   if (arcsGroup) arcsGroup.selectAll('.arc-line').remove();
   document.body.classList.remove('dim-active');
   dimBadge.style('display', 'none');
@@ -625,7 +633,7 @@ const clearDim = () => {
 };
 
 // ── Activate dim from anywhere (e.g. player-table nation clicks) ──────────────
-const activateCountry = id => {
+const activateCountry = (id, scroll = false) => {
   if (id == null) return;
   const rec = DATA_REF[id];
   if (rec) {
@@ -639,7 +647,7 @@ const activateCountry = id => {
   } else {
     return;
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // ── Flag join helpers ─────────────────────────────────────────────────────────
@@ -862,20 +870,13 @@ Promise.all([
 
   const onCountryClick = (event, id) => {
     event.stopPropagation();
-    if (dimActive) { clearDim(); return; }
-    const rec = byId[id];
-    if (rec) {
-      const destIds = new Map(rec.nations.flatMap(([n,c]) => {
-        const did = QUALIFIED_BY_NAME[n];
-        return did !== undefined ? [[did, c]] : [];
-      }));
-      applyDim(id, destIds, rec.country);
-    } else if (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)) {
-      applyDim(id, new Map(), QUALIFIED_NAMES[id]);
+    if (dimActive) {
+      if (dimDestIds.has(id) || dimImportIds.has(id)) { activateCountry(id); return; }
+      clearDim();
+      return;
     }
+    activateCountry(id);
   };
-
-  const enablesDim = id => !!(byId[id] || (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)));
 
   // ── World choropleth (skip UK polygon — rendered separately below) ────────────
   g.selectAll('.country')
@@ -886,6 +887,7 @@ Promise.all([
     .attr('d', path)
     .attr('fill', d => { const r = byId[+d.id]; return r && r.ratio !== null ? color(r.ratio) : '#e8e4e0'; })
     .attr('stroke','#ccc8c0').attr('stroke-width',.3)
+    .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
     .style('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
     .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
     .on('mouseleave', () => { if (!dimActive) { hideTip(); dimBadge.style('display', 'none'); } })
@@ -905,6 +907,7 @@ Promise.all([
     .attr('d', path)
     .attr('fill', d => { const r = byId[d._id]; return r && r.ratio !== null ? color(r.ratio) : '#e8e4e0'; })
     .attr('stroke','#ccc8c0').attr('stroke-width',.3)
+    .attr('data-enables-dim', d => enablesDim(d._id) ? '' : null)
     .style('cursor', d => enablesDim(d._id) ? 'pointer' : 'default')
     .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
     .on('mouseleave', () => { if (!dimActive) hideTip(); })
@@ -922,6 +925,7 @@ Promise.all([
     .attr('y', d => dotCentroid(d)[1] - FLAG/2)
     .attr('data-id', d => +d.id)
     .attr('pointer-events', 'all')
+    .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
     .attr('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
     .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
     .on('click',     (event, d) => onCountryClick(event, +d.id));
@@ -935,6 +939,7 @@ Promise.all([
       .attr('data-cx', cx).attr('data-cy', cy)
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
+      .attr('data-enables-dim', enablesDim(id) ? '' : null)
       .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
       .on('mousemove', (event) => onCountryMousemove(event, id))
       .on('click',     (event) => onCountryClick(event, id));
@@ -954,6 +959,7 @@ Promise.all([
         .attr('data-cx', cx).attr('data-cy', cy)
         .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
         .attr('pointer-events', 'all')
+        .attr('data-enables-dim', enablesDim(f._id) ? '' : null)
         .attr('cursor', enablesDim(f._id) ? 'pointer' : 'default')
         .on('mousemove', (event) => onCountryMousemove(event, f._id))
         .on('click',     (event) => onCountryClick(event, f._id));
