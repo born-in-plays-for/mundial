@@ -6,8 +6,12 @@ Step 2 — batch-query the Wikipedia API (prop=langlinks) for FR/DE/IT titles.
 Step 3 — write wiki_langs: {en, fr?, de?, it?} onto every player object.
 """
 import json, re, time, requests
+from pathlib import Path
 from urllib.parse import unquote, quote
 from bs4 import BeautifulSoup
+
+ROOT = Path(__file__).parent.parent
+JSON_PATH = ROOT / "wc2026_map_data.json"
 
 WIKI_URL  = "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads"
 WIKI_API  = "https://en.wikipedia.org/w/api.php"
@@ -37,7 +41,7 @@ for table in soup.find_all("table", class_=re.compile(r"wikitable")):
 print(f"  {len(name_to_title)} linked names found")
 
 # ── Step 2: load JSON, collect titles used by actual players ──────────────────
-with open("wc2026_map_data.json", encoding="utf-8") as f:
+with open(JSON_PATH, encoding="utf-8") as f:
     data = json.load(f)
 
 all_players  = [p for rec in data["data"] for p in rec["players"]]
@@ -105,7 +109,7 @@ print(f"  Matched: {matched}/{len(all_players)}  |  unmatched: {unmatched}")
 for l in LANGS:
     print(f"  {l}: {lang_counts[l]} players have a {l}.wikipedia.org page")
 
-with open("wc2026_map_data.json", "w", encoding="utf-8") as f:
+with open(JSON_PATH, "w", encoding="utf-8") as f:
     json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
 
-print("wc2026_map_data.json updated.")
+print(f"{JSON_PATH} updated.")

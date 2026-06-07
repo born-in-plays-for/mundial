@@ -18,17 +18,13 @@ GitHub: **https://github.com/cthiebaud/mundial** (standalone repo, also a submod
 | `index.html` | Entry point — redirects to the map, carries OG meta tags |
 | `wc2026_map_exported.html` | Main map page (Bootstrap 5, loads JS + JSON via ES module) |
 | `wc2026_map.js` | ES module — D3 rendering, zoom, tooltips (lit-html), dim/arc logic, i18n |
-| `wc2026_map_data.json` | All data: player exports by birth country + population + `wiki_langs` |
+| `wc2026_map_data.json` | All data: player exports + natives by birth country + population + `wiki_langs` |
 | `uk-nations.geojson` | 4 UK home nations polygons (Natural Earth 50m) — England, Scotland, Wales, Northern Ireland rendered as separate choropleth features |
-| `wc2026_birthplaces.py` | Python scraper: Wikipedia → `wc2026_players.csv` |
-| `add_wiki_urls.py` | Enrichment script: adds `wiki_langs` (en/fr/de/it) to every player in the JSON |
-| `wc2026_players.csv` | Full squad roster with birth city/country (source of truth) |
-| `wc2026_by_birthcountry.csv` | Aggregated ranking by birth country |
-| `wc2026_make_ratio_chart.py` | Produces `wc2026_export_ratio.png` from JSON data |
 | `wc2026_export_ratio.png` | Bar chart of export ratio (top countries) |
 | `wc2026_og.png` | 1200×630 Open Graph preview image for LinkedIn/social |
 | `images/` | Screenshots used in external articles and social posts |
 | `chains/` | Export chain infographics — see section below |
+| `pipeline/` | Data acquisition scripts and source CSVs — see `pipeline/README.md` |
 
 ---
 
@@ -63,27 +59,19 @@ python3 -m http.server 8000
 ## Data pipeline
 
 ```bash
-pip install requests beautifulsoup4 pandas lxml pdfplumber
-python wc2026_birthplaces.py          # → wc2026_players.csv
+pip install requests beautifulsoup4 pandas lxml matplotlib
+python3 pipeline/wc2026_birthplaces.py   # → pipeline/wc2026_players.csv
+python3 pipeline/build_json.py           # → wc2026_map_data.json
+python3 pipeline/add_wiki_urls.py        # → enriches wc2026_map_data.json in-place
 ```
 
-The JSON data (`wc2026_map_data.json`) is rebuilt from the CSV using inline Python in the session — see git history for the exact rebuild scripts. Key logic: group by birth country, count exports to each destination nation, compute per-nation sorted lists.
-
-After rebuilding, run `add_wiki_urls.py` to re-enrich the JSON with Wikipedia links:
-
-```bash
-pip install requests beautifulsoup4
-python3 add_wiki_urls.py   # → updates wc2026_map_data.json in-place
-```
-
-The script fetches langlinks from the Wikipedia API one language at a time (`lllang=fr`, then `de`, then `it`) so each batch stays within the 500-langlink limit. Results are written as `wiki_langs: {en, fr?, de?, it?}` on each player object.
+Full documentation, partial-update recipes, and troubleshooting notes in **`pipeline/README.md`**.
 
 ### Generating the ratio chart
 
 ```bash
-pip install matplotlib
-python3 wc2026_make_ratio_chart.py              # Curaçao excluded (default)
-python3 wc2026_make_ratio_chart.py --with-curacao
+python3 pipeline/wc2026_make_ratio_chart.py              # Curaçao excluded (default)
+python3 pipeline/wc2026_make_ratio_chart.py --with-curacao
 ```
 
 ### Regenerating the OG image
