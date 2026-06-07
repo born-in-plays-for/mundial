@@ -214,7 +214,7 @@ const T = {
     exported:      (n, name) => `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${name ? frPrep(name) + ' ' + name : 'ici'}`,
     pageTitle:     'Mondial 2026 - Joueurs nés dans un pays, et qui jouent pour un autre',
     pageHeading:   'Mondial 2026 - Joueurs nés dans un pays, et qui jouent pour un autre',
-    pageSub:       "286 joueurs au total · source : Wikipedia",
+    pageSub:       n => `${n} joueurs au total · source : Wikipedia`,
     mapAriaLabel:  'Carte choroplèthe des joueurs nés dans un pays et jouant pour un autre',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
     legendCaption: "natifs / million d'hab.",
@@ -241,7 +241,7 @@ const T = {
     exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' in ' + name : ' qui'}`,
     pageTitle:     'Mondiali 2026 - Giocatori nati in un paese, che giocano per un altro',
     pageHeading:   'Mondiali 2026 - Giocatori nati in un paese, che giocano per un altro',
-    pageSub:       '286 giocatori in totale · fonte: Wikipedia',
+    pageSub:       n => `${n} giocatori in totale · fonte: Wikipedia`,
     mapAriaLabel:  'Mappa coropletica dei giocatori nati in un paese e che giocano per un altro',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
     legendCaption: 'nativi / milione di ab.',
@@ -268,7 +268,7 @@ const T = {
     exported:      (n, name) => name ? 'in ' + name + (n === 1 ? ' geborener Spieler' : ' geborene Spieler') : (n === 1 ? 'hier geborener Spieler' : 'hier geborene Spieler'),
     pageTitle:     'WM 2026 - Spieler, die in einem Land geboren wurden und für ein anderes spielen',
     pageHeading:   'WM 2026 - Spieler, die in einem Land geboren wurden und für ein anderes spielen',
-    pageSub:       '286 Spieler insgesamt · Quelle: Wikipedia',
+    pageSub:       n => `${n} Spieler insgesamt · Quelle: Wikipedia`,
     mapAriaLabel:  'Choroplethenkarte der Spieler, die in einem Land geboren wurden und für ein anderes spielen',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
     legendCaption: 'Einheimische / Mio. Einwohner',
@@ -295,7 +295,7 @@ const T = {
     exported:      (n, name) => `player${n > 1 ? 's' : ''} born${name ? ' in ' + name : ' here'}`,
     pageTitle:     'World Cup 2026 - Players born in one country, playing for another',
     pageHeading:   'World Cup 2026 - Players born in one country, playing for another',
-    pageSub:       '286 players total · source: Wikipedia',
+    pageSub:       n => `${n} players total · source: Wikipedia`,
     mapAriaLabel:  'Choropleth map of players born in one country, playing for another',
     zoomHint:      'scroll to zoom · drag to pan',
     legendCaption: 'natives / million inhab.',
@@ -306,9 +306,7 @@ const T = {
 document.documentElement.lang = LANG;
 document.title = T.pageTitle;
 document.getElementById('page-heading').textContent   = T.pageHeading;
-document.getElementById('page-sub').textContent       = T.pageSub;
 document.getElementById('page-heading-mob').textContent = T.pageHeading;
-document.getElementById('page-sub-mob').textContent    = T.pageSub;
 document.getElementById('zoom-hint').textContent      = T.zoomHint;
 document.getElementById('legend-caption').textContent = T.legendCaption;
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
@@ -655,6 +653,10 @@ Promise.all([
     byId[d.id] = d;
   });
   DATA_REF = byId;
+  const exportTotal = DATA.reduce((s, r) => s + r.count, 0);
+  const subText = T.pageSub(exportTotal);
+  document.getElementById('page-sub').textContent     = subText;
+  document.getElementById('page-sub-mob').textContent = subText;
   POP_REF  = POP;
 
   DATA.forEach(rec => {
