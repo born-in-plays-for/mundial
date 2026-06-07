@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>World Cup 2026 — "exported" players by country of birth</title>
+<title>World Cup 2026 - Players born in one country, playing for another</title>
 <link rel="icon" type="image/svg+xml" href="/images/wc2026.svg">
 <meta property="og:title"       content="The real gain from AI-assisted coding isn't speed. It's breadth.">
-<meta property="og:description" content="A D3.js choropleth map of the 2026 FIFA World Cup tracking which countries export players — born in one country, playing for another. 269 players, 43 birth countries.">
+<meta property="og:description" content="A D3.js choropleth map of the 2026 FIFA World Cup tracking players born in one country, playing for another nation at the 2026 FIFA World Cup.">
 <meta property="og:image"       content="https://aequologica.cthiebaud.com/mundial/wc2026_og.png">
 <meta property="og:url"         content="https://aequologica.cthiebaud.com/mundial/">
 <meta property="og:type"        content="website">
@@ -17,7 +17,7 @@
 <body>
 <header class="container-xxl px-4 pt-4 pb-0 d-none d-md-flex align-items-start justify-content-between">
   <div>
-    <h1 id="page-heading">World Cup 2026 — "exported" players by country of birth</h1>
+    <h1 id="page-heading">World Cup 2026 - Players born in one country, playing for another</h1>
     <p id="page-sub" class="sub mt-1">281 players total · source: Wikipedia</p>
   </div>
   <a href="https://github.com/cthiebaud/mundial" target="_blank" rel="noopener" aria-label="GitHub" style="color:#bbb;opacity:.5;transition:opacity .2s;flex-shrink:0;margin-top:4px" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.5">
@@ -25,14 +25,14 @@
   </a>
 </header>
 <div class="container-xxl px-0 mt-3 position-relative">
-  <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of birth countries of players exported to World Cup 2026"></svg>
+  <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of players born in one country, playing for another"></svg>
   <span id="zoom-hint" class="position-absolute bottom-0 end-0 pe-2 pb-1">scroll to zoom · drag to pan</span>
 </div>
 <div class="container-xxl px-4 mt-2 mb-4">
   <div class="d-flex gap-3 align-items-start">
     <!-- heading col: mobile only -->
     <div class="d-md-none flex-col">
-      <h2 id="page-heading-mob">World Cup 2026 — "exported" players by country of birth</h2>
+      <h2 id="page-heading-mob">World Cup 2026 - Players born in one country, playing for another</h2>
       <p id="page-sub-mob" class="sub mb-0">281 players total · source: Wikipedia</p>
     </div>
     <!-- legend col -->
@@ -43,7 +43,7 @@
           <div id="legend-ticks"><span>0.01</span><span>0.03</span><span>0.10</span><span>0.30</span><span>1.0</span></div>
         </div>
       </div>
-      <p id="legend-caption" class="sub mb-0 text-end text-md-start">exported players / million inhab. · grey = no exported player · flag = nation qualified</p>
+      <p id="legend-caption" class="sub mb-0 text-end text-md-start">natives / million inhab.</p>
     </div>
   </div>
 </div>

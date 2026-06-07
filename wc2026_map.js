@@ -169,87 +169,136 @@ const countryName = (id, fallback = '') => {
   return fallback || String(id);
 };
 
+// French preposition before country name (en / au / aux)
+const frPrep = name => {
+  if (!name) return 'en';
+  if (['États-Unis', 'Pays-Bas', 'Émirats arabes unis', 'Philippines', 'Bahamas'].some(c => name.startsWith(c))) return 'aux';
+  if (['Mexique', 'Mozambique', 'Cambodge', 'Zimbabwe', 'Belize'].includes(name)) return 'au';
+  if (['Haïti'].includes(name)) return 'en';
+  if (/^[AEIOUYÀÂÉÈÊËÎÏÔÙÛaeiouyàâéèêëîïôùû]/.test(name) || /e$/.test(name)) return 'en';
+  return 'au';
+};
+
+// French definite article before country name (le / la / l' / les)
+const frDefArt = name => {
+  if (!name) return '';
+  if (['États-Unis', 'Pays-Bas', 'Émirats arabes unis', 'Philippines', 'Bahamas'].some(c => name.startsWith(c))) return 'les ';
+  if (['Haïti'].includes(name)) return '';
+  if (/^[AEIOUYÀÂÉÈÊËÎÏÔÙÛaeiouyàâéèêëîïôùû]/.test(name)) return "l'";
+  if (['Mexique', 'Mozambique', 'Cambodge', 'Zimbabwe', 'Belize'].includes(name)) return 'le ';
+  if (/e$/.test(name)) return 'la ';
+  return 'le ';
+};
+
 // UI label strings
 const T = {
   fr: {
-    noExport:      'aucun joueur exporté',
+    noExport:      name => `Aucun joueur né ${name ? frPrep(name) + ' ' + name : 'ici'} ne joue pour un autre pays`,
     perMillion:    "/ million d'hab.",
     selections:    'Sélections',
     bornIn:        'Joueurs nés en',
-    imported:      'joueurs importés',
+    imported:      'joueurs nés ailleurs',
     ofSquad:       'de la sélection',
-    noImport:      'aucun joueur importé',
+    noImport:      name => `Tous les joueurs de la sélection sont nés ${name ? frPrep(name) + ' ' + name : 'ici'}`,
+    playingFor:    'jouant pour',
+    selectedBy:    'sélectionnés par un autre pays',
+    clickForAll:   'Cliquer sur le pays pour voir la liste complète',
+    clickForAllPlural: 'Cliquer sur le pays pour voir les listes complètes',
+    selectedByLabel: name => `Joueurs sélectionnés par ${frDefArt(name)}${name} nés dans un autre pays`,
+    ptNative:      (n, name) => `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} et sélectionné${n > 1 ? 's' : ''} ${name ? frPrep(name) + ' ' + name : 'ici'}`,
+    ptImportTitle: (n, name) => `joueur${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''} par ${frDefArt(name)}${name} né${n > 1 ? 's' : ''} dans un autre pays`,
     birthNations:  'Nés en',
     pop:           'pop.',
     caps:          'sél.',
     players:       n => `joueur${n > 1 ? 's' : ''}`,
-    exported:      n => `joueur${n > 1 ? 's' : ''} exporté${n > 1 ? 's' : ''}`,
-    pageTitle:     'Mondial 2026 — Joueurs "exportés" par pays de naissance',
-    pageHeading:   'Mondial 2026 — joueurs "exportés" par pays de naissance',
+    exported:      (n, name) => `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${name ? frPrep(name) + ' ' + name : 'ici'}`,
+    pageTitle:     'Mondial 2026 - Joueurs nés dans un pays, et qui jouent pour un autre',
+    pageHeading:   'Mondial 2026 - Joueurs nés dans un pays, et qui jouent pour un autre',
     pageSub:       "281 joueurs au total · source : Wikipedia",
-    mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs exportés',
+    mapAriaLabel:  'Carte choroplèthe des joueurs nés dans un pays et jouant pour un autre',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
-    legendCaption: "joueurs exportés / million d'hab. · gris = aucun joueur exporté · drapeau = nation qualifiée",
+    legendCaption: "natifs / million d'hab.",
   },
   it: {
-    noExport:      'nessun giocatore esportato',
+    noExport:      name => `Nessun giocatore nato${name ? ' in ' + name : ' qui'} gioca per un altro paese`,
     perMillion:    '/ milione di ab.',
     selections:    'Nazionali',
     bornIn:        'Giocatori nati in',
-    imported:      'giocatori importati',
+    imported:      'giocatori nati altrove',
     ofSquad:       'della rosa',
-    noImport:      'nessun giocatore importato',
+    noImport:      name => `Tutti i giocatori della rosa sono nati${name ? ' in ' + name : ' qui'}`,
+    playingFor:    'che giocano per',
+    selectedBy:    'selezionati da un altro paese',
+    clickForAll:   'Clicca sul paese per vedere la lista completa',
+    clickForAllPlural: 'Clicca sul paese per vedere le liste complete',
+    selectedByLabel: name => `Giocatori selezionati da ${name} nati in un altro paese`,
+    ptNative:      (n, name) => `giocator${n === 1 ? 'e' : 'i'} nato${n === 1 ? '' : 'i'} e selezionato${n === 1 ? '' : 'i'}${name ? ' per ' + name : ' qui'}`,
+    ptImportTitle: (n, name) => `giocator${n === 1 ? 'e' : 'i'} selezionato${n === 1 ? '' : 'i'} per ${name} nato${n === 1 ? '' : 'i'} in un altro paese`,
     birthNations:  'Nati in',
     pop:           'ab.',
     caps:          'pres.',
     players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
-    exported:      n => `giocator${n === 1 ? 'e esportato' : 'i esportati'}`,
-    pageTitle:     'Mondiali 2026 — giocatori "esportati" per paese di nascita',
-    pageHeading:   'Mondiali 2026 — giocatori "esportati" per paese di nascita',
+    exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' in ' + name : ' qui'}`,
+    pageTitle:     'Mondiali 2026 - Giocatori nati in un paese, che giocano per un altro',
+    pageHeading:   'Mondiali 2026 - Giocatori nati in un paese, che giocano per un altro',
     pageSub:       '281 giocatori in totale · fonte: Wikipedia',
-    mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori esportati',
+    mapAriaLabel:  'Mappa coropletica dei giocatori nati in un paese e che giocano per un altro',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
-    legendCaption: 'giocatori esportati / milione di ab. · grigio = nessun giocatore esportato · bandiera = nazione qualificata',
+    legendCaption: 'nativi / milione di ab.',
   },
   de: {
-    noExport:      'kein exportierter Spieler',
+    noExport:      name => name ? `Kein in ${name} geborener Spieler spielt für ein anderes Land` : 'Kein hier geborener Spieler spielt für ein anderes Land',
     perMillion:    '/ Mio. Einwohner',
     selections:    'Nationalteams',
     bornIn:        'Spieler geboren in',
-    imported:      'importierte Spieler',
+    imported:      'anderswo geborene Spieler',
     ofSquad:       'im Kader',
-    noImport:      'kein importierter Spieler',
+    noImport:      name => name ? `Alle Kaderspieler wurden in ${name} geboren` : 'Alle Kaderspieler wurden hier geboren',
+    playingFor:    'spielend für',
+    selectedBy:    'ausgewählt von einem anderen Land',
+    clickForAll:   'Land anklicken für die vollständige Liste',
+    clickForAllPlural: 'Land anklicken für die vollständigen Listen',
+    selectedByLabel: name => `Von ${name} ausgewählte Spieler, geboren in einem anderen Land`,
+    ptNative:      (_, name) => name ? `in ${name} geborene und ausgewählte Spieler` : 'hier geborene und ausgewählte Spieler',
+    ptImportTitle: (_, name) => name ? `für ${name} ausgewählte, woanders geborene Spieler` : 'anderswo geborene Spieler',
     birthNations:  'Geb. in',
     pop:           'Einw.',
     caps:          'Sp.',
     players:       () => 'Spieler',
-    exported:      n => n === 1 ? 'exportierter Spieler' : 'exportierte Spieler',
-    pageTitle:     'WM 2026 — „exportierte“ Spieler nach Geburtsland',
-    pageHeading:   'WM 2026 — „exportierte“ Spieler nach Geburtsland',
+    exported:      (n, name) => name ? 'in ' + name + (n === 1 ? ' geborener Spieler' : ' geborene Spieler') : (n === 1 ? 'hier geborener Spieler' : 'hier geborene Spieler'),
+    pageTitle:     'WM 2026 - Spieler, die in einem Land geboren wurden und für ein anderes spielen',
+    pageHeading:   'WM 2026 - Spieler, die in einem Land geboren wurden und für ein anderes spielen',
     pageSub:       '281 Spieler insgesamt · Quelle: Wikipedia',
-    mapAriaLabel:  'Choroplethenkarte der Geburtsländer exportierter Spieler',
+    mapAriaLabel:  'Choroplethenkarte der Spieler, die in einem Land geboren wurden und für ein anderes spielen',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
-    legendCaption: 'exportierte Spieler / Mio. Einwohner · Grau = kein exportierter Spieler · Flagge = qualifizierte Nation',
+    legendCaption: 'Einheimische / Mio. Einwohner',
   },
   en: {
-    noExport:      'no players exported',
+    noExport:      name => `No player born${name ? ' in ' + name : ' here'} plays for another country`,
     perMillion:    '/ million inhab.',
     selections:    'Selections',
     bornIn:        'Players born in',
-    imported:      'imported players',
+    imported:      'players born elsewhere',
     ofSquad:       'of the squad',
-    noImport:      'no players imported',
+    noImport:      name => `All squad players were born${name ? ' in ' + name : ' here'}`,
+    playingFor:    'playing for',
+    selectedBy:    'selected by another country',
+    clickForAll:   'Click the country to see the complete list',
+    clickForAllPlural: 'Click the country to see the complete lists',
+    selectedByLabel: name => `Players selected by ${name} born in another country`,
+    ptNative:      (n, name) => `player${n > 1 ? 's' : ''} born and selected for ${name}`,
+    ptImportTitle: (n, name) => `player${n > 1 ? 's' : ''} selected for ${name} born in another country`,
     birthNations:  'Born in',
     pop:           'pop.',
     caps:          'caps',
     players:       n => `player${n > 1 ? 's' : ''}`,
-    exported:      n => `player${n > 1 ? 's' : ''} exported`,
-    pageTitle:     'World Cup 2026 — "exported" players by country of birth',
-    pageHeading:   'World Cup 2026 — "exported" players by country of birth',
+    exported:      (n, name) => `player${n > 1 ? 's' : ''} born${name ? ' in ' + name : ' here'}`,
+    pageTitle:     'World Cup 2026 - Players born in one country, playing for another',
+    pageHeading:   'World Cup 2026 - Players born in one country, playing for another',
     pageSub:       '281 players total · source: Wikipedia',
-    mapAriaLabel:  'Choropleth map of birth countries of players exported to World Cup 2026',
+    mapAriaLabel:  'Choropleth map of players born in one country, playing for another',
     zoomHint:      'scroll to zoom · drag to pan',
-    legendCaption: 'exported players / million inhab. · grey = no exported player · flag = nation qualified',
+    legendCaption: 'natives / million inhab.',
   },
 }[LANG];
 
@@ -318,8 +367,9 @@ const showQualifiedTip = (event, name, code) => {
         <span class="tt-name-inner">${flagImg(code)}${countryName(nId, name)}</span>
         ${popTag(POP_REF[name])}
       </div>
-      <div class="tt-no-export">${T.noExport}</div>
-      ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-no-export">${T.noImport}</div>`}`, tt);
+      <div class="tt-label">${T.noExport(countryName(nId, name))}</div>
+      ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-label">${T.noImport(countryName(nId, name))}</div>`}
+      ${hasImps && (IMPORT_BY_NATION[nId] ?? []).length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
   }
   positionTip(event, 200, false);
 };
@@ -334,6 +384,7 @@ let arcsGroup  = null;
 const centroids = {};
 let DATA_REF = {};          // set once data loads, used by applyDim
 let IMPORT_BY_NATION = {};  // nationId → [{name, birthCountry, birthCountryId, caps}]
+let NATIVE_BY_NATION = {};  // nationId → [{name, caps}]
 let POP_REF  = {};          // country name → population in millions
 
 const fmtPop = pop => (pop < 1 ? parseFloat(pop.toFixed(2)) : parseFloat(pop.toFixed(1)))
@@ -352,7 +403,7 @@ const SQUAD_SIZE = { 40: 25, 124: 25 }; // Austria, Canada — injuries reduced 
 
 const buildImportColHtml = nationId => {
   const players   = (IMPORT_BY_NATION[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
-  if (players.length === 0) return html`<div class="tt-no-export">${T.noImport}</div>`;
+  if (players.length === 0) return html`<div class="tt-label">${T.noImport(countryName(nationId, QUALIFIED_NAMES[nationId]))}</div>`;
   const byBirth   = {};
   players.forEach(p => { const l = countryName(p.birthCountryId, p.birthCountry); byBirth[l] = (byBirth[l] ?? 0) + 1; });
   const nations   = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
@@ -360,10 +411,13 @@ const buildImportColHtml = nationId => {
   const squadSize = SQUAD_SIZE[nationId] ?? 26;
   const ratio     = (players.length / squadSize * 100).toFixed(0) + '%';
 
+  const nationName = countryName(nationId, QUALIFIED_NAMES[nationId]);
   return html`
-    <div class="tt-count color-imp">${players.length}</div>
-    <div class="tt-label">${T.imported}</div>
-    <div class="tt-sub">${ratio} ${T.ofSquad} (${squadSize})</div>
+    <div class="tt-count-row">
+      <div class="tt-count color-imp">${players.length}</div>
+      <div class="tt-sub">${ratio} ${T.ofSquad} (${squadSize})</div>
+    </div>
+    <div class="tt-label">${T.selectedByLabel(nationName)}</div>
     <div class="tt-nations">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>
     <div class="tt-players ${players.length > 5 ? 'tt-more' : ''}">
       ${top.map(p => html`
@@ -380,7 +434,10 @@ const playerTableTemplate = sourceId => {
   const pop           = DATA_REF[sourceId]?.pop ?? POP_REF[QUALIFIED_NAMES[sourceId]] ?? null;
   const cnt           = DATA_REF[sourceId]?.count ?? 0;
   const exportPlayers = DATA_REF[sourceId]?.players ?? [];
+  const nativePlayers = NATIVE_BY_NATION[sourceId] ?? [];
   const importPlayers = (IMPORT_BY_NATION[sourceId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+  const isQualified   = !!QUALIFIED_NAMES[sourceId];
+  const name          = countryName(sourceId, country);
 
   const exportGroups = [];
   exportPlayers.forEach(p => {
@@ -402,30 +459,42 @@ const playerTableTemplate = sourceId => {
     <div class="d-flex align-items-center gap-2 mb-1 justify-content-between">
       <div class="d-flex align-items-center gap-2">
         ${fc ? html`<img class="pt-country-flag" src="${FLAG_CDN_RECT(fc)}">` : nothing}
-        <h2 class="mb-0 pt-title">${countryName(sourceId, country)}</h2>
+        <h2 class="mb-0 pt-title">${name}</h2>
       </div>
       ${pop ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing}
     </div>
-    <h2 id="pt-export-count" class="mb-3 pt-title color-exp">${cnt} ${T.exported(cnt)}</h2>
-    <div id="pt-nations">
-      ${exportGroups.map(({ nation, players: gp }) => {
-        const nc = ISO2[QUALIFIED_BY_NAME[nation]];
-        return html`
-          <div class="pt-nation-header">
-            ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
-            <span class="pt-nation-name">${countryName(QUALIFIED_BY_NAME[nation], nation)}</span>
-            <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
-          </div>
-          ${gp.map(p => html`
+    ${cnt > 0 ? html`
+      <h2 id="pt-export-count" class="mb-3 pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy}</h2>
+      <div id="pt-nations">
+        ${exportGroups.map(({ nation, players: gp }) => {
+          const nc = ISO2[QUALIFIED_BY_NAME[nation]];
+          return html`
+            <div class="pt-nation-header">
+              ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
+              <span class="pt-nation-name">${countryName(QUALIFIED_BY_NAME[nation], nation)}</span>
+              <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+            </div>
+            ${gp.map(p => html`
+              <div class="pt-player-row">
+                <span>${ptWikiRow(p)}</span>
+                <span class="pt-caps">${p.caps} ${T.caps}</span>
+              </div>`)}`;
+        })}
+      </div>` : isQualified ? html`<div id="pt-export-count" class="tt-label">${T.noExport(name)}</div>` : nothing}
+    ${nativePlayers.length > 0 ? html`
+      <div id="pt-native-section">
+        <h2 id="pt-native-title" class="mb-3 pt-title">${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}</h2>
+        <div id="pt-native-players">
+          ${nativePlayers.map(p => html`
             <div class="pt-player-row">
               <span>${ptWikiRow(p)}</span>
               <span class="pt-caps">${p.caps} ${T.caps}</span>
-            </div>`)}`;
-      })}
-    </div>
+            </div>`)}
+        </div>
+      </div>` : nothing}
     ${importPlayers.length > 0 ? html`
       <div id="pt-import-section">
-        <h2 id="pt-import-title" class="mb-3 pt-title color-imp">${importPlayers.length} ${T.imported}</h2>
+        <h2 id="pt-import-title" class="mb-3 pt-title color-imp">${importPlayers.length} ${T.ptImportTitle(importPlayers.length, name)}</h2>
         <div id="pt-import-nations">
           ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
             const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
@@ -442,7 +511,7 @@ const playerTableTemplate = sourceId => {
                 </div>`)}`;
           })}
         </div>
-      </div>` : nothing}`;
+      </div>` : isQualified ? html`<div class="tt-label">${T.noImport(name)}</div>` : nothing}`;
 };
 
 const applyDim = (sourceId, destIds, country) => {
@@ -597,13 +666,20 @@ Promise.all([
       IMPORT_BY_NATION[nId].push({ name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wiki_langs: p.wiki_langs });
     });
   });
+  if (appData.natives) {
+    Object.entries(appData.natives).forEach(([name, players]) => {
+      const nId = QUALIFIED_BY_NAME[name];
+      if (nId != null) NATIVE_BY_NATION[nId] = players;
+    });
+  }
 
   // ── Shared tooltip/click helpers (used by both world and UK nation paths) ──────
 
   const showExportTip = (event, id) => {
     const rec        = byId[id];
     if (!rec) { hideTip(); return; }
-    const hasImports = !!QUALIFIED_NAMES[id] && (IMPORT_BY_NATION[id] ?? []).length > 0;
+    const hasImports   = !!QUALIFIED_NAMES[id] && (IMPORT_BY_NATION[id] ?? []).length > 0;
+    const importCount  = hasImports ? (IMPORT_BY_NATION[id] ?? []).length : 0;
     if (lastTipKey !== id) {
       lastTipKey = id;
       const _r2   = rec.ratio !== null ? rec.ratio.toFixed(2) : '?';
@@ -611,9 +687,11 @@ Promise.all([
       const fc    = ISO2[rec.id];
 
       const leftCol = html`
-        <div class="tt-count color-exp">${rec.count}</div>
-        <div class="tt-label">${T.exported(rec.count)}</div>
-        <div class="tt-sub">${ratio} ${T.perMillion}</div>
+        <div class="tt-count-row">
+          <div class="tt-count color-exp">${rec.count}</div>
+          <div class="tt-sub">${ratio} ${T.perMillion}</div>
+        </div>
+        <div class="tt-label">${T.exported(rec.count, countryName(rec.id, rec.country))} ${T.selectedBy}</div>
         <div class="tt-nations">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
         <div class="tt-players ${rec.count > rec.top.length ? 'tt-more' : ''}">
           ${rec.top.map(p => html`
@@ -628,14 +706,18 @@ Promise.all([
             <div class="tt-vdiv"></div>
             <div class="flex-col">${buildImportColHtml(id)}</div>
           </div>`
-        : html`${leftCol}${QUALIFIED_NAMES[id] ? html`<div class="tt-no-export">${T.noImport}</div>` : nothing}`;
+        : html`${QUALIFIED_NAMES[id] ? html`<div class="tt-label">${T.noImport(countryName(id, QUALIFIED_NAMES[id]))}</div>` : nothing}${leftCol}`;
 
+      const leftTruncated  = rec.count > rec.top.length;
+      const rightTruncated = importCount > 5;
+      const hasMore        = leftTruncated || rightTruncated;
       render(html`
         <div class="tt-name tt-name-inner">
           <span class="tt-name-inner">${flagImg(fc)}${countryName(rec.id, rec.country)}</span>
           ${popTag(rec.pop)}
         </div>
-        ${body}`, tt);
+        ${body}
+        ${hasMore ? html`<div class="tt-more-label">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
     }
     positionTip(event, 240, hasImports);
   };
@@ -659,7 +741,8 @@ Promise.all([
         <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>
         <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
           ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
-        </div>`, tt);
+        </div>
+        ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
     }
     positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
   };
@@ -685,7 +768,8 @@ Promise.all([
         <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>
         <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
           ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
-        </div>`, tt);
+        </div>
+        ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
     }
     positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
   };
@@ -722,7 +806,8 @@ Promise.all([
           <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>
           <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
             ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
-          </div>` : nothing}`, tt);
+          </div>` : nothing}
+        ${exportPlayers.length > 5 || importPlayers.length > 5 ? html`<div class="tt-more-label">${exportPlayers.length > 5 && importPlayers.length > 5 ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
     }
     const h = 48 + (exportPlayers.length > 0 ? 20 + 24 * topExp.length : 0)
                   + (importPlayers.length > 0 ? 20 + 24 * topImp.length : 0)
@@ -758,7 +843,7 @@ Promise.all([
         return did !== undefined ? [[did, c]] : [];
       }));
       applyDim(id, destIds, rec.country);
-    } else if (QUALIFIED_NAMES[id] && (IMPORT_BY_NATION[id] ?? []).length > 0) {
+    } else if (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)) {
       applyDim(id, new Map(), QUALIFIED_NAMES[id]);
     }
   };
@@ -806,7 +891,7 @@ Promise.all([
     .attr('y', d => dotCentroid(d)[1] - FLAG/2)
     .attr('data-id', d => +d.id)
     .attr('pointer-events', d => byId[+d.id] ? 'none' : 'all')
-    .attr('cursor', d => (!byId[+d.id] && (IMPORT_BY_NATION[+d.id] ?? []).length > 0) ? 'pointer' : 'default')
+    .attr('cursor', d => (!byId[+d.id] && ((IMPORT_BY_NATION[+d.id] ?? []).length > 0 || (NATIVE_BY_NATION[+d.id] ?? []).length > 0)) ? 'pointer' : 'default')
     .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
     .on('click',     (event, d) => onCountryClick(event, +d.id));
 
@@ -819,7 +904,7 @@ Promise.all([
       .attr('data-cx', cx).attr('data-cy', cy)
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
-      .attr('cursor', byId[id] ? 'pointer' : (IMPORT_BY_NATION[id] ?? []).length > 0 ? 'pointer' : 'default')
+      .attr('cursor', byId[id] ? 'pointer' : ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0) ? 'pointer' : 'default')
       .on('mousemove', (event) => onCountryMousemove(event, id))
       .on('click',     (event) => onCountryClick(event, id));
   });
@@ -838,7 +923,7 @@ Promise.all([
         .attr('data-cx', cx).attr('data-cy', cy)
         .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
         .attr('pointer-events', byId[f._id] ? 'none' : 'all')
-        .attr('cursor', (!byId[f._id] && (IMPORT_BY_NATION[f._id] ?? []).length > 0) ? 'pointer' : 'default')
+        .attr('cursor', (!byId[f._id] && ((IMPORT_BY_NATION[f._id] ?? []).length > 0 || (NATIVE_BY_NATION[f._id] ?? []).length > 0)) ? 'pointer' : 'default')
         .on('mousemove', (event) => onCountryMousemove(event, f._id))
         .on('click',     (event) => onCountryClick(event, f._id));
     });

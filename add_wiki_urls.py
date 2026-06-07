@@ -40,7 +40,8 @@ print(f"  {len(name_to_title)} linked names found")
 with open("wc2026_map_data.json", encoding="utf-8") as f:
     data = json.load(f)
 
-all_players = [p for rec in data["data"] for p in rec["players"]]
+all_players  = [p for rec in data["data"] for p in rec["players"]]
+all_players += [p for players in data.get("natives", {}).values() for p in players]
 needed_titles = list({name_to_title[p["name"]] for p in all_players if p["name"] in name_to_title})
 print(f"  {len(needed_titles)} unique EN titles to query for langlinks")
 

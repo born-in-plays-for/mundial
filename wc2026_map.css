@@ -47,19 +47,21 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 .tt-pop { font-size: 10px; color: var(--color-muted); font-weight: normal; white-space: nowrap; margin-left: 8px; }
 .tt-flag { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
 .tt-count { font-size: 28px; font-weight: 500; line-height: 1; margin: 4px 0 2px; }
+.tt-count-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.tt-count-row .tt-count { margin-bottom: 0; }
+.tt-count-row .tt-sub { margin-bottom: 0; }
 .tt-label { font-size: 11px; color: #999; margin-bottom: 2px; }
 .tt-sub { font-size: 10px; color: var(--color-muted); margin-bottom: 6px; }
 .tt-nations { font-size: 12px; color: #777; margin-bottom: 0; font-style: italic; border-bottom: 1px solid #c8c4be; padding-bottom: 6px; }
 .tt-player { font-size: 10px; color: #555; padding: 3px 0; border-top: 1px solid #f0ede8; display: flex; justify-content: space-between; gap: 8px; }
 .tt-nations + .tt-players .tt-player:first-child { border-top: none; }
-.tt-nation { color: var(--color-dim); font-size: 10px; white-space: nowrap; }
-.tt-no-export { font-size: 10px; color: var(--color-muted); font-style: italic; margin-top: 3px; }
-.tt-players.tt-more::after { content: '⋮'; display: block; text-align: center; color: var(--color-muted); font-size: 10px; padding-top: 2px; letter-spacing: 2px; }
+.tt-nation { color: var(--color-dim); font-size: 10px; white-space: nowrap; }.tt-more-label { text-align: right; color: var(--color-muted); font-size: 10px; padding-top: 6px; }
+.tt-players.tt-more::after { content: 'etc.'; display: block; text-align: left; font-style: italic; color: var(--color-muted); font-size: 10px; padding-top: 2px; }
 .tt-divider { border-top: 1px solid var(--color-divider); margin: 8px 0 4px; }
 
 /* player table (pt-) */
 #player-table { margin-top: 4px; }
-#pt-export-count, #pt-import-section { border-top: 2px solid var(--color-divider); margin-top: 24px; padding-top: 12px; }
+#pt-export-count, #pt-native-section, #pt-import-section { border-top: 2px solid var(--color-divider); margin-top: 24px; padding-top: 12px; }
 .pt-title { font-size: 16px; font-weight: 500; }
 .pt-country-flag { height: 20px; width: auto; border-radius: 2px; }
 .pt-nation-header { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; border-bottom: 1px solid #f0ede8; }
