@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Longest dim-path · Mondial 2026</title>
+<title>Chemin le plus long · Mondial 2026</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #f5f2ec; min-height: 100vh; display: flex; justify-content: center; }
@@ -112,12 +112,12 @@ function render(chain) {
   {
     const ty = 32, fs = 14, aw = 22, cw = fs * 0.58, gap = 5;
     const parts = [
-      { t:'Longest',  c:'#1a1a18' },
-      { a:'blu',      c:'#3b82f6' },
-      { t:'Born in',  c:'#3b82f6' },
-      { a:'red',      c:'#ef4444' },
-      { t:'Plays for',c:'#ef4444' },
-      { t:'path',     c:'#1a1a18' },
+      { t:'Le plus long', c:'#1a1a18' },
+      { a:'blu',          c:'#3b82f6' },
+      { t:'Né en',        c:'#3b82f6' },
+      { a:'red',          c:'#ef4444' },
+      { t:'Joue pour',    c:'#ef4444' },
+      { t:'chemin',       c:'#1a1a18' },
     ];
     const widths = parts.map(p => p.a ? aw : Math.round(p.t.length * cw));
     const total  = widths.reduce((s,w) => s+w, 0) + gap * (parts.length - 1);
