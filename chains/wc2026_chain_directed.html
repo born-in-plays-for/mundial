@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Longest "plays for" chain · 12 edges, 13 nodes</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #f5f2ec; min-height: 100vh; padding: 16px; display: flex; justify-content: center; }
+</style>
+</head>
+<body>
+<script>
+const CDN    = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
+const NS     = 'http://www.w3.org/2000/svg';
+const svgEl  = (tag, a={}) => { const e=document.createElementNS(NS,tag); Object.entries(a).forEach(([k,v])=>e.setAttribute(k,String(v))); return e; };
+const svgTxt = (tag, a, s)  => { const e=svgEl(tag,a); e.textContent=s; return e; };
+
+const SHORT  = { 'Bosnia and Herzegovina': 'Bosnia & Herz.' };
+const COLS   = 3;
+
+function render(chain) {
+  const M  = 16;
+  const PW = Math.min(window.innerWidth - 2*M, 960);
+  const CW = PW / COLS;
+  const FR = Math.min(24, Math.floor(CW / 7));
+
+  // Cell geometry (y offsets from row-top)
+  const FLAG_Y   = 24;
+  const NAME_Y   = FLAG_Y + FR + 13;   // country name baseline
+  const PLAYER_Y = NAME_Y + 17;        // player name baseline
+  const DETAIL_Y = PLAYER_Y + 13;      // city · caps baseline
+  const CELL_H   = DETAIL_Y + 46;      // generous bottom for turn arrows
+
+  const TH = 68;   // title area height
+
+  const { nodes, links } = chain;
+  const n       = nodes.length;
+  const numRows = Math.ceil(n / COLS);
+  const H       = TH + numRows * CELL_H + 28;
+
+  // Absolute (x, row-top y, row-index) for node i
+  const pos = i => {
+    const row = Math.floor(i / COLS);
+    const col = (row % 2 === 0) ? i % COLS : COLS - 1 - (i % COLS);
+    return { x: col * CW + CW / 2, y: TH + row * CELL_H, row };
+  };
+
+  const svg = svgEl('svg', { width: PW, height: H, viewBox: `0 0 ${PW} ${H}`,
+    style: `font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:block` });
+
+  svg.appendChild(svgEl('rect', { width:PW, height:H, rx:14, fill:'#fff', opacity:.72 }));
+  svg.appendChild(svgEl('rect', { width:PW, height:H, rx:14, fill:'none', stroke:'#e8e4de', 'stroke-width':1 }));
+
+  // Arrowhead
+  const defs = svgEl('defs');
+  const mk   = svgEl('marker', { id:'arr', viewBox:'0 -3 7 6', refX:7, refY:0, markerWidth:5, markerHeight:5, orient:'auto' });
+  mk.appendChild(svgEl('path', { d:'M0,-3L7,0L0,3Z', fill:'#9b59b6' }));
+  defs.appendChild(mk);
+  svg.appendChild(defs);
+
+  // Title
+  svg.appendChild(svgTxt('text', { x:PW/2, y:28, 'text-anchor':'middle', 'font-size':16, 'font-weight':600, fill:'#1a1a18' }, chain.title));
+  svg.appendChild(svgTxt('text', { x:PW/2, y:50, 'text-anchor':'middle', 'font-size':11, fill:'#aaa' }, chain.subtitle));
+
+
+  // ── Arrows (drawn before nodes so flags cover arrow tips) ────────────────────
+  links.forEach((lk, i) => {
+    const p0 = pos(i), p1 = pos(i + 1);
+
+    if (p0.row === p1.row) {
+      // Horizontal arrow at flag-centre height
+      const fy  = p0.y + FLAG_Y;
+      const ltr = p1.x > p0.x;
+      const x1  = ltr ? p0.x + FR + 4 : p0.x - FR - 4;
+      const x2  = ltr ? p1.x - FR - 4 : p1.x + FR + 4;
+      svg.appendChild(svgEl('line', { x1, y1:fy, x2, y2:fy,
+        stroke:'#9b59b6', 'stroke-width':2, 'marker-end':'url(#arr)' }));
+
+    } else {
+      // Vertical turn arrow at edge column
+      const ex  = p0.x;
+      const ay1 = p0.y + DETAIL_Y + 10;
+      const ay2 = p1.y + FLAG_Y - FR - 4;
+      svg.appendChild(svgEl('line', { x1:ex, y1:ay1, x2:ex, y2:ay2,
+        stroke:'#9b59b6', 'stroke-width':2, 'marker-end':'url(#arr)' }));
+    }
+  });
+
+  // ── Nodes ────────────────────────────────────────────────────────────────────
+  nodes.forEach((node, i) => {
+    const { x, y } = pos(i);
+    const lk = links[i];   // outgoing link (undefined for last node)
+
+    // Flag
+    svg.appendChild(svgEl('image', { href: CDN(node.code),
+      x: x - FR, y: y + FLAG_Y - FR, width: FR*2, height: FR*2 }));
+
+    // Country name
+    const name = SHORT[node.country] ?? node.country;
+    svg.appendChild(svgTxt('text', { x, y: y + NAME_Y,
+      'text-anchor': 'middle', 'font-size': 13, 'font-weight': 600, fill: '#1a1a18' }, name));
+
+    // Player name + detail (for all but last node)
+    if (lk) {
+      svg.appendChild(svgTxt('text', { x, y: y + PLAYER_Y,
+        'text-anchor': 'middle', 'font-size': 11, 'font-style': 'italic', fill: '#6c3483' }, lk.player));
+      svg.appendChild(svgTxt('text', { x, y: y + DETAIL_Y,
+        'text-anchor': 'middle', 'font-size': 9, fill: '#aaa' }, `${lk.city} · ${lk.caps} caps`));
+    }
+  });
+
+  if (chain.source) svg.appendChild(svgTxt('text', {
+    x:PW/2, y:H-10, 'text-anchor':'middle', 'font-size':8, fill:'#ccc'
+  }, chain.source));
+
+  document.body.appendChild(svg);
+}
+
+fetch('wc2026_chain_directed.json')
+  .then(r => r.json())
+  .then(render)
+  .catch(e => { document.body.textContent = 'Error: ' + e.message; });
+</script>
+</body>
+</html>

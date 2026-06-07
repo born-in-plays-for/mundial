@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Longest dim-path · Mondial 2026</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #f5f2ec; min-height: 100vh; display: flex; justify-content: center; }
+</style>
+</head>
+<body>
+<script>
+const CDN    = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
+const NS     = 'http://www.w3.org/2000/svg';
+const svgEl  = (tag, a={}) => { const e=document.createElementNS(NS,tag); Object.entries(a).forEach(([k,v])=>e.setAttribute(k,String(v))); return e; };
+const svgTxt = (tag, a, s)  => { const e=svgEl(tag,a); e.textContent=s; return e; };
+
+const SHORT = { 'Bosnia and Herzegovina': 'Bosnia & Herz.' };
+
+// SVG path for an orthogonal (L-shaped) arrow.
+// 'below': player below country — horizontal first, then vertical UP to flag bottom.
+// 'right': player in right margin — vertical first, then horizontal LEFT to flag right edge.
+// 'left' : player in left  margin — vertical first, then horizontal RIGHT to flag left edge.
+//
+// The ±5 offset is direction-based (not color-based) so arrows from opposite sides
+// naturally land on opposite sides of the flag — no crossings, no same-color overlap.
+//   mode=below : off = −5 if approaching from left, +5 if from right  (shifts endpoint x)
+//   mode=right/left: off = +5 if approaching from below, −5 if from above (shifts endpoint y)
+function orthoPath(px, py, cx, cy, FR, mode) {
+  const OFF = 5;
+  if (mode === 'below') {
+    const off = px < cx ? -OFF : OFF;
+    const ex = cx + off;
+    return `M${px},${py} L${ex},${py} L${ex},${cy + FR}`;
+  } else if (mode === 'right') {
+    const off = py > cy ? OFF : -OFF;
+    const ey = cy + off;
+    return `M${px},${py} L${px},${ey} L${cx + FR},${ey}`;
+  } else {
+    const off = py > cy ? OFF : -OFF;
+    const ey = cy + off;
+    return `M${px},${py} L${px},${ey} L${cx - FR},${ey}`;
+  }
+}
+
+function render(chain) {
+  const PAD  = 0;
+  const SIDE = 90;   // side-margin width for turn-player nodes
+  const CW   = 120;  // fixed triad width — number of columns reflows, nothing scales
+  const FR   = 22;   // fixed flag radius
+
+  // How many country columns fit? Minimum 2 so the snake always has somewhere to turn.
+  const n = chain.nodes.length;
+  const N  = Math.max(2, Math.floor((Math.min(window.innerWidth - 2*PAD, 1400) - 2*SIDE) / CW));
+  const PW = 2*SIDE + N*CW;  // SVG is exactly as wide as needed — no leftover space
+
+  // Row geometry (y offsets from row top) — all fixed, independent of window width
+  const FLAG_Y   = 26;               // flag centre from row top
+  const NAME_Y   = FLAG_Y + FR + 13; // country name baseline
+  const PLR_Y    = NAME_Y + 20;      // player italic name baseline
+  const CITY_Y   = PLR_Y + 12;       // city text baseline
+  const ARROW_Y  = CITY_Y + 8;       // arrow start (below city)
+  const ROW_H    = ARROW_Y + 14;
+
+  const TH      = 64;
+  const numRows = Math.ceil(n / N);
+  const H       = TH + numRows * ROW_H + 20;
+
+  // Country node: x = grid column centre, y = flag centre absolute
+  const cPos = i => {
+    const row = Math.floor(i / N);
+    const col = (row%2===0) ? i%N : N-1-(i%N);
+    return { x: SIDE + col*CW + CW/2, y: TH + row*ROW_H + FLAG_Y, row };
+  };
+
+  // Player node for link i (between nodes i and i+1)
+  const pPos = (cp0, cp1) => {
+    if (cp0.row === cp1.row) {
+      return {
+        x: (cp0.x + cp1.x) / 2,
+        y: TH + cp0.row * ROW_H + ARROW_Y,
+        mode: 'below'
+      };
+    }
+    // Turn: push into the side margin
+    const right = cp0.row % 2 === 0;
+    return {
+      x: right ? PW - SIDE/2 : SIDE/2,
+      y: (cp0.y + cp1.y) / 2,
+      mode: right ? 'right' : 'left'
+    };
+  };
+
+  /* ── SVG ──────────────────────────────────────────────────────────────── */
+  const svg = svgEl('svg', { width:PW, height:H, viewBox:`0 0 ${PW} ${H}`,
+    style:`font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:block;overflow:visible` });
+
+  svg.appendChild(svgEl('rect',{width:PW,height:H,rx:14,fill:'#fff',opacity:.72}));
+  svg.appendChild(svgEl('rect',{width:PW,height:H,rx:14,fill:'none',stroke:'#e8e4de','stroke-width':1}));
+
+  // Arrowhead markers: blue for "born in", red for "plays for"
+  const defs = svgEl('defs');
+  [['blu','#3b82f6'],['red','#ef4444']].forEach(([id,col]) => {
+    const mk = svgEl('marker',{id, viewBox:'0 -3 7 6', refX:7, refY:0, markerWidth:5, markerHeight:5, orient:'auto'});
+    mk.appendChild(svgEl('path',{d:'M0,-3L7,0L0,3Z', fill:col}));
+    defs.appendChild(mk);
+  });
+  svg.appendChild(defs);
+
+  // ── Inline legend title: "Longest [→Born in] [→Plays for] path" ─────────
+  {
+    const ty = 32, fs = 14, aw = 22, cw = fs * 0.58, gap = 5;
+    const parts = [
+      { t:'Longest',  c:'#1a1a18' },
+      { a:'blu',      c:'#3b82f6' },
+      { t:'Born in',  c:'#3b82f6' },
+      { a:'red',      c:'#ef4444' },
+      { t:'Plays for',c:'#ef4444' },
+      { t:'path',     c:'#1a1a18' },
+    ];
+    const widths = parts.map(p => p.a ? aw : Math.round(p.t.length * cw));
+    const total  = widths.reduce((s,w) => s+w, 0) + gap * (parts.length - 1);
+    let tx = Math.round(PW/2 - total/2);
+    parts.forEach((p, idx) => {
+      if (idx > 0) tx += gap;
+      if (p.a) {
+        svg.appendChild(svgEl('line',{x1:tx, y1:ty, x2:tx+aw-5, y2:ty,
+          stroke:p.c, 'stroke-width':2, 'marker-end':`url(#${p.a})`}));
+        tx += aw;
+      } else {
+        svg.appendChild(svgTxt('text',{x:tx, y:ty,
+          'dominant-baseline':'middle','font-size':fs,'font-weight':600, fill:p.c}, p.t));
+        tx += widths[idx];
+      }
+    });
+  }
+  if (chain.subtitle) svg.appendChild(svgTxt('text',{x:PW/2,y:54,
+    'text-anchor':'middle','font-size':10,fill:'#aaa'}, chain.subtitle));
+
+  const { nodes, links } = chain;
+  const cp = nodes.map((_,i) => cPos(i));
+
+  /* ── 1. Arrows ─────────────────────────────────────────────────────────── */
+  links.forEach((lk, i) => {
+    const p0 = cp[i], p1 = cp[i+1];
+    const pp = pPos(p0, p1);
+    const isFwd = lk.direction === 'fwd';
+    const bornC  = isFwd ? p0 : p1;
+    const playsC = isFwd ? p1 : p0;
+    const drw = (tgt, color, mid) => svg.appendChild(svgEl('path',{
+      d: orthoPath(pp.x, pp.y, tgt.x, tgt.y, FR, pp.mode),
+      stroke:color, 'stroke-width':1.8, fill:'none', 'marker-end':`url(#${mid})`
+    }));
+    drw(bornC,  '#3b82f6', 'blu');
+    drw(playsC, '#ef4444', 'red');
+  });
+
+  /* ── 2. Player text nodes ──────────────────────────────────────────────── */
+  links.forEach((lk, i) => {
+    const p0 = cp[i], p1 = cp[i+1];
+    const pp = pPos(p0, p1);
+    const isFwd = lk.direction === 'fwd';
+    const bornC = isFwd ? p0 : p1;
+    const halo  = { stroke:'#fff', 'stroke-width':3, 'paint-order':'stroke', 'dominant-baseline':'middle' };
+
+    if (pp.mode === 'below') {
+      // Horizontal player: name centered, city pinned to the ELBOW of the blue arrow.
+      // The elbow is where the arrow bends (horizontal → vertical), at (bornC.x ± 5, pp.y).
+      // City edge is always 0 px from the elbow — consistent distance for every player.
+      const nameY = pp.y - (ARROW_Y - PLR_Y);
+      const cityY = pp.y - (ARROW_Y - CITY_Y);  // 8 px above the arrow horizontal segment
+      const blueLeft  = bornC.x < pp.x;          // born country is to the left?
+      const elbowOff  = blueLeft ? +5 : -5;       // matches orthoPath's off for bornC
+      const elbowX    = bornC.x + elbowOff;       // exact bend point of the blue arrow
+      svg.appendChild(svgTxt('text',{
+        x:pp.x, y:nameY, 'text-anchor':'middle',
+        'font-size':10,'font-style':'italic','font-weight':600,fill:'#6c3483',...halo
+      }, lk.player));
+      svg.appendChild(svgTxt('text',{
+        x: elbowX + (blueLeft ? 3 : -3), y:cityY, 'text-anchor': blueLeft ? 'start' : 'end',
+        'font-size':8, fill:'#aaa', ...halo
+      }, lk.city));
+
+    } else {
+      // Turn player: name stays near the player centre.
+      // City is pinned to the ELBOW of the blue arrow — same y as the arrow bend,
+      // 3 px inside (toward the grid) from the vertical segment.
+      const nameY    = pp.y - 6;
+      const elbowOff = pp.y > bornC.y ? 5 : -5;  // matches orthoPath's off for bornC
+      const cityY    = bornC.y + elbowOff - 7;
+      const cityX    = pp.mode === 'right' ? pp.x - 3 : pp.x + 3;
+      const cityAnch = pp.mode === 'right' ? 'end' : 'start';
+      svg.appendChild(svgTxt('text',{
+        x:cityX, y:nameY, 'text-anchor':cityAnch,
+        'font-size':10,'font-style':'italic','font-weight':600,fill:'#6c3483',...halo
+      }, lk.player));
+      svg.appendChild(svgTxt('text',{
+        x:cityX, y:cityY, 'text-anchor':cityAnch,
+        'font-size':8, fill:'#aaa', ...halo
+      }, lk.city));
+    }
+  });
+
+  /* ── 3. Country nodes ──────────────────────────────────────────────────── */
+  nodes.forEach((node, i) => {
+    const {x,y} = cp[i];
+    const nameTxt = SHORT[node.country] ?? node.country;
+    const fsz = Math.max(9, Math.min(13, Math.floor(CW / (nameTxt.length * 0.65))));
+    // White background disc so flag clips cleanly over arrow lines
+    svg.appendChild(svgEl('circle',{cx:x, cy:y, r:FR+1, fill:'#fff9f5'}));
+    svg.appendChild(svgEl('image',{href:CDN(node.code), x:x-FR, y:y-FR, width:FR*2, height:FR*2}));
+    svg.appendChild(svgTxt('text',{
+      x, y: y + FR + 12,
+      'text-anchor':'middle', 'dominant-baseline':'middle',
+      'font-size':fsz, 'font-weight':700, fill:'#1a1a18',
+      stroke:'#fff9f5', 'stroke-width':3, 'paint-order':'stroke'
+    }, nameTxt));
+  });
+
+  if (chain.source) svg.appendChild(svgTxt('text',{x:PW/2,y:H-6,'text-anchor':'middle','font-size':8,fill:'#ccc'}, chain.source));
+
+  document.body.appendChild(svg);
+}
+
+/* ── Load & responsive re-render ─────────────────────────────────────────── */
+let chainData = null, resizeTimer = null;
+const dataFile = new URLSearchParams(location.search).get('data') || 'wc2026_chain_longest.json';
+fetch(dataFile)
+  .then(r => r.json())
+  .then(chain => { chainData = chain; render(chain); })
+  .catch(e => { document.body.textContent = 'Error: ' + e.message; });
+
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!chainData) return;
+    document.querySelector('svg')?.remove();
+    render(chainData);
+  }, 150);
+});
+</script>
+</body>
+</html>
