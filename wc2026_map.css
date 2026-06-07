@@ -66,7 +66,8 @@ body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<
 #pt-export-count, #pt-native-section, #pt-import-section { border-top: 2px solid var(--color-divider); margin-top: 24px; padding-top: 12px; }
 .pt-title { font-size: 16px; font-weight: 500; }
 .pt-country-flag { height: 20px; width: auto; border-radius: 2px; }
-.pt-nation-header { display: flex; align-items: center; gap: 8px; padding: 10px 0 4px; border-bottom: 1px solid #f0ede8; }
+.pt-nation-header { display: flex; align-items: center; gap: 8px; padding: 10px 4px 4px; border-bottom: 1px solid #f0ede8; cursor: pointer; border-radius: 4px; }
+.pt-nation-header:hover { background: rgba(0,0,0,.04); }
 .pt-nation-header img { height: 14px; width: auto; border-radius: 2px; }
 .pt-nation-name { font-size: 13px; font-weight: 500; color: #1a1a18; }
 .pt-nation-count { font-size: 11px; color: var(--color-dim); }

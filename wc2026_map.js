@@ -459,11 +459,12 @@ const playerTableTemplate = sourceId => {
       <h2 id="pt-export-count" class="mb-3 pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</h2>
       <div id="pt-nations">
         ${exportGroups.map(({ nation, players: gp }) => {
-          const nc = ISO2[QUALIFIED_BY_NAME[nation]];
+          const nationId = QUALIFIED_BY_NAME[nation];
+          const nc = ISO2[nationId];
           return html`
-            <div class="pt-nation-header">
+            <div class="pt-nation-header" @click=${() => activateCountry(nationId)}>
               ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
-              <span class="pt-nation-name">${countryName(QUALIFIED_BY_NAME[nation], nation)}</span>
+              <span class="pt-nation-name">${countryName(nationId, nation)}</span>
               <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
             </div>
             ${gp.map(p => html`
@@ -490,8 +491,9 @@ const playerTableTemplate = sourceId => {
         <div id="pt-import-nations">
           ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
             const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
+            const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
             return html`
-              <div class="pt-nation-header">
+              <div class="pt-nation-header${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId) : null}>
                 ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
                 <span class="pt-nation-name">${label}</span>
                 <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
@@ -620,6 +622,24 @@ const clearDim = () => {
   document.body.classList.remove('dim-active');
   dimBadge.style('display', 'none');
   document.getElementById('player-table').style.display = 'none';
+};
+
+// ── Activate dim from anywhere (e.g. player-table nation clicks) ──────────────
+const activateCountry = id => {
+  if (id == null) return;
+  const rec = DATA_REF[id];
+  if (rec) {
+    const destIds = new Map(rec.nations.flatMap(([n, c]) => {
+      const did = QUALIFIED_BY_NAME[n];
+      return did !== undefined ? [[did, c]] : [];
+    }));
+    applyDim(id, destIds, rec.country);
+  } else if (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)) {
+    applyDim(id, new Map(), QUALIFIED_NAMES[id]);
+  } else {
+    return;
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // ── Flag join helpers ─────────────────────────────────────────────────────────
