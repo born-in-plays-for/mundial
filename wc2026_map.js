@@ -28,24 +28,17 @@ const FLAG = 14;
 const dimBadge     = svg.append('g').attr('cursor','pointer').style('display','none');
 const dimBadgeRect = dimBadge.append('rect')
   .attr('y', 7).attr('height', 20).attr('rx', 10)
-  .attr('fill', '#bbb').attr('opacity', .82);
+  .attr('fill', '#bbb').attr('opacity', .82)
+  .style('visibility', 'hidden');
 const dimBadgeFlag = dimBadge.append('image')
-  .attr('y', 9).attr('width', 16).attr('height', 16);
+  .attr('y', 9).attr('width', 16).attr('height', 16)
+  .style('visibility', 'hidden');
 const dimBadgeText = dimBadge.append('text')
-  .attr('y', 21).attr('text-anchor', 'start')
+  .attr('x', 893).attr('y', 21).attr('text-anchor', 'end')
   .attr('font-size', '10px')
   .attr('font-family', '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif')
-  .attr('fill', '#fff');
+  .attr('fill', '#555');
 dimBadge.on('click', () => clearDim());
-
-const hoverLabel = svg.append('text')
-  .attr('x', 893).attr('y', 21)
-  .attr('text-anchor', 'end')
-  .attr('font-size', '11px')
-  .attr('font-family', '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif')
-  .attr('fill', '#555')
-  .style('display', 'none')
-  .style('pointer-events', 'none');
 
 const CENTROID_OVERRIDE = {
   250:  [2.5,  46.5],   // France (without overseas territories)
@@ -111,7 +104,8 @@ svg.call(d3.zoom()
 
 g.append('path').datum({type:'Sphere'})
   .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5)
-  .on('mousemove', () => { hideTip(); hoverLabel.style('display', 'none'); });
+  .attr('cursor', 'default')
+  .on('mousemove', () => { hideTip(); if (!dimActive) dimBadge.style('display', 'none'); });
 
 g.append('path').datum(d3.geoGraticule()())
   .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
@@ -600,9 +594,9 @@ const applyDim = (sourceId, destIds, country) => {
   const countryDisplay = countryName(sourceId, country);
   const badgeW = Math.round(countryDisplay.length * 5.8 + 46);
   const bx = 895 - badgeW;
-  dimBadgeRect.attr('x', bx).attr('width', badgeW);
-  dimBadgeFlag.attr('href', fc ? FLAG_CDN(fc) : '').attr('x', bx + 8);
-  dimBadgeText.attr('x', bx + 30).text(countryDisplay);
+  dimBadgeRect.style('visibility', 'visible').attr('x', bx).attr('width', badgeW);
+  dimBadgeFlag.style('visibility', 'visible').attr('href', fc ? FLAG_CDN(fc) : '').attr('x', bx + 8);
+  dimBadgeText.attr('x', Math.round(bx + (badgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#fff').text(countryDisplay);
   g.selectAll('.flag-qualified').filter(function() {
     return +this.getAttribute('data-id') === sourceId;
   }).raise();
@@ -632,7 +626,7 @@ const clearDim = () => {
 const placeFlag = (sel) => {
   sel.attr('class','flag-qualified')
     .attr('width', FLAG).attr('height', FLAG)
-    .on('mouseleave', () => { if (!dimActive) hideTip(); hoverLabel.style('display', 'none'); });
+    .on('mouseleave', () => { if (!dimActive) { hideTip(); dimBadge.style('display', 'none'); } });
 };
 
 // ── Main render ───────────────────────────────────────────────────────────────
@@ -819,8 +813,16 @@ Promise.all([
     positionTip(event, h);
   };
 
-  const onCountryMousemove = (event, id) => {
-    hoverLabel.attr('y', dimActive ? 42 : 21).text(countryName(id, QUALIFIED_NAMES[id] ?? byId[id]?.country ?? '')).style('display', null);
+  const onCountryMousemove = (event, id, topoName = '') => {
+    if (!dimActive) {
+      const hlName = countryName(id, QUALIFIED_NAMES[id] ?? byId[id]?.country ?? topoName);
+      const hlBadgeW = Math.round(hlName.length * 5.8 + 46);
+      const hlBx = 895 - hlBadgeW;
+      dimBadgeRect.attr('x', hlBx).attr('width', hlBadgeW).style('visibility', 'hidden');
+      dimBadgeFlag.attr('href', ISO2[id] ? FLAG_CDN(ISO2[id]) : '').attr('x', hlBx + 8).style('visibility', 'hidden');
+      dimBadgeText.attr('x', Math.round(hlBx + (hlBadgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#555').text(hlName);
+      dimBadge.style('display', null);
+    }
     if (dimActive) {
       const inDest = dimDestIds.has(id), inImport = dimImportIds.has(id);
       if (inDest && inImport) { showCombinedTip(event, id); return; }
@@ -853,6 +855,8 @@ Promise.all([
     }
   };
 
+  const enablesDim = id => !!(byId[id] || (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)));
+
   // ── World choropleth (skip UK polygon — rendered separately below) ────────────
   g.selectAll('.country')
     .data(topojson.feature(world, world.objects.countries).features
@@ -862,8 +866,9 @@ Promise.all([
     .attr('d', path)
     .attr('fill', d => { const r = byId[+d.id]; return r && r.ratio !== null ? color(r.ratio) : '#e8e4e0'; })
     .attr('stroke','#ccc8c0').attr('stroke-width',.3)
-    .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
-    .on('mouseleave', () => { if (!dimActive) hideTip(); })
+    .style('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
+    .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
+    .on('mouseleave', () => { if (!dimActive) { hideTip(); dimBadge.style('display', 'none'); } })
     .on('click',     (event, d) => onCountryClick(event, +d.id));
 
   g.append('path')
@@ -880,6 +885,7 @@ Promise.all([
     .attr('d', path)
     .attr('fill', d => { const r = byId[d._id]; return r && r.ratio !== null ? color(r.ratio) : '#e8e4e0'; })
     .attr('stroke','#ccc8c0').attr('stroke-width',.3)
+    .style('cursor', d => enablesDim(d._id) ? 'pointer' : 'default')
     .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
     .on('mouseleave', () => { if (!dimActive) hideTip(); })
     .on('click',     (event, d) => onCountryClick(event, d._id));
@@ -895,8 +901,8 @@ Promise.all([
     .attr('x', d => dotCentroid(d)[0] - FLAG/2)
     .attr('y', d => dotCentroid(d)[1] - FLAG/2)
     .attr('data-id', d => +d.id)
-    .attr('pointer-events', d => byId[+d.id] ? 'none' : 'all')
-    .attr('cursor', d => (!byId[+d.id] && ((IMPORT_BY_NATION[+d.id] ?? []).length > 0 || (NATIVE_BY_NATION[+d.id] ?? []).length > 0)) ? 'pointer' : 'default')
+    .attr('pointer-events', 'all')
+    .attr('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
     .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
     .on('click',     (event, d) => onCountryClick(event, +d.id));
 
@@ -909,7 +915,7 @@ Promise.all([
       .attr('data-cx', cx).attr('data-cy', cy)
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
-      .attr('cursor', byId[id] ? 'pointer' : ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0) ? 'pointer' : 'default')
+      .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
       .on('mousemove', (event) => onCountryMousemove(event, id))
       .on('click',     (event) => onCountryClick(event, id));
   });
@@ -927,8 +933,8 @@ Promise.all([
         .attr('data-id', f._id)
         .attr('data-cx', cx).attr('data-cy', cy)
         .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
-        .attr('pointer-events', byId[f._id] ? 'none' : 'all')
-        .attr('cursor', (!byId[f._id] && ((IMPORT_BY_NATION[f._id] ?? []).length > 0 || (NATIVE_BY_NATION[f._id] ?? []).length > 0)) ? 'pointer' : 'default')
+        .attr('pointer-events', 'all')
+        .attr('cursor', enablesDim(f._id) ? 'pointer' : 'default')
         .on('mousemove', (event) => onCountryMousemove(event, f._id))
         .on('click',     (event) => onCountryClick(event, f._id));
     });
