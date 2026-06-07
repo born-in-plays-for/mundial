@@ -111,7 +111,7 @@ svg.call(d3.zoom()
 
 g.append('path').datum({type:'Sphere'})
   .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5)
-  .on('mousemove', () => hideTip());
+  .on('mousemove', () => { hideTip(); hoverLabel.style('display', 'none'); });
 
 g.append('path').datum(d3.geoGraticule()())
   .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
@@ -350,7 +350,7 @@ const positionTip = (event, height, wide = false) => {
 
 let lastTipKey = null;
 
-const hideTip = () => { tt.style.display = 'none'; tt.classList.remove('tt-non-qualified'); hoverLabel.style('display', 'none'); lastTipKey = null; };
+const hideTip = () => { tt.style.display = 'none'; tt.classList.remove('tt-non-qualified'); lastTipKey = null; };
 
 const showQualifiedTip = (event, name, code) => {
   const nId = QUALIFIED_BY_NAME[name];
@@ -613,7 +613,6 @@ const applyDim = (sourceId, destIds, country) => {
   render(playerTableTemplate(sourceId), ptEl);
 
   document.body.classList.add('dim-active');
-  hoverLabel.style('display', 'none');
   dimBadge.style('display', null);
 };
 const clearDim = () => {
@@ -633,7 +632,7 @@ const clearDim = () => {
 const placeFlag = (sel) => {
   sel.attr('class','flag-qualified')
     .attr('width', FLAG).attr('height', FLAG)
-    .on('mouseleave', () => { if (!dimActive) hideTip(); });
+    .on('mouseleave', () => { if (!dimActive) hideTip(); hoverLabel.style('display', 'none'); });
 };
 
 // ── Main render ───────────────────────────────────────────────────────────────
@@ -821,7 +820,7 @@ Promise.all([
   };
 
   const onCountryMousemove = (event, id) => {
-    if (!dimActive) hoverLabel.text(countryName(id, QUALIFIED_NAMES[id] ?? byId[id]?.country ?? '')).style('display', null);
+    hoverLabel.attr('y', dimActive ? 42 : 21).text(countryName(id, QUALIFIED_NAMES[id] ?? byId[id]?.country ?? '')).style('display', null);
     if (dimActive) {
       const inDest = dimDestIds.has(id), inImport = dimImportIds.has(id);
       if (inDest && inImport) { showCombinedTip(event, id); return; }
