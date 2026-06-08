@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Interactive D3.js choropleth map of the 2026 FIFA World Cup tracking player "exports": players born in one country who represent another. Normalised by population. Includes a Python scraping/data pipeline and several standalone infographic HTML files.
 
 Live at: **https://mundial.cthiebaud.com/**
-GitHub: **https://github.com/cthiebaud/mundial** (standalone repo, also a submodule of `aequologica/aequologica.github.io`)
+GitHub: **https://github.com/cthiebaud/mundial** (standalone repo)
 
 ---
 
@@ -197,7 +197,7 @@ git add <files> && git commit -m "..." && git push
 
 The live site is now served directly from the `cthiebaud/mundial` repo at **https://mundial.cthiebaud.com/**.
 
-`aequologica.cthiebaud.com/mundial/` is now a static redirect page (no longer a submodule) — it redirects to `https://mundial.cthiebaud.com/` and requires no further maintenance.
+`aequologica.cthiebaud.com/mundial/` is a static redirect page — it redirects to `https://mundial.cthiebaud.com/` and requires no further maintenance.
 
 After deploying, re-scrape LinkedIn preview:
 **https://www.linkedin.com/post-inspector/**
