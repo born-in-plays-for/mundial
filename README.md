@@ -53,10 +53,6 @@ Infographics visualising multi-hop birth-country → plays-for paths.
 | `wc2026_chain_kaz.json` | Kazakhstan → … → Algeria (5 hops) |
 | `wc2026_chain_loop.json` | Bosnia ⇄ Croatia mutual cycle |
 
-## images/
-
-Screenshots used in external articles and social posts.
-
 ---
 
 ## Running locally
