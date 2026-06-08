@@ -32,18 +32,26 @@ See `pipeline/README.md` for full instructions.
 
 ## chains/
 
-Standalone infographics visualising the longest multi-hop birth-country → plays-for paths.
+Infographics visualising multi-hop birth-country → plays-for paths.
+
+**Renderers:**
 
 | File | Purpose |
 |---|---|
-| `wc2026_chain_parameterized.html` | Generic renderer — loads any chain via `?data=<file>` |
-| `wc2026_chain.html` | Standalone chain page |
-| `wc2026_chain_main.json` | UK → France → … → Croatia (7 hops, longest) |
+| `wc2026_chain_parameterized.html` | Generic renderer — loads any chain via `?data=<file>` (default: `_main.json`) |
+| `wc2026_chain_longest.html` | Snake renderer for the longest chain — loads any chain via `?data=<file>` (default: `_longest.json`) |
+| `wc2026_chain_directed.html` | Directed-graph renderer — loads `_directed.json` |
+
+**Data:**
+
+| File | Content |
+|---|---|
+| `wc2026_chain_main.json` | UK → France → … → Croatia (7 hops) |
+| `wc2026_chain_longest.json` | Full longest chain (12 edges, 13 nodes) |
+| `wc2026_chain_directed.json` | Directed graph of all chains |
 | `wc2026_chain_italy.json` | Italy variant (Marcus Thuram first link) |
 | `wc2026_chain_kaz.json` | Kazakhstan → … → Algeria (5 hops) |
 | `wc2026_chain_loop.json` | Bosnia ⇄ Croatia mutual cycle |
-| `wc2026_chain_italy.html` | Standalone Italy chain page |
-| `wc2026_chain_kaz.html` | Standalone Kazakhstan chain page |
 
 ## images/
 
