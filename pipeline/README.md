@@ -83,6 +83,29 @@ python3 pipeline/build_json.py           # rebuild JSON
 python3 pipeline/add_wiki_urls.py        # re-enrich (only new players need new calls)
 ```
 
+### Fixing country name mismatches
+
+Some scraped `birth_country` values use the full formal country name while `nation` uses a short form — breaking the `birth_country == nation` native check. Known case:
+
+| `birth_country` (scraped) | `nation` | Fix |
+|---|---|---|
+| `Democratic Republic of the Congo` | `DR Congo` | normalize to `DR Congo` |
+
+After step 1, check and fix:
+
+```python
+import pandas as pd
+df = pd.read_csv('pipeline/wc2026_players.csv')
+mask = (df['birth_country'] == 'Democratic Republic of the Congo') & (df['nation'] == 'DR Congo')
+df.loc[mask, 'birth_country'] = 'DR Congo'
+df.to_csv('pipeline/wc2026_players.csv', index=False)
+print(f"Fixed {mask.sum()} rows")
+```
+
+Then re-run steps 2–3. Verify totals: every squad should have exactly 26 players (Austria and Canada are known exceptions at 25 due to injuries).
+
+---
+
 ### Fixing missing birth countries
 
 After step 1, check for bad rows:

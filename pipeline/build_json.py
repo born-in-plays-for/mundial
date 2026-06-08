@@ -50,6 +50,13 @@ with open(CSV_PATH, encoding="utf-8") as f:
             "caps":         int(row["caps"]) if row["caps"] else 0,
         })
 
+# ── Normalize country name variants ──────────────────────────────────────────
+BIRTH_COUNTRY_ALIASES = {
+    "Democratic Republic of the Congo": "DR Congo",
+}
+for p in players:
+    p["birth_country"] = BIRTH_COUNTRY_ALIASES.get(p["birth_country"], p["birth_country"])
+
 # ── Build data["data"] — exports (birth_country ≠ nation) ────────────────────
 by_birth = defaultdict(list)
 for p in players:
