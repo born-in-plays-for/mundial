@@ -193,20 +193,9 @@ Order matters for SVG z-layering:
 git add <files> && git commit -m "..." && git push
 ```
 
-The parent submodule repo (`aequologica/aequologica.github.io`) is updated manually by the user when they choose. If asked explicitly:
+The live site is now served directly from the `cthiebaud/mundial` repo at **https://mundial.cthiebaud.com/**.
 
-```bash
-cd /Users/christophe.thiebaud/github.com/aequologica/aequologica.github.io/mundial
-git pull
-cd ..
-git add mundial && git commit -m "mundial: ..." && git push
-```
-
-If the submodule has local uncommitted changes (from manual file copies), reset first:
-```bash
-cd .../aequologica.github.io/mundial
-git checkout <modified-file>   # or: git reset --hard origin/main
-```
+`aequologica.cthiebaud.com/mundial/` is now a static redirect page (no longer a submodule) — it redirects to `https://mundial.cthiebaud.com/` and requires no further maintenance.
 
 After deploying, re-scrape LinkedIn preview:
 **https://www.linkedin.com/post-inspector/**
