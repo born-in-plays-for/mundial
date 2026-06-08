@@ -16,7 +16,6 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup showing **where play
 | `wc2026_map_data.json` | App data: all players by birth country (natives + playing for another country) + population |
 | `uk-nations.geojson` | Polygons for England, Scotland, Wales, Northern Ireland |
 | `wc2026_og_v3.png` | 1200×630 Open Graph preview image |
-| `wc2026_export_ratio.png` | Bar chart of players born in a country but playing for another (top countries) |
 
 ## Data pipeline
 
@@ -27,7 +26,7 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup showing **where play
 | `add_wiki_urls.py` | Enriches JSON with per-language Wikipedia links (`wiki_langs`) |
 | `wc2026_players.csv` | Full squad roster with birth city/country (source of truth) |
 | `wc2026_by_birthcountry.csv` | Aggregated ranking by birth country |
-| `wc2026_make_ratio_chart.py` | Generates `wc2026_export_ratio.png` from JSON data |
+| `wc2026_make_ratio_chart.py` | Generates a bar chart of players born in a country but playing for another |
 
 See `pipeline/README.md` for full instructions.
 
