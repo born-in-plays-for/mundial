@@ -6,7 +6,7 @@
 <title>Longest "plays for" chain · 12 edges, 13 nodes</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f5f2ec; min-height: 100vh; padding: 16px; display: flex; justify-content: center; }
+body { background: #f5f2ec; min-height: 100vh; display: flex; justify-content: center; }
 </style>
 </head>
 <body>
@@ -17,13 +17,12 @@ const svgEl  = (tag, a={}) => { const e=document.createElementNS(NS,tag); Object
 const svgTxt = (tag, a, s)  => { const e=svgEl(tag,a); e.textContent=s; return e; };
 
 const SHORT  = { 'Bosnia and Herzegovina': 'Bosnia & Herz.' };
-const COLS   = 3;
 
 function render(chain) {
-  const M  = 16;
-  const PW = Math.min(window.innerWidth - 2*M, 960);
-  const CW = PW / COLS;
-  const FR = Math.min(24, Math.floor(CW / 7));
+  const CW = 120;  // fixed column width — N reflows, nothing scales
+  const FR = 22;   // fixed flag radius
+  const N  = Math.max(2, Math.floor(Math.min(window.innerWidth, 1400) / CW));
+  const PW = N * CW;  // SVG is exactly as wide as needed
 
   // Cell geometry (y offsets from row-top)
   const FLAG_Y   = 24;
@@ -36,13 +35,13 @@ function render(chain) {
 
   const { nodes, links } = chain;
   const n       = nodes.length;
-  const numRows = Math.ceil(n / COLS);
+  const numRows = Math.ceil(n / N);
   const H       = TH + numRows * CELL_H + 28;
 
   // Absolute (x, row-top y, row-index) for node i
   const pos = i => {
-    const row = Math.floor(i / COLS);
-    const col = (row % 2 === 0) ? i % COLS : COLS - 1 - (i % COLS);
+    const row = Math.floor(i / N);
+    const col = (row % 2 === 0) ? i % N : N - 1 - (i % N);
     return { x: col * CW + CW / 2, y: TH + row * CELL_H, row };
   };
 
@@ -117,10 +116,20 @@ function render(chain) {
   document.body.appendChild(svg);
 }
 
+let chainData = null, resizeTimer = null;
 fetch('wc2026_chain_directed.json')
   .then(r => r.json())
-  .then(render)
+  .then(chain => { chainData = chain; render(chain); })
   .catch(e => { document.body.textContent = 'Error: ' + e.message; });
+
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!chainData) return;
+    document.querySelector('svg')?.remove();
+    render(chainData);
+  }, 150);
+});
 </script>
 </body>
 </html>
