@@ -22,9 +22,7 @@ GitHub: **https://github.com/cthiebaud/mundial** (standalone repo)
 | `wc2026_map.js` | ES module — D3 rendering, zoom, tooltips (lit-html), dim/arc logic, i18n |
 | `wc2026_map_data.json` | All data: player exports + natives by birth country + population + `wiki_langs` |
 | `uk-nations.geojson` | 4 UK home nations polygons (Natural Earth 50m) — England, Scotland, Wales, Northern Ireland rendered as separate choropleth features |
-| `wc2026_export_ratio.png` | Bar chart of export ratio (top countries) |
-| `wc2026_og.png` | 1200×630 Open Graph preview image for LinkedIn/social |
-| `images/` | Screenshots used in external articles and social posts |
+| `wc2026_og_v3.png` | 1200×630 Open Graph preview image for LinkedIn/social |
 | `chains/` | Export chain infographics — see section below |
 | `pipeline/` | Data acquisition scripts and source CSVs — see `pipeline/README.md` |
 
@@ -86,7 +84,7 @@ with sync_playwright() as p:
     page.goto("https://mundial.cthiebaud.com/wc2026_map_exported.html",
               wait_until="networkidle", timeout=30000)
     page.wait_for_timeout(4000)
-    page.screenshot(path="wc2026_og.png")
+    page.screenshot(path="wc2026_og_v3.png")
     browser.close()
 ```
 
@@ -247,12 +245,23 @@ with sync_playwright() as p:
 
 ## Infographic chain files (`chains/`)
 
-`chains/wc2026_chain_parameterized.html` renders any chain JSON via `?data=<file>`:
-- `wc2026_chain_main.json` — UK → France → … → Croatia (7 hops, longest)
-- `wc2026_chain_italy.json` — Italy variant (Marcus Thuram first link)
-- `wc2026_chain_kaz.json` — Kazakhstan → … → Algeria (5 hops, different geography)
-- `wc2026_chain_loop.json` — demonstrates Bosnia ⇄ Croatia mutual cycle
-
-`chains/wc2026_chain.html`, `chains/wc2026_chain_italy.html`, `chains/wc2026_chain_kaz.html` are standalone versions of the above.
-
 Requires a local server (same `fetch()` constraint as the map).
+
+**Renderers:**
+
+| File | Loads |
+|---|---|
+| `wc2026_chain_parameterized.html` | Any JSON via `?data=<file>`, default: `wc2026_chain_main.json` |
+| `wc2026_chain_longest.html` | Any JSON via `?data=<file>`, default: `wc2026_chain_longest.json` |
+| `wc2026_chain_directed.html` | Hardcoded to `wc2026_chain_directed.json` |
+
+**Data:**
+
+| File | Content |
+|---|---|
+| `wc2026_chain_main.json` | UK → France → … → Croatia (7 hops) |
+| `wc2026_chain_longest.json` | Full longest chain (12 edges, 13 nodes) |
+| `wc2026_chain_directed.json` | Directed graph of all chains |
+| `wc2026_chain_italy.json` | Italy variant (Marcus Thuram first link) |
+| `wc2026_chain_kaz.json` | Kazakhstan → … → Algeria (5 hops) |
+| `wc2026_chain_loop.json` | Bosnia ⇄ Croatia mutual cycle |

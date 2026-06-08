@@ -47,14 +47,8 @@ for row in soup.find_all('tr'):
 
 print(f"Parsed {len(fifa_rank)} teams")
 
-# ── 2. Load JSON and inject ───────────────────────────────────────────────────
-json_path = ROOT / 'wc2026_map_data.json'
-with open(json_path, encoding='utf-8') as f:
-    data = json.load(f)
-
-data['fifa_rank'] = fifa_rank
-
-# ── 3. Coverage report ───────────────────────────────────────────────────────
+# ── 2. Coverage report (against pop keys in wc2026_map_data.json) ────────────
+data = json.load(open(ROOT / 'wc2026_map_data.json', encoding='utf-8'))
 missing = [k for k in data['pop'] if k not in fifa_rank]
 if missing:
     print(f"WARNING – {len(missing)} pop countries not in FIFA rankings:")
@@ -63,7 +57,8 @@ if missing:
 else:
     print("All pop countries covered.")
 
-# ── 4. Write back ────────────────────────────────────────────────────────────
-with open(json_path, 'w', encoding='utf-8') as f:
-    json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
-print(f"Done → {json_path.name}")
+# ── 3. Write standalone JSON ──────────────────────────────────────────────────
+out_path = ROOT / 'wc2026_fifa_ranks.json'
+with open(out_path, 'w', encoding='utf-8') as f:
+    json.dump(fifa_rank, f, ensure_ascii=False, separators=(',', ':'), sort_keys=True)
+print(f"Done → {out_path.name}")

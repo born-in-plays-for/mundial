@@ -6,6 +6,21 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup showing **where play
 
 ---
 
+## Pages
+
+| URL | Description |
+|---|---|
+| https://mundial.cthiebaud.com/ | Entry point — redirects to the map |
+| https://mundial.cthiebaud.com/wc2026_map_exported.html | Main choropleth map |
+| https://mundial.cthiebaud.com/wc2026_correlation.html | FIFA ranking vs. exports scatter plot |
+| https://mundial.cthiebaud.com/infographics/wc2026_top_exporters.html | Top birth-country infographic (1080×1920) |
+| https://mundial.cthiebaud.com/infographics/wc2026_top_importers.html | Top importing-nation infographic (1080×1920) |
+| https://mundial.cthiebaud.com/chains/wc2026_chain_parameterized.html | Chain renderer — `?data=wc2026_chain_main.json` (default), `_italy.json`, `_kaz.json`, `_loop.json`, `_longest.json` |
+| https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html | Snake renderer — `?data=wc2026_chain_longest.json` (default), any chain JSON |
+| https://mundial.cthiebaud.com/chains/wc2026_chain_directed.html | Directed-graph renderer — hardcoded to `wc2026_chain_directed.json` |
+
+---
+
 ## Main files
 
 | File | Purpose |
