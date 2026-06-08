@@ -10,6 +10,7 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; justify-content: c
 .card { background: rgba(255,255,255,.82); border-radius: 14px; border: 1px solid #e8e4de; padding: 28px 28px 20px; width: 100%; max-width: 940px; }
 h1 { font-size: 17px; font-weight: 600; color: #1a1a18; margin-bottom: 3px; }
 .subtitle { font-size: 11px; color: #aaa; margin-bottom: 18px; }
+.subtitle>span {display: block;}
 .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; font-size: 12px; color: #555; flex-wrap: wrap; }
 .control-group { display: flex; align-items: center; gap: 6px; }
 input[type=range] { width: 110px; accent-color: #3b82f6; }
@@ -42,11 +43,12 @@ input[type=range] { width: 110px; accent-color: #3b82f6; }
 <div class="card">
   <h1 id="chart-title">FIFA Rank vs Player Migration · Mundial 2026</h1>
   <p class="subtitle">
-    Each dot = a 2026 World Cup qualified nation · <span id="sub-x"></span> · <span id="sub-y"></span><br>
-    <span id="sub-interp"></span>
+    Each dot = a 2026 World Cup qualified nation
+    <span id="sub-x"></span>
+    <span id="sub-y"></span>
   </p>
   <div class="x-toggle-row">
-    <span class="toggle-label">X axis:</span>
+    <!--span class="toggle-label">X axis:</span-->
     <div id="x-toggle">
       <button class="seg active" data-xmode="rank">FIFA rank</button>
       <button class="seg" data-xmode="gdp">GDP total</button>
@@ -298,15 +300,13 @@ function update() {
   document.getElementById('chart-title').textContent = titleMap[xMode];
   const subX = {
     rank:   'X = FIFA rank (strongest →)',
-    gdp:    'X = GDP total in billion USD (log scale, UK home nations excluded)',
-    gdp_pc: 'X = GDP per capita PPP (log scale, UK home nations excluded)',
-    hdi:    'X = Human Development Index (Curaçao & UK home nations excluded)',
+    gdp:    'X = GDP total in billion USD (log scale)',
+    gdp_pc: 'X = GDP per capita PPP (log scale)',
+    hdi:    'X = Human Development Index (Curaçao excluded)',
   };
   const subY = { net: 'Y = exports − imports · blue = net exporter · red = net importer', exports: 'Y = players exported · blue dots', imports: 'Y = players imported · red dots' };
-  const subI = { net: 'Richer/more-developed nations tend to have a higher net export balance.', exports: 'Stronger/wealthier nations tend to export more players born on their soil.', imports: 'Weaker/smaller nations tend to field more players born abroad.' };
-  document.getElementById('sub-x').textContent      = subX[xMode];
-  document.getElementById('sub-y').textContent      = subY[yMode];
-  document.getElementById('sub-interp').textContent = subI[yMode];
+  document.getElementById('sub-x').textContent = subX[xMode];
+  document.getElementById('sub-y').textContent = subY[yMode];
 
   // Dots
   dots
