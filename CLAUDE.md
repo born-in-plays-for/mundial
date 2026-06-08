@@ -188,7 +188,7 @@ Order matters for SVG z-layering:
 
 ## Git / deployment
 
-**When asked to "commit and push", only commit and push the `_Mundial` repo. Never touch the parent `aequologica.github.io` repo unless explicitly asked.**
+**When asked to "commit and push", only commit and push this repo (`cthiebaud/mundial`). Never touch the parent `aequologica.github.io` repo unless explicitly asked.**
 
 ```bash
 # Standalone repo only
