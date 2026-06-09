@@ -187,7 +187,7 @@ const QUALIFIED_BY_NAME = Object.fromEntries(
 );
 
 
-import { LOCALE, T, countryName } from './i18n.js';
+import { LOCALE, T, countryName, wikiUrl } from './i18n.js';
 
 // Null-ID birth countries → numeric topojson ID (for centroid lookup and flag dimming)
 const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840, 'Kingdom of the Netherlands': 528 };
@@ -298,10 +298,10 @@ const popTag  = pop  => pop  ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}
 const rankTag = name => { const r = app.fifaRank[name]; return r ? html`<span class="tt-rank">FIFA #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag" src="${FLAG_CDN(code)}">` : nothing;
 const ptWikiRow = p => {
-  const wikiLang = p.wiki_langs?.[LANG];
-  const wikiEn   = p.wiki_langs?.en ?? null;
-  return wikiLang ? html`<a href="${wikiLang}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
-       : wikiEn   ? html`${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki">en</a>)`
+  const url    = wikiUrl(p);
+  const wikiEn = p.wiki_langs?.en ?? null;
+  return url    ? html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
+       : wikiEn ? html`${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki">en</a>)`
        : p.name;
 };
 

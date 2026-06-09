@@ -25,6 +25,8 @@ const _OVERRIDE = {
 // For id=null entries that do have a standard alpha-2 code
 const _NULL_CODE = { 'Democratic Republic of the Congo':'cd', 'U.S.':'us', 'Isle of Man':'im' };
 
+export const wikiUrl = p => p.wiki_langs?.[LANG] ?? null;
+
 export const countryName = (id, fallback = '') => {
   const key = id ?? fallback;
   if (_OVERRIDE[key]) return _OVERRIDE[key][LANG];
@@ -57,6 +59,13 @@ const frDefArt = name => {
   return 'le ';
 };
 
+// Italian preposition "in" before country name — contracts with plural articles
+const itPrep   = name => name?.startsWith('Stati Uniti') ? 'negli' : name?.startsWith('Paesi Bassi') ? 'nei'  : 'in';
+// Italian definite article for non-contracting prepositions (per gli / per i)
+const itDefArt = name => name?.startsWith('Stati Uniti') ? 'gli '  : name?.startsWith('Paesi Bassi') ? 'i '   : '';
+// Italian "da" contracted with article (da → dagli / dai)
+const itDa     = name => name?.startsWith('Stati Uniti') ? 'dagli' : name?.startsWith('Paesi Bassi') ? 'dai'  : 'da';
+
 // UI label strings
 export const T = {
   fr: {
@@ -85,20 +94,20 @@ export const T = {
     legendCaption: 'joueurs nés dans le pays',
   },
   it: {
-    noExport:      name => `Nessun giocatore nato${name ? ' in ' + name : ' qui'} gioca per un altro paese`,
+    noExport:      name => `Nessun giocatore nato${name ? ' ' + itPrep(name) + ' ' + name : ' qui'} gioca per un altro paese`,
     perMillion:    '/ milione di ab.',
     ofSquad:       'della rosa',
-    noImport:      name => `Tutti i giocatori della rosa sono nati${name ? ' in ' + name : ' qui'}`,
+    noImport:      name => `Tutti i giocatori della rosa sono nati${name ? ' ' + itPrep(name) + ' ' + name : ' qui'}`,
     selectedBy:    n => `e selezionato${n === 1 ? '' : 'i'} da un altro paese`,
     clickForAll:   'Clicca sul paese per vedere la lista completa',
     clickForAllPlural: 'Clicca sul paese per vedere le liste complete',
-    selectedByLabel: name => `Giocatori selezionati da ${name} nati in un altro paese`,
-    ptNative:      (n, name) => name ? `giocator${n === 1 ? 'e' : 'i'} nato${n === 1 ? '' : 'i'} in ${name} e selezionato${n === 1 ? '' : 'i'} per ${name}` : `giocator${n === 1 ? 'e' : 'i'} nato${n === 1 ? '' : 'i'} e selezionato${n === 1 ? '' : 'i'} qui`,
-    ptImportTitle: (n, name) => `giocator${n === 1 ? 'e' : 'i'} selezionato${n === 1 ? '' : 'i'} per ${name} e nato${n === 1 ? '' : 'i'} in un altro paese`,
+    selectedByLabel: name => `Giocatori selezionati ${itDa(name)} ${name} nati in un altro paese`,
+    ptNative:      (n, name) => name ? `giocator${n === 1 ? 'e' : 'i'} nato${n === 1 ? '' : 'i'} ${itPrep(name)} ${name} e selezionato${n === 1 ? '' : 'i'} per ${itDefArt(name)}${name}` : `giocator${n === 1 ? 'e' : 'i'} nato${n === 1 ? '' : 'i'} e selezionato${n === 1 ? '' : 'i'} qui`,
+    ptImportTitle: (n, name) => `giocator${n === 1 ? 'e' : 'i'} selezionato${n === 1 ? '' : 'i'} per ${itDefArt(name)}${name} e nato${n === 1 ? '' : 'i'} in un altro paese`,
     pop:           'ab.',
     caps:          'pres.',
     players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
-    exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' in ' + name : ' qui'}`,
+    exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' ' + itPrep(name) + ' ' + name : ' qui'}`,
     pageTitle:      'Luogo di nascita dei giocatori dei Mondiali 2026',
     pageHeading:    'Luogo di nascita dei giocatori dei Mondiali 2026',
     pageQuote: { text: '«Aux âmes bien nées, la sélection ne dépend point du lieu de naissance.»', author: 'Pierre Corneille', work: 'Le Cid', ref: 'Atto II, sc. 2 (Don Rodrigue) · 1637', sep: ' — ' },
