@@ -54,7 +54,12 @@ const arrowPoints = (sw, ofx, ofy, otx, oty, oqx, oqy, k) => {
 const g = svg.append('g');
 const tt = document.getElementById('tooltip');
 
-const FLAG = 14;
+const FLAG   = 14;
+const DOT_R  = 2;  // visual radius (px) for standalone island dot markers
+// How much flag icons grow with zoom: 0 = fixed size, 1 = fully proportional; visual size = FLAG * k^exp
+const FLAG_SIZE_ZOOM_EXP   = 1/5;
+// How much the leader-line offset grows with zoom: 0 = fixed, 0.5 = sqrt(k), 1 = fully proportional
+const FLAG_OFFSET_ZOOM_EXP = 2/3;
 
 // ── Dim-state indicator (fixed in SVG space, unaffected by zoom) ──────────────
 const dimBadge     = svg.append('g').attr('cursor','pointer').style('display','none');
@@ -72,11 +77,19 @@ const dimBadgeText = dimBadge.append('text')
   .attr('fill', '#555');
 dimBadge.on('click', () => clearDim());
 
+// Fixes arc endpoint when path.centroid() lands outside the country polygon.
 const CENTROID_OVERRIDE = {
   250:  [2.5,  46.5],   // France (without overseas territories)
   840:  [-98,  38],     // USA (without Alaska/Hawaii)
   8261: [-4.2, 56.8],  // Scotland (centroid pulled north by islands)
   191:  [16.8, 45.8],  // Croatia (coastal strip drags centroid south into Bosnia)
+};
+
+// Visual flag position — overrides where the flag icon is drawn (data-cx/data-cy + x/y).
+// Arcs still connect to the geographic centroid (via CENTROID_OVERRIDE / dotCentroid).
+const FLAG_POS_OVERRIDE = {
+  191: [16.8, 45.8],    // Croatia — flag placed in Slavonia, away from the coastal strip
+  858: [-51.5, -37.5],  // Uruguay — flag placed SE in the Atlantic
 };
 
 const dotCentroid = d => {
@@ -90,12 +103,36 @@ svg.call(d3.zoom()
   .scaleExtent([1, 12])
   .on('zoom', e => {
     g.attr('transform', e.transform);
-    const s = FLAG / e.transform.k;
+    const s = FLAG / Math.pow(e.transform.k, 1 - FLAG_SIZE_ZOOM_EXP);
     g.selectAll('.flag-qualified')
       .attr('width', s)
       .attr('height', s)
       .attr('x', function() { return +this.getAttribute('data-cx') - s/2; })
       .attr('y', function() { return +this.getAttribute('data-cy') - s/2; });
+    g.selectAll('.standalone-dot')
+      .attr('r', DOT_R / e.transform.k)
+      .attr('stroke-width', 0.5 / e.transform.k);
+    g.selectAll('.offset-flag').each(function() {
+      const cx = +this.getAttribute('data-centroid-cx');
+      const cy = +this.getAttribute('data-centroid-cy');
+      const dx = +this.getAttribute('data-flag-dx');
+      const dy = +this.getAttribute('data-flag-dy');
+      d3.select(this)
+        .attr('x', cx + dx / Math.pow(e.transform.k, FLAG_OFFSET_ZOOM_EXP) - s/2)
+        .attr('y', cy + dy / Math.pow(e.transform.k, FLAG_OFFSET_ZOOM_EXP) - s/2);
+    });
+    g.selectAll('.leader-line').each(function() {
+      const cx = +this.getAttribute('data-centroid-cx');
+      const cy = +this.getAttribute('data-centroid-cy');
+      const dx = +this.getAttribute('data-flag-dx');
+      const dy = +this.getAttribute('data-flag-dy');
+      const k  = e.transform.k;
+      d3.select(this)
+        .attr('x2', cx + dx / Math.pow(k, FLAG_OFFSET_ZOOM_EXP))
+        .attr('y2', cy + dy / Math.pow(k, FLAG_OFFSET_ZOOM_EXP))
+        .attr('stroke-width', 2 / k)
+        .attr('stroke-dasharray', `0,${3/k}`);
+    });
     dimState.k = e.transform.k;
     const k = dimState.k;
     g.selectAll('path.arc-line')
@@ -218,10 +255,12 @@ const ISO2 = {
   531:'cw'
 };
 
-// Small island nations — placed manually (unreliable centroid in 110m topojson)
+// Small island nations — absent from 110m topojson. A dot marker is drawn at lon/lat (choropleth color);
+// the flag icon is offset by dLon/dLat (degrees) from the centroid so both are visible.
+// dLon: + east, − west  |  dLat: + north, − south
 const STANDALONE_FLAGS = [
-  { id: 132, lon: -23.6, lat: 15.1 },  // Cape Verde
-  { id: 531, lon: -69.0, lat: 12.2 },  // Curaçao
+  { id: 132, lon: -23.6, lat: 15.1, dLon:  -4.0, dLat: 4.0 },  // Cape Verde — flag south in Atlantic
+  { id: 531, lon: -69.0, lat: 12.2, dLon:  4.0, dLat:  4.0 },  // Curaçao   — flag north in Caribbean
 ];
 const STANDALONE_IDS = new Set(STANDALONE_FLAGS.map(f => f.id));
 
@@ -805,18 +844,57 @@ g.selectAll('.country-uk')
   .on('mouseleave', () => { if (!dimState.active) hideTip(); })
   .on('click',     (event, d) => onCountryClick(event, d._id));
 
+const worldFeatures = topojson.feature(world, world.objects.countries).features;
+
+// Ocean-only clip path: sphere − land (even-odd rule punches out land areas)
+svg.append('defs').append('clipPath').attr('id', 'ocean-clip')
+  .append('path')
+  .attr('clip-rule', 'evenodd')
+  .attr('d', path({type:'Sphere'}) + ' ' + path(topojson.merge(world, world.objects.countries.geometries)));
+
+// Leader lines for offset flags — drawn first, clipped to ocean so they vanish over land
+const leaderGroup = g.append('g').attr('clip-path', 'url(#ocean-clip)');
+const appendLeaderLine = (cx, cy, fx, fy) =>
+  leaderGroup.append('line')
+    .attr('class', 'leader-line')
+    .attr('data-centroid-cx', cx).attr('data-centroid-cy', cy)
+    .attr('data-flag-dx', fx - cx).attr('data-flag-dy', fy - cy)
+    .attr('x1', cx).attr('y1', cy)
+    .attr('x2', fx).attr('y2', fy)
+    .attr('stroke', '#555').attr('stroke-width', 2)
+    .attr('stroke-dasharray', '0,3').attr('stroke-linecap', 'round').attr('opacity', 0.5)
+    .attr('pointer-events', 'none');
+
+worldFeatures.forEach(d => {
+  const fp = FLAG_POS_OVERRIDE[+d.id];
+  if (!fp) return;
+  const [cx, cy] = dotCentroid(d);
+  const [fx, fy] = projection(fp);
+  appendLeaderLine(cx, cy, fx, fy);
+});
+
+STANDALONE_FLAGS.forEach(({ lon, lat, dLon = 0, dLat = 0 }) => {
+  const [cx, cy] = projection([lon, lat]);
+  const [fx, fy] = projection([lon + dLon, lat + dLat]);
+  appendLeaderLine(cx, cy, fx, fy);
+});
+
 g.selectAll('.flag-qualified')
-  .data(topojson.feature(world, world.objects.countries).features
-    .filter(d => QUALIFIED_NAMES[+d.id] && !STANDALONE_IDS.has(+d.id)))
+  .data(worldFeatures.filter(d => QUALIFIED_NAMES[+d.id] && !STANDALONE_IDS.has(+d.id)))
   .join('image')
   .call(placeFlag)
   .attr('href', d => FLAG_CDN(ISO2[+d.id]))
   .attr('data-id', d => +d.id)
   .each(function(d) {
     const [cx, cy] = dotCentroid(d);
-    d3.select(this)
-      .attr('data-cx', cx).attr('data-cy', cy)
-      .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2);
+    const fp = FLAG_POS_OVERRIDE[+d.id];
+    const [fx, fy] = fp ? projection(fp) : [cx, cy];
+    const sel = d3.select(this)
+      .attr('data-cx', fx).attr('data-cy', fy)
+      .attr('x', fx - FLAG/2).attr('y', fy - FLAG/2);
+    if (fp) sel.classed('offset-flag', true)
+      .attr('data-centroid-cx', cx).attr('data-centroid-cy', cy)
+      .attr('data-flag-dx', fx - cx).attr('data-flag-dy', fy - cy);
   })
   .attr('pointer-events', 'all')
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
@@ -824,14 +902,36 @@ g.selectAll('.flag-qualified')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
   .on('click',     (event, d) => onCountryClick(event, +d.id));
 
+// Dot markers at true island centroid — choropleth color, zoom-stable, interactive
 STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
   const [cx, cy] = projection([lon, lat]);
-  g.append('image')
-    .call(placeFlag)
-    .attr('href', FLAG_CDN(ISO2[id]))
+  g.append('circle')
+    .attr('class', 'flag-qualified standalone-dot')
     .attr('data-id', id)
     .attr('data-cx', cx).attr('data-cy', cy)
-    .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
+    .attr('cx', cx).attr('cy', cy)
+    .attr('r', DOT_R)
+    .attr('fill', choroFill(id, app.byId))
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 0.5)
+    .attr('data-enables-dim', enablesDim(id) ? '' : null)
+    .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+    .on('mousemove', (event) => onCountryMousemove(event, id))
+    .on('click',     (event) => onCountryClick(event, id));
+});
+
+STANDALONE_FLAGS.forEach(({ id, lon, lat, dLon = 0, dLat = 0 }) => {
+  const [cx, cy] = projection([lon, lat]);
+  const [fx, fy] = projection([lon + dLon, lat + dLat]);
+  g.append('image')
+    .call(placeFlag)
+    .classed('offset-flag', true)
+    .attr('href', FLAG_CDN(ISO2[id]))
+    .attr('data-id', id)
+    .attr('data-cx', fx).attr('data-cy', fy)
+    .attr('data-centroid-cx', cx).attr('data-centroid-cy', cy)
+    .attr('data-flag-dx', fx - cx).attr('data-flag-dy', fy - cy)
+    .attr('x', fx - FLAG/2).attr('y', fy - FLAG/2)
     .attr('pointer-events', 'all')
     .attr('data-enables-dim', enablesDim(id) ? '' : null)
     .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
