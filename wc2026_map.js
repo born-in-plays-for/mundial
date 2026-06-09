@@ -96,8 +96,8 @@ svg.call(d3.zoom()
       .attr('height', s)
       .attr('x', function() { return +this.getAttribute('data-cx') - s/2; })
       .attr('y', function() { return +this.getAttribute('data-cy') - s/2; });
-    currentK = e.transform.k;
-    const k = currentK;
+    dimState.k = e.transform.k;
+    const k = dimState.k;
     g.selectAll('path.arc-line')
       .attr('stroke-width', function() { return +this.getAttribute('data-sw') / k; })
       .attr('d', function() {
@@ -119,7 +119,7 @@ svg.call(d3.zoom()
 g.append('path').datum({type:'Sphere'})
   .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5)
   .attr('cursor', 'default')
-  .on('mousemove', () => { hideTip(); if (!dimActive) dimBadge.style('display', 'none'); });
+  .on('mousemove', () => { hideTip(); if (!dimState.active) dimBadge.style('display', 'none'); });
 
 g.append('path').datum(d3.geoGraticule()())
   .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
@@ -149,12 +149,8 @@ const QUALIFIED_BY_NAME = Object.fromEntries(
   Object.entries(QUALIFIED_NAMES).map(([id, name]) => [name, +id])
 );
 
-// ── i18n ──────────────────────────────────────────────────────────────────────
-const LOCALE = navigator.languages?.[0] ?? navigator.language ?? 'fr';
-const LANG   = LOCALE.toLowerCase().startsWith('fr') ? 'fr'
-             : LOCALE.toLowerCase().startsWith('de') ? 'de'
-             : LOCALE.toLowerCase().startsWith('it') ? 'it'
-             : 'en';
+
+import { LOCALE, LANG, T, frPrep, frDefArt } from './i18n.js';
 
 const _regionNames = (() => {
   try { return new Intl.DisplayNames([LOCALE], { type: 'region' }); } catch(e) { return null; }
@@ -186,130 +182,7 @@ const countryName = (id, fallback = '') => {
   return fallback || String(id);
 };
 
-// French preposition before country name (en / au / aux)
-const frPrep = name => {
-  if (!name) return 'en';
-  if (['États-Unis', 'Pays-Bas', 'Émirats arabes unis', 'Philippines', 'Bahamas'].some(c => name.startsWith(c))) return 'aux';
-  if (['Mexique', 'Mozambique', 'Cambodge', 'Zimbabwe', 'Belize'].includes(name)) return 'au';
-  if (['Haïti'].includes(name)) return 'en';
-  if (/^[AEIOUYÀÂÉÈÊËÎÏÔÙÛaeiouyàâéèêëîïôùû]/.test(name) || /e$/.test(name)) return 'en';
-  return 'au';
-};
 
-// French definite article before country name (le / la / l' / les)
-const frDefArt = name => {
-  if (!name) return '';
-  if (['États-Unis', 'Pays-Bas', 'Émirats arabes unis', 'Philippines', 'Bahamas'].some(c => name.startsWith(c))) return 'les ';
-  if (['Haïti'].includes(name)) return '';
-  if (/^[AEIOUYÀÂÉÈÊËÎÏÔÙÛaeiouyàâéèêëîïôùû]/.test(name)) return "l'";
-  if (['Mexique', 'Mozambique', 'Cambodge', 'Zimbabwe', 'Belize'].includes(name)) return 'le ';
-  if (/e$/.test(name)) return 'la ';
-  return 'le ';
-};
-
-// UI label strings
-const T = {
-  fr: {
-    noExport:      name => `Aucun joueur né ${name ? frPrep(name) + ' ' + name : 'ici'} ne joue pour un autre pays`,
-    perMillion:    "/ million d'hab.",
-    ofSquad:       'de la sélection',
-    noImport:      name => `Tous les joueurs de la sélection sont nés ${name ? frPrep(name) + ' ' + name : 'ici'}`,
-    selectedBy:    n => `et sélectionné${n > 1 ? 's' : ''} par un autre pays`,
-    clickForAll:   'Cliquer sur le pays pour voir la liste complète',
-    clickForAllPlural: 'Cliquer sur le pays pour voir les listes complètes',
-    selectedByLabel: name => `Joueurs sélectionnés par ${frDefArt(name)}${name} nés dans un autre pays`,
-    ptNative:      (n, name) => name ? `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${frPrep(name)} ${name} et sélectionné${n > 1 ? 's' : ''} par ${frDefArt(name)}${name}` : `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} et sélectionné${n > 1 ? 's' : ''} ici`,
-    ptImportTitle: (n, name) => `joueur${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''} par ${frDefArt(name)}${name} et né${n > 1 ? 's' : ''} dans un autre pays`,
-    pop:           'pop.',
-    caps:          'sél.',
-    players:       n => `joueur${n > 1 ? 's' : ''}`,
-    exported:      (n, name) => `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${name ? frPrep(name) + ' ' + name : 'ici'}`,
-    pageTitle:      'Lieu de naissance des joueurs du Mondial 2026',
-    pageHeading:    'Lieu de naissance des joueurs du Mondial 2026',
-    pageQuote: { text: '« Aux âmes bien nées, la sélection ne dépend point du lieu de naissance. »', author: 'Pierre Corneille', work: 'Le Cid', ref: 'Acte II, sc. 2 (Don Rodrigue) · 1637', sep: ' — ' },
-    pageSub:       n => `${n} joueurs au total · source : Wikipedia`,
-    mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs du Mondial 2026',
-    notQualified:  'non qualifié',
-    pageDescription: 'Carte choroplèthe du Mondial 2026 — pays de naissance des joueurs, dont certains jouent pour un autre pays.',
-    zoomHint:      'scroll pour zoomer · glisser pour déplacer',
-    legendCaption: 'joueurs nés dans le pays',
-  },
-  it: {
-    noExport:      name => `Nessun giocatore nato${name ? ' in ' + name : ' qui'} gioca per un altro paese`,
-    perMillion:    '/ milione di ab.',
-    ofSquad:       'della rosa',
-    noImport:      name => `Tutti i giocatori della rosa sono nati${name ? ' in ' + name : ' qui'}`,
-    selectedBy:    n => `e selezionato${n === 1 ? '' : 'i'} da un altro paese`,
-    clickForAll:   'Clicca sul paese per vedere la lista completa',
-    clickForAllPlural: 'Clicca sul paese per vedere le liste complete',
-    selectedByLabel: name => `Giocatori selezionati da ${name} nati in un altro paese`,
-    ptNative:      (n, name) => name ? `giocator${n === 1 ? 'e' : 'i'} nato${n === 1 ? '' : 'i'} in ${name} e selezionato${n === 1 ? '' : 'i'} per ${name}` : `giocator${n === 1 ? 'e' : 'i'} nato${n === 1 ? '' : 'i'} e selezionato${n === 1 ? '' : 'i'} qui`,
-    ptImportTitle: (n, name) => `giocator${n === 1 ? 'e' : 'i'} selezionato${n === 1 ? '' : 'i'} per ${name} e nato${n === 1 ? '' : 'i'} in un altro paese`,
-    pop:           'ab.',
-    caps:          'pres.',
-    players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
-    exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' in ' + name : ' qui'}`,
-    pageTitle:      'Luogo di nascita dei giocatori dei Mondiali 2026',
-    pageHeading:    'Luogo di nascita dei giocatori dei Mondiali 2026',
-    pageQuote: { text: '«Aux âmes bien nées, la sélection ne dépend point du lieu de naissance.»', author: 'Pierre Corneille', work: 'Le Cid', ref: 'Atto II, sc. 2 (Don Rodrigue) · 1637', sep: ' — ' },
-    pageSub:       n => `${n} giocatori in totale · fonte: Wikipedia`,
-    mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori dei Mondiali 2026',
-    notQualified:  'non qualificato',
-    pageDescription: 'Mappa coropletica dei Mondiali 2026 — paesi di nascita dei giocatori, alcuni dei quali giocano per un altro paese.',
-    zoomHint:      'scorri per zoomare · trascina per spostarti',
-    legendCaption: 'giocatori nati nel paese',
-  },
-  de: {
-    noExport:      name => name ? `Kein in ${name} geborener Spieler spielt für ein anderes Land` : 'Kein hier geborener Spieler spielt für ein anderes Land',
-    perMillion:    '/ Mio. Einwohner',
-    ofSquad:       'im Kader',
-    noImport:      name => name ? `Alle Kaderspieler wurden in ${name} geboren` : 'Alle Kaderspieler wurden hier geboren',
-    selectedBy:    () => 'ausgewählt von einem anderen Land',
-    clickForAll:   'Land anklicken für die vollständige Liste',
-    clickForAllPlural: 'Land anklicken für die vollständigen Listen',
-    selectedByLabel: name => `Von ${name} ausgewählte Spieler, geboren in einem anderen Land`,
-    ptNative:      (_, name) => name ? `in ${name} geborene und für ${name} ausgewählte Spieler` : 'hier geborene und ausgewählte Spieler',
-    ptImportTitle: (_, name) => name ? `für ${name} ausgewählte, woanders geborene Spieler` : 'anderswo geborene Spieler',
-    pop:           'Einw.',
-    caps:          'Sp.',
-    players:       () => 'Spieler',
-    exported:      (n, name) => name ? 'in ' + name + (n === 1 ? ' geborener Spieler' : ' geborene Spieler') : (n === 1 ? 'hier geborener Spieler' : 'hier geborene Spieler'),
-    pageTitle:      'Geburtsort der Spieler der WM 2026',
-    pageHeading:    'Geburtsort der Spieler der WM 2026',
-    pageQuote: { text: '„Aux âmes bien nées, la sélection ne dépend point du lieu de naissance.“', author: 'Pierre Corneille', work: 'Le Cid', ref: 'Akt II, Sz. 2 (Don Rodrigue) · 1637', sep: ' – ' },
-    pageSub:       n => `${n} Spieler insgesamt · Quelle: Wikipedia`,
-    mapAriaLabel:  'Choroplethenkarte der Geburtsländer der Spieler der WM 2026',
-    notQualified:  'nicht qualifiziert',
-    pageDescription: 'Choroplethenkarte der WM 2026 — Geburtsländer der Spieler, darunter einige, die für ein anderes Land spielen.',
-    zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
-    legendCaption: 'im Land geborene Spieler',
-  },
-  en: {
-    noExport:      name => `No player born${name ? ' in ' + name : ' here'} plays for another country`,
-    perMillion:    '/ million inhab.',
-    ofSquad:       'of the squad',
-    noImport:      name => `All squad players were born${name ? ' in ' + name : ' here'}`,
-    selectedBy:    () => 'selected by another country',
-    clickForAll:   'Click the country to see the complete list',
-    clickForAllPlural: 'Click the country to see the complete lists',
-    selectedByLabel: name => `Players selected by ${name} born in another country`,
-    ptNative:      (n, name) => name ? `player${n > 1 ? 's' : ''} born in ${name} and selected for ${name}` : `player${n > 1 ? 's' : ''} born and selected here`,
-    ptImportTitle: (n, name) => `player${n > 1 ? 's' : ''} selected for ${name} born in another country`,
-    pop:           'pop.',
-    caps:          'caps',
-    players:       n => `player${n > 1 ? 's' : ''}`,
-    exported:      (n, name) => `player${n > 1 ? 's' : ''} born${name ? ' in ' + name : ' here'}`,
-    pageTitle:      'Birthplace of 2026 World Cup Players',
-    pageHeading:    'Birthplace of 2026 World Cup Players',
-    pageQuote: { text: '‘Aux âmes bien nées, la sélection ne dépend point du lieu de naissance.’', author: 'Pierre Corneille', work: 'Le Cid', ref: 'Act II, sc. 2 (Don Rodrigue) · 1637', sep: ' – ' },
-    pageSub:       n => `${n} players total · source: Wikipedia`,
-    mapAriaLabel:  'Choropleth map of birth countries of 2026 World Cup players',
-    notQualified:  'not qualified',
-    pageDescription: 'Choropleth map of the 2026 World Cup — birth countries of players, some of whom play for another country.',
-    zoomHint:      'scroll to zoom · drag to pan',
-    legendCaption: 'players born in the country',
-  },
-}[LANG];
 
 // Apply locale to static page elements
 document.documentElement.lang = LANG;
@@ -374,40 +247,44 @@ const showQualifiedTip = (event, name, code) => {
   const nId = QUALIFIED_BY_NAME[name];
   if (lastTipKey !== name) {
     lastTipKey = name;
-    const hasImps = (IMPORT_BY_NATION[nId] ?? []).length > 0;
+    const hasImps = (app.importByNation[nId] ?? []).length > 0;
 
     render(html`
       <div class="tt-name tt-name-inner">
-        <span class="tt-name-inner">${flagImg(code)}${countryName(nId, name)}${DATA_REF[nId]?.totalCount ? html`<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${DATA_REF[nId].totalCount}</span>` : nothing}</span>
-        <span class="tt-pop-rank">${popTag(POP_REF[name])}${rankTag(name)}</span>
+        <span class="tt-name-inner">${flagImg(code)}${countryName(nId, name)}${app.byId[nId]?.totalCount ? html`<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${app.byId[nId].totalCount}</span>` : nothing}</span>
+        <span class="tt-pop-rank">${popTag(app.pop[name])}${rankTag(name)}</span>
       </div>
       <div class="tt-label">${T.noExport(countryName(nId, name))}</div>
       ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-label">${T.noImport(countryName(nId, name))}</div>`}
-      ${hasImps && (IMPORT_BY_NATION[nId] ?? []).length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
+      ${hasImps && (app.importByNation[nId] ?? []).length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
   }
   positionTip(event, 200, false);
 };
 
 // ── Dim helpers (click destination highlight) ─────────────────────────────────
-let currentK = 1;
-let dimActive = false;
-let dimSourceId = null;
-let dimDestIds   = new Map(); // destId → player count  (export: A→X)
-let dimImportIds = new Map(); // centroid-id → count   (import: Y→A)
-let arcsGroup  = null;
+const dimState = {
+  k: 1,
+  active: false,
+  sourceId: null,
+  destIds: new Map(),
+  importIds: new Map(),
+  arcsGroup: null,
+};
+const app = {
+  byId: {},
+  importByNation: {},
+  nativeByNation: {},
+  pop: {},
+  fifaRank: {},
+};
 const centroids = {};
-let DATA_REF = {};          // set once data loads, used by applyDim
-let IMPORT_BY_NATION = {};  // nationId → [{name, birthCountry, birthCountryId, caps}]
-let NATIVE_BY_NATION = {};  // nationId → [{name, caps}]
-let POP_REF  = {};          // country name → population in millions
-let FIFA_RANK = {};         // country name → FIFA rank (int, lower = better)
 
-const enablesDim = id => !!(DATA_REF[id] || (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)));
+const enablesDim = id => !!(app.byId[id] || (QUALIFIED_NAMES[id] && ((app.importByNation[id] ?? []).length > 0 || (app.nativeByNation[id] ?? []).length > 0)));
 
 const fmtPop = pop => (pop < 1 ? parseFloat(pop.toFixed(2)) : parseFloat(pop.toFixed(1)))
   .toLocaleString(LOCALE, { maximumFractionDigits: pop < 1 ? 2 : 1, minimumFractionDigits: 0, useGrouping: false }) + 'M';
 const popTag  = pop  => pop  ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing;
-const rankTag = name => { const r = FIFA_RANK[name]; return r ? html`<span class="tt-rank">FIFA #${r}</span>` : nothing; };
+const rankTag = name => { const r = app.fifaRank[name]; return r ? html`<span class="tt-rank">FIFA #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag" src="${FLAG_CDN(code)}">` : nothing;
 const ptWikiRow = p => {
   const wikiLang = p.wiki_langs?.[LANG];
@@ -420,7 +297,7 @@ const ptWikiRow = p => {
 const SQUAD_SIZE = { 40: 25, 124: 25 }; // Austria, Canada — injuries reduced squad to 25
 
 const buildImportColHtml = nationId => {
-  const players   = (IMPORT_BY_NATION[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+  const players   = (app.importByNation[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
   if (players.length === 0) return html`<div class="tt-label">${T.noImport(countryName(nationId, QUALIFIED_NAMES[nationId]))}</div>`;
   const byBirth   = {};
   players.forEach(p => { const l = countryName(p.birthCountryId, p.birthCountry); byBirth[l] = (byBirth[l] ?? 0) + 1; });
@@ -448,12 +325,12 @@ const buildImportColHtml = nationId => {
 
 const playerTableTemplate = sourceId => {
   const fc            = ISO2[sourceId];
-  const country       = DATA_REF[sourceId]?.country ?? QUALIFIED_NAMES[sourceId];
-  const pop           = DATA_REF[sourceId]?.pop ?? POP_REF[QUALIFIED_NAMES[sourceId]] ?? null;
-  const cnt           = DATA_REF[sourceId]?.count ?? 0;
-  const exportPlayers = DATA_REF[sourceId]?.players ?? [];
-  const nativePlayers = NATIVE_BY_NATION[sourceId] ?? [];
-  const importPlayers = (IMPORT_BY_NATION[sourceId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+  const country       = app.byId[sourceId]?.country ?? QUALIFIED_NAMES[sourceId];
+  const pop           = app.byId[sourceId]?.pop ?? app.pop[QUALIFIED_NAMES[sourceId]] ?? null;
+  const cnt           = app.byId[sourceId]?.count ?? 0;
+  const exportPlayers = app.byId[sourceId]?.players ?? [];
+  const nativePlayers = app.nativeByNation[sourceId] ?? [];
+  const importPlayers = (app.importByNation[sourceId] ?? []).slice().sort((a, b) => b.caps - a.caps);
   const isQualified   = !!QUALIFIED_NAMES[sourceId];
   const name          = countryName(sourceId, country);
 
@@ -537,24 +414,24 @@ const playerTableTemplate = sourceId => {
 };
 
 const applyDim = (sourceId, destIds, country) => {
-  dimActive = true;
-  dimSourceId = sourceId;
-  dimDestIds = destIds;
+  dimState.active = true;
+  dimState.sourceId = sourceId;
+  dimState.destIds = destIds;
 
   // Build import ids: birth countries Y whose players represent nation sourceId
-  dimImportIds = new Map();
-  (IMPORT_BY_NATION[sourceId] ?? []).forEach(p => {
+  dimState.importIds = new Map();
+  (app.importByNation[sourceId] ?? []).forEach(p => {
     const cId = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
     if (cId == null) return;
-    dimImportIds.set(cId, (dimImportIds.get(cId) ?? 0) + 1);
+    dimState.importIds.set(cId, (dimState.importIds.get(cId) ?? 0) + 1);
   });
 
   // Flag opacity + data-dim-visible for cursor/click control
-  const dimVisibleIds = new Set([...destIds.keys(), ...dimImportIds.keys()]);
+  const dimVisibleIds = new Set([...destIds.keys(), ...dimState.importIds.keys()]);
   g.selectAll('.flag-qualified').each(function() {
     const id = +this.getAttribute('data-id');
     const isExport = destIds.has(id);
-    const isImport = dimImportIds.has(id);
+    const isImport = dimState.importIds.has(id);
     const visible = id === sourceId || isExport || isImport;
     d3.select(this)
       .attr('opacity', visible ? 1 : 0.35)
@@ -569,28 +446,28 @@ const applyDim = (sourceId, destIds, country) => {
   const drawArc = (from, to, count, type) => {
     const color = type === 'export' ? ARC_EXPORT_COLOR : ARC_IMPORT_COLOR;
     const sw = Math.max(1, Math.sqrt(count));
-    const {ofx, ofy, otx, oty, oqx, oqy} = arcOffset(sw, from[0], from[1], to[0], to[1], currentK);
+    const {ofx, ofy, otx, oty, oqx, oqy} = arcOffset(sw, from[0], from[1], to[0], to[1], dimState.k);
 
-    arcsGroup.append('path')
+    dimState.arcsGroup.append('path')
       .attr('class', 'arc-line')
       .attr('d', `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`)
       .attr('fill', 'none').attr('stroke', color)
-      .attr('stroke-width', sw/currentK).attr('opacity', 0.7)
+      .attr('stroke-width', sw/dimState.k).attr('opacity', 0.7)
       .attr('data-sw', sw)
       .attr('data-sx', from[0]).attr('data-sy', from[1])
       .attr('data-tx', to[0]).attr('data-ty', to[1]);
 
-    arcsGroup.append('polygon')
+    dimState.arcsGroup.append('polygon')
       .attr('class', 'arc-line arc-mid')
-      .attr('points', arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, currentK))
+      .attr('points', arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, dimState.k))
       .attr('fill', color).attr('opacity', 0.8)
       .attr('data-sw', sw)
       .attr('data-sx', from[0]).attr('data-sy', from[1])
       .attr('data-tx', to[0]).attr('data-ty', to[1]);
   };
 
-  if (arcsGroup) {
-    arcsGroup.selectAll('.arc-line').remove();
+  if (dimState.arcsGroup) {
+    dimState.arcsGroup.selectAll('.arc-line').remove();
     const src = centroids[sourceId];
     if (src) {
       // Export arcs: A → X (blue)
@@ -599,7 +476,7 @@ const applyDim = (sourceId, destIds, country) => {
         if (dst) drawArc(src, dst, count, 'export');
       });
       // Import arcs: Y → A (red, arrow points inward)
-      dimImportIds.forEach((count, birthId) => {
+      dimState.importIds.forEach((count, birthId) => {
         if (birthId === sourceId) return;
         const ySrc = centroids[birthId];
         if (ySrc) drawArc(ySrc, src, count, 'import');
@@ -627,13 +504,13 @@ const applyDim = (sourceId, destIds, country) => {
   dimBadge.style('display', null);
 };
 const clearDim = () => {
-  dimActive = false;
-  dimSourceId = null;
-  dimDestIds = new Map();
-  dimImportIds = new Map();
+  dimState.active = false;
+  dimState.sourceId = null;
+  dimState.destIds = new Map();
+  dimState.importIds = new Map();
   g.selectAll('.flag-qualified').attr('opacity', null).attr('data-dim-visible', null);
   g.selectAll('.country').attr('data-dim-visible', null);
-  if (arcsGroup) arcsGroup.selectAll('.arc-line').remove();
+  if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line').remove();
   document.body.classList.remove('dim-active');
   dimBadge.style('display', 'none');
   document.getElementById('player-table').style.display = 'none';
@@ -642,14 +519,14 @@ const clearDim = () => {
 // ── Activate dim from anywhere (e.g. player-table nation clicks) ──────────────
 const activateCountry = (id, scroll = false) => {
   if (id == null) return;
-  const rec = DATA_REF[id];
+  const rec = app.byId[id];
   if (rec) {
     const destIds = new Map(rec.nations.flatMap(([n, c]) => {
       const did = QUALIFIED_BY_NAME[n];
       return did !== undefined ? [[did, c]] : [];
     }));
     applyDim(id, destIds, rec.country);
-  } else if (QUALIFIED_NAMES[id] && ((IMPORT_BY_NATION[id] ?? []).length > 0 || (NATIVE_BY_NATION[id] ?? []).length > 0)) {
+  } else if (QUALIFIED_NAMES[id] && ((app.importByNation[id] ?? []).length > 0 || (app.nativeByNation[id] ?? []).length > 0)) {
     applyDim(id, new Map(), QUALIFIED_NAMES[id]);
   } else {
     return;
@@ -661,340 +538,345 @@ const activateCountry = (id, scroll = false) => {
 const placeFlag = (sel) => {
   sel.attr('class','flag-qualified')
     .attr('width', FLAG).attr('height', FLAG)
-    .on('mouseleave', () => { if (!dimActive) { hideTip(); dimBadge.style('display', 'none'); } });
+    .on('mouseleave', () => { if (!dimState.active) { hideTip(); dimBadge.style('display', 'none'); } });
 };
 
 // ── Main render ───────────────────────────────────────────────────────────────
 // GU_A3 code (Natural Earth) → synthetic nation ID
 const UK_GU_TO_ID = {ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263};
 
+// ── Data index builder ──────────────────────────────────────────────────────
+const buildIndices = rawData => {
+const DATA = rawData.data;
+if (rawData.natives) {
+  Object.entries(rawData.natives).forEach(([name, players]) => {
+    const nId = QUALIFIED_BY_NAME[name];
+    if (nId != null) app.nativeByNation[nId] = players;
+  });
+}
+DATA.forEach(d => {
+  d.pop        = rawData.pop[d.country] || null;
+  d.nativeCount = (app.nativeByNation[d.id] ?? []).length;
+  d.totalCount  = d.count + d.nativeCount;
+  d.ratio       = d.totalCount;
+  app.byId[d.id] = d;
+});
+// Add coloring entries for qualified nations all of whose players play for their own country
+Object.entries(app.nativeByNation).forEach(([nId, players]) => {
+  const id = +nId;
+  if (app.byId[id]) return;
+  const name = QUALIFIED_NAMES[id];
+  const pop  = rawData.pop[name] || null;
+  app.byId[id] = { id, country: name, count: 0, nativeCount: players.length,
+               totalCount: players.length, pop, ratio: players.length,
+               players: [], top: [], nations: [] };
+});
+app.pop   = rawData.pop;
+app.fifaRank = rawData.fifa_rank || {};
+OUTLIER_IDS.forEach(id => {
+  const el = document.getElementById('legend-outlier-count');
+  if (el && app.byId[id]) el.textContent = app.byId[id].totalCount;
+});
+
+DATA.forEach(rec => {
+  rec.players.forEach(p => {
+    const nId = QUALIFIED_BY_NAME[p.nation];
+    if (nId == null) return;
+    if (countryName(rec.id, rec.country) === countryName(nId, QUALIFIED_NAMES[nId])) return;
+    if (!app.importByNation[nId]) app.importByNation[nId] = [];
+    app.importByNation[nId].push({ name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wiki_langs: p.wiki_langs });
+  });
+});};
+
+
+// ── Shared tooltip/click helpers (used by both world and UK nation paths) ──────
+
+const showExportTip = (event, id) => {
+  const rec        = app.byId[id];
+  if (!rec) { hideTip(); return; }
+  const hasImports   = !!QUALIFIED_NAMES[id] && (app.importByNation[id] ?? []).length > 0;
+  const importCount  = hasImports ? (app.importByNation[id] ?? []).length : 0;
+  if (lastTipKey !== id) {
+    lastTipKey = id;
+    const exportRatio = rec.pop && rec.count ? rec.count / rec.pop : null;
+    const _r2   = exportRatio !== null ? exportRatio.toFixed(2) : '?';
+    const ratio = _r2 === '0.00' ? exportRatio.toPrecision(2) : _r2;
+    const fc    = ISO2[rec.id];
+
+    const leftCol = html`
+      <div class="tt-count-row">
+        <div class="tt-count color-exp">${rec.count}</div>
+        <div class="tt-sub">${ratio} ${T.perMillion}</div>
+      </div>
+      <div class="tt-label">${T.exported(rec.count, countryName(rec.id, rec.country))} ${T.selectedBy(rec.count)}</div>
+      <div class="tt-nations">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
+      <div class="tt-players ${rec.count > rec.top.length ? 'tt-more' : ''}">
+        ${rec.top.map(p => html`
+          <div class="tt-player">
+            <span>${p.name}</span>
+            <span class="tt-nation"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
+          </div>`)}
+      </div>`;
+    const body = hasImports
+      ? html`<div class="tt-columns">
+          <div class="flex-col">${leftCol}</div>
+          <div class="tt-vdiv"></div>
+          <div class="flex-col">${buildImportColHtml(id)}</div>
+        </div>`
+      : html`${QUALIFIED_NAMES[id] ? html`<div class="tt-label">${T.noImport(countryName(id, QUALIFIED_NAMES[id]))}</div>` : nothing}${leftCol}`;
+
+    const leftTruncated  = rec.count > rec.top.length;
+    const rightTruncated = importCount > 5;
+    const hasMore        = leftTruncated || rightTruncated;
+    render(html`
+      <div class="tt-name tt-name-inner">
+        <span class="tt-name-inner">${flagImg(fc)}${countryName(rec.id, rec.country)}<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${rec.totalCount}</span></span>
+        <span class="tt-pop-rank">${popTag(rec.pop)}${rankTag(rec.country)}</span>
+      </div>
+      ${!QUALIFIED_NAMES[id] ? html`<div class="tt-not-qualified">${T.notQualified}</div>` : nothing}
+      ${body}
+      ${hasMore ? html`<div class="tt-more-label">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
+  }
+  tt.classList.toggle('tt-non-qualified', !QUALIFIED_NAMES[id]);
+  positionTip(event, 240, hasImports);
+};
+
+const showImportTip = (event, destId) => {
+  const key        = `import-${dimState.sourceId}-${destId}`;
+  const srcRec     = app.byId[dimState.sourceId];
+  if (!srcRec) { hideTip(); return; }
+  const destName   = QUALIFIED_NAMES[destId];
+  const allPlayers = (srcRec.players ?? []).filter(p => p.nation === destName);
+  const players    = allPlayers.slice(0, 5);
+  if (lastTipKey !== key) {
+    lastTipKey = key;
+    const destFc = ISO2[destId];
+
+    render(html`
+      <div class="tt-name tt-name-inner">
+        <span class="tt-name-inner">${flagImg(destFc)}${countryName(destId, destName)}</span>
+        <span class="tt-pop-rank">${popTag(app.pop[destName])}${rankTag(destName)}</span>
+      </div>
+      <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
+      <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
+        ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+      </div>
+      ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
+  }
+  positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
+};
+
+const showImportSourceTip = (event, centroidId) => {
+  const key        = `impsrc-${dimState.sourceId}-${centroidId}`;
+  const allPlayers = (app.importByNation[dimState.sourceId] ?? []).filter(p => {
+    const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
+    return bid === centroidId;
+  });
+  if (allPlayers.length === 0) { hideTip(); return; }
+  const players    = allPlayers.slice(0, 5);
+  if (lastTipKey !== key) {
+    lastTipKey = key;
+    const p0  = allPlayers[0];
+    const bFc = p0.birthCountryId != null ? ISO2[p0.birthCountryId] : (_NULL_CODE[p0.birthCountry] ?? null);
+
+    render(html`
+      <div class="tt-name tt-name-inner">
+        <span class="tt-name-inner">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
+        <span class="tt-pop-rank">${popTag(app.pop[p0.birthCountry])}${rankTag(p0.birthCountry)}</span>
+      </div>
+      <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
+      <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
+        ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+      </div>
+      ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
+  }
+  positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
+};
+
+const showCombinedTip = (event, id) => {
+  const key           = `combined-${dimState.sourceId}-${id}`;
+  const exportPlayers = (app.importByNation[dimState.sourceId] ?? []).filter(p => {
+    const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
+    return bid === id;
+  });
+  const srcRec        = app.byId[dimState.sourceId];
+  const destName      = QUALIFIED_NAMES[id];
+  const importPlayers = srcRec ? (srcRec.players ?? []).filter(p => p.nation === destName) : [];
+  if (exportPlayers.length === 0 && importPlayers.length === 0) { hideTip(); return; }
+  const topExp        = exportPlayers.slice(0, 5);
+  const topImp        = importPlayers.slice(0, 5);
+  if (lastTipKey !== key) {
+    lastTipKey = key;
+    const fc      = ISO2[id];
+    const hasBoth = exportPlayers.length > 0 && importPlayers.length > 0;
+
+    render(html`
+      <div class="tt-name tt-name-inner">
+        <span class="tt-name-inner">${flagImg(fc)}${countryName(id, destName)}</span>
+        <span class="tt-pop-rank">${popTag(app.pop[destName])}${rankTag(destName)}</span>
+      </div>
+      ${exportPlayers.length > 0 ? html`
+        <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
+        <div class="tt-players ${exportPlayers.length > 5 ? 'tt-more' : ''}">
+          ${topExp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+        </div>` : nothing}
+      ${hasBoth ? html`<div class="tt-divider"></div>` : nothing}
+      ${importPlayers.length > 0 ? html`
+        <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${importPlayers.length})</div>
+        <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
+          ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
+        </div>` : nothing}
+      ${exportPlayers.length > 5 || importPlayers.length > 5 ? html`<div class="tt-more-label">${exportPlayers.length > 5 && importPlayers.length > 5 ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
+  }
+  const h = 48 + (exportPlayers.length > 0 ? 20 + 24 * topExp.length : 0)
+                + (importPlayers.length > 0 ? 20 + 24 * topImp.length : 0)
+                + (exportPlayers.length > 0 && importPlayers.length > 0 ? 20 : 0);
+  positionTip(event, h);
+};
+
+const onCountryMousemove = (event, id, topoName = '') => {
+  if (!dimState.active) {
+    const hlName = countryName(id, QUALIFIED_NAMES[id] ?? app.byId[id]?.country ?? topoName);
+    const hlBadgeW = Math.round(hlName.length * 5.8 + 46);
+    const hlBx = 895 - hlBadgeW;
+    dimBadgeRect.attr('x', hlBx).attr('width', hlBadgeW).style('visibility', 'hidden');
+    dimBadgeFlag.attr('href', ISO2[id] ? FLAG_CDN(ISO2[id]) : '').attr('x', hlBx + 8).style('visibility', 'hidden');
+    dimBadgeText.attr('x', Math.round(hlBx + (hlBadgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#555').text(hlName);
+    dimBadge.style('display', null);
+    if (app.byId[id]?.count > 0) showExportTip(event, id);
+    else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
+    else hideTip();
+  } else {
+    const inDest = dimState.destIds.has(id), inImport = dimState.importIds.has(id);
+    if      (inDest && inImport) showCombinedTip(event, id);
+    else if (inDest)             showImportTip(event, id);
+    else if (inImport)           showImportSourceTip(event, id);
+    else if (id === dimState.sourceId) {
+      if (app.byId[id]?.count > 0) showExportTip(event, id);
+      else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
+    } else hideTip();
+  }
+};
+
+const onCountryClick = (event, id) => {
+  event.stopPropagation();
+  if (dimState.active) {
+    if (dimState.destIds.has(id) || dimState.importIds.has(id)) { activateCountry(id); return; }
+    clearDim();
+    return;
+  }
+  activateCountry(id);
+};
+// ── World render ────────────────────────────────────────────────────────────
+const renderWorld = (world, ukNations) => {
+
+// ── World choropleth (skip UK polygon — rendered separately below) ────────────
+g.selectAll('.country')
+  .data(topojson.feature(world, world.objects.countries).features
+    .filter(d => +d.id !== 826))
+  .join('path')
+  .attr('class','country')
+  .attr('d', path)
+  .attr('fill', d => choroFill(+d.id, byId))
+  .attr('stroke','#ccc8c0').attr('stroke-width',.3)
+  .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
+  .style('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
+  .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
+  .on('mouseleave', () => { if (!dimState.active) { hideTip(); dimBadge.style('display', 'none'); } })
+  .on('click',     (event, d) => onCountryClick(event, +d.id));
+
+g.append('path')
+  .datum(topojson.mesh(world, world.objects.countries, (a,b) => a!==b))
+  .attr('fill','none').attr('stroke','#b8b0a8').attr('stroke-width',.3).attr('d', path);
+
+// ── UK home nations (separate polygons from uk-nations.geojson) ───────────────
+const ukFeatures = ukNations.features.map(f => ({...f, _id: UK_GU_TO_ID[f.properties.GU_A3]}));
+
+g.selectAll('.country-uk')
+  .data(ukFeatures)
+  .join('path')
+  .attr('class','country country-uk')
+  .attr('d', path)
+  .attr('fill', d => choroFill(d._id, byId))
+  .attr('stroke','#ccc8c0').attr('stroke-width',.3)
+  .attr('data-enables-dim', d => enablesDim(d._id) ? '' : null)
+  .style('cursor', d => enablesDim(d._id) ? 'pointer' : 'default')
+  .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
+  .on('mouseleave', () => { if (!dimState.active) hideTip(); })
+  .on('click',     (event, d) => onCountryClick(event, d._id));
+
+g.selectAll('.flag-qualified')
+  .data(topojson.feature(world, world.objects.countries).features
+    .filter(d => QUALIFIED_NAMES[+d.id] && !STANDALONE_IDS.has(+d.id)))
+  .join('image')
+  .call(placeFlag)
+  .attr('href', d => FLAG_CDN(ISO2[+d.id]))
+  .attr('data-id', d => +d.id)
+  .each(function(d) {
+    const [cx, cy] = dotCentroid(d);
+    d3.select(this)
+      .attr('data-cx', cx).attr('data-cy', cy)
+      .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2);
+  })
+  .attr('pointer-events', 'all')
+  .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
+  .attr('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
+  .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
+  .on('click',     (event, d) => onCountryClick(event, +d.id));
+
+STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
+  const [cx, cy] = projection([lon, lat]);
+  g.append('image')
+    .call(placeFlag)
+    .attr('href', FLAG_CDN(ISO2[id]))
+    .attr('data-id', id)
+    .attr('data-cx', cx).attr('data-cy', cy)
+    .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
+    .attr('pointer-events', 'all')
+    .attr('data-enables-dim', enablesDim(id) ? '' : null)
+    .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+    .on('mousemove', (event) => onCountryMousemove(event, id))
+    .on('click',     (event) => onCountryClick(event, id));
+});
+
+// ── England & Scotland flags (after the .flag-qualified join so they aren't removed by its exit) ──
+ukFeatures
+  .filter(f => f._id === 8260 || f._id === 8261)
+  .forEach(f => {
+    const ov = CENTROID_OVERRIDE[f._id];
+    const [cx, cy] = ov ? projection(ov) : path.centroid(f);
+    centroids[f._id] = [cx, cy];
+    g.append('image')
+      .call(placeFlag)
+      .attr('href', FLAG_CDN(ISO2[f._id]))
+      .attr('data-id', f._id)
+      .attr('data-cx', cx).attr('data-cy', cy)
+      .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
+      .attr('pointer-events', 'all')
+      .attr('data-enables-dim', enablesDim(f._id) ? '' : null)
+      .attr('cursor', enablesDim(f._id) ? 'pointer' : 'default')
+      .on('mousemove', (event) => onCountryMousemove(event, f._id))
+      .on('click',     (event) => onCountryClick(event, f._id));
+  });
+
+// ── Centroids map (for arc drawing) ──────────────────────────────────────────
+topojson.feature(world, world.objects.countries).features
+  .filter(f => +f.id !== 826)
+  .forEach(f => { centroids[+f.id] = dotCentroid(f); });
+// UK nation centroids set above when placing flags
+STANDALONE_FLAGS.forEach(({ id, lon, lat }) => { centroids[id] = projection([lon, lat]); });
+
+
+// ── Arc group (above flags; source flag raised above arcs in applyDim) ────────
+dimState.arcsGroup = g.append('g').attr('class', 'arcs-group');};
+
 Promise.all([
   fetch('wc2026_map_data.json').then(r => r.json()),
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
   fetch('uk-nations.geojson').then(r => r.json())
-]).then(([appData, world, ukNations]) => {
-  const DATA = appData.data;
-  const POP  = appData.pop;
-  const byId = {};
-  if (appData.natives) {
-    Object.entries(appData.natives).forEach(([name, players]) => {
-      const nId = QUALIFIED_BY_NAME[name];
-      if (nId != null) NATIVE_BY_NATION[nId] = players;
-    });
-  }
-  DATA.forEach(d => {
-    d.pop        = POP[d.country] || null;
-    d.nativeCount = (NATIVE_BY_NATION[d.id] ?? []).length;
-    d.totalCount  = d.count + d.nativeCount;
-    d.ratio       = d.totalCount;
-    byId[d.id] = d;
-  });
-  DATA_REF = byId;
-  // Add coloring entries for qualified nations all of whose players play for their own country
-  Object.entries(NATIVE_BY_NATION).forEach(([nId, players]) => {
-    const id = +nId;
-    if (byId[id]) return;
-    const name = QUALIFIED_NAMES[id];
-    const pop  = POP[name] || null;
-    byId[id] = { id, country: name, count: 0, nativeCount: players.length,
-                 totalCount: players.length, pop, ratio: players.length,
-                 players: [], top: [], nations: [] };
-  });
-  POP_REF   = POP;
-  FIFA_RANK = appData.fifa_rank || {};
-  OUTLIER_IDS.forEach(id => {
-    const el = document.getElementById('legend-outlier-count');
-    if (el && byId[id]) el.textContent = byId[id].totalCount;
-  });
-
-  DATA.forEach(rec => {
-    rec.players.forEach(p => {
-      const nId = QUALIFIED_BY_NAME[p.nation];
-      if (nId == null) return;
-      if (countryName(rec.id, rec.country) === countryName(nId, QUALIFIED_NAMES[nId])) return;
-      if (!IMPORT_BY_NATION[nId]) IMPORT_BY_NATION[nId] = [];
-      IMPORT_BY_NATION[nId].push({ name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wiki_langs: p.wiki_langs });
-    });
-  });
-
-  // ── Shared tooltip/click helpers (used by both world and UK nation paths) ──────
-
-  const showExportTip = (event, id) => {
-    const rec        = byId[id];
-    if (!rec) { hideTip(); return; }
-    const hasImports   = !!QUALIFIED_NAMES[id] && (IMPORT_BY_NATION[id] ?? []).length > 0;
-    const importCount  = hasImports ? (IMPORT_BY_NATION[id] ?? []).length : 0;
-    if (lastTipKey !== id) {
-      lastTipKey = id;
-      const exportRatio = rec.pop && rec.count ? rec.count / rec.pop : null;
-      const _r2   = exportRatio !== null ? exportRatio.toFixed(2) : '?';
-      const ratio = _r2 === '0.00' ? exportRatio.toPrecision(2) : _r2;
-      const fc    = ISO2[rec.id];
-
-      const leftCol = html`
-        <div class="tt-count-row">
-          <div class="tt-count color-exp">${rec.count}</div>
-          <div class="tt-sub">${ratio} ${T.perMillion}</div>
-        </div>
-        <div class="tt-label">${T.exported(rec.count, countryName(rec.id, rec.country))} ${T.selectedBy(rec.count)}</div>
-        <div class="tt-nations">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
-        <div class="tt-players ${rec.count > rec.top.length ? 'tt-more' : ''}">
-          ${rec.top.map(p => html`
-            <div class="tt-player">
-              <span>${p.name}</span>
-              <span class="tt-nation"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
-            </div>`)}
-        </div>`;
-      const body = hasImports
-        ? html`<div class="tt-columns">
-            <div class="flex-col">${leftCol}</div>
-            <div class="tt-vdiv"></div>
-            <div class="flex-col">${buildImportColHtml(id)}</div>
-          </div>`
-        : html`${QUALIFIED_NAMES[id] ? html`<div class="tt-label">${T.noImport(countryName(id, QUALIFIED_NAMES[id]))}</div>` : nothing}${leftCol}`;
-
-      const leftTruncated  = rec.count > rec.top.length;
-      const rightTruncated = importCount > 5;
-      const hasMore        = leftTruncated || rightTruncated;
-      render(html`
-        <div class="tt-name tt-name-inner">
-          <span class="tt-name-inner">${flagImg(fc)}${countryName(rec.id, rec.country)}<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${rec.totalCount}</span></span>
-          <span class="tt-pop-rank">${popTag(rec.pop)}${rankTag(rec.country)}</span>
-        </div>
-        ${!QUALIFIED_NAMES[id] ? html`<div class="tt-not-qualified">${T.notQualified}</div>` : nothing}
-        ${body}
-        ${hasMore ? html`<div class="tt-more-label">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
-    }
-    tt.classList.toggle('tt-non-qualified', !QUALIFIED_NAMES[id]);
-    positionTip(event, 240, hasImports);
-  };
-
-  const showImportTip = (event, destId) => {
-    const key        = `import-${dimSourceId}-${destId}`;
-    const srcRec     = byId[dimSourceId];
-    if (!srcRec) { hideTip(); return; }
-    const destName   = QUALIFIED_NAMES[destId];
-    const allPlayers = (srcRec.players ?? []).filter(p => p.nation === destName);
-    const players    = allPlayers.slice(0, 5);
-    if (lastTipKey !== key) {
-      lastTipKey = key;
-      const destFc = ISO2[destId];
-
-      render(html`
-        <div class="tt-name tt-name-inner">
-          <span class="tt-name-inner">${flagImg(destFc)}${countryName(destId, destName)}</span>
-          <span class="tt-pop-rank">${popTag(POP[destName])}${rankTag(destName)}</span>
-        </div>
-        <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimSourceId, srcRec.country)} (${allPlayers.length})</div>
-        <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
-          ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
-        </div>
-        ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
-    }
-    positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
-  };
-
-  const showImportSourceTip = (event, centroidId) => {
-    const key        = `impsrc-${dimSourceId}-${centroidId}`;
-    const allPlayers = (IMPORT_BY_NATION[dimSourceId] ?? []).filter(p => {
-      const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
-      return bid === centroidId;
-    });
-    if (allPlayers.length === 0) { hideTip(); return; }
-    const players    = allPlayers.slice(0, 5);
-    if (lastTipKey !== key) {
-      lastTipKey = key;
-      const p0  = allPlayers[0];
-      const bFc = p0.birthCountryId != null ? ISO2[p0.birthCountryId] : (_NULL_CODE[p0.birthCountry] ?? null);
-
-      render(html`
-        <div class="tt-name tt-name-inner">
-          <span class="tt-name-inner">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
-          <span class="tt-pop-rank">${popTag(POP[p0.birthCountry])}${rankTag(p0.birthCountry)}</span>
-        </div>
-        <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${allPlayers.length})</div>
-        <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
-          ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
-        </div>
-        ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
-    }
-    positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
-  };
-
-  const showCombinedTip = (event, id) => {
-    const key           = `combined-${dimSourceId}-${id}`;
-    const exportPlayers = (IMPORT_BY_NATION[dimSourceId] ?? []).filter(p => {
-      const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
-      return bid === id;
-    });
-    const srcRec        = byId[dimSourceId];
-    const destName      = QUALIFIED_NAMES[id];
-    const importPlayers = srcRec ? (srcRec.players ?? []).filter(p => p.nation === destName) : [];
-    if (exportPlayers.length === 0 && importPlayers.length === 0) { hideTip(); return; }
-    const topExp        = exportPlayers.slice(0, 5);
-    const topImp        = importPlayers.slice(0, 5);
-    if (lastTipKey !== key) {
-      lastTipKey = key;
-      const fc      = ISO2[id];
-      const hasBoth = exportPlayers.length > 0 && importPlayers.length > 0;
-
-      render(html`
-        <div class="tt-name tt-name-inner">
-          <span class="tt-name-inner">${flagImg(fc)}${countryName(id, destName)}</span>
-          <span class="tt-pop-rank">${popTag(POP[destName])}${rankTag(destName)}</span>
-        </div>
-        ${exportPlayers.length > 0 ? html`
-          <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimSourceId, QUALIFIED_NAMES[dimSourceId])} (${exportPlayers.length})</div>
-          <div class="tt-players ${exportPlayers.length > 5 ? 'tt-more' : ''}">
-            ${topExp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
-          </div>` : nothing}
-        ${hasBoth ? html`<div class="tt-divider"></div>` : nothing}
-        ${importPlayers.length > 0 ? html`
-          <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimSourceId, srcRec.country)} (${importPlayers.length})</div>
-          <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
-            ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
-          </div>` : nothing}
-        ${exportPlayers.length > 5 || importPlayers.length > 5 ? html`<div class="tt-more-label">${exportPlayers.length > 5 && importPlayers.length > 5 ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
-    }
-    const h = 48 + (exportPlayers.length > 0 ? 20 + 24 * topExp.length : 0)
-                  + (importPlayers.length > 0 ? 20 + 24 * topImp.length : 0)
-                  + (exportPlayers.length > 0 && importPlayers.length > 0 ? 20 : 0);
-    positionTip(event, h);
-  };
-
-  const onCountryMousemove = (event, id, topoName = '') => {
-    if (!dimActive) {
-      const hlName = countryName(id, QUALIFIED_NAMES[id] ?? byId[id]?.country ?? topoName);
-      const hlBadgeW = Math.round(hlName.length * 5.8 + 46);
-      const hlBx = 895 - hlBadgeW;
-      dimBadgeRect.attr('x', hlBx).attr('width', hlBadgeW).style('visibility', 'hidden');
-      dimBadgeFlag.attr('href', ISO2[id] ? FLAG_CDN(ISO2[id]) : '').attr('x', hlBx + 8).style('visibility', 'hidden');
-      dimBadgeText.attr('x', Math.round(hlBx + (hlBadgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#555').text(hlName);
-      dimBadge.style('display', null);
-      if (byId[id]?.count > 0) showExportTip(event, id);
-      else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
-      else hideTip();
-    } else {
-      const inDest = dimDestIds.has(id), inImport = dimImportIds.has(id);
-      if      (inDest && inImport) showCombinedTip(event, id);
-      else if (inDest)             showImportTip(event, id);
-      else if (inImport)           showImportSourceTip(event, id);
-      else if (id === dimSourceId) {
-        if (byId[id]?.count > 0) showExportTip(event, id);
-        else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
-      } else hideTip();
-    }
-  };
-
-  const onCountryClick = (event, id) => {
-    event.stopPropagation();
-    if (dimActive) {
-      if (dimDestIds.has(id) || dimImportIds.has(id)) { activateCountry(id); return; }
-      clearDim();
-      return;
-    }
-    activateCountry(id);
-  };
-
-  // ── World choropleth (skip UK polygon — rendered separately below) ────────────
-  g.selectAll('.country')
-    .data(topojson.feature(world, world.objects.countries).features
-      .filter(d => +d.id !== 826))
-    .join('path')
-    .attr('class','country')
-    .attr('d', path)
-    .attr('fill', d => choroFill(+d.id, byId))
-    .attr('stroke','#ccc8c0').attr('stroke-width',.3)
-    .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
-    .style('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
-    .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
-    .on('mouseleave', () => { if (!dimActive) { hideTip(); dimBadge.style('display', 'none'); } })
-    .on('click',     (event, d) => onCountryClick(event, +d.id));
-
-  g.append('path')
-    .datum(topojson.mesh(world, world.objects.countries, (a,b) => a!==b))
-    .attr('fill','none').attr('stroke','#b8b0a8').attr('stroke-width',.3).attr('d', path);
-
-  // ── UK home nations (separate polygons from uk-nations.geojson) ───────────────
-  const ukFeatures = ukNations.features.map(f => ({...f, _id: UK_GU_TO_ID[f.properties.GU_A3]}));
-
-  g.selectAll('.country-uk')
-    .data(ukFeatures)
-    .join('path')
-    .attr('class','country country-uk')
-    .attr('d', path)
-    .attr('fill', d => choroFill(d._id, byId))
-    .attr('stroke','#ccc8c0').attr('stroke-width',.3)
-    .attr('data-enables-dim', d => enablesDim(d._id) ? '' : null)
-    .style('cursor', d => enablesDim(d._id) ? 'pointer' : 'default')
-    .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
-    .on('mouseleave', () => { if (!dimActive) hideTip(); })
-    .on('click',     (event, d) => onCountryClick(event, d._id));
-
-  g.selectAll('.flag-qualified')
-    .data(topojson.feature(world, world.objects.countries).features
-      .filter(d => QUALIFIED_NAMES[+d.id] && !STANDALONE_IDS.has(+d.id)))
-    .join('image')
-    .call(placeFlag)
-    .attr('href', d => FLAG_CDN(ISO2[+d.id]))
-    .attr('data-id', d => +d.id)
-    .each(function(d) {
-      const [cx, cy] = dotCentroid(d);
-      d3.select(this)
-        .attr('data-cx', cx).attr('data-cy', cy)
-        .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2);
-    })
-    .attr('pointer-events', 'all')
-    .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
-    .attr('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
-    .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
-    .on('click',     (event, d) => onCountryClick(event, +d.id));
-
-  STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
-    const [cx, cy] = projection([lon, lat]);
-    g.append('image')
-      .call(placeFlag)
-      .attr('href', FLAG_CDN(ISO2[id]))
-      .attr('data-id', id)
-      .attr('data-cx', cx).attr('data-cy', cy)
-      .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
-      .attr('pointer-events', 'all')
-      .attr('data-enables-dim', enablesDim(id) ? '' : null)
-      .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
-      .on('mousemove', (event) => onCountryMousemove(event, id))
-      .on('click',     (event) => onCountryClick(event, id));
-  });
-
-  // ── England & Scotland flags (after the .flag-qualified join so they aren't removed by its exit) ──
-  ukFeatures
-    .filter(f => f._id === 8260 || f._id === 8261)
-    .forEach(f => {
-      const ov = CENTROID_OVERRIDE[f._id];
-      const [cx, cy] = ov ? projection(ov) : path.centroid(f);
-      centroids[f._id] = [cx, cy];
-      g.append('image')
-        .call(placeFlag)
-        .attr('href', FLAG_CDN(ISO2[f._id]))
-        .attr('data-id', f._id)
-        .attr('data-cx', cx).attr('data-cy', cy)
-        .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
-        .attr('pointer-events', 'all')
-        .attr('data-enables-dim', enablesDim(f._id) ? '' : null)
-        .attr('cursor', enablesDim(f._id) ? 'pointer' : 'default')
-        .on('mousemove', (event) => onCountryMousemove(event, f._id))
-        .on('click',     (event) => onCountryClick(event, f._id));
-    });
-
-  // ── Centroids map (for arc drawing) ──────────────────────────────────────────
-  topojson.feature(world, world.objects.countries).features
-    .filter(f => +f.id !== 826)
-    .forEach(f => { centroids[+f.id] = dotCentroid(f); });
-  // UK nation centroids set above when placing flags
-  STANDALONE_FLAGS.forEach(({ id, lon, lat }) => { centroids[id] = projection([lon, lat]); });
-
-
-  // ── Arc group (above flags; source flag raised above arcs in applyDim) ────────
-  arcsGroup = g.append('g').attr('class', 'arcs-group');
+]).then(([rawData, world, ukNations]) => {
+  buildIndices(rawData);
+  renderWorld(world, ukNations);
 });
 
 // ── Legend gradient ───────────────────────────────────────────────────────────
