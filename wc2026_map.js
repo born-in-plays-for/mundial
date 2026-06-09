@@ -27,6 +27,30 @@ document.documentElement.style.setProperty('--arc-import-color', ARC_IMPORT_COLO
 const ARC_OFFSET = 1.0; // lateral separation: visual offset = sw * ARC_OFFSET / k
 const ARC_MID_T  = 0.65; // arrow at 65% toward destination — separates bidirectional pairs along the arc
 
+const arcOffset = (sw, sx, sy, tx, ty, k) => {
+  const ddx = tx-sx, ddy = ty-sy, dist = Math.sqrt(ddx*ddx+ddy*ddy);
+  const pnx = -ddy/dist, pny = ddx/dist;
+  const off = sw * ARC_OFFSET / k;
+  return {
+    ofx: sx + pnx*off, ofy: sy + pny*off,
+    otx: tx + pnx*off, oty: ty + pny*off,
+    oqx: (sx+tx)/2 + pnx*off, oqy: (sy+ty)/2 - dist*0.3 + pny*off,
+  };
+};
+
+const arrowPoints = (sw, ofx, ofy, otx, oty, oqx, oqy, k) => {
+  const mt = ARC_MID_T, ms = 1 - mt;
+  const mx = ms*ms*ofx + 2*ms*mt*oqx + mt*mt*otx;
+  const my = ms*ms*ofy + 2*ms*mt*oqy + mt*mt*oty;
+  const tdx = 2*ms*(oqx-ofx) + 2*mt*(otx-oqx);
+  const tdy = 2*ms*(oqy-ofy) + 2*mt*(oty-oqy);
+  const tLen = Math.sqrt(tdx*tdx+tdy*tdy);
+  const mux = tdx/tLen, muy = tdy/tLen, mnx = -muy, mny = mux;
+  const mah = Math.sqrt(sw)*5/k, maw = Math.sqrt(sw)*2.5/k;
+  const bx = mx-mux*mah/2, by = my-muy*mah/2;
+  return `${mx+mux*mah/2},${my+muy*mah/2} ${bx+mnx*maw},${by+mny*maw} ${bx-mnx*maw},${by-mny*maw}`;
+};
+
 const g = svg.append('g');
 const tt = document.getElementById('tooltip');
 
@@ -74,39 +98,21 @@ svg.call(d3.zoom()
       .attr('y', function() { return +this.getAttribute('data-cy') - s/2; });
     currentK = e.transform.k;
     const k = currentK;
-    const ah = 6/k, aw = 3/k;
-    const arcOffset = (sw, sx, sy, tx, ty) => {
-      const ddx = tx-sx, ddy = ty-sy, dist = Math.sqrt(ddx*ddx+ddy*ddy);
-      const pnx = -ddy/dist, pny = ddx/dist;
-      const off = sw * ARC_OFFSET / k;
-      return {
-        ofx: sx + pnx*off, ofy: sy + pny*off,
-        otx: tx + pnx*off, oty: ty + pny*off,
-        oqx: (sx+tx)/2 + pnx*off, oqy: (sy+ty)/2 - dist*0.3 + pny*off,
-      };
-    };
     g.selectAll('path.arc-line')
       .attr('stroke-width', function() { return +this.getAttribute('data-sw') / k; })
       .attr('d', function() {
         const sw = +this.getAttribute('data-sw');
         const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
         const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
-        const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty);
+        const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
         return `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`;
       });
     g.selectAll('polygon.arc-mid').attr('points', function() {
       const sw = +this.getAttribute('data-sw');
       const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
       const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
-      const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty);
-      const mt = ARC_MID_T, ms = 1 - mt;
-      const mx = ms*ms*ofx + 2*ms*mt*oqx + mt*mt*otx, my = ms*ms*ofy + 2*ms*mt*oqy + mt*mt*oty;
-      const tdx = 2*ms*(oqx-ofx) + 2*mt*(otx-oqx), tdy = 2*ms*(oqy-ofy) + 2*mt*(oty-oqy);
-      const tLen = Math.sqrt(tdx*tdx+tdy*tdy);
-      const mux = tdx/tLen, muy = tdy/tLen, mnx = -muy, mny = mux;
-      const mah = Math.sqrt(sw)*5/k, maw = Math.sqrt(sw)*2.5/k;
-      const bx = mx-mux*mah/2, by = my-muy*mah/2;
-      return `${mx+mux*mah/2},${my+muy*mah/2} ${bx+mnx*maw},${by+mny*maw} ${bx-mnx*maw},${by-mny*maw}`;
+      const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
+      return arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k);
     });
   }));
 
@@ -562,16 +568,8 @@ const applyDim = (sourceId, destIds, country) => {
   // Arc drawing helper — smooth quadratic Bézier, laterally offset by type, mid arrowhead
   const drawArc = (from, to, count, type) => {
     const color = type === 'export' ? ARC_EXPORT_COLOR : ARC_IMPORT_COLOR;
-    const ddx = to[0]-from[0], ddy = to[1]-from[1];
-    const dist = Math.sqrt(ddx*ddx + ddy*ddy);
     const sw = Math.max(1, Math.sqrt(count));
-    // Shift each arc left of its own from→to direction; reversed arcs naturally go the other way
-    const pnx = -ddy/dist, pny = ddx/dist;
-    const off = sw * ARC_OFFSET / currentK;
-    const ofx = from[0] + pnx*off, ofy = from[1] + pny*off;
-    const otx = to[0]   + pnx*off, oty = to[1]   + pny*off;
-    const oqx = (from[0]+to[0])/2 + pnx*off;
-    const oqy = (from[1]+to[1])/2 - dist*0.3 + pny*off;
+    const {ofx, ofy, otx, oty, oqx, oqy} = arcOffset(sw, from[0], from[1], to[0], to[1], currentK);
 
     arcsGroup.append('path')
       .attr('class', 'arc-line')
@@ -582,20 +580,9 @@ const applyDim = (sourceId, destIds, country) => {
       .attr('data-sx', from[0]).attr('data-sy', from[1])
       .attr('data-tx', to[0]).attr('data-ty', to[1]);
 
-    // Mid arrowhead at ARC_MID_T toward destination — keeps bidirectional pairs separated along arc
-    const mt = ARC_MID_T, ms = 1 - mt;
-    const mx = ms*ms*ofx + 2*ms*mt*oqx + mt*mt*otx;
-    const my = ms*ms*ofy + 2*ms*mt*oqy + mt*mt*oty;
-    const tdx = 2*ms*(oqx-ofx) + 2*mt*(otx-oqx);
-    const tdy = 2*ms*(oqy-ofy) + 2*mt*(oty-oqy);
-    const tLen = Math.sqrt(tdx*tdx + tdy*tdy);
-    const mux = tdx/tLen, muy = tdy/tLen;
-    const mnx = -muy, mny = mux;
-    const mah = Math.sqrt(sw)*5/currentK, maw = Math.sqrt(sw)*2.5/currentK;
-    const mbx = mx - mux*mah/2, mby = my - muy*mah/2;
     arcsGroup.append('polygon')
       .attr('class', 'arc-line arc-mid')
-      .attr('points', `${mx+mux*mah/2},${my+muy*mah/2} ${mbx+mnx*maw},${mby+mny*maw} ${mbx-mnx*maw},${mby-mny*maw}`)
+      .attr('points', arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, currentK))
       .attr('fill', color).attr('opacity', 0.8)
       .attr('data-sw', sw)
       .attr('data-sx', from[0]).attr('data-sy', from[1])
@@ -884,22 +871,19 @@ Promise.all([
       dimBadgeFlag.attr('href', ISO2[id] ? FLAG_CDN(ISO2[id]) : '').attr('x', hlBx + 8).style('visibility', 'hidden');
       dimBadgeText.attr('x', Math.round(hlBx + (hlBadgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#555').text(hlName);
       dimBadge.style('display', null);
-    }
-    if (dimActive) {
+      if (byId[id]?.count > 0) showExportTip(event, id);
+      else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
+      else hideTip();
+    } else {
       const inDest = dimDestIds.has(id), inImport = dimImportIds.has(id);
-      if (inDest && inImport) { showCombinedTip(event, id); return; }
-      if (inDest)   { showImportTip(event, id); return; }
-      if (inImport) { showImportSourceTip(event, id); return; }
-      if (id === dimSourceId) {
+      if      (inDest && inImport) showCombinedTip(event, id);
+      else if (inDest)             showImportTip(event, id);
+      else if (inImport)           showImportSourceTip(event, id);
+      else if (id === dimSourceId) {
         if (byId[id]?.count > 0) showExportTip(event, id);
         else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
-        return;
-      }
-      hideTip(); return;
+      } else hideTip();
     }
-    if (byId[id]?.count > 0) showExportTip(event, id);
-    else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
-    else hideTip();
   };
 
   const onCountryClick = (event, id) => {
@@ -953,11 +937,13 @@ Promise.all([
     .join('image')
     .call(placeFlag)
     .attr('href', d => FLAG_CDN(ISO2[+d.id]))
-    .attr('data-cx', d => dotCentroid(d)[0])
-    .attr('data-cy', d => dotCentroid(d)[1])
-    .attr('x', d => dotCentroid(d)[0] - FLAG/2)
-    .attr('y', d => dotCentroid(d)[1] - FLAG/2)
     .attr('data-id', d => +d.id)
+    .each(function(d) {
+      const [cx, cy] = dotCentroid(d);
+      d3.select(this)
+        .attr('data-cx', cx).attr('data-cy', cy)
+        .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2);
+    })
     .attr('pointer-events', 'all')
     .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
     .attr('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
