@@ -2,8 +2,8 @@
 Enriches wc2026_map_data.json with per-language Wikipedia URLs.
 
 Step 1 — fetch the WC2026 squads page, extract player name → EN wiki title.
-Step 2 — batch-query the Wikipedia API (prop=langlinks) for FR/DE/IT titles.
-Step 3 — write wiki_langs: {en, fr?, de?, it?} onto every player object.
+Step 2 — batch-query the Wikipedia API (prop=langlinks) for FR/DE/IT/ES titles.
+Step 3 — write wiki_langs: {en, fr?, de?, it?, es?} onto every player object.
 """
 import json, re, time, requests
 from pathlib import Path
@@ -16,7 +16,7 @@ JSON_PATH = ROOT / "wc2026_map_data.json"
 WIKI_URL  = "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads"
 WIKI_API  = "https://en.wikipedia.org/w/api.php"
 HEADERS   = {"User-Agent": "mundial-enricher/1.0 (github.com/cthiebaud/mundial)"}
-LANGS     = ["fr", "de", "it"]
+LANGS     = ["fr", "de", "it", "es"]
 BATCH     = 50  # max titles per API call
 
 def wiki_url(lang, title):

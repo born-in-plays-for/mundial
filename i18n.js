@@ -26,7 +26,10 @@ const _OVERRIDE = {
 // For id=null entries that do have a standard alpha-2 code
 const _NULL_CODE = { 'Democratic Republic of the Congo':'cd', 'U.S.':'us', 'Isle of Man':'im' };
 
-export const wikiUrl = p => p.wiki_langs?.[_LANG] ?? null;
+// Languages for which the pipeline provides Wikipedia data. Others fall back to English
+// as the primary URL (no "(en)" suffix — showing it on every player would be noisy).
+const _WIKI_LANGS = new Set(['en', 'fr', 'de', 'it', 'es']);
+export const wikiUrl = p => p.wiki_langs?.[_LANG] ?? (_WIKI_LANGS.has(_LANG) ? null : p.wiki_langs?.en ?? null);
 
 export const countryName = (id, fallback = '') => {
   const key = id ?? fallback;
@@ -98,6 +101,9 @@ export const T = {
     pageDescription: 'Carte choroplèthe du Mondial 2026 — pays de naissance des joueurs, dont certains jouent pour un autre pays.',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
     legendCaption: 'joueurs nés dans le pays',
+    tabNoCountry:  'Aucun pays sélectionné',
+    tabChain:      'Chemin le plus long',
+    tabPlayersHint:'Cliquez sur un pays pour voir ses joueurs.',
   },
   it: {
     noExport:      name => `Nessun giocatore nato${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'} gioca per un altro paese`,
@@ -123,6 +129,9 @@ export const T = {
     pageDescription: 'Mappa coropletica dei Mondiali 2026 — paesi di nascita dei giocatori, alcuni dei quali giocano per un altro paese.',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
     legendCaption: 'giocatori nati nel paese',
+    tabNoCountry:  'Nessun paese selezionato',
+    tabChain:      'Percorso più lungo',
+    tabPlayersHint:'Clicca su un paese per vedere i suoi giocatori.',
   },
   de: {
     noExport:      name => name ? `Kein in ${name} geborener Spieler spielt für ein anderes Land` : 'Kein hier geborener Spieler spielt für ein anderes Land',
@@ -148,6 +157,9 @@ export const T = {
     pageDescription: 'Choroplethenkarte der WM 2026 — Geburtsländer der Spieler, darunter einige, die für ein anderes Land spielen.',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
     legendCaption: 'im Land geborene Spieler',
+    tabNoCountry:  'Kein Land ausgewählt',
+    tabChain:      'Längster Pfad',
+    tabPlayersHint:'Klicke auf ein Land, um seine Spieler zu sehen.',
   },
   es: {
     noExport:      name => `Ningún jugador nacido${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'} juega para otro país`,
@@ -173,6 +185,9 @@ export const T = {
     pageDescription: 'Mapa coroplético del Mundial 2026 — países de nacimiento de los jugadores, algunos de los cuales juegan para otro país.',
     zoomHint:      'rueda para zoom · arrastra para mover',
     legendCaption: 'jugadores nacidos en el país',
+    tabNoCountry:  'Ningún país seleccionado',
+    tabChain:      'Camino más largo',
+    tabPlayersHint:'Haz clic en un país para ver sus jugadores.',
   },
   en: {
     noExport:      name => `No player born${name ? ' in ' + name : ' here'} plays for another country`,
@@ -198,5 +213,8 @@ export const T = {
     pageDescription: 'Choropleth map of the 2026 World Cup — birth countries of players, some of whom play for another country.',
     zoomHint:      'scroll to zoom · drag to pan',
     legendCaption: 'players born in the country',
+    tabNoCountry:  'No country selected',
+    tabChain:      'Longest path',
+    tabPlayersHint:'Click a country on the map to see its players.',
   },
 }[_LANG];

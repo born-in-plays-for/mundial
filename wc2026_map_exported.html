@@ -62,10 +62,24 @@
   <div id="page-heading-sub-mob" class="d-md-none mt-2"></div>
 </div>
 
-<div id="player-table" class="container-xxl px-4 pb-5 mt-1" style="display:none"></div>
+<div id="bottom-panel" class="container-xxl px-4 pb-5 mt-1">
+  <ul class="nav nav-tabs" id="bottomTabList" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="tab-players-btn" data-bs-toggle="tab" data-bs-target="#tab-players" type="button" role="tab" aria-controls="tab-players" aria-selected="true">Players</button>
+    </li>
+    <li class="nav-item ms-auto" role="presentation">
+      <button class="nav-link" id="tab-chain-btn" data-bs-toggle="tab" data-bs-target="#tab-chain" type="button" role="tab" aria-controls="tab-chain" aria-selected="false">Longest path</button>
+    </li>
+  </ul>
+  <div class="tab-content mt-3" id="bottomTabContent">
+    <div class="tab-pane fade show active" id="tab-players" role="tabpanel" aria-labelledby="tab-players-btn"></div>
+    <div class="tab-pane fade" id="tab-chain" role="tabpanel" aria-labelledby="tab-chain-btn"></div>
+  </div>
+</div>
 
 <div id="tooltip"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script type="module" src="wc2026_map.js"></script>

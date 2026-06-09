@@ -1,4 +1,5 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { renderChain } from './chains/wc2026_chain_render.js';
 
 const RATIO_MIN = 0;
 const RATIO_MAX = 66; // Netherlands (2nd highest) anchors the top of the scale
@@ -208,6 +209,56 @@ document.getElementById('page-heading-mob').textContent  = T.pageHeading;
 document.getElementById('zoom-hint').textContent      = T.zoomHint;
 document.getElementById('legend-caption').textContent = T.legendCaption;
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
+document.getElementById('tab-players-btn').textContent = T.tabNoCountry;
+document.getElementById('tab-chain-btn').textContent   = T.tabChain;
+render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
+
+// Chain tab: load data lazily, render when tab is shown, re-render on resize
+// Both callbacks reference symbols defined later in the module — safe because they
+// are only invoked on user interaction, after the module has fully loaded.
+const _chainOnClick    = node => activateCountry(ISO2_REVERSE[node.code]);
+const _chainGetIndex   = () => {
+  if (!_chainData || dimState.sourceId == null) return -1;
+  return _chainData.nodes.findIndex(n => ISO2_REVERSE[n.code] === dimState.sourceId);
+};
+let _chainData = null, _chainUpdate = null;
+const _accState = { exp: true, nat: true, imp: true };
+// Lazy lookup: player name → {href, fallback} drawn from loaded app data.
+// fallback=true means current-language URL absent, using English fallback (renders as "Name (en)").
+const _chainWikiUrl = name => {
+  for (const rec of Object.values(app.byId)) {
+    const p = (rec.players ?? []).find(q => q.name === name);
+    if (!p) continue;
+    const url = wikiUrl(p);
+    if (url) return { href: url, fallback: false };
+    const en = p.wiki_langs?.en ?? null;
+    if (en) return { href: en, fallback: true };
+  }
+  return null;
+};
+const _renderChain = () => {
+  if (!_chainData) return;
+  _chainUpdate = renderChain(_chainData, document.getElementById('tab-chain'), _chainOnClick, _chainGetIndex, _chainWikiUrl);
+};
+// On selection change: surgical update only — no SVG rebuild, no flicker.
+const _updateChainSelection = () => {
+  if (_chainUpdate && document.getElementById('tab-chain')?.classList.contains('active'))
+    _chainUpdate(_chainGetIndex());
+};
+fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
+  _chainData = d;
+  if (document.getElementById('tab-chain')?.classList.contains('active')) _renderChain();
+});
+document.getElementById('tab-chain-btn')?.addEventListener('shown.bs.tab', () => {
+  if (_chainData) _renderChain();
+});
+let _chainResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_chainResizeTimer);
+  _chainResizeTimer = setTimeout(() => {
+    if (_chainData && document.getElementById('tab-chain')?.classList.contains('active')) _renderChain();
+  }, 150);
+});
 
 const ISO2 = {
   12:'dz', 32:'ar', 36:'au', 40:'at', 56:'be', 70:'ba', 76:'br',
@@ -226,6 +277,11 @@ const ISO2 = {
   729:'sd', 834:'tz', 854:'bf', 818:'eg', 894:'zm',
   531:'cw'
 };
+
+const ISO2_REVERSE = Object.fromEntries(Object.entries(ISO2).map(([id, c]) => [c, +id]));
+
+// Birth country names not in ISO 3166-1 numeric that have a known alpha-2 code
+const _NULL_CODE = { 'Democratic Republic of the Congo': 'cd', 'U.S.': 'us', 'Isle of Man': 'im' };
 
 // Small island nations — absent from 110m topojson. A dot marker is drawn at lon/lat (choropleth color);
 // the flag icon is offset by dLon/dLat (degrees) from the centroid so both are visible.
@@ -335,9 +391,7 @@ const buildImportColHtml = nationId => {
 };
 
 const playerTableTemplate = sourceId => {
-  const fc            = ISO2[sourceId];
   const country       = app.byId[sourceId]?.country ?? QUALIFIED_NAMES[sourceId];
-  const pop           = app.byId[sourceId]?.pop ?? app.pop[QUALIFIED_NAMES[sourceId]] ?? null;
   const cnt           = app.byId[sourceId]?.count ?? 0;
   const exportPlayers = app.byId[sourceId]?.players ?? [];
   const nativePlayers = app.nativeByNation[sourceId] ?? [];
@@ -363,65 +417,96 @@ const playerTableTemplate = sourceId => {
   const importGroups = [...importGroupMap.values()].sort((a, b) => b.players.length - a.players.length);
 
   return html`
-    <div class="d-flex align-items-center gap-2 mb-1 justify-content-between">
-      <div class="d-flex align-items-center gap-2">
-        ${fc ? html`<img class="pt-country-flag" src="${FLAG_CDN_RECT(fc)}">` : nothing}
-        <h2 class="mb-0 pt-title">${name}</h2>
-      </div>
-      ${pop ? html`<span class="tt-pop fw-normal text-nowrap">${T.pop} ${fmtPop(pop)}</span>` : nothing}
-    </div>
     ${!isQualified ? html`<div class="tt-not-qualified fst-italic">${T.notQualified}</div>` : nothing}
-    ${cnt > 0 ? html`
-      <h2 id="pt-export-count" class="mb-3 pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</h2>
-      <div id="pt-nations">
-        ${exportGroups.map(({ nation, players: gp }) => {
-          const nationId = QUALIFIED_BY_NAME[nation];
-          const nc = ISO2[nationId];
-          return html`
-            <div class="pt-nation-header d-flex align-items-center" @click=${() => activateCountry(nationId, true)}>
-              ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
-              <span class="pt-nation-name fw-medium">${countryName(nationId, nation)}</span>
-              <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+    <div class="accordion accordion-flush mt-2" id="pt-acc-${sourceId}">
+      ${cnt > 0 ? html`
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button pt-acc-btn" type="button"
+              data-bs-toggle="collapse" data-bs-target="#acc-exp-${sourceId}"
+              aria-expanded="true" aria-controls="acc-exp-${sourceId}">
+              <span class="pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</span>
+            </button>
+          </h2>
+          <div id="acc-exp-${sourceId}" class="accordion-collapse collapse show">
+            <div class="accordion-body px-0 pt-1">
+              ${exportGroups.map(({ nation, players: gp }) => {
+                const nationId = QUALIFIED_BY_NAME[nation];
+                const nc = ISO2[nationId];
+                return html`
+                  <div class="pt-nation-header d-flex align-items-center" @click=${() => activateCountry(nationId, true)}>
+                    ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
+                    <span class="pt-nation-name fw-medium">${countryName(nationId, nation)}</span>
+                    <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+                  </div>
+                  ${gp.map(p => html`
+                    <div class="pt-player-row d-flex justify-content-between align-items-center">
+                      <span>${ptWikiRow(p)}</span>
+                      <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
+                    </div>`)}`;
+              })}
             </div>
-            ${gp.map(p => html`
-              <div class="pt-player-row d-flex justify-content-between align-items-center">
-                <span>${ptWikiRow(p)}</span>
-                <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
-              </div>`)}`;
-        })}
-      </div>` : isQualified ? html`<div id="pt-export-count" class="tt-label">${T.noExport(name)}</div>` : nothing}
-    ${nativePlayers.length > 0 ? html`
-      <div id="pt-native-section">
-        <h2 id="pt-native-title" class="mb-3 pt-title">${importPlayers.length === 0 ? T.noImport(name) : `${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}`}</h2>
-        <div id="pt-native-players">
-          ${nativePlayers.map(p => html`
-            <div class="pt-player-row d-flex justify-content-between align-items-center">
-              <span>${ptWikiRow(p)}</span>
-              <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
-            </div>`)}
-        </div>
-      </div>` : nothing}
-    ${importPlayers.length > 0 ? html`
-      <div id="pt-import-section">
-        <h2 id="pt-import-title" class="mb-3 pt-title color-imp">${importPlayers.length} ${T.ptImportTitle(importPlayers.length, name)}</h2>
-        <div id="pt-import-nations">
-          ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
-            const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
-            const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
-            return html`
-              <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
-                ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
-                <span class="pt-nation-name fw-medium">${label}</span>
-                <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
-              </div>
-              ${gp.map(p => html`
+          </div>
+        </div>` : isQualified ? html`
+        <div class="accordion-item">
+          <div class="accordion-body px-0">
+            <div class="tt-label">${T.noExport(name)}</div>
+          </div>
+        </div>` : nothing}
+      ${nativePlayers.length > 0 ? html`
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button pt-acc-btn" type="button"
+              data-bs-toggle="collapse" data-bs-target="#acc-nat-${sourceId}"
+              aria-expanded="true" aria-controls="acc-nat-${sourceId}">
+              <span class="pt-title">${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}</span>
+            </button>
+          </h2>
+          <div id="acc-nat-${sourceId}" class="accordion-collapse collapse show">
+            <div class="accordion-body px-0 pt-1">
+              ${nativePlayers.map(p => html`
                 <div class="pt-player-row d-flex justify-content-between align-items-center">
                   <span>${ptWikiRow(p)}</span>
                   <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
-                </div>`)}`;
-          })}
-        </div>
-      </div>` : isQualified && nativePlayers.length === 0 ? html`<div class="tt-label">${T.noImport(name)}</div>` : nothing}`;
+                </div>`)}
+            </div>
+          </div>
+        </div>` : nothing}
+      ${importPlayers.length > 0 ? html`
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button pt-acc-btn" type="button"
+              data-bs-toggle="collapse" data-bs-target="#acc-imp-${sourceId}"
+              aria-expanded="true" aria-controls="acc-imp-${sourceId}">
+              <span class="pt-title color-imp">${importPlayers.length} ${T.ptImportTitle(importPlayers.length, name)}</span>
+            </button>
+          </h2>
+          <div id="acc-imp-${sourceId}" class="accordion-collapse collapse show">
+            <div class="accordion-body px-0 pt-1">
+              ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
+                const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
+                const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
+                return html`
+                  <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
+                    ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
+                    <span class="pt-nation-name fw-medium">${label}</span>
+                    <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+                  </div>
+                  ${gp.map(p => html`
+                    <div class="pt-player-row d-flex justify-content-between align-items-center">
+                      <span>${ptWikiRow(p)}</span>
+                      <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
+                    </div>`)}`;
+              })}
+            </div>
+          </div>
+        </div>` : isQualified && nativePlayers.length === 0 ? html`
+        <div class="accordion-item">
+          <div class="accordion-body px-0">
+            <div class="tt-label">${T.noImport(name)}</div>
+          </div>
+        </div>` : nothing}
+    </div>`;
 };
 
 const applyDim = (sourceId, destIds, country) => {
@@ -507,10 +592,39 @@ const applyDim = (sourceId, destIds, country) => {
     return +this.getAttribute('data-id') === sourceId;
   }).raise(); // source flag above other flags
 
-  // ── Player table ──────────────────────────────────────────────────────────────
-  const ptEl = document.getElementById('player-table');
-  ptEl.style.display = '';
-  render(playerTableTemplate(sourceId), ptEl);
+  // ── Player table + tab label ──────────────────────────────────────────────────
+  const ptEl = document.getElementById('tab-players');
+  if (ptEl) {
+    // Capture which accordion sections are currently collapsed
+    ['exp','nat','imp'].forEach(k => {
+      const el = ptEl.querySelector(`[id^="acc-${k}-"]`);
+      if (el) _accState[k] = el.classList.contains('show');
+    });
+    render(playerTableTemplate(sourceId), ptEl);
+    // Restore collapsed state (default is all open; collapse whichever were closed)
+    ['exp','nat','imp'].forEach(k => {
+      if (!_accState[k]) {
+        const pane = ptEl.querySelector(`#acc-${k}-${sourceId}`);
+        const btn  = ptEl.querySelector(`[data-bs-target="#acc-${k}-${sourceId}"]`);
+        pane?.classList.remove('show');
+        btn?.classList.add('collapsed');
+        btn?.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+  _updateChainSelection();
+  const _playersBtn = document.getElementById('tab-players-btn');
+  if (_playersBtn) {
+    _playersBtn.innerHTML = '';
+    if (fc) {
+      const _img = document.createElement('img');
+      _img.src = FLAG_CDN(fc);
+      _img.className = 'rounded-circle flex-shrink-0';
+      _img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin-right:5px';
+      _playersBtn.appendChild(_img);
+    }
+    _playersBtn.appendChild(document.createTextNode(countryDisplay));
+  }
 
   document.body.classList.add('dim-active');
   dimBadge.style('display', null);
@@ -525,7 +639,11 @@ const clearDim = () => {
   if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line').remove();
   document.body.classList.remove('dim-active');
   dimBadge.style('display', 'none');
-  document.getElementById('player-table').style.display = 'none';
+  const _ptEl = document.getElementById('tab-players');
+  if (_ptEl) render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
+  const _pb = document.getElementById('tab-players-btn');
+  if (_pb) _pb.textContent = T.tabNoCountry;
+  _updateChainSelection();
 };
 
 // ── Activate dim from anywhere (e.g. player-table nation clicks) ──────────────

@@ -71,7 +71,6 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .tt-divider { border-top: 1px solid var(--color-divider); margin: 8px 0 4px; }
 
 /* player table (pt-) */
-#pt-export-count, #pt-native-section, #pt-import-section { border-top: 2px solid var(--color-divider); margin-top: 24px; padding-top: 12px; }
 .pt-title { font-size: 16px; font-weight: 500; }
 .pt-country-flag { height: 20px; width: auto; border-radius: 2px; }
 .pt-nation-header { gap: 8px; padding: 10px 4px 4px; border-bottom: 1px solid #f0ede8; cursor: pointer; border-radius: 4px; }
@@ -84,3 +83,9 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .pt-caps { color: var(--color-dim); font-size: 11px; }
 .pt-wiki { color: inherit; border-bottom: 1px dotted var(--color-muted); }
 .pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
+
+/* player table accordion overrides */
+.accordion-flush .accordion-item { background-color: transparent; border-color: var(--color-divider); }
+.pt-acc-btn { padding: 10px 4px !important; }
+.pt-acc-btn, .pt-acc-btn:not(.collapsed) { background-color: transparent !important; color: inherit !important; box-shadow: none !important; }
+.pt-acc-btn:hover { background-color: rgba(0,0,0,.03) !important; }
