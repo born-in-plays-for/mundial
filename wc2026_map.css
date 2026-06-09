@@ -89,3 +89,5 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .pt-acc-btn { padding: 10px 4px !important; }
 .pt-acc-btn, .pt-acc-btn:not(.collapsed) { background-color: transparent !important; color: inherit !important; box-shadow: none !important; }
 .pt-acc-btn:hover { background-color: rgba(0,0,0,.03) !important; }
+.pt-acc-static { cursor: default !important; }
+.pt-acc-static::after { display: none !important; }

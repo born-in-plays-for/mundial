@@ -222,7 +222,37 @@ const _chainGetIndex   = () => {
   return _chainData.nodes.findIndex(n => ISO2_REVERSE[n.code] === dimState.sourceId);
 };
 let _chainData = null, _chainUpdate = null;
-const _accState = { exp: true, nat: true, imp: true };
+
+/* ── Accordion state persistence ─────────────────────────────────────────────
+   Bootstrap's Collapse instances get confused across lit-html renders.
+   We own the state: save before every render, restore after. */
+const _accState = Object.assign({ exp: true, nat: true, imp: true },
+  JSON.parse(localStorage.getItem('accState') ?? '{}'));
+const _saveAccState = ptEl => {
+  ['exp','nat','imp'].forEach(k => {
+    const el = ptEl?.querySelector(`#acc-${k}`);
+    if (el) _accState[k] = el.classList.contains('show');
+  });
+  localStorage.setItem('accState', JSON.stringify(_accState));
+};
+const _ACC_ID = { 'acc-exp': 'exp', 'acc-nat': 'nat', 'acc-imp': 'imp' };
+document.addEventListener('shown.bs.collapse',  e => { const k = _ACC_ID[e.target.id]; if (k) { _accState[k] = true;  localStorage.setItem('accState', JSON.stringify(_accState)); } });
+document.addEventListener('hidden.bs.collapse', e => { const k = _ACC_ID[e.target.id]; if (k) { _accState[k] = false; localStorage.setItem('accState', JSON.stringify(_accState)); } });
+
+const _restoreAccState = ptEl => ['exp','nat','imp'].forEach(k => {
+  const pane = ptEl?.querySelector(`#acc-${k}`);
+  const btn  = ptEl?.querySelector(`[data-bs-target="#acc-${k}"]`);
+  if (!pane || !btn) return;
+  if (_accState[k]) {
+    pane.classList.add('show');
+    btn.classList.remove('collapsed');
+    btn.setAttribute('aria-expanded', 'true');
+  } else {
+    pane.classList.remove('show');
+    btn.classList.add('collapsed');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+});
 // Lazy lookup: player name → {href, fallback} drawn from loaded app data.
 // fallback=true means current-language URL absent, using English fallback (renders as "Name (en)").
 const _chainWikiUrl = name => {
@@ -416,96 +446,89 @@ const playerTableTemplate = sourceId => {
   });
   const importGroups = [...importGroupMap.values()].sort((a, b) => b.players.length - a.players.length);
 
+  const staticHdr = content => html`<div class="accordion-button pt-acc-btn pt-acc-static">${content}</div>`;
+  const toggleHdr = (id, content) => html`
+    <button class="accordion-button pt-acc-btn" type="button"
+      data-bs-toggle="collapse" data-bs-target="#acc-${id}"
+      aria-expanded="true" aria-controls="acc-${id}">${content}</button>`;
+
   return html`
-    ${!isQualified ? html`<div class="tt-not-qualified fst-italic">${T.notQualified}</div>` : nothing}
-    <div class="accordion accordion-flush mt-2" id="pt-acc-${sourceId}">
-      ${cnt > 0 ? html`
-        <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button class="accordion-button pt-acc-btn" type="button"
-              data-bs-toggle="collapse" data-bs-target="#acc-exp-${sourceId}"
-              aria-expanded="true" aria-controls="acc-exp-${sourceId}">
-              <span class="pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</span>
-            </button>
-          </h2>
-          <div id="acc-exp-${sourceId}" class="accordion-collapse collapse show">
-            <div class="accordion-body px-0 pt-1">
-              ${exportGroups.map(({ nation, players: gp }) => {
-                const nationId = QUALIFIED_BY_NAME[nation];
-                const nc = ISO2[nationId];
-                return html`
-                  <div class="pt-nation-header d-flex align-items-center" @click=${() => activateCountry(nationId, true)}>
-                    ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
-                    <span class="pt-nation-name fw-medium">${countryName(nationId, nation)}</span>
-                    <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
-                  </div>
-                  ${gp.map(p => html`
-                    <div class="pt-player-row d-flex justify-content-between align-items-center">
-                      <span>${ptWikiRow(p)}</span>
-                      <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
-                    </div>`)}`;
-              })}
-            </div>
-          </div>
-        </div>` : isQualified ? html`
-        <div class="accordion-item">
-          <div class="accordion-body px-0">
-            <div class="tt-label">${T.noExport(name)}</div>
+    <div class="accordion accordion-flush mt-2" id="pt-acc">
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          ${cnt > 0
+            ? toggleHdr('exp', html`<span class="pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</span>`)
+            : staticHdr(html`<span class="pt-title color-exp">${T.noExport(name)}</span>`)}
+        </h2>
+        ${cnt > 0 ? html`
+        <div id="acc-exp" class="accordion-collapse collapse">
+          <div class="accordion-body px-0 pt-1">
+            ${exportGroups.map(({ nation, players: gp }) => {
+              const nationId = QUALIFIED_BY_NAME[nation];
+              const nc = ISO2[nationId];
+              return html`
+                <div class="pt-nation-header d-flex align-items-center" @click=${() => activateCountry(nationId, true)}>
+                  ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
+                  <span class="pt-nation-name fw-medium">${countryName(nationId, nation)}</span>
+                  <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+                </div>
+                ${gp.map(p => html`
+                  <div class="pt-player-row d-flex justify-content-between align-items-center">
+                    <span>${ptWikiRow(p)}</span>
+                    <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
+                  </div>`)}`;
+            })}
           </div>
         </div>` : nothing}
-      ${nativePlayers.length > 0 ? html`
-        <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button class="accordion-button pt-acc-btn" type="button"
-              data-bs-toggle="collapse" data-bs-target="#acc-nat-${sourceId}"
-              aria-expanded="true" aria-controls="acc-nat-${sourceId}">
-              <span class="pt-title">${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}</span>
-            </button>
-          </h2>
-          <div id="acc-nat-${sourceId}" class="accordion-collapse collapse show">
-            <div class="accordion-body px-0 pt-1">
-              ${nativePlayers.map(p => html`
-                <div class="pt-player-row d-flex justify-content-between align-items-center">
-                  <span>${ptWikiRow(p)}</span>
-                  <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
-                </div>`)}
-            </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          ${nativePlayers.length > 0
+            ? toggleHdr('nat', html`<span class="pt-title">${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}</span>`)
+            : staticHdr(html`<span class="pt-title">${T.notQualified}</span>`)}
+        </h2>
+        ${nativePlayers.length > 0 ? html`
+        <div id="acc-nat" class="accordion-collapse collapse">
+          <div class="accordion-body px-0 pt-1">
+            ${nativePlayers.map(p => html`
+              <div class="pt-player-row d-flex justify-content-between align-items-center">
+                <span>${ptWikiRow(p)}</span>
+                <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
+              </div>`)}
           </div>
         </div>` : nothing}
-      ${importPlayers.length > 0 ? html`
-        <div class="accordion-item">
-          <h2 class="accordion-header">
-            <button class="accordion-button pt-acc-btn" type="button"
-              data-bs-toggle="collapse" data-bs-target="#acc-imp-${sourceId}"
-              aria-expanded="true" aria-controls="acc-imp-${sourceId}">
-              <span class="pt-title color-imp">${importPlayers.length} ${T.ptImportTitle(importPlayers.length, name)}</span>
-            </button>
-          </h2>
-          <div id="acc-imp-${sourceId}" class="accordion-collapse collapse show">
-            <div class="accordion-body px-0 pt-1">
-              ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
-                const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
-                const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
-                return html`
-                  <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
-                    ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
-                    <span class="pt-nation-name fw-medium">${label}</span>
-                    <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
-                  </div>
-                  ${gp.map(p => html`
-                    <div class="pt-player-row d-flex justify-content-between align-items-center">
-                      <span>${ptWikiRow(p)}</span>
-                      <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
-                    </div>`)}`;
-              })}
-            </div>
-          </div>
-        </div>` : isQualified && nativePlayers.length === 0 ? html`
-        <div class="accordion-item">
-          <div class="accordion-body px-0">
-            <div class="tt-label">${T.noImport(name)}</div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          ${importPlayers.length > 0
+            ? toggleHdr('imp', html`<span class="pt-title color-imp">${importPlayers.length} ${T.ptImportTitle(importPlayers.length, name)}</span>`)
+            : staticHdr(html`<span class="pt-title color-imp">${isQualified ? T.noImport(name) : T.notQualified}</span>`)}
+        </h2>
+        ${importPlayers.length > 0 ? html`
+        <div id="acc-imp" class="accordion-collapse collapse">
+          <div class="accordion-body px-0 pt-1">
+            ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
+              const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
+              const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
+              return html`
+                <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
+                  ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
+                  <span class="pt-nation-name fw-medium">${label}</span>
+                  <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+                </div>
+                ${gp.map(p => html`
+                  <div class="pt-player-row d-flex justify-content-between align-items-center">
+                    <span>${ptWikiRow(p)}</span>
+                    <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
+                  </div>`)}`;
+            })}
           </div>
         </div>` : nothing}
+      </div>
+
     </div>`;
 };
 
@@ -595,22 +618,9 @@ const applyDim = (sourceId, destIds, country) => {
   // ── Player table + tab label ──────────────────────────────────────────────────
   const ptEl = document.getElementById('tab-players');
   if (ptEl) {
-    // Capture which accordion sections are currently collapsed
-    ['exp','nat','imp'].forEach(k => {
-      const el = ptEl.querySelector(`[id^="acc-${k}-"]`);
-      if (el) _accState[k] = el.classList.contains('show');
-    });
+    _saveAccState(ptEl);
     render(playerTableTemplate(sourceId), ptEl);
-    // Restore collapsed state (default is all open; collapse whichever were closed)
-    ['exp','nat','imp'].forEach(k => {
-      if (!_accState[k]) {
-        const pane = ptEl.querySelector(`#acc-${k}-${sourceId}`);
-        const btn  = ptEl.querySelector(`[data-bs-target="#acc-${k}-${sourceId}"]`);
-        pane?.classList.remove('show');
-        btn?.classList.add('collapsed');
-        btn?.setAttribute('aria-expanded', 'false');
-      }
-    });
+    _restoreAccState(ptEl);
   }
   _updateChainSelection();
   const _playersBtn = document.getElementById('tab-players-btn');
@@ -640,7 +650,10 @@ const clearDim = () => {
   document.body.classList.remove('dim-active');
   dimBadge.style('display', 'none');
   const _ptEl = document.getElementById('tab-players');
-  if (_ptEl) render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
+  if (_ptEl) {
+    _saveAccState(_ptEl);
+    render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
+  }
   const _pb = document.getElementById('tab-players-btn');
   if (_pb) _pb.textContent = T.tabNoCountry;
   _updateChainSelection();

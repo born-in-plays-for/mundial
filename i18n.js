@@ -15,10 +15,10 @@ const _regionNames = (() => {
 
 // Entries Intl.DisplayNames cannot handle (subdivision codes, historical states, edge cases)
 const _OVERRIDE = {
-  8260: { fr:'Angleterre',      de:'England',      it:'Inghilterra',    es:'Inglaterra',     en:'England' },
-  8261: { fr:'Écosse',          de:'Schottland',   it:'Scozia',         es:'Escocia',        en:'Scotland' },
-  8262: { fr:'Pays de Galles',  de:'Wales',        it:'Galles',         es:'Gales',          en:'Wales' },
-  8263: { fr:'Irlande du Nord', de:'Nordirland',   it:'Irlanda del Nord', es:'Irlanda del Norte', en:'Northern Ireland' },
+  8260: { fr:'Angleterre',        de:'England',               it:'Inghilterra',      es:'Inglaterra',        en:'England' },
+  8261: { fr:'Écosse',            de:'Schottland',            it:'Scozia',           es:'Escocia',           en:'Scotland' },
+  8262: { fr:'Pays de Galles',    de:'Wales',                 it:'Galles',           es:'Gales',             en:'Wales' },
+  8263: { fr:'Irlande du Nord',   de:'Nordirland',            it:'Irlanda del Nord', es:'Irlanda del Norte', en:'Northern Ireland' },
   'Soviet Union':               { fr:'Union soviétique', de:'Sowjetunion',  it:'Unione Sovietica', es:'Unión Soviética',  en:'Soviet Union' },
   'Kingdom of the Netherlands': { fr:'Pays-Bas',         de:'Niederlande',  it:'Paesi Bassi',      es:'Países Bajos',     en:'Netherlands' },
 };
@@ -34,7 +34,7 @@ export const wikiUrl = p => p.wiki_langs?.[_LANG] ?? (_WIKI_LANGS.has(_LANG) ? n
 export const countryName = (id, fallback = '') => {
   const key = id ?? fallback;
   if (_OVERRIDE[key]) return _OVERRIDE[key][_LANG];
-  const code = (id != null ? whereNumeric(id)?.alpha2?.toLowerCase() : null)
+  const code = (id != null ? whereNumeric(String(id).padStart(3, '0'))?.alpha2?.toLowerCase() : null)
                ?? _NULL_CODE[fallback] ?? null;
   if (code && _regionNames) {
     try { const n = _regionNames.of(code.toUpperCase()); if (n) return n; } catch(e) {}
