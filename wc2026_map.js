@@ -487,7 +487,7 @@ const playerTableTemplate = sourceId => {
         <h2 class="accordion-header">
           ${nativePlayers.length > 0
             ? toggleHdr('nat', html`<span class="pt-title">${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}</span>`)
-            : staticHdr(html`<span class="pt-title">${T.notQualified}</span>`)}
+            : staticHdr(html`<span class="pt-title">${'n/a'}</span>`)}
         </h2>
         ${nativePlayers.length > 0 ? html`
         <div id="acc-nat" class="accordion-collapse collapse">
@@ -505,7 +505,7 @@ const playerTableTemplate = sourceId => {
         <h2 class="accordion-header">
           ${importPlayers.length > 0
             ? toggleHdr('imp', html`<span class="pt-title color-imp">${importPlayers.length} ${T.ptImportTitle(importPlayers.length, name)}</span>`)
-            : staticHdr(html`<span class="pt-title color-imp">${isQualified ? T.noImport(name) : T.notQualified}</span>`)}
+            : staticHdr(html`<span class="pt-title color-imp">${isQualified ? T.noImport(name) : 'n/a'}</span>`)}
         </h2>
         ${importPlayers.length > 0 ? html`
         <div id="acc-imp" class="accordion-collapse collapse">
@@ -626,14 +626,38 @@ const applyDim = (sourceId, destIds, country) => {
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     _playersBtn.innerHTML = '';
-    if (fc) {
-      const _img = document.createElement('img');
-      _img.src = FLAG_CDN(fc);
-      _img.className = 'rounded-circle flex-shrink-0';
-      _img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin-right:5px';
-      _playersBtn.appendChild(_img);
+    if (QUALIFIED_NAMES[sourceId]) {
+      if (fc) {
+        const _img = document.createElement('img');
+        _img.src = FLAG_CDN(fc);
+        _img.className = 'rounded-circle flex-shrink-0';
+        _img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin-right:5px';
+        _playersBtn.appendChild(_img);
+      }
+      _playersBtn.appendChild(document.createTextNode(countryDisplay));
+    } else {
+      const row = document.createElement('span');
+      row.className = 'd-flex align-items-center gap-2 text-start';
+      if (fc) {
+        const _img = document.createElement('img');
+        _img.src = FLAG_CDN(fc);
+        _img.className = 'rounded-circle flex-shrink-0';
+        _img.style.cssText = 'width:16px;height:16px';
+        row.appendChild(_img);
+      }
+      const col = document.createElement('span');
+      col.className = 'd-inline-flex flex-column lh-sm gap-1';
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = countryDisplay;
+      nameSpan.className = 'text-muted';
+      col.appendChild(nameSpan);
+      const tag = document.createElement('small');
+      tag.textContent = T.notQualified;
+      tag.className = 'tt-pop fst-italic';
+      col.appendChild(tag);
+      row.appendChild(col);
+      _playersBtn.appendChild(row);
     }
-    _playersBtn.appendChild(document.createTextNode(countryDisplay));
   }
 
   document.body.classList.add('dim-active');
@@ -773,10 +797,9 @@ const showExportTip = (event, id) => {
     const hasMore        = leftTruncated || rightTruncated;
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
-        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${countryName(rec.id, rec.country)}<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${rec.totalCount}</span></span>
+        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${!QUALIFIED_NAMES[id] ? html`<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${countryName(rec.id, rec.country)}</span><small class="tt-pop fst-italic">${T.notQualified}</small></span>` : countryName(rec.id, rec.country)}</span>
         <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(rec.pop)}${rankTag(rec.country)}</span>
       </div>
-      ${!QUALIFIED_NAMES[id] ? html`<div class="tt-not-qualified fst-italic">${T.notQualified}</div>` : nothing}
       ${body}
       ${hasMore ? html`<div class="tt-more-label text-end">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
   }
