@@ -502,9 +502,10 @@ const applyDim = (sourceId, destIds, country) => {
   dimBadgeRect.style('visibility', 'visible').attr('x', bx).attr('width', badgeW);
   dimBadgeFlag.style('visibility', 'visible').attr('href', fc ? FLAG_CDN(fc) : '').attr('x', bx + 8);
   dimBadgeText.attr('x', Math.round(bx + (badgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#fff').text(countryDisplay);
+  g.selectAll('.flag-qualified').raise(); // all flags above arcs
   g.selectAll('.flag-qualified').filter(function() {
     return +this.getAttribute('data-id') === sourceId;
-  }).raise();
+  }).raise(); // source flag above other flags
 
   // ── Player table ──────────────────────────────────────────────────────────────
   const ptEl = document.getElementById('player-table');
@@ -824,6 +825,9 @@ svg.append('defs').append('clipPath').attr('id', 'ocean-clip')
   .attr('clip-rule', 'evenodd')
   .attr('d', path({type:'Sphere'}) + ' ' + path(topojson.merge(world, world.objects.countries.geometries)));
 
+// Arc group — below flags so arcs never cover flag icons
+dimState.arcsGroup = g.append('g').attr('class', 'arcs-group');
+
 // Leader lines for offset flags — drawn first, clipped to ocean so they vanish over land
 const leaderGroup = g.append('g').attr('clip-path', 'url(#ocean-clip)');
 const appendLeaderLine = (cx, cy, fx, fy) =>
@@ -939,8 +943,7 @@ topojson.feature(world, world.objects.countries).features
 STANDALONE_FLAGS.forEach(({ id, lon, lat }) => { centroids[id] = projection([lon, lat]); });
 
 
-// ── Arc group (above flags; source flag raised above arcs in applyDim) ────────
-dimState.arcsGroup = g.append('g').attr('class', 'arcs-group');};
+};
 
 Promise.all([
   fetch('wc2026_map_data.json').then(r => r.json()),

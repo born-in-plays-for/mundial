@@ -174,13 +174,14 @@ Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via
 
 ### Data join ordering in the render callback
 Order matters for SVG z-layering:
-1. World choropleth paths (skip 826)
-2. Mesh borders
-3. UK nation paths (from `uk-nations.geojson`)
-4. `.flag-qualified` world topojson data join
-5. England/Scotland flags (must be **after** step 4)
-6. STANDALONE_FLAGS
-7. `arcsGroup` (above everything, below raised source flag)
+1. `arcsGroup` (below all flags)
+2. Leader lines (ocean-clipped)
+3. World choropleth paths (skip 826)
+4. Mesh borders
+5. UK nation paths (from `uk-nations.geojson`)
+6. `.flag-qualified` world topojson data join
+7. England/Scotland flags (must be **after** step 6)
+8. STANDALONE_FLAGS
 
 ---
 
