@@ -203,7 +203,7 @@ document.getElementById('page-heading-mob').textContent  = T.pageHeading;
   const el = document.getElementById(id);
   if (!el) return;
   const q = T.pageQuote;
-  el.innerHTML = `<p class="pq-text">${q.text}</p><p class="pq-attr"><span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}</p>`;
+  el.innerHTML = `<p class="pq-text fst-italic">${q.text}</p><p class="pq-attr"><span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}</p>`;
 });
 document.getElementById('zoom-hint').textContent      = T.zoomHint;
 document.getElementById('legend-caption').textContent = T.legendCaption;
@@ -261,13 +261,13 @@ const showQualifiedTip = (event, name, code) => {
     const hasImps = (app.importByNation[nId] ?? []).length > 0;
 
     render(html`
-      <div class="tt-name tt-name-inner">
-        <span class="tt-name-inner">${flagImg(code)}${countryName(nId, name)}${app.byId[nId]?.totalCount ? html`<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${app.byId[nId].totalCount}</span>` : nothing}</span>
-        <span class="tt-pop-rank">${popTag(app.pop[name])}${rankTag(name)}</span>
+      <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
+        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(code)}${countryName(nId, name)}${app.byId[nId]?.totalCount ? html`<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${app.byId[nId].totalCount}</span>` : nothing}</span>
+        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[name])}${rankTag(name)}</span>
       </div>
       <div class="tt-label">${T.noExport(countryName(nId, name))}</div>
       ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-label">${T.noImport(countryName(nId, name))}</div>`}
-      ${hasImps && (app.importByNation[nId] ?? []).length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
+      ${hasImps && (app.importByNation[nId] ?? []).length > 5 ? html`<div class="tt-more-label text-end">${T.clickForAll}</div>` : nothing}`, tt);
   }
   positionTip(event, 200, false);
 };
@@ -294,14 +294,14 @@ const enablesDim = id => !!(app.byId[id] || (QUALIFIED_NAMES[id] && ((app.import
 
 const fmtPop = pop => (pop < 1 ? parseFloat(pop.toFixed(2)) : parseFloat(pop.toFixed(1)))
   .toLocaleString(LOCALE, { maximumFractionDigits: pop < 1 ? 2 : 1, minimumFractionDigits: 0, useGrouping: false }) + 'M';
-const popTag  = pop  => pop  ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing;
-const rankTag = name => { const r = app.fifaRank[name]; return r ? html`<span class="tt-rank">FIFA #${r}</span>` : nothing; };
-const flagImg = code => code ? html`<img class="tt-flag" src="${FLAG_CDN(code)}">` : nothing;
+const popTag  = pop  => pop  ? html`<span class="tt-pop fw-normal text-nowrap">${T.pop} ${fmtPop(pop)}</span>` : nothing;
+const rankTag = name => { const r = app.fifaRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">FIFA #${r}</span>` : nothing; };
+const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const ptWikiRow = p => {
   const url    = wikiUrl(p);
   const wikiEn = p.wiki_langs?.en ?? null;
-  return url    ? html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki">${p.name}</a>`
-       : wikiEn ? html`${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki">en</a>)`
+  return url    ? html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${p.name}</a>`
+       : wikiEn ? html`${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)`
        : p.name;
 };
 
@@ -319,17 +319,17 @@ const buildImportColHtml = nationId => {
 
   const nationName = countryName(nationId, QUALIFIED_NAMES[nationId]);
   return html`
-    <div class="tt-count-row">
+    <div class="tt-count-row d-flex justify-content-between align-items-center">
       <div class="tt-count color-imp">${players.length}</div>
       <div class="tt-sub">${ratio} ${T.ofSquad} (${squadSize})</div>
     </div>
     <div class="tt-label">${T.selectedByLabel(nationName)}</div>
-    <div class="tt-nations">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>
+    <div class="tt-nations mb-0 fst-italic">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>
     <div class="tt-players ${players.length > 5 ? 'tt-more' : ''}">
       ${top.map(p => html`
         <div class="tt-player">
           <span>${p.name}</span>
-          <span class="tt-nation"><span class="color-imp">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
+          <span class="tt-nation text-nowrap"><span class="color-imp">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
         </div>`)}
     </div>`;
 };
@@ -368,9 +368,9 @@ const playerTableTemplate = sourceId => {
         ${fc ? html`<img class="pt-country-flag" src="${FLAG_CDN_RECT(fc)}">` : nothing}
         <h2 class="mb-0 pt-title">${name}</h2>
       </div>
-      ${pop ? html`<span class="tt-pop">${T.pop} ${fmtPop(pop)}</span>` : nothing}
+      ${pop ? html`<span class="tt-pop fw-normal text-nowrap">${T.pop} ${fmtPop(pop)}</span>` : nothing}
     </div>
-    ${!isQualified ? html`<div class="tt-not-qualified">${T.notQualified}</div>` : nothing}
+    ${!isQualified ? html`<div class="tt-not-qualified fst-italic">${T.notQualified}</div>` : nothing}
     ${cnt > 0 ? html`
       <h2 id="pt-export-count" class="mb-3 pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</h2>
       <div id="pt-nations">
@@ -378,15 +378,15 @@ const playerTableTemplate = sourceId => {
           const nationId = QUALIFIED_BY_NAME[nation];
           const nc = ISO2[nationId];
           return html`
-            <div class="pt-nation-header" @click=${() => activateCountry(nationId, true)}>
+            <div class="pt-nation-header d-flex align-items-center" @click=${() => activateCountry(nationId, true)}>
               ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
-              <span class="pt-nation-name">${countryName(nationId, nation)}</span>
+              <span class="pt-nation-name fw-medium">${countryName(nationId, nation)}</span>
               <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
             </div>
             ${gp.map(p => html`
-              <div class="pt-player-row">
+              <div class="pt-player-row d-flex justify-content-between align-items-center">
                 <span>${ptWikiRow(p)}</span>
-                <span class="pt-caps">${p.caps} ${T.caps}</span>
+                <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
               </div>`)}`;
         })}
       </div>` : isQualified ? html`<div id="pt-export-count" class="tt-label">${T.noExport(name)}</div>` : nothing}
@@ -395,9 +395,9 @@ const playerTableTemplate = sourceId => {
         <h2 id="pt-native-title" class="mb-3 pt-title">${importPlayers.length === 0 ? T.noImport(name) : `${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}`}</h2>
         <div id="pt-native-players">
           ${nativePlayers.map(p => html`
-            <div class="pt-player-row">
+            <div class="pt-player-row d-flex justify-content-between align-items-center">
               <span>${ptWikiRow(p)}</span>
-              <span class="pt-caps">${p.caps} ${T.caps}</span>
+              <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
             </div>`)}
         </div>
       </div>` : nothing}
@@ -409,15 +409,15 @@ const playerTableTemplate = sourceId => {
             const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
             const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
             return html`
-              <div class="pt-nation-header${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
+              <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
                 ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
-                <span class="pt-nation-name">${label}</span>
+                <span class="pt-nation-name fw-medium">${label}</span>
                 <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
               </div>
               ${gp.map(p => html`
-                <div class="pt-player-row">
+                <div class="pt-player-row d-flex justify-content-between align-items-center">
                   <span>${ptWikiRow(p)}</span>
-                  <span class="pt-caps">${p.caps} ${T.caps}</span>
+                  <span class="pt-caps text-nowrap">${p.caps} ${T.caps}</span>
                 </div>`)}`;
           })}
         </div>
@@ -616,21 +616,21 @@ const showExportTip = (event, id) => {
     const fc    = ISO2[rec.id];
 
     const leftCol = html`
-      <div class="tt-count-row">
+      <div class="tt-count-row d-flex justify-content-between align-items-center">
         <div class="tt-count color-exp">${rec.count}</div>
         <div class="tt-sub">${ratio} ${T.perMillion}</div>
       </div>
       <div class="tt-label">${T.exported(rec.count, countryName(rec.id, rec.country))} ${T.selectedBy(rec.count)}</div>
-      <div class="tt-nations">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
+      <div class="tt-nations mb-0 fst-italic">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
       <div class="tt-players ${rec.count > rec.top.length ? 'tt-more' : ''}">
         ${rec.top.map(p => html`
           <div class="tt-player">
             <span>${p.name}</span>
-            <span class="tt-nation"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
+            <span class="tt-nation text-nowrap"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
           </div>`)}
       </div>`;
     const body = hasImports
-      ? html`<div class="tt-columns">
+      ? html`<div class="tt-columns d-flex gap-0">
           <div class="flex-col">${leftCol}</div>
           <div class="tt-vdiv"></div>
           <div class="flex-col">${buildImportColHtml(id)}</div>
@@ -641,13 +641,13 @@ const showExportTip = (event, id) => {
     const rightTruncated = importCount > 5;
     const hasMore        = leftTruncated || rightTruncated;
     render(html`
-      <div class="tt-name tt-name-inner">
-        <span class="tt-name-inner">${flagImg(fc)}${countryName(rec.id, rec.country)}<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${rec.totalCount}</span></span>
-        <span class="tt-pop-rank">${popTag(rec.pop)}${rankTag(rec.country)}</span>
+      <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
+        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${countryName(rec.id, rec.country)}<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${rec.totalCount}</span></span>
+        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(rec.pop)}${rankTag(rec.country)}</span>
       </div>
-      ${!QUALIFIED_NAMES[id] ? html`<div class="tt-not-qualified">${T.notQualified}</div>` : nothing}
+      ${!QUALIFIED_NAMES[id] ? html`<div class="tt-not-qualified fst-italic">${T.notQualified}</div>` : nothing}
       ${body}
-      ${hasMore ? html`<div class="tt-more-label">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
+      ${hasMore ? html`<div class="tt-more-label text-end">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
   }
   tt.classList.toggle('tt-non-qualified', !QUALIFIED_NAMES[id]);
   positionTip(event, 240, hasImports);
@@ -665,15 +665,15 @@ const showImportTip = (event, destId) => {
     const destFc = ISO2[destId];
 
     render(html`
-      <div class="tt-name tt-name-inner">
-        <span class="tt-name-inner">${flagImg(destFc)}${countryName(destId, destName)}</span>
-        <span class="tt-pop-rank">${popTag(app.pop[destName])}${rankTag(destName)}</span>
+      <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
+        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(destFc)}${countryName(destId, destName)}</span>
+        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[destName])}${rankTag(destName)}</span>
       </div>
-      <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
+      <div class="tt-nations mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
         ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
       </div>
-      ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
+      ${allPlayers.length > 5 ? html`<div class="tt-more-label text-end">${T.clickForAll}</div>` : nothing}`, tt);
   }
   positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
 };
@@ -692,15 +692,15 @@ const showImportSourceTip = (event, centroidId) => {
     const bFc = p0.birthCountryId != null ? ISO2[p0.birthCountryId] : (_NULL_CODE[p0.birthCountry] ?? null);
 
     render(html`
-      <div class="tt-name tt-name-inner">
-        <span class="tt-name-inner">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
-        <span class="tt-pop-rank">${popTag(app.pop[p0.birthCountry])}${rankTag(p0.birthCountry)}</span>
+      <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
+        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
+        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[p0.birthCountry])}${rankTag(p0.birthCountry)}</span>
       </div>
-      <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
+      <div class="tt-nations mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
         ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
       </div>
-      ${allPlayers.length > 5 ? html`<div class="tt-more-label">${T.clickForAll}</div>` : nothing}`, tt);
+      ${allPlayers.length > 5 ? html`<div class="tt-more-label text-end">${T.clickForAll}</div>` : nothing}`, tt);
   }
   positionTip(event, 48 + 20 + 24 * players.length + (allPlayers.length > 5 ? 18 : 0));
 };
@@ -723,22 +723,22 @@ const showCombinedTip = (event, id) => {
     const hasBoth = exportPlayers.length > 0 && importPlayers.length > 0;
 
     render(html`
-      <div class="tt-name tt-name-inner">
-        <span class="tt-name-inner">${flagImg(fc)}${countryName(id, destName)}</span>
-        <span class="tt-pop-rank">${popTag(app.pop[destName])}${rankTag(destName)}</span>
+      <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
+        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${countryName(id, destName)}</span>
+        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[destName])}${rankTag(destName)}</span>
       </div>
       ${exportPlayers.length > 0 ? html`
-        <div class="tt-nations"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
+        <div class="tt-nations mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
         <div class="tt-players ${exportPlayers.length > 5 ? 'tt-more' : ''}">
           ${topExp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>` : nothing}
       ${hasBoth ? html`<div class="tt-divider"></div>` : nothing}
       ${importPlayers.length > 0 ? html`
-        <div class="tt-nations"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${importPlayers.length})</div>
+        <div class="tt-nations mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${importPlayers.length})</div>
         <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
           ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>` : nothing}
-      ${exportPlayers.length > 5 || importPlayers.length > 5 ? html`<div class="tt-more-label">${exportPlayers.length > 5 && importPlayers.length > 5 ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
+      ${exportPlayers.length > 5 || importPlayers.length > 5 ? html`<div class="tt-more-label text-end">${exportPlayers.length > 5 && importPlayers.length > 5 ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
   }
   const h = 48 + (exportPlayers.length > 0 ? 20 + 24 * topExp.length : 0)
                 + (importPlayers.length > 0 ? 20 + 24 * topImp.length : 0)

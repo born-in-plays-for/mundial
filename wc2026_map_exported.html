@@ -45,14 +45,14 @@
     <div class="flex-col">
       <div id="legend" class="d-flex align-items-center justify-content-end justify-content-md-start gap-2 mb-1">
         <div>
-          <div id="legend-bar"></div>
-          <div id="legend-ticks"><span>0</span><span>15</span><span>35</span><span>55</span><span>66</span></div>
+          <div id="legend-bar" class="overflow-hidden rounded-2"></div>
+          <div id="legend-ticks" class="d-flex justify-content-between"><span>0</span><span>15</span><span>35</span><span>55</span><span>66</span></div>
         </div>
-        <div style="display:flex;flex-direction:column;padding-left:6px">
-          <div style="height:10px;display:flex;align-items:center;justify-content:center">
+        <div class="d-flex flex-column ps-2">
+          <div class="d-flex align-items-center justify-content-center" style="height:10px">
             <div style="width:10px;height:10px;border-radius:50%;background:#000"></div>
           </div>
-          <div id="legend-outlier-count" style="font-size:10px;color:var(--color-dim);margin-top:3px;text-align:center"></div>
+          <div id="legend-outlier-count" class="text-center" style="font-size:10px;color:var(--color-dim);margin-top:3px"></div>
         </div>
       </div>
       <p id="legend-caption" class="sub mb-0 text-end text-md-start">par lieu de naissance</p>
@@ -62,7 +62,7 @@
   <div id="page-heading-sub-mob" class="d-md-none mt-2"></div>
 </div>
 
-<div id="player-table" class="container-xxl px-4 pb-5" style="display:none"></div>
+<div id="player-table" class="container-xxl px-4 pb-5 mt-1" style="display:none"></div>
 
 <div id="tooltip"></div>
 
