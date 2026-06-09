@@ -1,11 +1,15 @@
+import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
+
 export const LOCALE = navigator.languages?.[0] ?? navigator.language ?? 'fr';
-export const LANG   = LOCALE.toLowerCase().startsWith('fr') ? 'fr'
-             : LOCALE.toLowerCase().startsWith('de') ? 'de'
-             : LOCALE.toLowerCase().startsWith('it') ? 'it'
-             : 'en';
+const LANG = LOCALE.toLowerCase().startsWith('fr') ? 'fr'
+           : LOCALE.toLowerCase().startsWith('de') ? 'de'
+           : LOCALE.toLowerCase().startsWith('it') ? 'it'
+           : 'en';
+
+document.documentElement.lang = LANG;
 
 const _regionNames = (() => {
-  try { return new Intl.DisplayNames([LOCALE], { type: 'region' }); } catch(e) { return null; }
+  try { return new Intl.DisplayNames([LOCALE], { type: 'region', fallback: 'none' }); } catch(e) { return null; }
 })();
 
 // Entries Intl.DisplayNames cannot handle (subdivision codes, historical states, edge cases)
@@ -21,13 +25,11 @@ const _OVERRIDE = {
 // For id=null entries that do have a standard alpha-2 code
 const _NULL_CODE = { 'Democratic Republic of the Congo':'cd', 'U.S.':'us', 'Isle of Man':'im' };
 
-// Null-ID birth countries → numeric topojson ID (for centroid lookup and flag dimming)
-const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840, 'Kingdom of the Netherlands': 528 };
-
-const countryName = (id, fallback = '') => {
+export const countryName = (id, fallback = '') => {
   const key = id ?? fallback;
   if (_OVERRIDE[key]) return _OVERRIDE[key][LANG];
-  const code = (id != null ? ISO2[id] : null) ?? _NULL_CODE[fallback] ?? null;
+  const code = (id != null ? whereNumeric(id)?.alpha2?.toLowerCase() : null)
+               ?? _NULL_CODE[fallback] ?? null;
   if (code && _regionNames) {
     try { const n = _regionNames.of(code.toUpperCase()); if (n) return n; } catch(e) {}
   }
@@ -35,7 +37,7 @@ const countryName = (id, fallback = '') => {
 };
 
 // French preposition before country name (en / au / aux)
-export const frPrep = name => {
+const frPrep = name => {
   if (!name) return 'en';
   if (['États-Unis', 'Pays-Bas', 'Émirats arabes unis', 'Philippines', 'Bahamas'].some(c => name.startsWith(c))) return 'aux';
   if (['Mexique', 'Mozambique', 'Cambodge', 'Zimbabwe', 'Belize'].includes(name)) return 'au';
@@ -45,7 +47,7 @@ export const frPrep = name => {
 };
 
 // French definite article before country name (le / la / l' / les)
-export const frDefArt = name => {
+const frDefArt = name => {
   if (!name) return '';
   if (['États-Unis', 'Pays-Bas', 'Émirats arabes unis', 'Philippines', 'Bahamas'].some(c => name.startsWith(c))) return 'les ';
   if (['Haïti'].includes(name)) return '';

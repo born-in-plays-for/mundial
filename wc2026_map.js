@@ -187,42 +187,14 @@ const QUALIFIED_BY_NAME = Object.fromEntries(
 );
 
 
-import { LOCALE, LANG, T, frPrep, frDefArt } from './i18n.js';
-
-const _regionNames = (() => {
-  try { return new Intl.DisplayNames([LOCALE], { type: 'region' }); } catch(e) { return null; }
-})();
-
-// Entries Intl.DisplayNames cannot handle (subdivision codes, historical states, edge cases)
-const _OVERRIDE = {
-  8260: { fr:'Angleterre',      de:'England',      it:'Inghilterra',    en:'England' },
-  8261: { fr:'Écosse',          de:'Schottland',   it:'Scozia',         en:'Scotland' },
-  8262: { fr:'Pays de Galles',  de:'Wales',        it:'Galles',         en:'Wales' },
-  8263: { fr:'Irlande du Nord', de:'Nordirland',   it:'Irlanda del Nord', en:'Northern Ireland' },
-  'Soviet Union':               { fr:'Union soviétique', de:'Sowjetunion',  it:'Unione Sovietica', en:'Soviet Union' },
-  'Kingdom of the Netherlands': { fr:'Pays-Bas',         de:'Niederlande',  it:'Paesi Bassi',      en:'Netherlands' },
-};
-
-// For id=null entries that do have a standard alpha-2 code
-const _NULL_CODE = { 'Democratic Republic of the Congo':'cd', 'U.S.':'us', 'Isle of Man':'im' };
+import { LOCALE, T, countryName } from './i18n.js';
 
 // Null-ID birth countries → numeric topojson ID (for centroid lookup and flag dimming)
 const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840, 'Kingdom of the Netherlands': 528 };
 
-const countryName = (id, fallback = '') => {
-  const key = id ?? fallback;
-  if (_OVERRIDE[key]) return _OVERRIDE[key][LANG];
-  const code = (id != null ? ISO2[id] : null) ?? _NULL_CODE[fallback] ?? null;
-  if (code && _regionNames) {
-    try { const n = _regionNames.of(code.toUpperCase()); if (n) return n; } catch(e) {}
-  }
-  return fallback || String(id);
-};
-
 
 
 // Apply locale to static page elements
-document.documentElement.lang = LANG;
 document.title = T.pageTitle;
 document.querySelector('meta[name="description"]')?.setAttribute('content', T.pageDescription);
 document.getElementById('page-heading').textContent     = T.pageHeading;
