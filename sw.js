@@ -1,4 +1,4 @@
-const CACHE = 'mundial-2026-v1';
+const CACHE = 'mundial-2026-v2';
 
 const PRECACHE = [
   '/',
@@ -11,6 +11,8 @@ const PRECACHE = [
   '/chains/wc2026_chain_render.js',
   '/chains/wc2026_chain_longest.json',
   '/images/wc2026.svg',
+  '/images/wc2026_192.png',
+  '/images/wc2026_512.png',
 ];
 
 self.addEventListener('install', e => {
