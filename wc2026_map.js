@@ -634,38 +634,28 @@ const applyDim = (sourceId, destIds, country) => {
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     _playersBtn.innerHTML = '';
-    if (QUALIFIED_NAMES[sourceId]) {
-      if (fc) {
-        const _img = document.createElement('img');
-        _img.src = FLAG_CDN(fc);
-        _img.className = 'rounded-circle flex-shrink-0';
-        _img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin-right:5px';
-        _playersBtn.appendChild(_img);
-      }
-      _playersBtn.appendChild(document.createTextNode(countryDisplay));
-    } else {
-      const row = document.createElement('span');
-      row.className = 'd-flex align-items-center gap-2 text-start';
-      if (fc) {
-        const _img = document.createElement('img');
-        _img.src = FLAG_CDN(fc);
-        _img.className = 'rounded-circle flex-shrink-0';
-        _img.style.cssText = 'width:16px;height:16px';
-        row.appendChild(_img);
-      }
-      const col = document.createElement('span');
-      col.className = 'd-inline-flex flex-column lh-sm gap-1';
-      const nameSpan = document.createElement('span');
-      nameSpan.textContent = countryDisplay;
-      nameSpan.className = 'text-muted';
-      col.appendChild(nameSpan);
-      const tag = document.createElement('small');
-      tag.textContent = T.notQualified;
-      tag.className = 'tt-pop fst-italic';
-      col.appendChild(tag);
-      row.appendChild(col);
-      _playersBtn.appendChild(row);
+    const isQualifiedBtn = !!QUALIFIED_NAMES[sourceId];
+    const row = document.createElement('span');
+    row.className = 'd-flex align-items-center gap-2 text-start';
+    if (fc) {
+      const _img = document.createElement('img');
+      _img.src = FLAG_CDN(fc);
+      _img.className = 'rounded-circle flex-shrink-0';
+      _img.style.cssText = 'width:16px;height:16px';
+      row.appendChild(_img);
     }
+    const col = document.createElement('span');
+    col.className = 'd-inline-flex flex-column lh-sm gap-1';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = countryDisplay;
+    if (!isQualifiedBtn) nameSpan.className = 'text-muted';
+    col.appendChild(nameSpan);
+    const tag = document.createElement('small');
+    tag.textContent = isQualifiedBtn ? ' ' : T.notQualified;
+    tag.className = 'tt-pop fst-italic';
+    col.appendChild(tag);
+    row.appendChild(col);
+    _playersBtn.appendChild(row);
   }
 
   document.body.classList.add('dim-active');
