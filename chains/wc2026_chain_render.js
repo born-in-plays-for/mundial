@@ -22,8 +22,14 @@ function _orthoPath(px, py, cx, cy, FR, mode) {
   }
 }
 
+const _spanHtml  = (t, col) => `<span style="color:${col};font-weight:600;white-space:nowrap">${t}</span>`;
+
+const _defaultLabels = { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue pour', post: 'chemin' };
+
 // Returns an updateSelection(newIdx) function for surgical selection updates.
-export function renderChain(chain, container, onCountryClick = null, getSelectedIndex = null, getPlayerWikiUrl = null) {
+export function renderChain(chain, container, opts = {}) {
+  const { onCountryClick = null, getSelectedIndex = null, getPlayerWikiUrl = null, labels = null } = opts;
+  const L = labels ?? _defaultLabels;
   const PAD  = 0;
   const SIDE = 90;
   const CW   = 120;
@@ -41,7 +47,7 @@ export function renderChain(chain, container, onCountryClick = null, getSelected
   const ARROW_Y  = CITY_Y + 8;
   const ROW_H    = ARROW_Y + 14;
 
-  const TH      = 64;
+  const TH      = 4;
   const numRows = Math.ceil(n / N);
   const H       = TH + numRows * ROW_H + 20;
 
@@ -59,11 +65,60 @@ export function renderChain(chain, container, onCountryClick = null, getSelected
     return { x: right ? PW - SIDE/2 : SIDE/2, y: (cp0.y + cp1.y) / 2, mode: right ? 'right' : 'left' };
   };
 
+  // ── HTML header (legend + subtitle + nav buttons) ────────────────────────────
+  const _navBtns = [];
+  const { nodes, links } = chain;
+  const nn = nodes.length;
+  const selIdx = getSelectedIndex?.() ?? -1;
+
+  container.innerHTML = '';
+  const wrapper = document.createElement('div');
+  container.appendChild(wrapper);
+
+  const hdr = document.createElement('div');
+  hdr.style.cssText = `display:${onCountryClick ? 'flex' : 'block'};align-items:flex-start;justify-content:space-between;padding:8px 0 4px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif`;
+  wrapper.appendChild(hdr);
+
+  const leftDiv = document.createElement('div');
+  const legendDiv = document.createElement('div');
+  legendDiv.style.cssText = 'font-size:14px;font-weight:600';
+  legendDiv.innerHTML = `${_spanHtml(L.pre, '#1a1a18')} [${_spanHtml('← ' + L.bornIn, '#3b82f6')}, ${_spanHtml(L.playsFor + ' →', '#ef4444')}] ${_spanHtml(L.post, '#1a1a18')}`;
+  leftDiv.appendChild(legendDiv);
+  const subtitleText = L.subtitle ? L.subtitle(links.length, nodes.length) : chain.subtitle;
+  if (subtitleText) {
+    const sub = document.createElement('div');
+    sub.style.cssText = 'font-size:10px;color:#aaa;margin-top:3px';
+    sub.textContent = subtitleText;
+    leftDiv.appendChild(sub);
+  }
+  hdr.innerHTML = '';
+  hdr.appendChild(leftDiv);
+
+  if (onCountryClick) {
+    const navDiv = document.createElement('div');
+    navDiv.style.cssText = 'display:flex;gap:4px;flex-shrink:0;padding-top:2px';
+    const addNavBtn = (label, delta) => {
+      const dis = selIdx >= 0 && (delta < 0 ? selIdx === 0 : selIdx === nn - 1);
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.style.cssText = `width:28px;height:24px;border-radius:5px;border:none;background:#e8e4de;color:#888;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:${dis?'default':'pointer'};opacity:${dis?'0.35':'1'}`;
+      btn.addEventListener('click', () => {
+        const c = getSelectedIndex?.() ?? -1;
+        if (c >= 0 && (delta < 0 ? c === 0 : c === nn - 1)) return;
+        const next = c < 0 ? (delta > 0 ? 0 : nn - 1) : c + delta;
+        if (next >= 0 && next < nn) onCountryClick(nodes[next]);
+      });
+      navDiv.appendChild(btn);
+      _navBtns.push({ btn, delta });
+    };
+    addNavBtn('◀', -1);
+    addNavBtn('▶', +1);
+    hdr.appendChild(navDiv);
+  }
+
+  // ── SVG ──────────────────────────────────────────────────────────────────────
   const svg = _svgEl('svg', { width:PW, height:H, viewBox:`0 0 ${PW} ${H}`,
     style:`font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:block;overflow:visible` });
-
-  svg.appendChild(_svgEl('rect',{width:PW,height:H,rx:14,fill:'#fff',opacity:.72}));
-  svg.appendChild(_svgEl('rect',{width:PW,height:H,rx:14,fill:'none',stroke:'#e8e4de','stroke-width':1}));
 
   const defs = _svgEl('defs');
   [['blu','#3b82f6'],['red','#ef4444']].forEach(([id,col]) => {
@@ -76,42 +131,11 @@ export function renderChain(chain, container, onCountryClick = null, getSelected
   defs.appendChild(styleEl);
   svg.appendChild(defs);
 
-  {
-    const ty = 32, fs = 14, aw = 22, cw = fs * 0.58, gap = 5;
-    const parts = [
-      { t:'Le plus long', c:'#1a1a18' },
-      { a:'blu',          c:'#3b82f6' },
-      { t:'Né en',        c:'#3b82f6' },
-      { a:'red',          c:'#ef4444' },
-      { t:'Joue pour',    c:'#ef4444' },
-      { t:'chemin',       c:'#1a1a18' },
-    ];
-    const widths = parts.map(p => p.a ? aw : Math.round(p.t.length * cw));
-    const total  = widths.reduce((s,w) => s+w, 0) + gap * (parts.length - 1);
-    let tx = Math.round(PW/2 - total/2);
-    parts.forEach((p, idx) => {
-      if (idx > 0) tx += gap;
-      if (p.a) {
-        svg.appendChild(_svgEl('line',{x1:tx, y1:ty, x2:tx+aw-5, y2:ty,
-          stroke:p.c, 'stroke-width':2, 'marker-end':`url(#${p.a})`}));
-        tx += aw;
-      } else {
-        svg.appendChild(_svgTxt('text',{x:tx, y:ty,
-          'dominant-baseline':'middle','font-size':fs,'font-weight':600, fill:p.c}, p.t));
-        tx += widths[idx];
-      }
-    });
-  }
-  if (chain.subtitle) svg.appendChild(_svgTxt('text',{x:PW/2,y:54,
-    'text-anchor':'middle','font-size':10,fill:'#aaa'}, chain.subtitle));
-
-  const { nodes, links } = chain;
   const cp = nodes.map((_,i) => cPos(i));
 
   /* ── 0. Selection backgrounds — rendered first so arrows draw on top ────────── */
-  const selIdx = getSelectedIndex?.() ?? -1;
-  const P = FR + 7;
   const _selBgs = [];
+  const P = FR + 7;
   nodes.forEach((node, i) => {
     const {x, y} = cp[i];
     const selBg = _svgEl('rect', {x:x-P, y:y-P, width:P*2, height:P*2, rx:10, fill:'#d8d4ce',
@@ -143,12 +167,10 @@ export function renderChain(chain, container, onCountryClick = null, getSelected
     if (!wiki) {
       svg.appendChild(_svgTxt('text', base, name));
     } else if (!wiki.fallback) {
-      // Full name as link
       const a = _svgEl('a', {href:wiki.href, target:'_blank', rel:'noopener', class:'cplr-a'});
       a.appendChild(_svgTxt('text', base, name));
       svg.appendChild(a);
     } else {
-      // "Name (en)" — only "(en)" is the link, matching ptWikiRow fallback behaviour
       const t = _svgEl('text', base);
       t.appendChild(document.createTextNode(name + ' ('));
       const a = _svgEl('a', {href:wiki.href, target:'_blank', rel:'noopener', class:'cplr-a'});
@@ -218,68 +240,24 @@ export function renderChain(chain, container, onCountryClick = null, getSelected
 
   if (chain.source) svg.appendChild(_svgTxt('text',{x:PW/2,y:H-6,'text-anchor':'middle','font-size':8,fill:'#ccc'}, chain.source));
 
-  // Nav button refs for updateSelection()
-  const _navBtns = [];
-  const nn = nodes.length;
-
   if (onCountryClick) {
-    // Transparent hit circles over each flag
     nodes.forEach((node, i) => {
       const {x, y} = cp[i];
       const hit = _svgEl('circle', {cx:x, cy:y, r:FR, fill:'transparent', cursor:'pointer'});
       hit.addEventListener('click', () => onCountryClick(node));
       svg.appendChild(hit);
     });
-
-    // ── ◀ ▶ navigation widget (top-right of SVG) ────────────────────────────────
-    const BW = 28, BH = 24, BGAP = 4, BRMAR = 12;
-    const B2X = PW - BRMAR - BW;
-    const B1X = B2X - BGAP - BW;
-    const BY  = Math.floor(TH / 2 - BH / 2);
-    const BCY = BY + Math.floor(BH / 2);
-    const addNavBtn = (bx, triPts, delta) => {
-      const disabled = selIdx >= 0 && (delta < 0 ? selIdx === 0 : selIdx === nn - 1);
-      const g  = _svgEl('g');
-      const bg = _svgEl('rect', {x:bx, y:BY, width:BW, height:BH, rx:5,
-        fill:'#e8e4de', opacity: disabled ? '0.35' : '1'});
-      const tr = _svgEl('polygon', {points:triPts, fill: disabled ? '#bbb' : '#888'});
-      g.style.cursor = disabled ? 'default' : 'pointer';
-      g.appendChild(bg);
-      g.appendChild(tr);
-      // Handlers check state lazily — no need to refresh on selection update
-      g.addEventListener('click', () => {
-        const c = getSelectedIndex?.() ?? -1;
-        if (c >= 0 && (delta < 0 ? c === 0 : c === nn - 1)) return;
-        const next = c < 0 ? (delta > 0 ? 0 : nn - 1) : c + delta;
-        if (next >= 0 && next < nn) onCountryClick(nodes[next]);
-      });
-      g.addEventListener('mouseover', () => {
-        const c = getSelectedIndex?.() ?? -1;
-        if (c >= 0 && (delta < 0 ? c === 0 : c === nn - 1)) return;
-        bg.setAttribute('fill', '#ccc8c4');
-      });
-      g.addEventListener('mouseout', () => bg.setAttribute('fill', '#e8e4de'));
-      svg.appendChild(g);
-      _navBtns.push({ bg, tr, g, delta });
-    };
-    // ◀ back: triangle pointing left
-    addNavBtn(B1X, `${B1X+BW-7},${BCY-6} ${B1X+BW-7},${BCY+6} ${B1X+7},${BCY}`, -1);
-    // ▶ next: triangle pointing right
-    addNavBtn(B2X, `${B2X+7},${BCY-6} ${B2X+7},${BCY+6} ${B2X+BW-7},${BCY}`, +1);
   }
 
-  const oldSvg = container.querySelector('svg');
-  if (oldSvg) container.replaceChild(svg, oldSvg);
-  else container.appendChild(svg);
+  wrapper.appendChild(svg);
 
   // Returned function updates only selection state — no SVG rebuild, no flicker.
   return newIdx => {
     _selBgs.forEach((r, i) => r.setAttribute('visibility', i === newIdx ? 'visible' : 'hidden'));
-    _navBtns.forEach(({ bg, tr, g, delta }) => {
+    _navBtns.forEach(({ btn, delta }) => {
       const dis = newIdx >= 0 && (delta < 0 ? newIdx === 0 : newIdx === nn - 1);
-      bg.setAttribute('opacity', dis ? '0.35' : '1');
-      tr.setAttribute('fill',    dis ? '#bbb'  : '#888');
-      g.style.cursor = dis ? 'default' : 'pointer';
+      btn.style.opacity = dis ? '0.35' : '1';
+      btn.style.cursor  = dis ? 'default' : 'pointer';
     });
   };
 }

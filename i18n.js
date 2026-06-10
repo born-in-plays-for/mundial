@@ -67,7 +67,7 @@ const _frDefArt = name => {
 const _itPrep   = name => name?.startsWith('Stati Uniti') ? 'negli' : name?.startsWith('Paesi Bassi') ? 'nei'  : 'in';
 // Italian definite article for non-contracting prepositions (per gli / per i)
 const _itDefArt = name => name?.startsWith('Stati Uniti') ? 'gli '  : name?.startsWith('Paesi Bassi') ? 'i '   : '';
-// Italian "da" contracted with article (da → dagli / dai)
+// Italian "da" contracted with article (da dagli / dai)
 const _itDa     = name => name?.startsWith('Stati Uniti') ? 'dagli' : name?.startsWith('Paesi Bassi') ? 'dai'  : 'da';
 
 // Spanish preposition "en" before country name — adds article for plural countries
@@ -101,9 +101,10 @@ export const T = {
     pageDescription: 'Carte choroplèthe du Mondial 2026 — pays de naissance des joueurs, dont certains jouent pour un autre pays.',
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
     legendCaption: 'joueurs nés dans le pays',
-    tabNoCountry:  'Aucun pays sélectionné',
     tabChain:      'Chemin le plus long',
     tabPlayersHint:'Cliquez sur un pays pour voir ses joueurs.',
+    chainLegend:   { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue pour', post: 'chemin' },
+    chainSubtitle: (p, c) => `Mondial 2026 · ${p} joueurs · ${c} pays`,
   },
   it: {
     noExport:      name => `Nessun giocatore nato${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'} gioca per un altro paese`,
@@ -129,9 +130,10 @@ export const T = {
     pageDescription: 'Mappa coropletica dei Mondiali 2026 — paesi di nascita dei giocatori, alcuni dei quali giocano per un altro paese.',
     zoomHint:      'scorri per zoomare · trascina per spostarti',
     legendCaption: 'giocatori nati nel paese',
-    tabNoCountry:  'Nessun paese selezionato',
     tabChain:      'Percorso più lungo',
     tabPlayersHint:'Clicca su un paese per vedere i suoi giocatori.',
+    chainLegend:   { pre: 'Il più lungo', bornIn: 'nato in', playsFor: 'gioca per', post: 'cammino' },
+    chainSubtitle: (p, c) => `Mondiale 2026 · ${p} giocatori · ${c} paesi`,
   },
   de: {
     noExport:      name => name ? `Kein in ${name} geborener Spieler spielt für ein anderes Land` : 'Kein hier geborener Spieler spielt für ein anderes Land',
@@ -157,9 +159,10 @@ export const T = {
     pageDescription: 'Choroplethenkarte der WM 2026 — Geburtsländer der Spieler, darunter einige, die für ein anderes Land spielen.',
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
     legendCaption: 'im Land geborene Spieler',
-    tabNoCountry:  'Kein Land ausgewählt',
     tabChain:      'Längster Pfad',
     tabPlayersHint:'Klicke auf ein Land, um seine Spieler zu sehen.',
+    chainLegend:   { pre: 'Der längste', bornIn: 'geboren in', playsFor: 'spielt für', post: 'Weg' },
+    chainSubtitle: (p, c) => `WM 2026 · ${p} Spieler · ${c} Länder`,
   },
   es: {
     noExport:      name => `Ningún jugador nacido${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'} juega para otro país`,
@@ -185,9 +188,10 @@ export const T = {
     pageDescription: 'Mapa coroplético del Mundial 2026 — países de nacimiento de los jugadores, algunos de los cuales juegan para otro país.',
     zoomHint:      'rueda para zoom · arrastra para mover',
     legendCaption: 'jugadores nacidos en el país',
-    tabNoCountry:  'Ningún país seleccionado',
     tabChain:      'Camino más largo',
     tabPlayersHint:'Haz clic en un país para ver sus jugadores.',
+    chainLegend:   { pre: 'El más largo', bornIn: 'nacido en', playsFor: 'juega para', post: 'camino' },
+    chainSubtitle: (p, c) => `Mundial 2026 · ${p} jugadores · ${c} países`,
   },
   en: {
     noExport:      name => `No player born${name ? ' in ' + name : ' here'} plays for another country`,
@@ -213,8 +217,9 @@ export const T = {
     pageDescription: 'Choropleth map of the 2026 World Cup — birth countries of players, some of whom play for another country.',
     zoomHint:      'scroll to zoom · drag to pan',
     legendCaption: 'players born in the country',
-    tabNoCountry:  'No country selected',
     tabChain:      'Longest path',
     tabPlayersHint:'Click a country on the map to see its players.',
+    chainLegend:   { pre: 'Longest', bornIn: 'born in', playsFor: 'plays for', post: 'path' },
+    chainSubtitle: (p, c) => `World Cup 2026 · ${p} players · ${c} countries`,
   },
 }[_LANG];

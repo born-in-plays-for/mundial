@@ -209,8 +209,11 @@ document.getElementById('page-heading-mob').textContent  = T.pageHeading;
 document.getElementById('zoom-hint').textContent      = T.zoomHint;
 document.getElementById('legend-caption').textContent = T.legendCaption;
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
-document.getElementById('tab-players-btn').textContent = T.tabNoCountry;
-document.getElementById('tab-chain-btn').textContent   = T.tabChain;
+const _tabSvg = (w, inner) => `<svg viewBox="0 0 ${w} 24" width="${w}" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+const _EMPTY_TAB_SVG = _tabSvg(24, `<circle cx="12" cy="12" r="7"/><line x1="5" y1="19" x2="19" y2="5"/>`);
+const _SNAKE_SVG     = _tabSvg(46, `<polyline points="2,2 36,2 36,10 2,10 2,18 28,18"/><polygon points="29,14 39,18 29,23" fill="currentColor" stroke="none"/>`);
+document.getElementById('tab-players-btn').innerHTML = _EMPTY_TAB_SVG;
+document.getElementById('tab-chain-btn').innerHTML = _SNAKE_SVG;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
 
 // Chain tab: load data lazily, render when tab is shown, re-render on resize
@@ -268,7 +271,12 @@ const _chainWikiUrl = name => {
 };
 const _renderChain = () => {
   if (!_chainData) return;
-  _chainUpdate = renderChain(_chainData, document.getElementById('tab-chain'), _chainOnClick, _chainGetIndex, _chainWikiUrl);
+  _chainUpdate = renderChain(_chainData, document.getElementById('tab-chain'), {
+    onCountryClick:   _chainOnClick,
+    getSelectedIndex: _chainGetIndex,
+    getPlayerWikiUrl: _chainWikiUrl,
+    labels:           { ...T.chainLegend, subtitle: T.chainSubtitle },
+  });
 };
 // On selection change: surgical update only — no SVG rebuild, no flicker.
 const _updateChainSelection = () => {
@@ -679,7 +687,7 @@ const clearDim = () => {
     render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
   }
   const _pb = document.getElementById('tab-players-btn');
-  if (_pb) _pb.textContent = T.tabNoCountry;
+  if (_pb) _pb.innerHTML = _EMPTY_TAB_SVG;
   _updateChainSelection();
 };
 
