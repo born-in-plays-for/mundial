@@ -238,8 +238,6 @@ export function renderChain(chain, container, opts = {}) {
     svg.appendChild(ng);
   });
 
-  if (chain.source) svg.appendChild(_svgTxt('text',{x:PW/2,y:H-6,'text-anchor':'middle','font-size':8,fill:'#ccc'}, chain.source));
-
   if (onCountryClick) {
     nodes.forEach((node, i) => {
       const {x, y} = cp[i];

@@ -6,25 +6,35 @@
 <title>Chemin le plus long · Mondial 2026</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f5f2ec; min-height: 100vh; display: flex; justify-content: center; }
+body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+#container { width: 100%; }
+#source { font-size: 10px; color: #ccc; text-align: center; padding: 4px 0 16px; }
 </style>
 </head>
 <body>
+<div id="container"></div>
+<div id="source"></div>
 <script type="module">
 import { renderChain } from './wc2026_chain_render.js';
 
+const container = document.getElementById('container');
+const sourceEl  = document.getElementById('source');
 let chainData = null, resizeTimer = null;
 const dataFile = new URLSearchParams(location.search).get('data') || 'wc2026_chain_longest.json';
 fetch(dataFile)
   .then(r => r.json())
-  .then(chain => { chainData = chain; renderChain(chain, document.body); })
-  .catch(e => { document.body.textContent = 'Error: ' + e.message; });
+  .then(chain => {
+    chainData = chain;
+    renderChain(chain, container);
+    if (chain.source) sourceEl.textContent = chain.source;
+  })
+  .catch(e => { container.textContent = 'Error: ' + e.message; });
 
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     if (!chainData) return;
-    renderChain(chainData, document.body);
+    renderChain(chainData, container);
   }, 150);
 });
 </script>
