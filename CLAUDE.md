@@ -159,6 +159,14 @@ On screens narrower than 768px (`d-md-none` / `d-md-flex` Bootstrap breakpoint):
 - Legend bar and ticks shrink to 90px max-width via `@media (max-width: 767.98px)`
 - Legend caption and legend bar are right-aligned on mobile, left-aligned on desktop
 
+### Mobile portrait sticky layout (`@media (max-width: 767.98px) and (orientation: portrait)`)
+On portrait mobile only (landscape and desktop are unaffected):
+- **Map fixed at top**: `#map-container` gets `position: fixed !important` — the `!important` is required because Bootstrap's `.position-relative` utility is declared with `!important` and would otherwise win.
+- **Body offset**: `body { padding-top: calc(100vw * 480 / 900) }` pushes all page content below the fixed map. The formula matches the SVG's `viewBox="0 0 900 480"` aspect ratio so the offset is exact at any viewport width.
+- **Tab bar fixed at bottom**: `#bottomTabList` gets `position: fixed !important; bottom: 0; left: 0; right: 0` so the navigation stays visible while the tab content scrolls freely above it.
+- **Bottom clearance**: `body { padding-bottom: 48px }` prevents the last line of tab content from being hidden behind the fixed tab bar.
+- **Border flip**: Bootstrap's nav-tabs border is on the bottom by default; overridden to `border-bottom: none; border-top: 1px solid var(--color-divider)` since the bar is now at the bottom of the screen.
+
 ### Player table
 Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via lit-html:
 - Header row: `[flag] Country` left + `pop. xM` right

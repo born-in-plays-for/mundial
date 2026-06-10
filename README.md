@@ -79,6 +79,17 @@ python3 -m http.server 8000
 
 The map uses `fetch()` and requires an HTTP server — `file://` will not work.
 
+## Responsive layout
+
+The map is fully responsive. On screens narrower than 768px the desktop header is hidden and a compact title/subtitle appears inline with the legend.
+
+**Portrait mobile only** (`max-width: 767.98px` + `orientation: portrait`):
+- The map is fixed at the top of the viewport so it stays visible while the user scrolls the player table.
+- The tab bar (Players / Longest path) is fixed at the bottom of the viewport, above the browser chrome.
+- Body padding (`padding-top` and `padding-bottom`) keeps all scrollable content from sliding behind either fixed element.
+
+Landscape mobile and desktop are unaffected.
+
 ## i18n
 
 The UI language follows the browser locale. Supported: **French** (`fr`), **German** (`de`), **Italian** (`it`), English (fallback). Country names use the browser's `Intl.DisplayNames` API.
