@@ -40,6 +40,26 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   #legend-bar { max-width: 90px; }
   #legend-ticks { width: 90px; font-size: 8px; }
 }
+@media (max-width: 767.98px) and (orientation: portrait) {
+  #map-container {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: #f5f2ec;
+  }
+  /* Push all content below the fixed map (SVG viewBox 900×480 → 480/900 of vw) */
+  body { padding-top: calc(100vw * 480 / 900); padding-bottom: 48px; }
+  #bottomTabList {
+    position: fixed !important;
+    bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    background: #f5f2ec;
+    border-bottom: none !important;
+    border-top: 1px solid var(--color-divider);
+    padding: 0 1rem;
+    margin: 0 !important;
+  }
+}
 
 /* tooltip (tt-) */
 #tooltip {
