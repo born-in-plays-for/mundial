@@ -636,7 +636,7 @@ const applyDim = (sourceId, destIds, country) => {
     _playersBtn.innerHTML = '';
     const isQualifiedBtn = !!QUALIFIED_NAMES[sourceId];
     const row = document.createElement('span');
-    row.className = 'd-flex align-items-center gap-2 text-start';
+    row.className = 'd-flex align-items-start gap-2 text-start';
     if (fc) {
       const _img = document.createElement('img');
       _img.src = FLAG_CDN(fc);

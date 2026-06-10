@@ -84,6 +84,12 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .pt-wiki { color: inherit; border-bottom: 1px dotted var(--color-muted); }
 .pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
 
+/* nav tabs */
+#bottomTabList { align-items: stretch; }
+#bottomTabList .nav-item { display: flex; }
+#bottomTabList .nav-link { display: flex; align-items: flex-start; background-color: transparent !important; }
+#bottomTabList .nav-link.active { background-color: transparent !important; }
+
 /* player table accordion overrides */
 .accordion-flush .accordion-item { background-color: transparent; border-color: var(--color-divider); }
 .pt-acc-btn { padding: 10px 4px !important; }
