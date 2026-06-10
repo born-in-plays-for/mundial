@@ -1,5 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from './chains/wc2026_chain_render.js';
+import { LOCALE, T, countryName, wikiUrl } from './i18n.js';
 
 const RATIO_MIN = 0;
 const RATIO_MAX = 66; // Netherlands (2nd highest) anchors the top of the scale
@@ -65,21 +66,6 @@ const FLAG_SIZE_ZOOM_EXP   = 1/5;
 // How much the leader-line offset grows with zoom: 0 = fixed, 0.5 = sqrt(k), 1 = fully proportional
 const FLAG_OFFSET_ZOOM_EXP = 2/3;
 
-// ── Dim-state indicator (fixed in SVG space, unaffected by zoom) ──────────────
-const dimBadge     = svg.append('g').attr('cursor','pointer').style('display','none');
-const dimBadgeRect = dimBadge.append('rect')
-  .attr('y', 7).attr('height', 20).attr('rx', 10)
-  .attr('fill', '#bbb').attr('opacity', .82)
-  .style('visibility', 'hidden');
-const dimBadgeFlag = dimBadge.append('image')
-  .attr('y', 9).attr('width', 16).attr('height', 16)
-  .style('visibility', 'hidden');
-const dimBadgeText = dimBadge.append('text')
-  .attr('x', 893).attr('y', 21).attr('text-anchor', 'end')
-  .attr('font-size', '10px')
-  .attr('font-family', '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif')
-  .attr('fill', '#555');
-dimBadge.on('click', () => clearDim());
 
 // Fixes arc endpoint when path.centroid() lands outside the country polygon.
 const CENTROID_OVERRIDE = {
@@ -161,8 +147,7 @@ svg.call(zoom
 g.append('path').datum({type:'Sphere'})
   .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5)
   .attr('cursor', 'default')
-  .on('mousemove', () => { hideTip(); if (!dimState.active) dimBadge.style('display', 'none'); });
-
+  .on('mousemove', () => { hideTip(); });
 g.append('path').datum(d3.geoGraticule()())
   .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
 
@@ -192,7 +177,6 @@ const QUALIFIED_BY_NAME = Object.fromEntries(
 );
 
 
-import { LOCALE, T, countryName, wikiUrl } from './i18n.js';
 
 const DOCUMENT_TITLE = "Thiebaud's Mundial";
 
@@ -625,9 +609,6 @@ const applyDim = (sourceId, destIds, country) => {
   const countryDisplay = countryName(sourceId, country);
   const badgeW = Math.round(countryDisplay.length * 5.8 + 46);
   const bx = 895 - badgeW;
-  dimBadgeRect.style('visibility', 'visible').attr('x', bx).attr('width', badgeW);
-  dimBadgeFlag.style('visibility', 'visible').attr('href', fc ? FLAG_CDN(fc) : '').attr('x', bx + 8);
-  dimBadgeText.attr('x', Math.round(bx + (badgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#fff').text(countryDisplay);
   g.selectAll('.flag-qualified').raise(); // all flags above arcs
   g.selectAll('.flag-qualified').filter(function() {
     return +this.getAttribute('data-id') === sourceId;
@@ -671,7 +652,6 @@ const applyDim = (sourceId, destIds, country) => {
   }
 
   document.body.classList.add('dim-active');
-  dimBadge.style('display', null);
 };
 const clearDim = () => {
   dimState.active = false;
@@ -682,7 +662,6 @@ const clearDim = () => {
   g.selectAll('.country').attr('data-dim-visible', null);
   if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line').remove();
   document.body.classList.remove('dim-active');
-  dimBadge.style('display', 'none');
   const _ptEl = document.getElementById('tab-players');
   if (_ptEl) {
     _saveAccState(_ptEl);
@@ -715,7 +694,7 @@ const activateCountry = (id, scroll = false) => {
 const placeFlag = (sel) => {
   sel.attr('class','flag-qualified')
     .attr('width', FLAG).attr('height', FLAG)
-    .on('mouseleave', () => { if (!dimState.active) { hideTip(); dimBadge.style('display', 'none'); } });
+    .on('mouseleave', () => { if (!dimState.active) { hideTip(); } });
 };
 
 // ── Main render ───────────────────────────────────────────────────────────────
@@ -915,10 +894,6 @@ const onCountryMousemove = (event, id, topoName = '') => {
     const hlName = countryName(id, QUALIFIED_NAMES[id] ?? app.byId[id]?.country ?? topoName);
     const hlBadgeW = Math.round(hlName.length * 5.8 + 46);
     const hlBx = 895 - hlBadgeW;
-    dimBadgeRect.attr('x', hlBx).attr('width', hlBadgeW).style('visibility', 'hidden');
-    dimBadgeFlag.attr('href', ISO2[id] ? FLAG_CDN(ISO2[id]) : '').attr('x', hlBx + 8).style('visibility', 'hidden');
-    dimBadgeText.attr('x', Math.round(hlBx + (hlBadgeW + 22) / 2)).attr('text-anchor', 'middle').attr('fill', '#555').text(hlName);
-    dimBadge.style('display', null);
     if (app.byId[id]?.count > 0) showExportTip(event, id);
     else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
     else hideTip();
@@ -958,7 +933,7 @@ g.selectAll('.country')
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
   .style('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
-  .on('mouseleave', () => { if (!dimState.active) { hideTip(); dimBadge.style('display', 'none'); } })
+  .on('mouseleave', () => { if (!dimState.active) { hideTip(); } })
   .on('click',     (event, d) => onCountryClick(event, +d.id));
 
 g.append('path')
