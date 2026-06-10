@@ -21,6 +21,9 @@ const projection = d3.geoNaturalEarth1().scale(152).translate([W/2, H/2 + 10]);
 const path = d3.geoPath(projection);
 const svg = d3.select('#map');
 
+const [[_bx0, _by0], [_bx1, _by1]] = path.bounds({type: 'Sphere'});
+svg.attr('viewBox', `${Math.floor(_bx0)} ${Math.floor(_by0)} ${Math.ceil(_bx1-_bx0)} ${Math.ceil(_by1-_by0)}`);
+
 const ARC_EXPORT_COLOR = '#1d4ed8'; // blue
 const ARC_IMPORT_COLOR = '#dc2626'; // red
 document.documentElement.style.setProperty('--arc-export-color', ARC_EXPORT_COLOR);
@@ -100,7 +103,8 @@ const dotCentroid = d => {
 
 svg.on('click', () => { clearDim(); });
 
-svg.call(d3.zoom()
+const zoom = d3.zoom()
+svg.call(zoom
   .scaleExtent([1, 12])
   .on('zoom', e => {
     g.attr('transform', e.transform);
@@ -190,13 +194,15 @@ const QUALIFIED_BY_NAME = Object.fromEntries(
 
 import { LOCALE, T, countryName, wikiUrl } from './i18n.js';
 
+const DOCUMENT_TITLE = "Thiebaud's Mundial";
+
 // Null-ID birth countries → numeric topojson ID (for centroid lookup and flag dimming)
 const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840, 'Kingdom of the Netherlands': 528 };
 
 
 
 // Apply locale to static page elements
-document.title = T.pageTitle;
+document.title = DOCUMENT_TITLE;
 document.querySelector('meta[name="description"]')?.setAttribute('content', T.pageDescription);
 document.getElementById('page-heading').textContent     = T.pageHeading;
 document.getElementById('page-heading-mob').textContent  = T.pageHeading;
@@ -206,12 +212,16 @@ document.getElementById('page-heading-mob').textContent  = T.pageHeading;
   const q = T.pageQuote;
   el.innerHTML = `<p class="pq-text fst-italic">${q.text}</p><p class="pq-attr"><span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}</p>`;
 });
-document.getElementById('zoom-hint').textContent      = T.zoomHint;
-document.getElementById('legend-caption').textContent = T.legendCaption;
+const _zoomHintEl = document.getElementById('zoom-hint');
+_zoomHintEl.innerHTML = `${T.zoomHint} · <span id="zoom-reset">${T.zoomReset}</span>`;
+document.getElementById('zoom-reset').addEventListener('click', e => {
+  e.stopPropagation();
+  svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+});
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
-const _tabSvg = (w, inner) => `<svg viewBox="0 0 ${w} 24" width="${w}" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+const _tabSvg = (w, inner) => `<svg viewBox="0 0 ${w} 24" width="${w}" height="24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 const _EMPTY_TAB_SVG = _tabSvg(24, `<circle cx="12" cy="12" r="7"/><line x1="5" y1="19" x2="19" y2="5"/>`);
-const _SNAKE_SVG     = _tabSvg(46, `<polyline points="2,2 36,2 36,10 2,10 2,18 28,18"/><polygon points="29,14 39,18 29,23" fill="currentColor" stroke="none"/>`);
+const _SNAKE_SVG     = _tabSvg(46, `<polyline points="2,2 36,2 36,10 2,10 2,18 28,18"/><polygon points="29,14 39,18 29,23" fill="#777" stroke="none"/>`);
 document.getElementById('tab-players-btn').innerHTML = _EMPTY_TAB_SVG;
 document.getElementById('tab-chain-btn').innerHTML = _SNAKE_SVG;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
@@ -636,7 +646,7 @@ const applyDim = (sourceId, destIds, country) => {
     _playersBtn.innerHTML = '';
     const isQualifiedBtn = !!QUALIFIED_NAMES[sourceId];
     const row = document.createElement('span');
-    row.className = 'd-flex align-items-start gap-2 text-start';
+    row.className = 'd-flex align-items-center gap-2 text-start';
     if (fc) {
       const _img = document.createElement('img');
       _img.src = FLAG_CDN(fc);
@@ -645,15 +655,17 @@ const applyDim = (sourceId, destIds, country) => {
       row.appendChild(_img);
     }
     const col = document.createElement('span');
-    col.className = 'd-inline-flex flex-column lh-sm gap-1';
+    col.className = 'd-inline-flex align-items-baseline gap-1';
     const nameSpan = document.createElement('span');
     nameSpan.textContent = countryDisplay;
-    if (!isQualifiedBtn) nameSpan.className = 'text-muted';
+    nameSpan.className = isQualifiedBtn ? 'text-body' : 'text-muted';
     col.appendChild(nameSpan);
-    const tag = document.createElement('small');
-    tag.textContent = isQualifiedBtn ? ' ' : T.notQualified;
-    tag.className = 'tt-pop fst-italic';
-    col.appendChild(tag);
+    if (!isQualifiedBtn) {
+      const tag = document.createElement('small');
+      tag.textContent = T.notQualified;
+      tag.className = 'tt-pop fst-italic';
+      col.appendChild(tag);
+    }
     row.appendChild(col);
     _playersBtn.appendChild(row);
   }
