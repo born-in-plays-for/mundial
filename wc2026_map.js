@@ -292,12 +292,78 @@ document.getElementById('tab-chain-btn')?.addEventListener('shown.bs.tab', () =>
 const _eloEl = () => document.getElementById('tab-elo');
 let _eloUpdate = null;
 let _eloData   = null;
-const _buildEloItems = () => (_eloData?.rankings ?? []).map(({id, rank, pts, iso2, name}) => ({
-  id, rank, pts, iso2, name: countryName(id, name),
-}));
+
+// ── Persistent filter table — isQualified × isImporting × isExporting cube ──
+// Row and column headers are clickable: toggles all checkboxes in that row/column.
+// The same DOM node is re-appended on each render so checked state survives tab switches.
+const _eloFilterGrp = document.createElement('div');
+_eloFilterGrp.innerHTML = `<table class="elo-filter-table table table-sm table-bordered">
+  <thead><tr>
+    <th colspan="2"></th>
+    <th class="efg-col" data-col="exp">Exporter<sup style="color:#3b82f6">●</sup></th>
+    <th class="efg-col" data-col="nexp">Non-exp.</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td rowspan="2" class="efg-grp" data-row="q">Qualified</td>
+      <td class="efg-sub" data-row="qi">Importer<sup style="color:#ef4444">●</sup></td>
+      <td><input type="checkbox" class="form-check-input" id="elo-f-qie" checked></td>
+      <td><input type="checkbox" class="form-check-input" id="elo-f-qi"  checked></td>
+    </tr>
+    <tr>
+      <td class="efg-sub" data-row="qni">Non-imp.</td>
+      <td><input type="checkbox" class="form-check-input" id="elo-f-qe"  checked></td>
+      <td><input type="checkbox" class="form-check-input" id="elo-f-q"   checked></td>
+    </tr>
+    <tr>
+      <td colspan="2" class="efg-grp efg-grp--nq" data-row="nq">Non-Qualified</td>
+      <td><input type="checkbox" class="form-check-input" id="elo-f-e"   checked></td>
+      <td><input type="checkbox" class="form-check-input" id="elo-f-o"></td>
+    </tr>
+  </tbody>
+</table>`;
+
+const _eloF_QIE = _eloFilterGrp.querySelector('#elo-f-qie');
+const _eloF_QI  = _eloFilterGrp.querySelector('#elo-f-qi');
+const _eloF_QE  = _eloFilterGrp.querySelector('#elo-f-qe');
+const _eloF_Q   = _eloFilterGrp.querySelector('#elo-f-q');
+const _eloF_E   = _eloFilterGrp.querySelector('#elo-f-e');
+const _eloF_O   = _eloFilterGrp.querySelector('#elo-f-o');
+
+const _efgToggle = chks => { const on = chks.every(c => c.checked); chks.forEach(c => c.checked = !on); _renderElo(); };
+_eloFilterGrp.querySelector('[data-row="q"]'   ).addEventListener('click', () => _efgToggle([_eloF_QIE, _eloF_QI, _eloF_QE, _eloF_Q]));
+_eloFilterGrp.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _efgToggle([_eloF_QIE, _eloF_QI]));
+_eloFilterGrp.querySelector('[data-row="qni"]' ).addEventListener('click', () => _efgToggle([_eloF_QE,  _eloF_Q]));
+_eloFilterGrp.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _efgToggle([_eloF_E,   _eloF_O]));
+_eloFilterGrp.querySelector('[data-col="exp"]' ).addEventListener('click', () => _efgToggle([_eloF_QIE, _eloF_QE, _eloF_E]));
+_eloFilterGrp.querySelector('[data-col="nexp"]').addEventListener('click', () => _efgToggle([_eloF_QI,  _eloF_Q,  _eloF_O]));
+const _eloFilterCountEl = _eloFilterGrp.querySelector('thead th');
+_eloFilterGrp.addEventListener('change', () => _renderElo());
+
+const _buildEloItems = () => (_eloData?.rankings ?? [])
+  .map(({ id, rank, pts, iso2, name }) => ({
+    id, rank, pts, iso2, name: countryName(id, name),
+    exp: (app.byId[id]?.count ?? 0) > 0,
+    imp: (app.importByNation[id]?.length ?? 0) > 0,
+  }))
+  .filter(({ id }) => {
+    const qual = !!QUALIFIED_NAMES[id];
+    const imp  = (app.importByNation[id]?.length ?? 0) > 0;
+    const exp  = (app.byId[id]?.count ?? 0) > 0;
+    if  (qual &&  imp &&  exp) return _eloF_QIE.checked;
+    if  (qual &&  imp && !exp) return _eloF_QI.checked;
+    if  (qual && !imp &&  exp) return _eloF_QE.checked;
+    if  (qual && !imp && !exp) return _eloF_Q.checked;
+    if (!qual &&               exp) return _eloF_E.checked;
+    return _eloF_O.checked;
+  });
+
 const _renderElo = () => {
+  const items = _buildEloItems();
+  _eloFilterCountEl.textContent = items.length;
   _eloUpdate = renderEloRanking(_eloEl(), {
-    items: _buildEloItems(),
+    items,
+    controls: _eloFilterGrp,
     onCountryClick: id => { activateCountry(id); window.scrollTo({ top: 0, behavior: 'smooth' }); },
     isClickable: id => enablesDim(id),
     isMuted:     id => !QUALIFIED_NAMES[id],

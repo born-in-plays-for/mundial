@@ -121,6 +121,16 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .elo-item--active { background: rgba(123,45,139,.09) !important; border-color: rgba(123,45,139,.35) !important; }
 .elo-item--muted .elo-name { color: var(--color-muted); }
 .elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
+.elo-dot { font-size: 7px; line-height: 1; }
+.elo-filter-table { border-collapse: collapse; font-size: 12px; }
+.elo-filter-table td, .elo-filter-table th { padding: 2px 5px; vertical-align: middle; }
+.elo-filter-table td { text-align: center; }
+.elo-filter-table .efg-col { text-align: center; color: var(--color-muted); cursor: pointer; white-space: nowrap; }
+.elo-filter-table .efg-grp { cursor: pointer; font-weight: 500; white-space: nowrap; text-align: left; }
+.elo-filter-table .efg-grp--nq { color: var(--color-muted); }
+.elo-filter-table .efg-sub { color: var(--color-muted); cursor: pointer; white-space: nowrap; padding-left: 10px; }
+.elo-filter-table .efg-col:hover, .elo-filter-table .efg-grp:hover, .elo-filter-table .efg-sub:hover { color: #333; background: #f0ede8; border-radius: 3px; }
+.elo-filter-table .form-check-input { display: block; margin: 0 auto; cursor: pointer; }
 .elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
 .elo-name { font-size: 12px; white-space: nowrap; }
 .elo-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
