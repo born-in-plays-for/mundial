@@ -31,6 +31,15 @@ const _NULL_CODE = { 'Democratic Republic of the Congo':'cd', 'U.S.':'us', 'Isle
 const _WIKI_LANGS = new Set(['en', 'fr', 'de', 'it', 'es']);
 export const wikiUrl = p => p.wiki_langs?.[_LANG] ?? (_WIKI_LANGS.has(_LANG) ? null : p.wiki_langs?.en ?? null);
 
+// Resolve a name from an ISO alpha-2 (or subdivision) code, e.g. 'fr', 'gb-eng'.
+// Used by pages that have a code but no numeric id (chain render, standalone FIFA page).
+export const regionName = (alpha2, fallback = '') => {
+  const subId = {'gb-eng':8260,'gb-sct':8261,'gb-wls':8262,'gb-nir':8263}[alpha2];
+  if (subId != null) return _OVERRIDE[subId][_LANG];
+  if (_regionNames) try { const n = _regionNames.of(alpha2.toUpperCase()); if (n) return n; } catch(e) {}
+  return fallback;
+};
+
 export const countryName = (id, fallback = '') => {
   const key = id ?? fallback;
   if (_OVERRIDE[key]) return _OVERRIDE[key][_LANG];

@@ -3,7 +3,7 @@ const _NS     = 'http://www.w3.org/2000/svg';
 const _svgEl  = (tag, a={}) => { const e=document.createElementNS(_NS,tag); Object.entries(a).forEach(([k,v])=>e.setAttribute(k,String(v))); return e; };
 const _svgTxt = (tag, a, s)  => { const e=_svgEl(tag,a); e.textContent=s; return e; };
 
-const _SHORT = { 'Bosnia and Herzegovina': 'Bosnia & Herz.' };
+import { regionName } from '../i18n.js';
 
 function _orthoPath(px, py, cx, cy, FR, mode) {
   const OFF = 5;
@@ -216,7 +216,7 @@ export function renderChain(chain, container, opts = {}) {
   /* ── 3. Country nodes ──────────────────────────────────────────────────────── */
   nodes.forEach((node, i) => {
     const {x,y} = cp[i];
-    const nameTxt = _SHORT[node.country] ?? node.country;
+    const nameTxt = regionName(node.code, node.country);
     const fsz = Math.max(9, Math.min(13, Math.floor(CW / (nameTxt.length * 0.65))));
     const ng = _svgEl('g');
     const txt = _svgTxt('text',{

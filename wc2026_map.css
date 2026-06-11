@@ -110,19 +110,19 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .pt-wiki { color: inherit; border-bottom: 1px dotted var(--color-muted); }
 .pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
 
-/* FIFA ranking list (fifa-) */
+/* FIFA ranking flow (fifa-) */
 .fifa-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
 .fifa-title { font-size: 14px; font-weight: 500; }
 .fifa-meta { font-size: 10px; color: var(--color-muted); }
-.fifa-list { list-style: none; padding: 0; max-width: 400px; }
-.fifa-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f0ede8; }
-.fifa-item:last-child { border-bottom: none; }
-.fifa-item--clickable { cursor: pointer; border-radius: 4px; padding-left: 4px; padding-right: 4px; margin-left: -4px; }
-.fifa-item--clickable:hover { background: rgba(0,0,0,.04); }
-.fifa-item--active { background: rgba(123,45,139,.08) !important; border-radius: 4px; }
-.fifa-rank { width: 26px; text-align: right; font-size: 11px; color: #aaa; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.fifa-flag { width: 22px; height: 22px; flex-shrink: 0; }
-.fifa-name { font-size: 13px; }
+.fifa-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.fifa-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid #e4e0d8; border-radius: 20px; background: #fff; }
+.fifa-item--clickable { cursor: pointer; }
+.fifa-item--clickable:hover { background: #f0ede8; border-color: #ccc9c0; }
+.fifa-item--active { background: rgba(123,45,139,.09) !important; border-color: rgba(123,45,139,.35) !important; }
+.fifa-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
+.fifa-flag { width: 20px; height: 20px; flex-shrink: 0; }
+.fifa-name { font-size: 12px; white-space: nowrap; }
+.fifa-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
 /* nav pills */
 #bottomTabList { align-items: stretch; }

@@ -7,16 +7,16 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #f5f2ec; min-height: 100vh; font-family: system-ui, sans-serif; }
-#container { max-width: 480px; margin: 0 auto; padding: 24px 16px 48px; }
+#container { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; }
 .fifa-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
 .fifa-title { font-size: 14px; font-weight: 500; color: #1a1a18; }
 .fifa-meta { font-size: 10px; color: #999; }
-.fifa-list { list-style: none; }
-.fifa-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #ede9e1; }
-.fifa-item:last-child { border-bottom: none; }
-.fifa-rank { width: 28px; text-align: right; font-size: 12px; color: #aaa; flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.fifa-flag { width: 24px; height: 24px; flex-shrink: 0; }
-.fifa-name { font-size: 13px; color: #1a1a18; }
+.fifa-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.fifa-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid #e4e0d8; border-radius: 20px; background: #fff; }
+.fifa-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
+.fifa-flag { width: 20px; height: 20px; flex-shrink: 0; }
+.fifa-name { font-size: 12px; color: #1a1a18; white-space: nowrap; }
+.fifa-pts  { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -25,7 +25,20 @@ body { background: #f5f2ec; min-height: 100vh; font-family: system-ui, sans-seri
 </div>
 <script type="module">
 import { renderFifaRanking } from './wc2026_fifa_ranking.js';
-renderFifaRanking(document.getElementById('list'));
+import { countryName } from './i18n.js';
+
+fetch('./wc2026_fifa_rank.json')
+  .then(r => r.json())
+  .then(data => {
+    const items = data.rankings.map(({id, rank, pts, iso2, name}) => ({
+      id, rank, pts, iso2, name: countryName(id, name),
+    }));
+    renderFifaRanking(document.getElementById('list'), {
+      items,
+      source: data.source,
+      date:   data.updated,
+    });
+  });
 </script>
 </body>
 </html>
