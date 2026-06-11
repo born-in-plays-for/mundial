@@ -1,4 +1,4 @@
-const CACHE = 'mundial-2026-v3';
+const CACHE = 'mundial-2026-v4';
 
 const PRECACHE = [
   '/',
@@ -8,6 +8,7 @@ const PRECACHE = [
   '/i18n.js',
   '/wc2026_map_data.json',
   '/uk-nations.geojson',
+  '/wc2026_fifa_ranking.js',
   '/chains/wc2026_chain_render.js',
   '/chains/wc2026_chain_longest.json',
   '/realfavicongenerator/favicon.svg',

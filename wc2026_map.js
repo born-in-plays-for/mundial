@@ -1,5 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from './chains/wc2026_chain_render.js';
+import { renderFifaRanking } from './wc2026_fifa_ranking.js';
 import { LOCALE, T, countryName, wikiUrl } from './i18n.js';
 
 const RATIO_MIN = 0;
@@ -206,8 +207,10 @@ document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
 const _tabSvg = (w, inner) => `<svg viewBox="0 0 ${w} 24" width="${w}" height="24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 const _EMPTY_TAB_SVG = _tabSvg(24, `<circle cx="12" cy="12" r="7"/><line x1="5" y1="19" x2="19" y2="5"/>`);
 const _SNAKE_SVG     = _tabSvg(46, `<polyline points="2,2 36,2 36,10 2,10 2,18 28,18"/><polygon points="29,14 39,18 29,23" fill="#777" stroke="none"/>`);
+const _FIFA_SVG      = _tabSvg(16, `<line x1="8" y1="2" x2="8" y2="17"/><polyline points="3,12 8,17 13,12"/>`);
 document.getElementById('tab-players-btn').innerHTML = _EMPTY_TAB_SVG;
-document.getElementById('tab-chain-btn').innerHTML = _SNAKE_SVG;
+document.getElementById('tab-fifa-btn').innerHTML    = _FIFA_SVG;
+document.getElementById('tab-chain-btn').innerHTML   = _SNAKE_SVG;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
 
 // Chain tab: load data lazily, render when tab is shown, re-render on resize
@@ -284,6 +287,23 @@ fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
 document.getElementById('tab-chain-btn')?.addEventListener('shown.bs.tab', () => {
   if (_chainData) _renderChain();
 });
+
+// FIFA ranking tab
+const _fifaEl = () => document.getElementById('tab-fifa');
+let _fifaUpdate = null;
+const _renderFifa = () => {
+  _fifaUpdate = renderFifaRanking(_fifaEl(), {
+    getName: countryName,
+    fifaRank: app.fifaRank,
+    onCountryClick: id => { activateCountry(id); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+    getSelectedId: () => dimState.sourceId,
+  });
+};
+const _updateFifaSelection = () => {
+  if (_fifaUpdate && document.getElementById('tab-fifa')?.classList.contains('active'))
+    _fifaUpdate(dimState.sourceId);
+};
+document.getElementById('tab-fifa-btn')?.addEventListener('shown.bs.tab', _renderFifa);
 let _chainResizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(_chainResizeTimer);
@@ -622,6 +642,7 @@ const applyDim = (sourceId, destIds, country) => {
     _restoreAccState(ptEl);
   }
   _updateChainSelection();
+  _updateFifaSelection();
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     _playersBtn.innerHTML = '';
@@ -670,6 +691,7 @@ const clearDim = () => {
   const _pb = document.getElementById('tab-players-btn');
   if (_pb) _pb.innerHTML = _EMPTY_TAB_SVG;
   _updateChainSelection();
+  _updateFifaSelection();
 };
 
 // ── Activate dim from anywhere (e.g. player-table nation clicks) ──────────────

@@ -62,7 +62,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 
 @media (max-width: 767.98px) and (orientation: portrait) {
   #page-heading-sub-mob { display: none; }
-  body:not(.dim-active):not(:has(#tab-chain.active)) #mobile-quote { display: block; margin: 1rem 0; }
+  body:not(.dim-active):not(:has(#tab-chain.active)):not(:has(#tab-fifa.active)) #mobile-quote { display: block; margin: 1rem 0; }
 }
 
 /* tooltip (tt-) */
@@ -109,6 +109,20 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .pt-caps { color: var(--color-dim); font-size: 11px; }
 .pt-wiki { color: inherit; border-bottom: 1px dotted var(--color-muted); }
 .pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
+
+/* FIFA ranking list (fifa-) */
+.fifa-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.fifa-title { font-size: 14px; font-weight: 500; }
+.fifa-meta { font-size: 10px; color: var(--color-muted); }
+.fifa-list { list-style: none; padding: 0; max-width: 400px; }
+.fifa-item { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f0ede8; }
+.fifa-item:last-child { border-bottom: none; }
+.fifa-item--clickable { cursor: pointer; border-radius: 4px; padding-left: 4px; padding-right: 4px; margin-left: -4px; }
+.fifa-item--clickable:hover { background: rgba(0,0,0,.04); }
+.fifa-item--active { background: rgba(123,45,139,.08) !important; border-radius: 4px; }
+.fifa-rank { width: 26px; text-align: right; font-size: 11px; color: #aaa; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.fifa-flag { width: 22px; height: 22px; flex-shrink: 0; }
+.fifa-name { font-size: 13px; }
 
 /* nav pills */
 #bottomTabList { align-items: stretch; }
