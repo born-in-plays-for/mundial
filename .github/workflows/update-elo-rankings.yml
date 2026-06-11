@@ -1,0 +1,39 @@
+name: Update Elo Rankings
+
+on:
+  schedule:
+    - cron: '0 7 * * *'   # Daily at 07:00 UTC
+  workflow_dispatch:        # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests pycountry
+
+      - name: Fetch and update Elo rankings
+        run: python3 pipeline/update_elo_rankings.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet wc2026_elo_rank.json || (
+            git add wc2026_elo_rank.json &&
+            git commit -m "data: update Elo rankings $(date -u +%Y-%m-%d)" &&
+            git push
+          )

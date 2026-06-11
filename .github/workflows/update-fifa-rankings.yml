@@ -1,36 +1,12 @@
-name: Update FIFA Rankings
+name: Update FIFA Rankings (deprecated)
 
+# Replaced by update-elo-rankings.yml — schedule removed to prevent daily failures.
+# The FIFA API (api.fifa.com/api/v3) is no longer available (404).
 on:
-  schedule:
-    - cron: '0 7 * * *'   # Daily at 07:00 UTC
-  workflow_dispatch:        # Allow manual trigger from GitHub UI
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  update:
+  noop:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: pip install requests pycountry
-
-      - name: Fetch and update FIFA rankings
-        run: python3 pipeline/update_fifa_rankings.py
-
-      - name: Commit and push if changed
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --quiet wc2026_fifa_rank.json || (
-            git add wc2026_fifa_rank.json &&
-            git commit -m "data: update FIFA rankings $(date -u +%Y-%m-%d)" &&
-            git push
-          )
+      - run: echo "This workflow is deprecated. Use update-elo-rankings.yml instead."

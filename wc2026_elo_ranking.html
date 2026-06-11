@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elo Ranking · Mondial 2026</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #f5f2ec; min-height: 100vh; font-family: system-ui, sans-serif; }
+#container { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; }
+.elo-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.elo-title { font-size: 14px; font-weight: 500; color: #1a1a18; }
+.elo-meta { font-size: 10px; color: #999; }
+.elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid #e4e0d8; border-radius: 20px; background: #fff; }
+.elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
+.elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
+.elo-name { font-size: 12px; color: #1a1a18; white-space: nowrap; }
+.elo-pts  { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div id="container">
+  <div id="list"></div>
+</div>
+<script type="module">
+import { renderEloRanking } from './wc2026_elo_ranking.js';
+import { countryName } from './i18n.js';
+
+fetch('./wc2026_elo_rank.json')
+  .then(r => r.json())
+  .then(data => {
+    const items = data.rankings.map(({id, rank, pts, iso2, name}) => ({
+      id, rank, pts, iso2, name: countryName(id, name),
+    }));
+    renderEloRanking(document.getElementById('list'), {
+      items,
+      source: data.source,
+      date:   data.updated,
+    });
+  });
+</script>
+</body>
+</html>

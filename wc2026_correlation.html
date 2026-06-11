@@ -41,7 +41,7 @@ input[type=range] { width: 110px; accent-color: #3b82f6; }
 </head>
 <body>
 <div class="card">
-  <h1 id="chart-title">FIFA Rank vs Player Migration · Mundial 2026</h1>
+  <h1 id="chart-title">Elo Rank vs Player Migration · Mundial 2026</h1>
   <p class="subtitle">
     Each dot = a 2026 World Cup qualified nation
     <span id="sub-x"></span>
@@ -50,7 +50,7 @@ input[type=range] { width: 110px; accent-color: #3b82f6; }
   <div class="x-toggle-row">
     <!--span class="toggle-label">X axis:</span-->
     <div id="x-toggle">
-      <button class="seg active" data-xmode="rank">FIFA rank</button>
+      <button class="seg active" data-xmode="rank">Elo rank</button>
       <button class="seg" data-xmode="gdp">GDP total</button>
       <button class="seg" data-xmode="gdp_pc">GDP/cap PPP</button>
       <button class="seg" data-xmode="hdi">HDI</button>
@@ -89,9 +89,9 @@ input[type=range] { width: 110px; accent-color: #3b82f6; }
 <script type="module">
 import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7.8.5/+esm';
 
-const [raw, fifaRank, gdpData, gdpPcData, hdiData] = await Promise.all([
+const [raw, eloData, gdpData, gdpPcData, hdiData] = await Promise.all([
   fetch('wc2026_map_data.json').then(r => r.json()),
-  fetch('wc2026_fifa_ranks.json').then(r => r.json()),
+  fetch('wc2026_elo_rank.json').then(r => r.json()),
   fetch('wc2026_gdp.json').then(r => r.json()),
   fetch('wc2026_gdp_pc_ppp.json').then(r => r.json()),
   fetch('wc2026_hdi.json').then(r => r.json()),
@@ -104,8 +104,17 @@ raw.data.forEach(d => {
   (d.nations || []).forEach(([nat, cnt]) => { importMap[nat] = (importMap[nat] || 0) + cnt; });
 });
 
-const countries = Object.entries(fifaRank)
-  .filter(([name]) => name in raw.pop)
+// Join elo ranks to canonical project names via numeric id.
+// raw.data uses project-canonical names AND has numeric ids that match wc2026_elo_rank.json.
+const idToRank = new Map(eloData.rankings.map(({id, rank}) => [id, rank]));
+const nameToId = new Map(raw.data.map(d => [d.country, d.id]));
+const eloRank = {};
+for (const name of Object.keys(raw.pop)) {
+  const id = nameToId.get(name);
+  if (id != null) { const r = idToRank.get(id); if (r != null) eloRank[name] = r; }
+}
+
+const countries = Object.entries(eloRank)
   .map(([name, rank]) => ({
     name,
     rank,
@@ -136,14 +145,14 @@ const dotColor = d => {
 };
 
 const xLabels = {
-  rank:   'FIFA Rank  (stronger →)',
+  rank:   'Elo Rank  (stronger →)',
   gdp:    'GDP total in billion USD  (log scale, larger →)',
   gdp_pc: 'GDP per capita, PPP  (log scale, richer →)',
   hdi:    'Human Development Index  (more developed →)',
 };
 
 const titleMap = {
-  rank:   'FIFA Rank vs Player Migration · Mundial 2026',
+  rank:   'Elo Rank vs Player Migration · Mundial 2026',
   gdp:    'National Wealth vs Player Migration · Mundial 2026',
   gdp_pc: 'GDP per Capita vs Player Migration · Mundial 2026',
   hdi:    'Human Development vs Player Migration · Mundial 2026',
@@ -194,7 +203,7 @@ const labels = labelG.selectAll('.dot-label').data(countries, d=>d.name).join('t
 const tip = document.getElementById('tip');
 dots.on('mousemove', (event, d) => {
   const xStr = {
-    rank:   `FIFA #${d.rank}`,
+    rank:   `Elo #${d.rank}`,
     gdp:    d.gdp   != null ? `GDP $${d.gdp >= 1000 ? (d.gdp/1000).toFixed(1)+'T' : d.gdp+'B'}` : 'GDP n/a',
     gdp_pc: d.gdpPc != null ? `GDP/cap $${d.gdpPc.toLocaleString()}` : 'GDP/cap n/a',
     hdi:    d.hdi   != null ? `HDI ${d.hdi}` : 'HDI n/a',
@@ -299,7 +308,7 @@ function update() {
   // Title + subtitle
   document.getElementById('chart-title').textContent = titleMap[xMode];
   const subX = {
-    rank:   'X = FIFA rank (strongest →)',
+    rank:   'X = Elo rank (strongest →)',
     gdp:    'X = GDP total in billion USD (log scale)',
     gdp_pc: 'X = GDP per capita PPP (log scale)',
     hdi:    'X = Human Development Index (Curaçao excluded)',

@@ -62,7 +62,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 
 @media (max-width: 767.98px) and (orientation: portrait) {
   #page-heading-sub-mob { display: none; }
-  body:not(.dim-active):not(:has(#tab-chain.active)):not(:has(#tab-fifa.active)) #mobile-quote { display: block; margin: 1rem 0; }
+  body:not(.dim-active):not(:has(#tab-chain.active)):not(:has(#tab-elo.active)) #mobile-quote { display: block; margin: 1rem 0; }
 }
 
 /* tooltip (tt-) */
@@ -110,19 +110,20 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .pt-wiki { color: inherit; border-bottom: 1px dotted var(--color-muted); }
 .pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
 
-/* FIFA ranking flow (fifa-) */
-.fifa-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
-.fifa-title { font-size: 14px; font-weight: 500; }
-.fifa-meta { font-size: 10px; color: var(--color-muted); }
-.fifa-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.fifa-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid #e4e0d8; border-radius: 20px; background: #fff; }
-.fifa-item--clickable { cursor: pointer; }
-.fifa-item--clickable:hover { background: #f0ede8; border-color: #ccc9c0; }
-.fifa-item--active { background: rgba(123,45,139,.09) !important; border-color: rgba(123,45,139,.35) !important; }
-.fifa-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
-.fifa-flag { width: 20px; height: 20px; flex-shrink: 0; }
-.fifa-name { font-size: 12px; white-space: nowrap; }
-.fifa-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+/* Elo ranking flow (elo-) */
+.elo-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.elo-title { font-size: 14px; font-weight: 500; }
+.elo-meta { font-size: 10px; color: var(--color-muted); }
+.elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid #e4e0d8; border-radius: 20px; background: #fff; }
+.elo-item--clickable { cursor: pointer; }
+.elo-item--clickable:hover { background: #f0ede8; border-color: #ccc9c0; }
+.elo-item--active { background: rgba(123,45,139,.09) !important; border-color: rgba(123,45,139,.35) !important; }
+.elo-item--muted .elo-name { color: var(--color-muted); }
+.elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
+.elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
+.elo-name { font-size: 12px; white-space: nowrap; }
+.elo-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
 /* nav pills */
 #bottomTabList { align-items: stretch; }
