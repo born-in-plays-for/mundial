@@ -91,7 +91,6 @@ export const T = {
     zoomReset:      'réinitialiser',
     notQualified: 'non qualifié',
 
-    tabChain:      'Chemin le plus long',
     tabPlayersHint:'Cliquez sur un pays pour voir ses joueurs.',
 
     noExport:      name => `Aucun joueur né ${name ? _frPrep(name) + ' ' + name : 'ici'} ne joue pour un autre pays`,
@@ -124,7 +123,6 @@ export const T = {
     zoomReset:      'reimposta',
     notQualified: 'non qualificato',
 
-    tabChain:      'Percorso più lungo',
     tabPlayersHint:'Clicca su un paese per vedere i suoi giocatori.',
 
     noExport:      name => `Nessun giocatore nato${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'} gioca per un altro paese`,
@@ -157,7 +155,6 @@ export const T = {
     zoomReset:      'zurücksetzen',
     notQualified: 'nicht qualifiziert',
 
-    tabChain:      'Längster Pfad',
     tabPlayersHint:'Klicke auf ein Land, um seine Spieler zu sehen.',
 
     noExport:      name => name ? `Kein in ${name} geborener Spieler spielt für ein anderes Land` : 'Kein hier geborener Spieler spielt für ein anderes Land',
@@ -190,7 +187,6 @@ export const T = {
     zoomReset:      'restablecer',
     notQualified: 'no clasificado',
 
-    tabChain:      'Camino más largo',
     tabPlayersHint:'Haz clic en un país para ver sus jugadores.',
 
     noExport:      name => `Ningún jugador nacido${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'} juega para otro país`,
@@ -223,7 +219,6 @@ export const T = {
     zoomReset:      'reset',
     notQualified: 'not qualified',
 
-    tabChain:      'Longest path',
     tabPlayersHint:'Click a country on the map to see its players.',
 
     noExport:      name => `No player born${name ? ' in ' + name : ' here'} plays for another country`,
