@@ -1,4 +1,4 @@
-const CACHE = 'mundial-2026-v2';
+const CACHE = 'mundial-2026-v3';
 
 const PRECACHE = [
   '/',
@@ -10,9 +10,12 @@ const PRECACHE = [
   '/uk-nations.geojson',
   '/chains/wc2026_chain_render.js',
   '/chains/wc2026_chain_longest.json',
-  '/images/wc2026.svg',
-  '/images/wc2026_192.png',
-  '/images/wc2026_512.png',
+  '/realfavicongenerator/favicon.svg',
+  '/realfavicongenerator/favicon-96x96.png',
+  '/realfavicongenerator/apple-touch-icon.png',
+  '/realfavicongenerator/web-app-manifest-192x192.png',
+  '/realfavicongenerator/web-app-manifest-512x512.png',
+  '/realfavicongenerator/site.webmanifest',
 ];
 
 self.addEventListener('install', e => {
