@@ -178,60 +178,60 @@
       "name": "Canada"
     },
     {
-      "id": 8261,
+      "id": 410,
       "rank": 26,
+      "pts": 1786,
+      "iso2": "kr",
+      "name": "Korea, Republic of"
+    },
+    {
+      "id": 8261,
+      "rank": 27,
       "pts": 1782,
       "iso2": "gb-sct",
       "name": "Scotland"
     },
     {
       "id": 804,
-      "rank": 27,
+      "rank": 28,
       "pts": 1780,
       "iso2": "ua",
       "name": "Ukraine"
     },
     {
       "id": 36,
-      "rank": 28,
+      "rank": 29,
       "pts": 1777,
       "iso2": "au",
       "name": "Australia"
     },
     {
       "id": 12,
-      "rank": 29,
+      "rank": 30,
       "pts": 1772,
       "iso2": "dz",
       "name": "Algeria"
     },
     {
       "id": 364,
-      "rank": 29,
+      "rank": 30,
       "pts": 1772,
       "iso2": "ir",
       "name": "Iran, Islamic Republic of"
     },
     {
       "id": 643,
-      "rank": 29,
+      "rank": 30,
       "pts": 1772,
       "iso2": "ru",
       "name": "Russian Federation"
     },
     {
       "id": 566,
-      "rank": 32,
+      "rank": 33,
       "pts": 1767,
       "iso2": "ng",
       "name": "Nigeria"
-    },
-    {
-      "id": 410,
-      "rank": 33,
-      "pts": 1758,
-      "iso2": "kr",
-      "name": "Korea, Republic of"
     },
     {
       "id": 300,
@@ -241,57 +241,57 @@
       "name": "Greece"
     },
     {
-      "id": 203,
-      "rank": 35,
-      "pts": 1740,
-      "iso2": "cz",
-      "name": "Czechia"
-    },
-    {
       "id": 688,
-      "rank": 36,
+      "rank": 35,
       "pts": 1734,
       "iso2": "rs",
       "name": "Serbia"
     },
     {
       "id": 862,
-      "rank": 37,
+      "rank": 36,
       "pts": 1733,
       "iso2": "ve",
       "name": "Venezuela, Bolivarian Republic of"
     },
     {
       "id": 591,
-      "rank": 38,
+      "rank": 37,
       "pts": 1730,
       "iso2": "pa",
       "name": "Panama"
     },
     {
       "id": 840,
-      "rank": 39,
+      "rank": 38,
       "pts": 1726,
       "iso2": "us",
       "name": "United States"
     },
     {
       "id": 152,
-      "rank": 40,
+      "rank": 39,
       "pts": 1717,
       "iso2": "cl",
       "name": "Chile"
     },
     {
       "id": 860,
-      "rank": 42,
+      "rank": 41,
       "pts": 1714,
       "iso2": "uz",
       "name": "Uzbekistan"
     },
     {
+      "id": 203,
+      "rank": 42,
+      "pts": 1712,
+      "iso2": "cz",
+      "name": "Czechia"
+    },
+    {
       "id": 752,
-      "rank": 43,
+      "rank": 42,
       "pts": 1712,
       "iso2": "se",
       "name": "Sweden"

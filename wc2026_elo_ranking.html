@@ -4,23 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Elo Ranking · Mondial 2026</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f5f2ec; min-height: 100vh; font-family: system-ui, sans-serif; }
-#container { max-width: 680px; margin: 0 auto; padding: 24px 16px 48px; }
-.elo-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
-.elo-title { font-size: 14px; font-weight: 500; color: #1a1a18; }
-.elo-meta { font-size: 10px; color: #999; }
-.elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid #e4e0d8; border-radius: 20px; background: #fff; }
-.elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
-.elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
-.elo-name { font-size: 12px; color: #1a1a18; white-space: nowrap; }
-.elo-pts  { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
-</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="wc2026_map.css">
 </head>
 <body>
-<div id="container">
+<div class="container py-4 pb-5">
+  <header class="mb-4">
+    <h1 class="fs-5 fw-semibold mb-1">World Football Elo Rankings</h1>
+    <p class="sub mb-0"><span id="elo-count"></span> nations · source: <a id="elo-source-link" href="https://www.eloratings.net/" target="_blank" rel="noopener" class="sub">eloratings.net</a> · updated <span id="elo-date"></span></p>
+  </header>
   <div id="list"></div>
 </div>
 <script type="module">
@@ -30,6 +22,8 @@ import { countryName } from './i18n.js';
 fetch('./wc2026_elo_rank.json')
   .then(r => r.json())
   .then(data => {
+    document.getElementById('elo-date').textContent = data.updated ?? '';
+    document.getElementById('elo-count').textContent = data.rankings.length;
     const items = data.rankings.map(({id, rank, pts, iso2, name}) => ({
       id, rank, pts, iso2, name: countryName(id, name),
     }));

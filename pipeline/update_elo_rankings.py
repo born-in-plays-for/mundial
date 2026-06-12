@@ -21,8 +21,9 @@ except ImportError:
     print("Missing dependencies. Run: pip install requests pycountry", file=sys.stderr)
     sys.exit(1)
 
-ROOT = Path(__file__).parent.parent
-OUT  = ROOT / 'wc2026_elo_rank.json'
+ROOT    = Path(__file__).parent.parent
+OUT     = ROOT / 'wc2026_elo_rank.json'
+OUT_TSV = Path(__file__).parent / 'wc2026_elo_rank.tsv'
 
 SOURCE_URL = 'https://www.eloratings.net/World.tsv'
 
@@ -72,7 +73,9 @@ def resolve(code):
 def fetch_tsv():
     resp = requests.get(SOURCE_URL, headers=HEADERS, timeout=30)
     resp.raise_for_status()
-    return resp.text
+    tsv_text = resp.text
+    OUT_TSV.write_text(tsv_text, encoding='utf-8')
+    return tsv_text
 
 
 def parse(tsv_text):
