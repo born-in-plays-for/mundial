@@ -97,7 +97,6 @@ export const T = {
     mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs du Mondial 2026',
 
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
-    zoomReset:      'réinitialiser',
     notQualified: 'non qualifié',
 
     tabPlayersHint:'Cliquez sur un pays pour voir ses joueurs.',
@@ -129,7 +128,6 @@ export const T = {
     mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori dei Mondiali 2026',
 
     zoomHint:      'scorri per zoomare · trascina per spostarti',
-    zoomReset:      'reimposta',
     notQualified: 'non qualificato',
 
     tabPlayersHint:'Clicca su un paese per vedere i suoi giocatori.',
@@ -161,7 +159,6 @@ export const T = {
     mapAriaLabel:  'Choroplethenkarte der Geburtsländer der Spieler der WM 2026',
 
     zoomHint:      'Scrollen zum Zoomen · Ziehen zum Verschieben',
-    zoomReset:      'zurücksetzen',
     notQualified: 'nicht qualifiziert',
 
     tabPlayersHint:'Klicke auf ein Land, um seine Spieler zu sehen.',
@@ -193,7 +190,6 @@ export const T = {
     mapAriaLabel:  'Mapa coroplético de los países de nacimiento de los jugadores del Mundial 2026',
 
     zoomHint:      'rueda para zoom · arrastra para mover',
-    zoomReset:      'restablecer',
     notQualified: 'no clasificado',
 
     tabPlayersHint:'Haz clic en un país para ver sus jugadores.',
@@ -225,7 +221,6 @@ export const T = {
     mapAriaLabel:  'Choropleth map of birth countries of 2026 World Cup players',
 
     zoomHint:      'scroll to zoom · drag to pan',
-    zoomReset:      'reset',
     notQualified: 'not qualified',
 
     tabPlayersHint:'Click a country on the map to see its players.',

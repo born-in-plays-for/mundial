@@ -194,13 +194,15 @@ document.querySelector('meta[name="description"]')?.setAttribute('content', T.pa
   const el = document.getElementById(id);
   if (!el) return;
   const q = T.pageQuote;
-  el.innerHTML = `<p class="pq-text fst-italic">${q.text}</p><p class="pq-attr"><span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}</p>`;
+  el.querySelector('.pq-text').innerHTML = q.text;
+  el.querySelector('.pq-attr').innerHTML = `<span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}`;
 });
 const _zoomHintEl = document.getElementById('zoom-hint');
-_zoomHintEl.innerHTML = `${T.zoomHint} · <span id="zoom-reset">${T.zoomReset}</span>`;
+_zoomHintEl.innerHTML = `${T.zoomHint} <button id="zoom-reset" type="button">↺</button>`;
+let _initialTransform = d3.zoomIdentity;
 document.getElementById('zoom-reset').addEventListener('click', e => {
   e.stopPropagation();
-  svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+  svg.transition().duration(400).call(zoom.transform, _initialTransform);
 });
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
 const _tabSvg = (w, inner) => `<svg viewBox="0 0 ${w} 24" width="${w}" height="24" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
@@ -307,24 +309,24 @@ document.getElementById('tab-elo')?.appendChild(_eloLayout);
 const _filterGrp = document.createElement('div');
 _filterGrp.innerHTML = `<table class="filter-table table table-sm table-bordered">
   <thead><tr>
-    <th colspan="2" class="ftbl-col" data-col="all" style="text-align:left">Country<span class="filter-count" style="float:right;margin-left:8px"></span></th>
-    <th class="ftbl-col" data-col="exp">Exporter<sup style="color:#3b82f6">●</sup></th>
-    <th class="ftbl-col" data-col="nexp">Non-exp.</th>
+    <th colspan="2" class="ftbl-col" data-col="all" style="text-align:left">country<span class="filter-count" style="float:right;margin-left:8px"></span></th>
+    <th class="ftbl-col" data-col="exp">exporter<sup style="color:#3b82f6">●</sup></th>
+    <th class="ftbl-col" data-col="nexp">non-exp.</th>
   </tr></thead>
   <tbody>
     <tr>
-      <td rowspan="2" class="ftbl-grp" data-row="q">Qualified</td>
-      <td class="ftbl-sub" data-row="qi">Importer<sup style="color:#ef4444">●</sup></td>
+      <td rowspan="2" class="ftbl-grp" data-row="q">qualified</td>
+      <td class="ftbl-sub" data-row="qi">importer<sup style="color:#ef4444">●</sup></td>
       <td><input type="checkbox" class="form-check-input" id="filter-qie" checked></td>
       <td><input type="checkbox" class="form-check-input" id="filter-qi"  checked></td>
     </tr>
     <tr>
-      <td class="ftbl-sub" data-row="qni">Non-imp.</td>
+      <td class="ftbl-sub" data-row="qni">non-imp.</td>
       <td><input type="checkbox" class="form-check-input" id="filter-qe"  checked></td>
       <td><input type="checkbox" class="form-check-input" id="filter-q"   checked></td>
     </tr>
     <tr>
-      <td colspan="2" class="ftbl-grp ftbl-grp--nq" data-row="nq">Non-Qualified</td>
+      <td colspan="2" class="ftbl-grp" data-row="nq">non-qualified</td>
       <td><input type="checkbox" class="form-check-input" id="filter-e"   checked></td>
       <td><input type="checkbox" class="form-check-input" id="filter-o"></td>
     </tr>
@@ -381,6 +383,14 @@ _filterSidebar.appendChild(_filterSidebarBody);
 _filterSidebar.classList.remove('collapsed');
 document.documentElement.style.setProperty('--filter-sidebar-h', _filterSidebarBody.scrollHeight + 'px');
 _filterSidebar.classList.add('collapsed');
+// Measure actual header height (offsetHeight forces reflow after CSS var is applied)
+const _pageHeader = document.getElementById('page-header');
+if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.offsetHeight + 'px');
+// padding-top = bottom edge of fixed map container (exact, no formula needed)
+const _mc = document.getElementById('map-container');
+const _syncPaddingTop = () => { if (_mc) document.body.style.paddingTop = _mc.getBoundingClientRect().bottom + 'px'; };
+requestAnimationFrame(_syncPaddingTop);
+window.addEventListener('resize', _syncPaddingTop);
 
 const _buildEloItems = () => (_eloData?.rankings ?? [])
   .map(({ id, rank, pts, iso2, name }) => ({
@@ -395,7 +405,7 @@ const _renderElo = () => {
   _filterCountEl.textContent = items.length;
   _eloUpdate = renderEloRanking(_eloMain, {
     items,
-    onCountryClick: id => { activateCountry(id); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+    onCountryClick: id => { if (dimState.sourceId === id) { clearDim(); } else { activateCountry(id); window.scrollTo({ top: 0, behavior: 'smooth' }); } },
     isClickable: id => enablesDim(id),
     isMuted:     id => !QUALIFIED_NAMES[id],
     getSelectedId: () => dimState.sourceId,
@@ -1251,7 +1261,26 @@ Promise.all([
   fetch('uk-nations.geojson').then(r => r.json())
 ]).then(([rawData, world, ukNations]) => {
   buildIndices(rawData);
+  _renderElo();
   renderWorld(world, ukNations);
+  // Initial zoom: fit all qualified + exporting flags so Antarctica is off-screen
+  const xs = [], ys = [];
+  g.selectAll('.flag-qualified[data-elo-cat]:not([data-elo-cat="o"])').each(function() {
+    const cx = +this.getAttribute('data-cx');
+    const cy = +this.getAttribute('data-cy');
+    if (isFinite(cx) && isFinite(cy)) { xs.push(cx); ys.push(cy); }
+  });
+  if (xs.length) {
+    const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs);
+    const y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const pad = 20;
+    const k = Math.max(1, Math.min(12, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
+    const tx = vbX + vbW / 2 - k * (x0 + x1) / 2;
+    const ty = vbY + vbH / 2 - k * (y0 + y1) / 2;
+    _initialTransform = d3.zoomIdentity.translate(tx, ty).scale(k);
+    svg.call(zoom.transform, _initialTransform);
+  }
 });
 
 // ── Legend gradient ───────────────────────────────────────────────────────────
@@ -1260,5 +1289,5 @@ const stops = Array.from({length: 60}, (_, i) => {
   const v = RATIO_MIN + (i / 59) * (RATIO_MAX - RATIO_MIN);
   return color(v);
 });
-bar.style.background = `linear-gradient(to right, ${stops.join(',')})`;
+bar.style.background = `linear-gradient(to left, ${stops.join(',')})`;
 bar.style.borderRadius = '5px';

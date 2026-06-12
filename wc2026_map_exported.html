@@ -30,33 +30,31 @@
 </head>
 <body>
 <header id="page-header" class="container-xxl px-0">
-  <div id="page-heading-sub" class="mx-3"></div>
-</header>
-<div id="map-container" class="container-xxl px-0 mt-0 position-relative">
-  <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of players born in one country, playing for another"></svg>
-  <span id="zoom-hint" class="position-absolute bottom-0 end-0 pe-2 pb-1">scroll to zoom · drag to pan</span>
-</div>
-<div class="container-xxl px-4 mt-2">
-  <div class="d-flex gap-3 align-items-start">
-    <!-- legend col -->
-    <div class="flex-col">
-      <div id="legend" class="d-flex align-items-center justify-content-end gap-2 mb-1">
-        <div>
-          <div id="legend-bar" class="overflow-hidden rounded-2"></div>
-          <div id="legend-ticks" class="d-flex justify-content-between"><span>0</span><span>15</span><span>35</span><span>55</span><span>66</span></div>
-        </div>
-        <div class="d-flex flex-column ps-2">
+  <div id="page-heading-sub" class="mx-3">
+    <div class="d-flex flex-column align-items-start h-100">
+      <p class="pq-text fst-italic"></p>
+      <p class="pq-attr"></p>
+      <div id="legend" class="mt-auto pt-2 d-flex align-items-center gap-2"><!-- align-self-end -->
+        <div class="d-flex flex-column pe-2">
           <div class="d-flex align-items-center justify-content-center" style="height:10px">
             <div style="width:10px;height:10px;border-radius:50%;background:#000"></div>
           </div>
           <div id="legend-outlier-count" class="text-center" style="font-size:10px;color:var(--color-dim);margin-top:3px"></div>
         </div>
+        <div>
+          <div id="legend-bar" class="overflow-hidden rounded-2"></div>
+          <div id="legend-ticks" class="d-flex justify-content-between"><span>66</span><span>55</span><span>35</span><span>15</span><span>0</span></div>
+        </div>
       </div>
     </div>
   </div>
+</header>
+<div id="map-container" class="container-xxl px-0 mt-0 position-relative">
+  <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of players born in one country, playing for another"></svg>
+  <span id="zoom-hint" class="position-absolute">scroll to zoom · drag to pan</span>
 </div>
 
-<div id="bottom-panel" class="container-xxl px-4 pb-5 mt-1">
+<div id="bottom-panel" class="container-xxl px-4 pb-1 mt-1">
 
   <ul class="nav nav-pills d-flex justify-content-between" id="bottomTabList" role="tablist">
     <li class="nav-item" role="presentation">
