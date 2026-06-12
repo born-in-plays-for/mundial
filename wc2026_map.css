@@ -106,7 +106,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid #e4e0d8; border-radius: 20px; background: #fff; }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: #f0ede8; border-color: #ccc9c0; }
-.elo-item--active { background: rgba(123,45,139,.09) !important; border-color: rgba(123,45,139,.35) !important; }
+.elo-item--active { background: #d8d4ce !important; border-color: #c8c4be !important; }
 .elo-item--muted .elo-name { color: var(--color-muted); }
 .elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
@@ -132,9 +132,9 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .elo-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
 /* nav pills */
-#bottomTabList { align-items: stretch; }
-#bottomTabList .nav-item { display: flex; }
-#bottomTabList .nav-link { display: flex; align-items: center; color: #444; }
+#bottomTabList { align-items: stretch; flex-wrap: nowrap; }
+#bottomTabList .nav-item { display: flex; min-width: 0; }
+#bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13px; }
 #bottomTabList .nav-link:hover { background-color: #e3e0dc; color: #000; } 
 #bottomTabList .nav-link.active { background-color: #f9f7f3; color: #000; border: 1px solid #dee2e6; }
 
