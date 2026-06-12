@@ -388,7 +388,7 @@ const _pageHeader = document.getElementById('page-header');
 if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.offsetHeight + 'px');
 // padding-top = bottom edge of fixed map container (exact, no formula needed)
 const _mc = document.getElementById('map-container');
-const _syncPaddingTop = () => { if (_mc) document.body.style.paddingTop = _mc.getBoundingClientRect().bottom + 'px'; };
+const _syncPaddingTop = () => { if (_mc) { const b = _mc.getBoundingClientRect().bottom + 'px'; document.body.style.paddingTop = b; document.documentElement.style.setProperty('--map-bottom', b); } };
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 
