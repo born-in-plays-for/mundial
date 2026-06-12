@@ -198,7 +198,7 @@ document.querySelector('meta[name="description"]')?.setAttribute('content', T.pa
   el.querySelector('.pq-attr').innerHTML = `<span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}`;
 });
 const _zoomHintEl = document.getElementById('zoom-hint');
-_zoomHintEl.innerHTML = `${T.zoomHint} <button id="zoom-reset" type="button">↺</button>`;
+_zoomHintEl.innerHTML = `${T.zoomHint} · <button id="zoom-reset" type="button">↺</button>`;
 let _initialTransform = d3.zoomIdentity;
 document.getElementById('zoom-reset').addEventListener('click', e => {
   e.stopPropagation();
@@ -1281,6 +1281,11 @@ Promise.all([
     _initialTransform = d3.zoomIdentity.translate(tx, ty).scale(k);
     svg.call(zoom.transform, _initialTransform);
   }
+  // Re-measure after reflow triggered by renderWorld + initial zoom
+  requestAnimationFrame(() => {
+    if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
+    _syncPaddingTop();
+  });
 });
 
 // ── Legend gradient ───────────────────────────────────────────────────────────
