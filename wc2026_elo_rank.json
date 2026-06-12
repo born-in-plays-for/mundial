@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-12",
+  "updated": "2026-06-13",
   "source": "eloratings.net",
   "rankings": [
     {
@@ -1100,6 +1100,20 @@
       "pts": 1179,
       "iso2": "ph",
       "name": "Philippines"
+    },
+    {
+      "id": 258,
+      "rank": 162,
+      "pts": 1177,
+      "iso2": "pf",
+      "name": "French Polynesia"
+    },
+    {
+      "id": 748,
+      "rank": 163,
+      "pts": 1148,
+      "iso2": "sz",
+      "name": "Eswatini"
     },
     {
       "id": 670,

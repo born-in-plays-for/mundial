@@ -43,10 +43,21 @@ ELO_UK = {
 ELO_OVERRIDES = {
     'KO': 'KR',   # South Korea
     'NM': 'MK',   # North Macedonia
+    'TI': 'PF',   # Tahiti (FIFA member; eloratings non-standard code, ISO: French Polynesia)
+    'SW': 'SZ',   # Eswatini (FIFA member; eloratings uses old Swaziland code)
 }
 
-# Known non-ISO codes to silently skip (not ISO-recognised states)
-ELO_SKIP = {'NS', 'KD', 'ZN', 'TI', 'SW', 'JS', 'HG', 'EU', 'AB', 'TE'}
+# Non-ISO / non-FIFA entities on eloratings.net — no pycountry mapping possible
+ELO_SKIP = {
+    'NS',  # Northern Cyprus
+    'KD',  # Kurdistan
+    'ZN',  # Zanzibar
+    'JS',  # Somaliland
+    'HG',  # Chagos Islands
+    'EU',  # Sint Eustatius
+    'AB',  # Saba
+    'TE',  # Tibet
+}
 
 
 def resolve(code):
