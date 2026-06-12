@@ -377,6 +377,10 @@ _filterSidebarBody.className = 'filter-sidebar-body';
 _filterSidebarBody.appendChild(_filterGrp);
 _filterSidebar.appendChild(_filterSidebarToggle);
 _filterSidebar.appendChild(_filterSidebarBody);
+// Measure natural height before first collapse (remove→measure→re-add, no paint between)
+_filterSidebar.classList.remove('collapsed');
+document.documentElement.style.setProperty('--filter-sidebar-h', _filterSidebarBody.scrollHeight + 'px');
+_filterSidebar.classList.add('collapsed');
 
 const _buildEloItems = () => (_eloData?.rankings ?? [])
   .map(({ id, rank, pts, iso2, name }) => ({

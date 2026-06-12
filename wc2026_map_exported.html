@@ -36,7 +36,7 @@
   <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of players born in one country, playing for another"></svg>
   <span id="zoom-hint" class="position-absolute bottom-0 end-0 pe-2 pb-1">scroll to zoom · drag to pan</span>
 </div>
-<div class="container-xxl px-4 mt-2 mb-4">
+<div class="container-xxl px-4 mt-2">
   <div class="d-flex gap-3 align-items-start">
     <!-- legend col -->
     <div class="flex-col">
@@ -58,20 +58,20 @@
 
 <div id="bottom-panel" class="container-xxl px-4 pb-5 mt-1">
 
-  <ul class="nav nav-pills" id="bottomTabList" role="tablist">
+  <ul class="nav nav-pills d-flex justify-content-between" id="bottomTabList" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="tab-players-btn" data-bs-toggle="tab" data-bs-target="#tab-players" type="button" role="tab" aria-controls="tab-players" aria-selected="true">Players</button>
+      <button class="nav-link active" id="tab-elo-btn" data-bs-toggle="tab" data-bs-target="#tab-elo" type="button" role="tab" aria-controls="tab-elo" aria-selected="true">Elo ranking</button>
     </li>
-    <li class="nav-item ms-auto" role="presentation">
-      <button class="nav-link" id="tab-elo-btn" data-bs-toggle="tab" data-bs-target="#tab-elo" type="button" role="tab" aria-controls="tab-elo" aria-selected="false">Elo ranking</button>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tab-players-btn" data-bs-toggle="tab" data-bs-target="#tab-players" type="button" role="tab" aria-controls="tab-players" aria-selected="false">Players</button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="tab-chain-btn" data-bs-toggle="tab" data-bs-target="#tab-chain" type="button" role="tab" aria-controls="tab-chain" aria-selected="false">Longest path</button>
     </li>
   </ul>
   <div class="tab-content mt-3" id="bottomTabContent">
-    <div class="tab-pane fade show active" id="tab-players" role="tabpanel" aria-labelledby="tab-players-btn"></div>
-    <div class="tab-pane fade" id="tab-elo" role="tabpanel" aria-labelledby="tab-elo-btn"></div>
+    <div class="tab-pane fade show active" id="tab-elo" role="tabpanel" aria-labelledby="tab-elo-btn"></div>
+    <div class="tab-pane fade" id="tab-players" role="tabpanel" aria-labelledby="tab-players-btn"></div>
     <div class="tab-pane fade" id="tab-chain" role="tabpanel" aria-labelledby="tab-chain-btn"></div>
   </div>
 </div>
