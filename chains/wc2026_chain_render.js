@@ -80,7 +80,7 @@ export function renderChain(chain, container, opts = {}) {
   const _btnStyle = dis => `width:28px;height:24px;border-radius:5px;border:none;background:#e8e4de;color:#888;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:${dis ? 'default' : 'pointer'};opacity:${dis ? '0.35' : '1'}`;
   hdrParent.innerHTML = `
     <div style="padding:8px 0 4px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-      <div style="font-size:14px;font-weight:600">[${_spanHtml(`← ${L.bornIn}`, '#3b82f6')}, ${_spanHtml(`${L.playsFor} →`, '#ef4444')}]</div>
+      <div style="font-size:14px;font-weight:600">[${_spanHtml(`← ${L.bornIn}`, '#3b82f6')} | ${_spanHtml(`${L.playsFor} →`, '#ef4444')}]</div>
       <div style="display:flex;align-items:center;justify-content:space-between">
         <div style="font-size:10px;color:#aaa">${subtitleText ?? ''}</div>
         ${onCountryClick ? `<div style="display:flex;gap:4px;flex-shrink:0">
@@ -246,6 +246,14 @@ export function renderChain(chain, container, opts = {}) {
       btn.style.cursor  = dis ? 'default' : 'pointer';
     });
   };
-  update.scrollActive = () => { if (_currentIdx >= 0) _selBgs[_currentIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+  update.scrollActive = () => {
+    const el = _currentIdx >= 0 ? _selBgs[_currentIdx] : null;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const padTop = parseFloat(document.documentElement.style.scrollPaddingTop)    || 0;
+    const padBot = parseFloat(document.documentElement.style.scrollPaddingBottom) || 0;
+    if (r.top < padTop || r.bottom > window.innerHeight - padBot)
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
   return update;
 }

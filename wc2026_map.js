@@ -219,7 +219,11 @@ render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`,
 // Chain tab: load data lazily, render when tab is shown, re-render on resize
 // Both callbacks reference symbols defined later in the module — safe because they
 // are only invoked on user interaction, after the module has fully loaded.
-const _chainOnClick    = node => { activateCountry(ISO2_REVERSE[node.code]); _zoomToActiveDimFlags(); };
+const _chainOnClick    = node => {
+  const id = ISO2_REVERSE[node.code];
+  if (dimState.sourceId === id) { clearDim(); return; }
+  activateCountry(id); _zoomToActiveDimFlags(); requestAnimationFrame(() => _chainUpdate?.scrollActive());
+};
 const _chainGetIndex   = () => {
   if (!_chainData || dimState.sourceId == null) return -1;
   return _chainData.nodes.findIndex(n => ISO2_REVERSE[n.code] === dimState.sourceId);
@@ -385,20 +389,36 @@ _filterSidebar.classList.add('collapsed');
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
 if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.offsetHeight + 'px');
+const _isFullyVisible = el => {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  const padTop = parseFloat(document.documentElement.style.scrollPaddingTop)    || 0;
+  const padBot = parseFloat(document.documentElement.style.scrollPaddingBottom) || 0;
+  return r.top >= padTop && r.bottom <= window.innerHeight - padBot;
+};
+
 // padding-top = bottom edge of fixed map container (exact, no formula needed)
 const _mc = document.getElementById('map-container');
-const _syncPaddingTop = () => { if (_mc) { const b = _mc.getBoundingClientRect().bottom + 'px'; document.body.style.paddingTop = b; document.documentElement.style.setProperty('--map-bottom', b); } };
+const _syncPaddingTop = () => {
+  if (_mc) {
+    const mapBottom = _mc.getBoundingClientRect().bottom;
+    document.body.style.paddingTop = mapBottom + 'px';
+    document.documentElement.style.scrollPaddingTop    = mapBottom + 'px';
+    document.documentElement.style.scrollPaddingBottom = (_bottomPanel ? _bottomPanel.offsetHeight : 0) + 'px';
+  }
+};
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
-const _bottomPanel = document.getElementById('bottom-panel');
+const _bottomPanel  = document.getElementById('bottom-panel');
+const _bottomTabNav = document.getElementById('bottomTabList');
 const _syncMapHeight = () => {
   const [, , vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
   const cs = getComputedStyle(_mc);
   const contentW = _mc.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const naturalH = contentW * vbH / vbW;
   const maxH = Math.max(50, Math.floor(window.innerHeight * 2 / 3
-    - (_pageHeader ? _pageHeader.offsetHeight : 0)
-    - (_bottomPanel ? _bottomPanel.offsetHeight : 0)));
+    - (_pageHeader    ? _pageHeader.offsetHeight    : 0)
+    - (_bottomTabNav  ? _bottomTabNav.offsetHeight  : 0)));
   const svgEl = document.getElementById('map');
   if (naturalH > maxH) {
     svgEl.style.width  = Math.round(maxH * vbW / vbH) + 'px';
@@ -407,7 +427,22 @@ const _syncMapHeight = () => {
     svgEl.style.width  = '';
     svgEl.style.height = '';
   }
-  requestAnimationFrame(_syncPaddingTop);
+  requestAnimationFrame(() => {
+    _syncPaddingTop();
+    const svgRect = svgEl.getBoundingClientRect();
+    const mcRect  = _mc.getBoundingClientRect();
+    const fromRight  = mcRect.right  - svgRect.right;
+    const fromBottom = mcRect.bottom - svgRect.bottom;
+    if (_zoomResetBtn) {
+      _zoomResetBtn.style.right = (fromRight  + 8) + 'px';
+      _zoomResetBtn.style.top   = (svgRect.top - mcRect.top + 8) + 'px';
+    }
+    if (_zoomHintEl) {
+      _zoomHintEl.style.left      = (svgRect.right - mcRect.left + 2) + 'px';
+      _zoomHintEl.style.bottom    = (fromBottom + 8) + 'px';
+      _zoomHintEl.style.maxHeight = (svgRect.height - 16) + 'px';
+    }
+  });
 };
 if (_bottomPanel) new ResizeObserver(() => {
   document.body.style.paddingBottom = _bottomPanel.offsetHeight + 'px';
@@ -494,15 +529,23 @@ const showTab = name => {
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
   });
-  document.getElementById('tab-elo-panel')?.classList.toggle('collapsed', name !== 'tab-elo');
-  document.getElementById('tab-chain-panel')?.classList.toggle('collapsed', name !== 'tab-chain');
+  const eloPanel   = document.getElementById('tab-elo-panel');
+  const chainPanel = document.getElementById('tab-chain-panel');
+  const toExpand   = name === 'tab-elo' ? eloPanel : name === 'tab-chain' ? chainPanel : null;
+  const toCollapse = [eloPanel, chainPanel].find(p => p && !p.classList.contains('collapsed') && p !== toExpand);
+  if (toCollapse) {
+    toCollapse.classList.add('collapsed');
+    if (toExpand) toCollapse.addEventListener('transitionend', () => toExpand.classList.remove('collapsed'), { once: true });
+  } else {
+    toExpand?.classList.remove('collapsed');
+  }
   if (name === 'tab-chain' && _chainData) {
     _renderChain();
     requestAnimationFrame(() => _chainUpdate?.scrollActive());
   }
   if (name === 'tab-elo') {
     _renderElo();
-    requestAnimationFrame(() => document.querySelector('#tab-elo .elo-item--active')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    requestAnimationFrame(() => { const el = document.querySelector('#tab-elo .elo-item--active'); if (el && !_isFullyVisible(el)) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
   }
 };
 document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
@@ -877,6 +920,12 @@ const applyDim = (sourceId, destIds, country) => {
     }
     row.appendChild(col);
     _playersBtn.appendChild(row);
+    const closeSpan = document.createElement('span');
+    closeSpan.className = 'btn-close btn-close-sm position-absolute top-0 end-0 m-1';
+    closeSpan.style.cssText = 'font-size:0.5rem';
+    closeSpan.setAttribute('aria-label', 'Close');
+    closeSpan.addEventListener('click', e => { e.stopPropagation(); clearDim(); });
+    _playersBtn.appendChild(closeSpan);
   }
 
   document.body.classList.add('dim-active');
