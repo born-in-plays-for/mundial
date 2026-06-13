@@ -133,7 +133,8 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 #bottomTabList { align-items: stretch; flex-wrap: nowrap; }
 #bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13px; }
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
-#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; position: relative; padding-right: 1.25rem !important; }
+#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; position: relative; }
+#tab-players-btn.dim-selected { padding-right: 1.25rem !important; }
 #tab-players-btn > span { min-width: 0; overflow: hidden; }
 #tab-players-btn > span > span { min-width: 0; overflow: hidden; }
 .btn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }

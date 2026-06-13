@@ -740,7 +740,7 @@ const playerTableTemplate = sourceId => {
               const nationId = QUALIFIED_BY_NAME[nation];
               const nc = ISO2[nationId];
               return html`
-                <div class="pt-nation-header d-flex align-items-center" @click=${() => activateCountry(nationId, true)}>
+                <div class="pt-nation-header d-flex align-items-center" @click=${() => { activateCountry(nationId, true); _zoomToActiveDimFlags(); }}>
                   ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
                   <span class="pt-nation-name fw-medium">${countryName(nationId, nation)}</span>
                   <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
@@ -786,7 +786,7 @@ const playerTableTemplate = sourceId => {
               const bc = birthCountryId != null ? ISO2[birthCountryId] : (_NULL_CODE[birthCountry] ?? null);
               const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
               return html`
-                <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => activateCountry(clickId, true) : null}>
+                <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => { activateCountry(clickId, true); _zoomToActiveDimFlags(); } : null}>
                   ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
                   <span class="pt-nation-name fw-medium">${label}</span>
                   <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
@@ -926,6 +926,7 @@ const applyDim = (sourceId, destIds, country) => {
     closeSpan.setAttribute('aria-label', 'Close');
     closeSpan.addEventListener('click', e => { e.stopPropagation(); clearDim(); });
     _playersBtn.appendChild(closeSpan);
+    _playersBtn.classList.add('dim-selected');
   }
 
   document.body.classList.add('dim-active');
@@ -945,7 +946,7 @@ const clearDim = () => {
     render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
   }
   const _pb = document.getElementById('tab-players-btn');
-  if (_pb) _pb.innerHTML = '<img class="tab-icon" src="images/empty_tab_icon.svg" aria-hidden="true">';
+  if (_pb) { _pb.innerHTML = '<img class="tab-icon" src="images/empty_tab_icon.svg" aria-hidden="true">'; _pb.classList.remove('dim-selected'); }
   _updateChainSelection();
   _updateEloSelection();
 };
