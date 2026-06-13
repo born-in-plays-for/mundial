@@ -396,6 +396,7 @@ requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 
 const _buildEloItems = () => (_eloData?.rankings ?? [])
+  .filter(r => !r.weirdo)
   .map(({ id, rank, pts, iso2, name }) => ({
     id, rank, pts, iso2, name: countryName(id, name),
     exp: (app.byId[id]?.count ?? 0) > 0,
