@@ -28,7 +28,7 @@ const _defaultLabels = { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue 
 
 // Returns an updateSelection(newIdx) function for surgical selection updates.
 export function renderChain(chain, container, opts = {}) {
-  const { onCountryClick = null, getSelectedIndex = null, getPlayerWikiUrl = null, labels = null } = opts;
+  const { onCountryClick = null, getSelectedIndex = null, getPlayerWikiUrl = null, labels = null, headerContainer = null } = opts;
   const L = labels ?? _defaultLabels;
   const PAD  = 0;
   const SIDE = 90;
@@ -75,9 +75,11 @@ export function renderChain(chain, container, opts = {}) {
   const wrapper = document.createElement('div');
   container.appendChild(wrapper);
 
+  const hdrParent = headerContainer ?? wrapper;
+  if (headerContainer) headerContainer.innerHTML = '';
   const hdr = document.createElement('div');
   hdr.style.cssText = `display:${onCountryClick ? 'flex' : 'block'};align-items:flex-start;justify-content:space-between;padding:8px 0 4px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif`;
-  wrapper.appendChild(hdr);
+  hdrParent.appendChild(hdr);
 
   const leftDiv = document.createElement('div');
   const legendDiv = document.createElement('div');

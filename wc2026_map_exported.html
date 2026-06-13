@@ -61,8 +61,19 @@
   <div id="tab-chain" hidden></div>
 </main>
 
-<footer id="bottom-panel" class="py-2">
-  <nav id="bottomTabList" class="container-xxl px-4 d-flex justify-content-between gap-2">
+<footer id="bottom-panel">
+  <div id="tab-elo-panel" class="tab-footer-panel">
+    <div class="container-xxl px-4 pt-3 pb-1">
+      <header>
+        <h1 class="fs-5 fw-semibold mb-1">World Football Elo Rankings</h1>
+        <p class="sub mb-0"><span id="elo-count">243</span> nations · source: <a id="elo-source-link" href="https://www.eloratings.net/" target="_blank" rel="noopener" class="sub">eloratings.net</a> · updated <span id="elo-date">2026-06-13</span></p>
+      </header>
+    </div>
+  </div>
+  <div id="tab-chain-panel" class="tab-footer-panel collapsed">
+    <div id="chain-panel-header" class="container-xxl px-4"></div>
+  </div>
+  <nav id="bottomTabList" class="container-xxl px-4 py-2 d-flex justify-content-between gap-2">
     <button class="nav-link active" id="tab-elo-btn" data-tab="tab-elo" type="button"><img class="tab-icon" src="images/elo_tab_icon.svg" aria-hidden="true"></button>
     <button class="nav-link" id="tab-players-btn" data-tab="tab-players" type="button"><img class="tab-icon" src="images/empty_tab_icon.svg" aria-hidden="true"></button>
     <button class="nav-link" id="tab-chain-btn" data-tab="tab-chain" type="button"><img class="tab-icon" src="images/chain_tab_icon.svg" aria-hidden="true"></button>

@@ -267,6 +267,7 @@ const _renderChain = () => {
     getSelectedIndex: _chainGetIndex,
     getPlayerWikiUrl: _chainWikiUrl,
     labels:           { ...T.chainLegend, subtitle: T.chainSubtitle },
+    headerContainer:  document.getElementById('chain-panel-header'),
   });
 };
 // On selection change: surgical update only — no SVG rebuild, no flicker.
@@ -384,6 +385,8 @@ const _mc = document.getElementById('map-container');
 const _syncPaddingTop = () => { if (_mc) { const b = _mc.getBoundingClientRect().bottom + 'px'; document.body.style.paddingTop = b; document.documentElement.style.setProperty('--map-bottom', b); } };
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
+const _bottomPanel = document.getElementById('bottom-panel');
+if (_bottomPanel) new ResizeObserver(() => { document.body.style.paddingBottom = _bottomPanel.offsetHeight + 'px'; }).observe(_bottomPanel);
 
 const _buildEloItems = () => (_eloData?.rankings ?? [])
   .filter(r => !r.weirdo)
@@ -435,6 +438,10 @@ const _updateEloSelection = () => {
 };
 fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
   _eloData = d;
+  const _countEl = document.getElementById('elo-count');
+  if (_countEl) _countEl.textContent = d.rankings?.length ?? '';
+  const _dateEl = document.getElementById('elo-date');
+  if (_dateEl && d.updated) _dateEl.textContent = d.updated;
   app.eloRank = Object.fromEntries(
     d.rankings.flatMap(({id, rank}) => { const n = QUALIFIED_NAMES[id]; return n ? [[n, rank]] : []; })
   );
@@ -448,6 +455,8 @@ const showTab = name => {
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
   });
+  document.getElementById('tab-elo-panel')?.classList.toggle('collapsed', name !== 'tab-elo');
+  document.getElementById('tab-chain-panel')?.classList.toggle('collapsed', name !== 'tab-chain');
   if (name === 'tab-chain' && _chainData) {
     _renderChain();
     requestAnimationFrame(() => _chainUpdate?.scrollActive());
