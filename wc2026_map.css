@@ -28,7 +28,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 
 /* page header — grid so both children share row 1/col 1 and the row height = max(quote, sidebar) */
 #page-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: #f5f2ec; padding: 0; display: grid; }
-#page-heading-sub { grid-row: 1; grid-column: 1; padding: 0.4rem 1.5rem; align-self: stretch; margin: 0 !important; }
+#page-heading-sub { grid-row: 1; grid-column: 1; padding: 0.4rem 1.5rem; align-self: stretch; margin: 0 !important; position: relative; }
 
 /* page quote (pq-) */
 .pq-text { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #555; margin: 0 0 3px; line-height: 1.45; }
@@ -38,7 +38,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #zoom-hint { font-size: 10px; color: var(--color-dim); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
 #zoom-reset { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--color-divider); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--color-muted); font-size: 18px; line-height: 1; padding: 4px 10px; }
 #zoom-reset:disabled { opacity: 0.35; cursor: default; }
-#legend { font-size: 11px; color: #888; margin-top: 4px; }
+#legend { font-size: 11px; color: #888; margin-top: 1rem; }
 #legend-bar { height: 10px; flex: 1; max-width: 280px; }
 #legend-ticks { width: 280px; font-size: 9px; color: var(--color-dim); margin-top: 3px; }
 @media (max-width: 767.98px) {
@@ -120,10 +120,11 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
 .elo-layout { display: block; }
 .elo-main { display: block; }
-#filter-sidebar { grid-row: 1; grid-column: 1; justify-self: end; align-self: start; z-index: 10; display: flex; flex-direction: row-reverse; align-items: flex-start; position: relative; }
+#filter-sidebar { grid-row: 1; grid-column: 1; justify-self: end; align-self: start; z-index: 10; display: flex; flex-direction: row-reverse; align-items: flex-start; position: relative; margin-top: 0.4rem; }
 .filter-sidebar-toggle { width: 16px; padding: 8px 0; background: #f0ede8; border: 1px solid #e4e0d8; border-radius: 0 4px 4px 0; cursor: pointer; font-size: 10px; color: var(--color-muted); align-self: stretch; display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-height: var(--filter-sidebar-h, 8rem); }
 .filter-sidebar-toggle:hover { background: #e8e4de; color: #333; }
-.filter-sidebar-body { max-width: 300px; height: var(--filter-sidebar-h, 8rem); overflow: hidden; transition: max-width 0.5s ease; background: #f5f2ec; padding: .5rem 0 }
+.filter-sidebar-body { max-width: 300px; height: var(--filter-sidebar-h, 8rem); overflow: hidden; transition: max-width 0.5s ease; background: #f5f2ec; }
+.filter-table td { padding: 2px 6px !important; }
 #filter-sidebar.collapsed .filter-sidebar-body { max-width: 0; pointer-events: none; }
 .elo-name { font-size: 12px; white-space: nowrap; }
 .elo-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }

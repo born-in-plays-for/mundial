@@ -382,9 +382,9 @@ _filterSidebarBody.className = 'filter-sidebar-body';
 _filterSidebarBody.appendChild(_filterGrp);
 _filterSidebar.appendChild(_filterSidebarToggle);
 _filterSidebar.appendChild(_filterSidebarBody);
-// Measure natural height before first collapse (remove→measure→re-add, no paint between)
+// Measure natural table height before first collapse (_filterGrp has no fixed height, so scrollHeight = actual table height)
 _filterSidebar.classList.remove('collapsed');
-document.documentElement.style.setProperty('--filter-sidebar-h', _filterSidebarBody.scrollHeight + 'px');
+document.documentElement.style.setProperty('--filter-sidebar-h', _filterGrp.scrollHeight + 'px');
 _filterSidebar.classList.add('collapsed');
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
