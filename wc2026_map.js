@@ -144,6 +144,7 @@ svg.call(zoom
       const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
       return arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k);
     });
+    _syncResetBtn(e.transform);
   }));
 
 g.append('path').datum({type:'Sphere'})
@@ -198,8 +199,16 @@ document.querySelector('meta[name="description"]')?.setAttribute('content', T.pa
   el.querySelector('.pq-attr').innerHTML = `<span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}`;
 });
 const _zoomHintEl = document.getElementById('zoom-hint');
-_zoomHintEl.innerHTML = `${T.zoomHint} · <button id="zoom-reset" type="button">↺</button>`;
+_zoomHintEl.textContent = T.zoomHint;
 let _initialTransform = d3.zoomIdentity;
+const _zoomResetBtn = document.getElementById('zoom-reset');
+const _syncResetBtn = t => {
+  if (!_zoomResetBtn) return;
+  _zoomResetBtn.disabled = Math.abs(t.k - _initialTransform.k) < 0.001
+    && Math.abs(t.x - _initialTransform.x) < 0.5
+    && Math.abs(t.y - _initialTransform.y) < 0.5;
+};
+_syncResetBtn(_initialTransform);
 document.getElementById('zoom-reset').addEventListener('click', e => {
   e.stopPropagation();
   svg.transition().duration(400).call(zoom.transform, _initialTransform);
@@ -386,7 +395,29 @@ const _syncPaddingTop = () => { if (_mc) { const b = _mc.getBoundingClientRect()
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 const _bottomPanel = document.getElementById('bottom-panel');
-if (_bottomPanel) new ResizeObserver(() => { document.body.style.paddingBottom = _bottomPanel.offsetHeight + 'px'; }).observe(_bottomPanel);
+const _syncMapHeight = () => {
+  const [, , vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
+  const cs = getComputedStyle(_mc);
+  const contentW = _mc.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const naturalH = contentW * vbH / vbW;
+  const maxH = Math.max(50, Math.floor(window.innerHeight * 2 / 3
+    - (_pageHeader ? _pageHeader.offsetHeight : 0)
+    - (_bottomPanel ? _bottomPanel.offsetHeight : 0)));
+  const svgEl = document.getElementById('map');
+  if (naturalH > maxH) {
+    svgEl.style.width  = Math.round(maxH * vbW / vbH) + 'px';
+    svgEl.style.height = maxH + 'px';
+  } else {
+    svgEl.style.width  = '';
+    svgEl.style.height = '';
+  }
+  requestAnimationFrame(_syncPaddingTop);
+};
+if (_bottomPanel) new ResizeObserver(() => {
+  document.body.style.paddingBottom = _bottomPanel.offsetHeight + 'px';
+  _syncMapHeight();
+}).observe(_bottomPanel);
+_syncMapHeight();
 
 const _buildEloItems = () => (_eloData?.rankings ?? [])
   .filter(r => !r.weirdo)
@@ -472,6 +503,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
 
 let _chainResizeTimer = null;
 window.addEventListener('resize', () => {
+  _syncMapHeight();
   clearTimeout(_chainResizeTimer);
   _chainResizeTimer = setTimeout(() => {
     if (_chainData && !document.getElementById('tab-chain')?.hidden) _renderChain();
@@ -1330,6 +1362,7 @@ Promise.all([
   requestAnimationFrame(() => {
     if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
     _syncPaddingTop();
+    _syncMapHeight();
   });
 });
 
