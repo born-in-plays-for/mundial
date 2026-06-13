@@ -24,8 +24,9 @@ fetch('./wc2026_elo_rank.json')
   .then(data => {
     document.getElementById('elo-date').textContent = data.updated ?? '';
     document.getElementById('elo-count').textContent = data.rankings.length;
-    const items = data.rankings.map(({id, rank, pts, iso2, name}) => ({
+    const items = data.rankings.map(({id, rank, pts, iso2, name, fifaMember, weirdo}) => ({
       id, rank, pts, iso2, name: countryName(id, name),
+      fifaMember, weirdo,
     }));
     renderEloRanking(document.getElementById('list'), {
       items,

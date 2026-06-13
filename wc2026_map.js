@@ -397,8 +397,9 @@ window.addEventListener('resize', _syncPaddingTop);
 
 const _buildEloItems = () => (_eloData?.rankings ?? [])
   .filter(r => !r.weirdo)
-  .map(({ id, rank, pts, iso2, name }) => ({
+  .map(({ id, rank, pts, iso2, name, fifaMember }) => ({
     id, rank, pts, iso2, name: countryName(id, name),
+    fifaMember,
     exp: (app.byId[id]?.count ?? 0) > 0,
     imp: (app.importByNation[id]?.length ?? 0) > 0,
   }))

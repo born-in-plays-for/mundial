@@ -46,11 +46,12 @@ export function renderEloRanking(container, opts = {}) {
   ul.className = 'elo-list';
   const itemById = new Map();
 
-  for (const { id, rank, pts, iso2, name, exp = false, imp = false } of items) {
+  for (const { id, rank, pts, iso2, name, exp = false, imp = false, fifaMember = true } of items) {
     const clickable = onCountryClick != null && (isClickable == null || isClickable(id));
     const muted     = isMuted != null && isMuted(id);
     const dots = (exp ? '<sup class="elo-dot" style="color:#3b82f6" title="exports players">●</sup>' : '') +
-                 (imp ? '<sup class="elo-dot" style="color:#ef4444" title="imports players">●</sup>' : '');
+                 (imp ? '<sup class="elo-dot" style="color:#ef4444" title="imports players">●</sup>' : '') +
+                 (!fifaMember ? '<sup class="elo-dot" style="color:#bbb" title="not a FIFA member">○</sup>' : '');
     const li = document.createElement('li');
     li.className = 'elo-item' + (clickable ? ' elo-item--clickable' : '') + (muted ? ' elo-item--muted' : '');
     li.innerHTML =
