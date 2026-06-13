@@ -205,13 +205,6 @@ document.getElementById('zoom-reset').addEventListener('click', e => {
   svg.transition().duration(400).call(zoom.transform, _initialTransform);
 });
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
-const _tabSvg = (w, inner) => `<svg viewBox="0 0 ${w} 24" width="${w * 20 / 24}" height="20" fill="none" stroke="#777" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
-const _EMPTY_TAB_SVG = _tabSvg(24, `<circle cx="12" cy="12" r="7"/><line x1="5" y1="19" x2="19" y2="5"/>`);
-const _SNAKE_SVG     = _tabSvg(46, `<polyline points="2,2 36,2 36,10 2,10 2,18 28,18"/><polygon points="29,14 39,18 29,23" fill="#777" stroke="none"/>`);
-const _ELO_SVG       = `<svg width="30" height="30" viewBox="0 0 476.473 476.474" fill="none" stroke="#777" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="10,370 10,200 152,200 152,112 316,112 316,238 465,238 465,370 10,370"/><path fill="#777" stroke="none" d="M243.48,134.334c-0.825,0.165-1.633,0.457-2.344,0.987c-7.81,5.819-15.861,11.314-23.244,17.685c-7.627,6.583,3.453,17.564,11.029,11.029c3.187-2.75,6.52-5.299,9.899-7.795c-0.229,18.382-0.63,36.762-0.681,55.145c-0.025,10.062,15.577,10.057,15.603,0c0.061-23.404,0.802-46.794,0.868-70.198C254.625,134.672,248.101,132.404,243.48,134.334z"/><path fill="#777" stroke="none" d="M112.476,285.919c-4.804,0-9.6,0.051-14.394,0.157c8.163-8.282,14.254-18.448,15.138-29.854c1.991-25.755-32.042-21.235-47.017-16.818c-9.625,2.834-5.527,17.891,4.148,15.041c5.33-1.574,29.597-9.343,27.025,3.413c-2.709,13.426-16.547,23.998-27.835,29.995c-2.471,1.311-3.61,3.296-3.829,5.383c-1.678,4.783,0.584,10.761,6.896,10.019c13.253-1.548,26.535-1.731,39.867-1.731C122.538,301.519,122.538,285.919,112.476,285.919z"/><path fill="#777" stroke="none" d="M373.319,288.661c5.397-1.138,10.785-2.097,16.274-2.574c2.691-0.239,5.81-0.29,8.293-0.076c-1.849,2.473-4.276,4.672-6.617,6.692c-1.533,0.178-3.017,0.873-4.296,2.234c-2.706,2.904-3.188,8.663,0,11.477c4.611,4.082,9.217,8.43,12.294,13.989c0.264,0.493,0.503,0.99,0.736,1.498c0.041,0.122,0.066,0.214,0.173,0.519c0.046,0.162,0.081,0.335,0.122,0.502c-0.082,0.021-0.117,0.031-0.152,0.041c-0.285,0.021-0.569,0.051-0.858,0.056c-2.311,0.112-3.428-0.203-5.946-0.889c-6.586-1.787-12.578-5.57-18.215-9.526c-8.19-5.753-15.768,8.303-7.638,14.016c11.004,7.733,31.316,19.565,43.646,8.201c10.456-9.644,1.818-23.704-6.683-33.139c8.079-8.161,16.188-20.125,4.769-28.854c-4.397-3.356-11.167-3.301-16.296-3.164c-7.916,0.214-15.873,1.722-23.627,3.357C359.725,275.032,363.788,290.672,373.319,288.661z"/></svg>`;
-document.getElementById('tab-players-btn').innerHTML = _EMPTY_TAB_SVG;
-document.getElementById('tab-elo-btn').innerHTML    = _ELO_SVG;
-document.getElementById('tab-chain-btn').innerHTML   = _SNAKE_SVG;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
 
 // Chain tab: load data lazily, render when tab is shown, re-render on resize
@@ -278,15 +271,12 @@ const _renderChain = () => {
 };
 // On selection change: surgical update only — no SVG rebuild, no flicker.
 const _updateChainSelection = () => {
-  if (_chainUpdate && document.getElementById('tab-chain')?.classList.contains('active'))
+  if (_chainUpdate && !document.getElementById('tab-chain')?.hidden)
     _chainUpdate(_chainGetIndex());
 };
 fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
   _chainData = d;
-  if (document.getElementById('tab-chain')?.classList.contains('active')) _renderChain();
-});
-document.getElementById('tab-chain-btn')?.addEventListener('shown.bs.tab', () => {
-  if (_chainData) { _renderChain(); requestAnimationFrame(() => _chainUpdate?.scrollActive()); }
+  if (!document.getElementById('tab-chain')?.hidden) _renderChain();
 });
 
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
@@ -440,7 +430,7 @@ const _renderElo = () => {
   });
 };
 const _updateEloSelection = () => {
-  if (_eloUpdate && document.getElementById('tab-elo')?.classList.contains('active'))
+  if (_eloUpdate && !document.getElementById('tab-elo')?.hidden)
     _eloUpdate(dimState.sourceId);
 };
 fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
@@ -448,17 +438,34 @@ fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
   app.eloRank = Object.fromEntries(
     d.rankings.flatMap(({id, rank}) => { const n = QUALIFIED_NAMES[id]; return n ? [[n, rank]] : []; })
   );
-  if (document.getElementById('tab-elo')?.classList.contains('active')) _renderElo();
+  if (!document.getElementById('tab-elo')?.hidden) _renderElo();
 }).catch(() => {});
-document.getElementById('tab-elo-btn')?.addEventListener('shown.bs.tab', () => {
-  _renderElo();
-  requestAnimationFrame(() => document.querySelector('#tab-elo .elo-item--active')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+
+const showTab = name => {
+  document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === name);
+  });
+  document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
+    pane.hidden = pane.id !== name;
+  });
+  if (name === 'tab-chain' && _chainData) {
+    _renderChain();
+    requestAnimationFrame(() => _chainUpdate?.scrollActive());
+  }
+  if (name === 'tab-elo') {
+    _renderElo();
+    requestAnimationFrame(() => document.querySelector('#tab-elo .elo-item--active')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  }
+};
+document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
+  btn.addEventListener('click', () => showTab(btn.dataset.tab));
 });
+
 let _chainResizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(_chainResizeTimer);
   _chainResizeTimer = setTimeout(() => {
-    if (_chainData && document.getElementById('tab-chain')?.classList.contains('active')) _renderChain();
+    if (_chainData && !document.getElementById('tab-chain')?.hidden) _renderChain();
   }, 150);
 });
 
@@ -811,7 +818,7 @@ const applyDim = (sourceId, destIds, country) => {
     col.className = 'd-inline-flex align-items-baseline gap-1';
     const nameSpan = document.createElement('span');
     nameSpan.textContent = countryDisplay;
-    nameSpan.className = isQualifiedBtn ? 'text-body' : 'text-muted';
+    nameSpan.className = (isQualifiedBtn ? 'text-body' : 'text-muted') + ' btn-name';
     col.appendChild(nameSpan);
     if (!isQualifiedBtn) {
       const tag = document.createElement('small');
@@ -840,7 +847,7 @@ const clearDim = () => {
     render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
   }
   const _pb = document.getElementById('tab-players-btn');
-  if (_pb) _pb.innerHTML = _EMPTY_TAB_SVG;
+  if (_pb) _pb.innerHTML = '<img class="tab-icon" src="images/empty_tab_icon.svg" aria-hidden="true">';
   _updateChainSelection();
   _updateEloSelection();
 };

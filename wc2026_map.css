@@ -41,16 +41,12 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   #legend-bar { max-width: 90px; }
   #legend-ticks { width: 90px; font-size: 8px; }
 }
-@media (max-width: 767.98px) and (orientation: portrait) {
-  body { padding-bottom: 48px; }
-  #bottomTabList {
-    position: fixed !important;
-    bottom: 0; left: 0; right: 0;
-    z-index: 100;
-    background: #faf9f6;
-    padding: 0 1rem;
-    margin: 0 !important;
-  }
+body { padding-bottom: 48px; }
+#bottom-panel {
+  position: fixed !important;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  background: #faf9f6;
 }
 
 /* tooltip (tt-) */
@@ -133,8 +129,12 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 
 /* nav pills */
 #bottomTabList { align-items: stretch; flex-wrap: nowrap; }
-#bottomTabList .nav-item { display: flex; min-width: 0; }
 #bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13px; }
+#bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
+#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; }
+#tab-players-btn > span { min-width: 0; overflow: hidden; }
+#tab-players-btn > span > span { min-width: 0; overflow: hidden; }
+.btn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
 #bottomTabList .nav-link:hover { background-color: #e3e0dc; color: #000; } 
 #bottomTabList .nav-link.active { background-color: #f9f7f3; color: #000; border: 1px solid #dee2e6; }
 
