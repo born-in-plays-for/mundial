@@ -76,46 +76,30 @@ export function renderChain(chain, container, opts = {}) {
   container.appendChild(wrapper);
 
   const hdrParent = headerContainer ?? wrapper;
-  if (headerContainer) headerContainer.innerHTML = '';
-  const hdr = document.createElement('div');
-  hdr.style.cssText = `display:${onCountryClick ? 'flex' : 'block'};align-items:flex-start;justify-content:space-between;padding:8px 0 4px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif`;
-  hdrParent.appendChild(hdr);
-
-  const leftDiv = document.createElement('div');
-  const legendDiv = document.createElement('div');
-  legendDiv.style.cssText = 'font-size:14px;font-weight:600';
-  legendDiv.innerHTML = `${_spanHtml(L.pre, '#1a1a18')} [${_spanHtml('← ' + L.bornIn, '#3b82f6')}, ${_spanHtml(L.playsFor + ' →', '#ef4444')}] ${_spanHtml(L.post, '#1a1a18')}`;
-  leftDiv.appendChild(legendDiv);
   const subtitleText = L.subtitle ? L.subtitle(links.length, nodes.length) : chain.subtitle;
-  if (subtitleText) {
-    const sub = document.createElement('div');
-    sub.style.cssText = 'font-size:10px;color:#aaa;margin-top:3px';
-    sub.textContent = subtitleText;
-    leftDiv.appendChild(sub);
-  }
-  hdr.innerHTML = '';
-  hdr.appendChild(leftDiv);
-
+  const _btnStyle = dis => `width:28px;height:24px;border-radius:5px;border:none;background:#e8e4de;color:#888;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:${dis ? 'default' : 'pointer'};opacity:${dis ? '0.35' : '1'}`;
+  hdrParent.innerHTML = `
+    <div style="padding:8px 0 4px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <div style="font-size:14px;font-weight:600">[${_spanHtml(`← ${L.bornIn}`, '#3b82f6')}, ${_spanHtml(`${L.playsFor} →`, '#ef4444')}]</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:10px;color:#aaa">${subtitleText ?? ''}</div>
+        ${onCountryClick ? `<div style="display:flex;gap:4px;flex-shrink:0">
+          <button data-nav="-1" style="${_btnStyle(selIdx >= 0 && selIdx === 0)}">◀</button>
+          <button data-nav="1"  style="${_btnStyle(selIdx >= 0 && selIdx === nn - 1)}">▶</button>
+        </div>` : ''}
+      </div>
+    </div>`;
   if (onCountryClick) {
-    const navDiv = document.createElement('div');
-    navDiv.style.cssText = 'display:flex;gap:4px;flex-shrink:0;padding-top:2px';
-    const addNavBtn = (label, delta) => {
-      const dis = selIdx >= 0 && (delta < 0 ? selIdx === 0 : selIdx === nn - 1);
-      const btn = document.createElement('button');
-      btn.textContent = label;
-      btn.style.cssText = `width:28px;height:24px;border-radius:5px;border:none;background:#e8e4de;color:#888;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:${dis?'default':'pointer'};opacity:${dis?'0.35':'1'}`;
+    hdrParent.querySelectorAll('[data-nav]').forEach(btn => {
+      const delta = +btn.dataset.nav;
       btn.addEventListener('click', () => {
         const c = getSelectedIndex?.() ?? -1;
         if (c >= 0 && (delta < 0 ? c === 0 : c === nn - 1)) return;
         const next = c < 0 ? (delta > 0 ? 0 : nn - 1) : c + delta;
         if (next >= 0 && next < nn) onCountryClick(nodes[next]);
       });
-      navDiv.appendChild(btn);
       _navBtns.push({ btn, delta });
-    };
-    addNavBtn('◀', -1);
-    addNavBtn('▶', +1);
-    hdr.appendChild(navDiv);
+    });
   }
 
   // ── SVG ──────────────────────────────────────────────────────────────────────
@@ -174,7 +158,7 @@ export function renderChain(chain, container, opts = {}) {
       svg.appendChild(a);
     } else {
       const t = _svgEl('text', base);
-      t.appendChild(document.createTextNode(name + ' ('));
+      t.appendChild(document.createTextNode(`${name} (`));
       const a = _svgEl('a', {href:wiki.href, target:'_blank', rel:'noopener', class:'cplr-a'});
       const sp = _svgEl('tspan', {});
       sp.textContent = 'en';

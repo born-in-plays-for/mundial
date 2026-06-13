@@ -119,6 +119,10 @@ export const T = {
 
     chainLegend:   { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue pour', post: 'chemin' },
     chainSubtitle: (p, c) => `${p} joueurs · ${c} pays`,
+    eloNations:  (s, t) => s === t ? `${t} pays` : `${s} / ${t} pays`,
+    eloSource:   'source : ',
+    eloUpdated:  ' · mis à jour ',
+    eloFilter:   '|filtre|',
   },
   it: {
     pageHeading:    'Luogo di nascita dei giocatori dei Mondiali 2026',
@@ -150,6 +154,10 @@ export const T = {
 
     chainLegend:   { pre: 'Il più lungo', bornIn: 'nato in', playsFor: 'gioca per', post: 'cammino' },
     chainSubtitle: (p, c) => `${p} giocatori · ${c} paesi`,
+    eloNations:  (s, t) => s === t ? `${t} paesi` : `${s} / ${t} paesi`,
+    eloSource:   'fonte: ',
+    eloUpdated:  ' · aggiornato ',
+    eloFilter:   '|filtro|',
   },
   de: {
     pageHeading:    'Geburtsort der Spieler der WM 2026',
@@ -181,6 +189,10 @@ export const T = {
 
     chainLegend:   { pre: 'Der längste', bornIn: 'geboren in', playsFor: 'spielt für', post: 'Weg' },
     chainSubtitle: (p, c) => `${p} Spieler · ${c} Länder`,
+    eloNations:  (s, t) => s === t ? `${t} Länder` : `${s} / ${t} Länder`,
+    eloSource:   'Quelle: ',
+    eloUpdated:  ' · aktualisiert ',
+    eloFilter:   '|Filter|',
   },
   es: {
     pageHeading:    'Lugar de nacimiento de los jugadores del Mundial 2026',
@@ -212,6 +224,10 @@ export const T = {
 
     chainLegend:   { pre: 'El más largo', bornIn: 'nacido en', playsFor: 'juega para', post: 'camino' },
     chainSubtitle: (p, c) => `${p} jugadores · ${c} países`,
+    eloNations:  (s, t) => s === t ? `${t} países` : `${s} de ${t} países`,
+    eloSource:   'fuente: ',
+    eloUpdated:  ' · actualizado ',
+    eloFilter:   '|filtro|',
   },
   en: {
     pageHeading:    'Birthplace of 2026 World Cup Players',
@@ -243,5 +259,9 @@ export const T = {
 
     chainLegend:   { pre: 'Longest', bornIn: 'born in', playsFor: 'plays for', post: 'path' },
     chainSubtitle: (p, c) => `${p} players · ${c} countries`,
+    eloNations:  (s, t) => s === t ? `${t} countries` : `${s} of ${t} countries`,
+    eloSource:   'source: ',
+    eloUpdated:  ' · updated ',
+    eloFilter:   '|filter|',
   },
 }[_LANG];

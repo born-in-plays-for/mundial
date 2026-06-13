@@ -13,6 +13,10 @@ body { background: #f5f2ec; color: #1a1a18; }
 .color-exp { color: var(--arc-export-color); }
 .color-imp { color: var(--arc-import-color); }
 
+/* inline button that looks like a link */
+.link-btn { background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; color: inherit; }
+.link-btn:hover { color: #555; }
+
 /* map */
 svg { display: block; width: 100%; height: auto; }
 #map-container { position: fixed !important; top: var(--page-header-h, var(--filter-sidebar-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: 1.5rem !important; padding-right: 1.5rem !important; display: flex; justify-content: center; align-items: flex-start; }
@@ -110,13 +114,9 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-item--muted .elo-name { color: var(--color-muted); }
 .elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
-.filter-table { border-collapse: collapse; font-size: 12px; margin: 0;  --bs-table-bg: #faf9f6;}
-.filter-table td, .filter-table th { padding: 2px 5px; vertical-align: middle; }
-.filter-table td { text-align: center; }
-.filter-table .ftbl-col { text-align: center; color: var(--color-muted); cursor: pointer; white-space: nowrap; }
-.filter-table .ftbl-grp { cursor: pointer; white-space: nowrap; text-align: left; color: var(--color-muted); }
-.filter-table .ftbl-sub { color: var(--color-muted); cursor: pointer; white-space: nowrap; padding-left: 10px; }
-.filter-table .ftbl-col:hover, .filter-table .ftbl-grp:hover, .filter-table .ftbl-sub:hover { color: #333; background: #f0ede8; border-radius: 3px; }
+.filter-table .ftbl-col, .filter-table .ftbl-grp, .filter-table .ftbl-sub { cursor: pointer; white-space: nowrap; }
+.filter-table { border-collapse: collapse; font-size: 11px; margin: 0; --bs-table-bg: #faf9f6; }
+.filter-table .ftbl-col:hover, .filter-table .ftbl-grp:hover, .filter-table .ftbl-sub:hover { background: #f0ede8; border-radius: 3px; color: var(--color-muted); }
 .filter-table .form-check-input { display: block; margin: 0 auto; cursor: pointer; }
 .elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
 .elo-layout { display: block; }
@@ -124,9 +124,7 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 #filter-sidebar { grid-row: 1; grid-column: 1; justify-self: end; align-self: start; z-index: 10; display: flex; flex-direction: row-reverse; align-items: flex-start; position: relative; }
 .filter-sidebar-toggle { width: 16px; padding: 8px 0; background: #f0ede8; border: 1px solid #e4e0d8; border-radius: 0 4px 4px 0; cursor: pointer; font-size: 10px; color: var(--color-muted); align-self: stretch; display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-height: var(--filter-sidebar-h, 8rem); }
 .filter-sidebar-toggle:hover { background: #e8e4de; color: #333; }
-.filter-sidebar-body { max-width: 300px; overflow: hidden; transition: max-width 0.5s linear; background: #f5f2ec; padding: .5rem 0 }
-.filter-sidebar-fade { position: absolute; left: -10px; top: 0; bottom: 0; width: 10px; background: linear-gradient(to left, #f5f2ec, rgba(245,242,236,0)); pointer-events: none; z-index: 1; }
-#filter-sidebar.collapsed .filter-sidebar-fade { display: none; }
+.filter-sidebar-body { max-width: 300px; height: var(--filter-sidebar-h, 8rem); overflow: hidden; transition: max-width 0.5s linear; background: #f5f2ec; padding: .5rem 0 }
 #filter-sidebar.collapsed .filter-sidebar-body { max-width: 0; pointer-events: none; }
 .elo-name { font-size: 12px; white-space: nowrap; }
 .elo-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }

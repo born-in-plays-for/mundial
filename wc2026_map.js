@@ -308,27 +308,27 @@ document.getElementById('tab-elo')?.appendChild(_eloLayout);
 // The same DOM node is re-appended on each render so checked state survives tab switches.
 const _filterGrp = document.createElement('div');
 _filterGrp.innerHTML = `<table class="filter-table table table-sm table-bordered">
-  <thead><tr>
-    <th colspan="2" class="ftbl-col" data-col="all" style="text-align:left">country<span class="filter-count" style="float:right;margin-left:8px"></span></th>
-    <th class="ftbl-col" data-col="exp">exporter<sup style="color:#3b82f6">●</sup></th>
-    <th class="ftbl-col" data-col="nexp">non-exp.</th>
-  </tr></thead>
   <tbody>
     <tr>
-      <td rowspan="2" class="ftbl-grp" data-row="q">qualified</td>
-      <td class="ftbl-sub" data-row="qi">importer<sup style="color:#ef4444">●</sup></td>
-      <td><input type="checkbox" class="form-check-input" id="filter-qie" checked></td>
-      <td><input type="checkbox" class="form-check-input" id="filter-qi"  checked></td>
+      <td colspan="2" class="ftbl-col text-muted" data-col="all">country</td>
+      <td class="ftbl-col text-muted" data-col="exp">exporter<sup style="color:#3b82f6">●</sup></td>
+      <td class="ftbl-col text-muted" data-col="nexp">non-exp.</td>
     </tr>
     <tr>
-      <td class="ftbl-sub" data-row="qni">non-imp.</td>
-      <td><input type="checkbox" class="form-check-input" id="filter-qe"  checked></td>
-      <td><input type="checkbox" class="form-check-input" id="filter-q"   checked></td>
+      <td rowspan="2" class="ftbl-grp text-muted" data-row="q">qualified</td>
+      <td class="ftbl-sub text-muted" data-row="qi">importer<sup style="color:#ef4444">●</sup></td>
+      <td class="text-muted"><input type="checkbox" class="form-check-input" id="filter-qie" checked></td>
+      <td class="text-muted"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></td>
     </tr>
     <tr>
-      <td colspan="2" class="ftbl-grp" data-row="nq">non-qualified</td>
-      <td><input type="checkbox" class="form-check-input" id="filter-e"   checked></td>
-      <td><input type="checkbox" class="form-check-input" id="filter-o"></td>
+      <td class="ftbl-sub text-muted" data-row="qni">non-imp.</td>
+      <td class="text-muted"><input type="checkbox" class="form-check-input" id="filter-qe"  checked></td>
+      <td class="text-muted"><input type="checkbox" class="form-check-input" id="filter-q"   checked></td>
+    </tr>
+    <tr>
+      <td colspan="2" class="ftbl-grp text-muted" data-row="nq">non-qualified</td>
+      <td class="text-muted"><input type="checkbox" class="form-check-input" id="filter-e"   checked></td>
+      <td class="text-muted"><input type="checkbox" class="form-check-input" id="filter-o"></td>
     </tr>
   </tbody>
 </table>`;
@@ -363,7 +363,6 @@ _filterGrp.querySelector('[data-row="qni"]' ).addEventListener('click', () => _f
 _filterGrp.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltE,   _fltO]));
 _filterGrp.querySelector('[data-col="exp"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQE, _fltE]));
 _filterGrp.querySelector('[data-col="nexp"]').addEventListener('click', () => _filterToggle([_fltQI,  _fltQ,  _fltO]));
-const _filterCountEl = _filterGrp.querySelector('.filter-count');
 _filterGrp.querySelector('[data-col="all"]').addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ, _fltE, _fltO]));
 _filterGrp.addEventListener('change', () => { _renderElo(); _applyFlagFilter(); });
 const _filterSidebarToggle = document.createElement('button');
@@ -379,9 +378,6 @@ _filterSidebarBody.className = 'filter-sidebar-body';
 _filterSidebarBody.appendChild(_filterGrp);
 _filterSidebar.appendChild(_filterSidebarToggle);
 _filterSidebar.appendChild(_filterSidebarBody);
-const _filterSidebarFade = document.createElement('div');
-_filterSidebarFade.className = 'filter-sidebar-fade';
-_filterSidebar.appendChild(_filterSidebarFade);
 // Measure natural height before first collapse (remove→measure→re-add, no paint between)
 _filterSidebar.classList.remove('collapsed');
 document.documentElement.style.setProperty('--filter-sidebar-h', _filterSidebarBody.scrollHeight + 'px');
@@ -452,7 +448,8 @@ const _zoomToActiveDimFlags = () => {
 
 const _renderElo = () => {
   const items = _buildEloItems();
-  _filterCountEl.textContent = items.length;
+  const _nationsEl = document.getElementById('elo-nations');
+  if (_nationsEl) _nationsEl.textContent = T.eloNations(items.length, _eloData?.rankings?.length ?? 0);
   _eloUpdate = renderEloRanking(_eloMain, {
     items,
     onCountryClick: id => { if (dimState.sourceId === id) { clearDim(); } else { activateCountry(id); _zoomToActiveDimFlags(); } },
@@ -467,10 +464,21 @@ const _updateEloSelection = () => {
   if (_eloUpdate && !document.getElementById('tab-elo')?.hidden)
     _eloUpdate(dimState.sourceId);
 };
+const _eloSourceLabelEl  = document.getElementById('elo-source-label');
+const _eloUpdatedLabelEl = document.getElementById('elo-updated-label');
+const _eloFilterBtn      = document.getElementById('elo-filter-btn');
+if (_eloSourceLabelEl)  _eloSourceLabelEl.textContent  = T.eloSource;
+if (_eloUpdatedLabelEl) _eloUpdatedLabelEl.textContent = T.eloUpdated;
+if (_eloFilterBtn) {
+  _eloFilterBtn.textContent = T.eloFilter;
+  _eloFilterBtn.addEventListener('click', () => {
+    const collapsed = _filterSidebar.classList.toggle('collapsed');
+    _filterSidebarToggle.textContent = collapsed ? '‹' : '›';
+  });
+}
+
 fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
   _eloData = d;
-  const _countEl = document.getElementById('elo-count');
-  if (_countEl) _countEl.textContent = d.rankings?.length ?? '';
   const _dateEl = document.getElementById('elo-date');
   if (_dateEl && d.updated) _dateEl.textContent = d.updated;
   app.eloRank = Object.fromEntries(

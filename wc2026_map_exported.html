@@ -64,11 +64,12 @@
 
 <footer id="bottom-panel">
   <div id="tab-elo-panel" class="tab-footer-panel">
-    <div class="container-xxl px-4 pt-3 pb-1">
-      <header>
-        <h1 class="fs-5 fw-semibold mb-1">World Football Elo Rankings</h1>
-        <p class="sub mb-0"><span id="elo-count">243</span> nations · source: <a id="elo-source-link" href="https://www.eloratings.net/" target="_blank" rel="noopener" class="sub">eloratings.net</a> · updated <span id="elo-date">2026-06-13</span></p>
-      </header>
+    <div class="container-xxl px-4 pt-2 pb-1">
+      <p class="sub mb-0">
+        <span id="elo-nations">243 nations</span> <button id="elo-filter-btn" type="button" class="link-btn sub"></button>
+        <span> · </span>
+        <span id="elo-source-label" class="d-none d-sm-inline"></span><a id="elo-source-link" href="https://www.eloratings.net/" target="_blank" rel="noopener" class="sub">eloratings.net</a><span id="elo-updated-label" class="d-none d-sm-inline"></span><span class="d-sm-none"> · </span><span id="elo-date">2026-06-13</span>
+      </p>
     </div>
   </div>
   <div id="tab-chain-panel" class="tab-footer-panel collapsed">
