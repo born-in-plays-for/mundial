@@ -296,7 +296,7 @@ fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloUpdate = null;
 let _eloData   = null;
-let _sortOrder  = ['elo', 'exp', 'imp', 'dlt', 'az'];
+let _sortOrder  = ['elo', 'exp', 'imp', 'delta', 'alpha'];
 let _sortDir    = 'desc';
 const _fifaMemberIds = new Set();
 const _eloMain    = document.createElement('div');
@@ -317,19 +317,20 @@ const _filterGrp = document.createElement('div');
 _filterGrp.innerHTML = `<table class="filter-table table table-sm table-bordered">
   <tbody>
     <tr>
-      <td class="ftbl-sort-header text-muted">${T.eloSort}</td>
-      <td colspan="2" class="ftbl-col text-muted" data-col="all">${T.filterLabels.country}<span id="filter-count" style="float:right"></span></td>
+      <td class="ftbl-sort-header text-muted" style="position:relative">${T.sortLabels.action}<span class="ftbl-close-btn btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
+      <td colspan="2" class="ftbl-col text-muted" data-col="all"><em>${T.filterLabels.action}</em><span id="filter-count" style="float:right"></span></td>
       <td class="ftbl-col text-muted" data-col="exp">${T.filterLabels.exporter}<sup style="color:#3b82f6">●</sup></td>
       <td class="ftbl-col text-muted" data-col="nexp">${T.filterLabels.nonExp}</td>
     </tr>
     <tr>
       <td rowspan="4" class="ftbl-sort-col p-0 text-muted">
         <div class="ftbl-sort-list">
-          <div class="ftbl-sort-item" data-sort="elo"><button class="sort-dir-btn"></button>${T.eloSortLabels.elo}</div>
-          <div class="ftbl-sort-item" data-sort="exp">${T.eloSortLabels.exp}</div>
-          <div class="ftbl-sort-item" data-sort="imp">${T.eloSortLabels.imp}</div>
-          <div class="ftbl-sort-item" data-sort="dlt">${T.eloSortLabels.dlt}</div>
-          <div class="ftbl-sort-item" data-sort="az">${T.eloSortLabels.az}</div>
+          <button class="sort-dir-btn"></button>
+          <div class="ftbl-sort-item" data-sort="elo">${T.sortLabels.elo}</div>
+          <div class="ftbl-sort-item" data-sort="exp">${T.sortLabels.exp}</div>
+          <div class="ftbl-sort-item" data-sort="imp">${T.sortLabels.imp}</div>
+          <div class="ftbl-sort-item" data-sort="delta">${T.sortLabels.delta}</div>
+          <div class="ftbl-sort-item" data-sort="alpha">${T.sortLabels.alpha}</div>
         </div>
       </td>
       <td rowspan="2" class="ftbl-grp text-muted" data-row="q">${T.filterLabels.qualified}</td>
@@ -407,13 +408,28 @@ _filterGrp.querySelector('[data-col="exp"]' ).addEventListener('click', () => _f
 _filterGrp.querySelector('[data-col="nexp"]').addEventListener('click', () => _filterToggle([_fltQI,  _fltQ,  _fltOF, _fltON]));
 _filterGrp.querySelector('[data-col="all"]').addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ, _fltEF, _fltOF, _fltEN, _fltON]));
 _filterGrp.addEventListener('change', () => { _renderElo(); _applyFlagFilter(); });
+_filterGrp.querySelector('.ftbl-close-btn')?.addEventListener('click', e => {
+  e.stopPropagation();
+  _filterSidebar.classList.add('collapsed');
+  _filterSidebarToggle.textContent = '‹';
+});
 const _sortListEl = _filterGrp.querySelector('.ftbl-sort-list');
 const _sortDirBtn = _sortListEl.querySelector('.sort-dir-btn');
 const _updateSortCol = () => {
+  const items = Array.from(_sortListEl.querySelectorAll('.ftbl-sort-item'));
+  const before = new Map(items.map(el => [el, el.getBoundingClientRect().top]));
   _sortOrder.forEach(key => { const el = _sortListEl.querySelector(`[data-sort="${key}"]`); if (el) _sortListEl.appendChild(el); });
-  const firstItem = _sortListEl.firstElementChild;
-  if (firstItem && !firstItem.contains(_sortDirBtn)) firstItem.prepend(_sortDirBtn);
   _sortDirBtn.dataset.dir = _sortDir;
+  items.forEach(el => {
+    const delta = before.get(el) - el.getBoundingClientRect().top;
+    if (delta === 0) return;
+    el.style.transition = 'none';
+    el.style.transform = `translateY(${delta}px)`;
+    el.getBoundingClientRect(); // force reflow
+    el.style.transition = 'transform 0.25s ease';
+    el.style.transform = '';
+    el.addEventListener('transitionend', () => { el.style.transition = ''; }, { once: true });
+  });
 };
 _updateSortCol();
 _sortListEl?.addEventListener('click', e => {
@@ -450,11 +466,24 @@ _filterSidebar.appendChild(_filterSidebarBody);
 _filterSidebar.classList.remove('collapsed');
 _filterSidebarBody.style.maxWidth = 'none';
 _filterSidebarBody.style.width = 'max-content';
+// Fix sort column width: longest item text + symmetric room for the direction button
+const _sortItemEls = Array.from(_sortListEl.querySelectorAll('.ftbl-sort-item'));
+const _maxItemW = Math.max(..._sortItemEls.map(el => el.offsetWidth));
+const _btnEffW  = _sortDirBtn.offsetWidth + 3; // 3px gap from edge
+document.documentElement.style.setProperty('--sort-col-w', (_maxItemW + 2 * _btnEffW + 6) + 'px');
 document.documentElement.style.setProperty('--filter-sidebar-h', _filterGrp.scrollHeight + 'px');
 document.documentElement.style.setProperty('--filter-sidebar-w', _filterSidebarBody.offsetWidth + 'px');
 _filterSidebarBody.style.maxWidth = '';
 _filterSidebarBody.style.width = '';
-_filterSidebar.classList.add('collapsed');
+_filterSidebarToggle.textContent = '›';
+setTimeout(() => {
+  _filterSidebarBody.style.transition = 'max-width 1s ease';
+  _filterSidebar.classList.add('collapsed');
+  _filterSidebarToggle.textContent = '‹';
+  _filterSidebarBody.addEventListener('transitionend', () => {
+    _filterSidebarBody.style.transition = '';
+  }, { once: true });
+}, 3000);
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
 if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.offsetHeight + 'px');
@@ -508,8 +537,8 @@ const _syncMapHeight = () => {
     }
     if (_zoomHintEl) {
       _zoomHintEl.style.left      = (svgRect.right - mcRect.left + 2) + 'px';
-      _zoomHintEl.style.bottom    = (fromBottom + 8) + 'px';
-      _zoomHintEl.style.maxHeight = (svgRect.height - 16) + 'px';
+      _zoomHintEl.style.bottom    = fromBottom + 'px';
+      _zoomHintEl.style.maxHeight = svgRect.height + 'px';
     }
   });
 };
@@ -531,15 +560,15 @@ const _buildEloItems = () => {
       impCount: app.importByNation[id]?.length ?? 0,
     }))
     .filter(item => _catEloChecked(item.id, item.fifaMember));
-  const _sortFns = { elo: (a, b) => a.rank - b.rank, exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, dlt: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), az: (a, b) => a.name.localeCompare(b.name) };
+  const _sortFns = { elo: (a, b) => a.rank - b.rank, exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
   raw.sort((a, b) => { for (let i = 0; i < _sortOrder.length; i++) { let d = _sortFns[_sortOrder[i]](a, b); if (i === 0 && _sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
   const primary = _sortOrder[0];
   return raw.map(item => ({
     ...item,
     pts: primary === 'exp' ? item.expCount
        : primary === 'imp' ? item.impCount
-       : primary === 'dlt' ? item.expCount - item.impCount
-       : primary === 'az'  ? null
+       : primary === 'delta' ? item.expCount - item.impCount
+       : primary === 'alpha'  ? null
        : item.pts,
   }));
 };
@@ -570,7 +599,7 @@ const _renderElo = () => {
   const total = _eloData?.rankings?.filter(r => !r.weirdo).length ?? 0;
   const _nationsEl = document.getElementById('elo-nations');
   if (_nationsEl) _nationsEl.textContent = T.eloNations(items.length, total);
-  if (_filterCountEl) _filterCountEl.textContent = total ? (items.length === total ? `${total}` : `${items.length}/${total}`) : '';
+  if (_filterCountEl) _filterCountEl.textContent = total ? `${items.length}/${total}` : '';
   _eloUpdate = renderEloRanking(_eloMain, {
     items,
     onCountryClick: id => { if (dimState.sourceId === id) { clearDim(); } else { activateCountry(id); _zoomToActiveDimFlags(); } },

@@ -20,7 +20,7 @@ body { background: #f5f2ec; color: #1a1a18; }
 /* map */
 svg { display: block; width: 100%; height: auto; }
 #map-container { position: fixed !important; top: var(--page-header-h, var(--filter-sidebar-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: 1.5rem !important; padding-right: 1.5rem !important; display: flex; justify-content: center; align-items: flex-start; background: rgba(245, 242, 236, 0.667)  }
-#map { touch-action: none; border: 1px grey dotted; background-color: #f9f7f3; overflow: hidden; padding-bottom: 0.5px; }
+#map { touch-action: none; background-color: #f9f7f3; overflow: hidden; padding-bottom: 0.5px; }
 .country { cursor: default; transition: opacity .12s; }
 .country:hover { opacity: .7; }
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
@@ -36,7 +36,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 .pq-author { font-variant: small-caps; letter-spacing: 0.07em; color: #666; }
 .pq-attr cite { font-style: italic; }
 #zoom-hint { font-size: 10px; color: var(--color-dim); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
-#zoom-reset { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--color-divider); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--color-muted); font-size: 18px; line-height: 1; padding: 4px 10px; }
+#zoom-reset { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--color-divider); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--color-muted); line-height: 1; padding: 3px 7px; }
 #zoom-reset:disabled { opacity: 0.35; cursor: default; }
 #legend { font-size: 11px; color: #888; margin-top: auto; }
 #legend-bar { height: 10px; flex: 1; max-width: 280px; }
@@ -117,25 +117,27 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .filter-table { border-collapse: collapse; font-size: 11px; margin: 0; --bs-table-bg: #faf9f6; }
 .filter-table .ftbl-col:hover, .filter-table .ftbl-grp:hover, .filter-table .ftbl-sub:hover { background: #f0ede8; border-radius: 3px; color: var(--color-muted); }
 .filter-table .form-check-input { display: none; }
-.check-lbl { display: block; text-align: center; cursor: pointer; line-height: 1; }
-.check-lbl::before { content: '◯'; color: #bbb; }
-.check-lbl:has(input:checked)::before { content: '◉'; color: #444; }
+.check-lbl { display: block; text-align: center; cursor: pointer; line-height: 1; color: #bbb; }
+.check-lbl::before { content: '□'; }
+.check-lbl:has(input:checked)::before { content: '■';}
 .elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
 .elo-layout { display: block; }
 .elo-main { display: block; }
 #filter-sidebar { grid-row: 1; grid-column: 1; justify-self: end; align-self: start; z-index: 10; display: flex; flex-direction: row-reverse; align-items: flex-start; position: relative; margin-top: 0.4rem; }
-.filter-sidebar-toggle { width: 16px; padding: 8px 0; background: #f0ede8; border: 1px solid #e4e0d8; border-radius: 0 4px 4px 0; cursor: pointer; font-size: 10px; color: var(--color-muted); align-self: stretch; display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-height: var(--filter-sidebar-h, 8rem); }
+.filter-sidebar-toggle { width: 16px; min-width: 16px; padding: 8px 0; background: #f0ede8; border: 1px solid #e4e0d8; border-radius: 0 4px 4px 0; cursor: pointer; font-size: 10px; color: var(--color-muted); align-self: stretch; display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-height: var(--filter-sidebar-h, 8rem); }
 .filter-sidebar-toggle:hover { background: #e8e4de; color: #333; }
 .filter-sidebar-body { max-width: var(--filter-sidebar-w, 300px); height: var(--filter-sidebar-h, 8rem); overflow: hidden; transition: max-width 0.5s ease; background: #f5f2ec; }
 .filter-table td { padding: 2px 6px !important; }
+@media (max-width: 400px) {
+  .filter-table td { padding: 2px 2px !important; }
+}
 .ftbl-sort-header { text-align: center; border-right: 3px double var(--color-divider) !important; font-style: italic; }
-.filter-table td[data-col="all"] { font-style: italic; }
-.ftbl-sort-col { padding: 0 !important; border-right: 3px double var(--color-divider) !important; vertical-align: top; }
-.ftbl-sort-list { display: flex; flex-direction: column; height: 100%; }
-.ftbl-sort-item { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0 6px; white-space: nowrap; position: relative; }
+#filter-count { font-family: monospace; }
+.ftbl-sort-col { padding: 0 !important; border-right: 3px double var(--color-divider) !important; vertical-align: top; width: var(--sort-col-w, 80px); min-width: var(--sort-col-w, 80px); }
+.ftbl-sort-list { display: flex; flex-direction: column; height: 100%; position: relative; }
+.ftbl-sort-item { flex: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0 6px; white-space: nowrap; }
 .ftbl-sort-item:hover { background: #f0ede8; color: #555; }
-.ftbl-sort-item:first-child { padding-left: 40px; }
-.sort-dir-btn { position: absolute; left: 3px; width: 15px; height: 15px; background: url('images/sort-vertical-svgrepo-com.svg') no-repeat center / 15px 15px; border: none; padding: 0; cursor: pointer; opacity: 0.5; }
+.sort-dir-btn { position: absolute; top: 1px; left: 0; width: 17px; height: 17px; background: url('images/sort-vertical-svgrepo-com.svg') no-repeat center / 17px 17px; border: none; padding: 0; cursor: pointer; opacity: 0.5; }
 .sort-dir-btn[data-dir="asc"] { background-image: url('images/sort-vertical-asc.svg'); }
 .sort-dir-btn:hover { opacity: 1; }
 #filter-sidebar.collapsed .filter-sidebar-body { max-width: 0; pointer-events: none; }
