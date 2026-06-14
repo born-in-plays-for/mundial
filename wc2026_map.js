@@ -1,7 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from './chains/wc2026_chain_render.js';
 import { renderEloRanking } from './wc2026_elo_ranking.js';
-import { LOCALE, T, countryName, wikiUrl } from './i18n.js';
+import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 
 const RATIO_MIN = 0;
@@ -764,7 +764,7 @@ const showQualifiedTip = (event, name, code) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(code)}${countryName(nId, name)}${app.byId[nId]?.totalCount ? html`<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${app.byId[nId].totalCount}</span>` : nothing}</span>
-        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[name])}${rankTag(name)}</span>
+        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[code])}${rankTag(name)}${capTag(app.capital[code])}</span>
       </div>
       <div class="tt-label">${T.noExport(countryName(nId, name))}</div>
       ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-label">${T.noImport(countryName(nId, name))}</div>`}
@@ -796,6 +796,7 @@ const enablesDim = id => !!(app.byId[id] || (QUALIFIED_NAMES[id] && ((app.import
 const fmtPop = pop => (pop < 1 ? parseFloat(pop.toFixed(2)) : parseFloat(pop.toFixed(1)))
   .toLocaleString(LOCALE, { maximumFractionDigits: pop < 1 ? 2 : 1, minimumFractionDigits: 0, useGrouping: false }) + 'M';
 const popTag  = pop  => pop  ? html`<span class="tt-pop fw-normal text-nowrap">${T.pop} ${fmtPop(pop)}</span>` : nothing;
+const capTag  = cap  => { const c = cap?.[ _LANG] ?? cap?.en ?? null; return c ? html`<span class="tt-pop fw-normal text-nowrap">${T.cap} ${c}</span>` : nothing; };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const ptWikiRow = p => {
@@ -1133,7 +1134,7 @@ if (rawData.natives) {
   });
 }
 DATA.forEach(d => {
-  d.pop        = rawData.pop[d.country] || null;
+  d.pop        = rawData.pop[ISO2[d.id]] || null;
   d.nativeCount = (app.nativeByNation[d.id] ?? []).length;
   d.totalCount  = d.count + d.nativeCount;
   d.ratio       = d.totalCount;
@@ -1144,12 +1145,13 @@ Object.entries(app.nativeByNation).forEach(([nId, players]) => {
   const id = +nId;
   if (app.byId[id]) return;
   const name = QUALIFIED_NAMES[id];
-  const pop  = rawData.pop[name] || null;
+  const pop  = rawData.pop[ISO2[id]] || null;
   app.byId[id] = { id, country: name, count: 0, nativeCount: players.length,
                totalCount: players.length, pop, ratio: players.length,
                players: [], top: [], nations: [] };
 });
 app.pop      = rawData.pop;
+app.capital  = rawData.capital ?? {};
 app.eloRank = {};  // populated by wc2026_elo_rank.json fetch below
 OUTLIER_IDS.forEach(id => {
   const el = document.getElementById('legend-outlier-count');
@@ -1209,7 +1211,7 @@ const showExportTip = (event, id) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${!QUALIFIED_NAMES[id] ? html`<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${countryName(rec.id, rec.country)}</span><small class="tt-pop fst-italic">${T.notQualified}</small></span>` : countryName(rec.id, rec.country)}</span>
-        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(rec.pop)}${rankTag(rec.country)}</span>
+        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(rec.pop)}${rankTag(rec.country)}${capTag(app.capital[ISO2[rec.id]])}</span>
       </div>
       ${body}
       ${hasMore ? html`<div class="tt-more-label text-end">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
@@ -1232,7 +1234,7 @@ const showImportTip = (event, destId) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(destFc)}${countryName(destId, destName)}</span>
-        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[destName])}${rankTag(destName)}</span>
+        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[destFc])}${rankTag(destName)}${capTag(app.capital[destFc])}</span>
       </div>
       <div class="tt-nations mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
@@ -1259,7 +1261,7 @@ const showImportSourceTip = (event, centroidId) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
-        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[p0.birthCountry])}${rankTag(p0.birthCountry)}</span>
+        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[bFc])}${rankTag(p0.birthCountry)}${capTag(app.capital[bFc])}</span>
       </div>
       <div class="tt-nations mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
@@ -1290,7 +1292,7 @@ const showCombinedTip = (event, id) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${countryName(id, destName)}</span>
-        <span class="tt-pop-rank d-flex align-items-center flex-shrink-0 ms-2">${popTag(app.pop[destName])}${rankTag(destName)}</span>
+        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[fc])}${rankTag(destName)}${capTag(app.capital[fc])}</span>
       </div>
       ${exportPlayers.length > 0 ? html`
         <div class="tt-nations mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
@@ -1311,14 +1313,32 @@ const showCombinedTip = (event, id) => {
   positionTip(event, h);
 };
 
+const showSimpleTip = (event, id, topoName) => {
+  if (lastTipKey !== id) {
+    lastTipKey = id;
+    const fc   = iso2ForId(id);
+    const name = countryName(id, topoName);
+    render(html`
+      <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
+        <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${name}</span><small class="tt-pop fst-italic">${T.notQualified}</small></span></span>
+        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[fc])}${capTag(app.capital[fc])}</span>
+      </div>`, tt);
+  }
+  tt.classList.add('tt-non-qualified');
+  positionTip(event, 60, false);
+};
+
 const onCountryMousemove = (event, id, topoName = '') => {
+  const _flagEl = g.select(`.flag-qualified[data-id="${id}"]`).node();
+  if (_flagEl?.getAttribute('visibility') === 'hidden') { hideTip(); return; }
+  if (dimState.active && _flagEl && !_flagEl.hasAttribute('data-dim-visible') && id !== dimState.sourceId) { hideTip(); return; }
   if (!dimState.active) {
     const hlName = countryName(id, QUALIFIED_NAMES[id] ?? app.byId[id]?.country ?? topoName);
     const hlBadgeW = Math.round(hlName.length * 5.8 + 46);
     const hlBx = 895 - hlBadgeW;
     if (app.byId[id]?.count > 0) showExportTip(event, id);
     else if (QUALIFIED_NAMES[id]) showQualifiedTip(event, QUALIFIED_NAMES[id], ISO2[id]);
-    else hideTip();
+    else showSimpleTip(event, id, topoName);
   } else {
     const inDest = dimState.destIds.has(id), inImport = dimState.importIds.has(id);
     if      (inDest && inImport) showCombinedTip(event, id);

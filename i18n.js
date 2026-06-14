@@ -1,7 +1,7 @@
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 
 export const LOCALE = navigator.languages?.[0] ?? navigator.language ?? 'en';
-const _LANG = LOCALE.toLowerCase().startsWith('fr') ? 'fr'
+export const _LANG = LOCALE.toLowerCase().startsWith('fr') ? 'fr'
            : LOCALE.toLowerCase().startsWith('de') ? 'de'
            : LOCALE.toLowerCase().startsWith('it') ? 'it'
            : LOCALE.toLowerCase().startsWith('es') ? 'es'
@@ -110,6 +110,7 @@ export const T = {
     perMillion:    "/ million d'hab.",
     ofSquad:       'de la sélection',
     pop:           'pop.',
+    cap:           'cap.',
     caps:          'sél.',
     players:       n => `joueur${n > 1 ? 's' : ''}`,
     exported:      (n, name) => `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${name ? _frPrep(name) + ' ' + name : 'ici'}`,
@@ -147,6 +148,7 @@ export const T = {
     perMillion:    '/ milione di ab.',
     ofSquad:       'della rosa',
     pop:           'ab.',
+    cap:           'cap.',
     caps:          'pres.',
     players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
     exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'}`,
@@ -184,6 +186,7 @@ export const T = {
     perMillion:    '/ Mio. Einwohner',
     ofSquad:       'im Kader',
     pop:           'Einw.',
+    cap:           'Hptst.',
     caps:          'Sp.',
     players:       () => 'Spieler',
     exported:      (n, name) => name ? 'in ' + name + (n === 1 ? ' geborener Spieler' : ' geborene Spieler') : (n === 1 ? 'hier geborener Spieler' : 'hier geborene Spieler'),
@@ -221,6 +224,7 @@ export const T = {
     perMillion:    '/ millón de hab.',
     ofSquad:       'de la selección',
     pop:           'pob.',
+    cap:           'cap.',
     caps:          'int.',
     players:       n => `jugador${n === 1 ? '' : 'es'}`,
     exported:      (n, name) => `jugador${n === 1 ? '' : 'es'} nacido${n === 1 ? '' : 's'}${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'}`,
@@ -258,6 +262,7 @@ export const T = {
     perMillion:    '/ million inhab.',
     ofSquad:       'of the squad',
     pop:           'pop.',
+    cap:           'cap.',
     caps:          'caps',
     players:       n => `player${n > 1 ? 's' : ''}`,
     exported:      (n, name) => `player${n > 1 ? 's' : ''} born${name ? ' in ' + name : ' here'}`,
