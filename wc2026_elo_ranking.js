@@ -55,7 +55,7 @@ export function renderEloRanking(container, opts = {}) {
     const li = document.createElement('li');
     li.className = 'elo-item' + (clickable ? ' elo-item--clickable' : '') + (muted ? ' elo-item--muted' : '');
     li.innerHTML =
-      `<span class="elo-rank">${rank}</span>` +
+      // `<span class="elo-rank">${rank}</span>` +
       (iso2 ? `<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : `<span class="elo-flag"></span>`) +
       `<span class="elo-name">${name}${dots}</span>` +
       (pts != null ? `<span class="elo-pts">${pts}</span>` : '');

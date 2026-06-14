@@ -128,6 +128,9 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 #filter-sidebar.collapsed .filter-sidebar-body { max-width: 0; pointer-events: none; }
 .elo-name { font-size: 12px; white-space: nowrap; }
 .elo-pts { font-size: 9px; color: #bbb; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.elo-sort-btn { background: none; border: none; padding: 1px 0; cursor: pointer; font-size: 11px; color: #bbb; border-radius: 3px; }
+.elo-sort-btn:hover { color: #555; background: #f0ede8; }
+.elo-sort-btn.active { color: #444; font-weight: 600; }
 
 /* nav pills */
 #bottomTabList { align-items: stretch; flex-wrap: nowrap; }

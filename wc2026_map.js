@@ -296,6 +296,8 @@ fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloUpdate = null;
 let _eloData   = null;
+let _eloSort    = 'elo';
+let _eloFifaOnly = false;
 const _eloMain    = document.createElement('div');
 _eloMain.className = 'elo-main';
 const _filterSidebar = document.createElement('div');
@@ -450,15 +452,30 @@ if (_bottomPanel) new ResizeObserver(() => {
 }).observe(_bottomPanel);
 _syncMapHeight();
 
-const _buildEloItems = () => (_eloData?.rankings ?? [])
-  .filter(r => !r.weirdo)
-  .map(({ id, rank, pts, iso2, name, fifaMember }) => ({
-    id, rank, pts, iso2, name: countryName(id, name),
-    fifaMember,
-    exp: (app.byId[id]?.count ?? 0) > 0,
-    imp: (app.importByNation[id]?.length ?? 0) > 0,
-  }))
-  .filter(({ id }) => _catChecked(_flagCat(id)));
+const _buildEloItems = () => {
+  const raw = (_eloData?.rankings ?? [])
+    .filter(r => !r.weirdo)
+    .map(({ id, rank, pts, iso2, name, fifaMember }) => ({
+      id, rank, pts, iso2, name: countryName(id, name),
+      fifaMember,
+      exp: (app.byId[id]?.count ?? 0) > 0,
+      imp: (app.importByNation[id]?.length ?? 0) > 0,
+      expCount: app.byId[id]?.count ?? 0,
+      impCount: app.importByNation[id]?.length ?? 0,
+    }))
+    .filter(({ id }) => _catChecked(_flagCat(id)))
+    .filter(item => !_eloFifaOnly || item.fifaMember);
+  if (_eloSort === 'exp') raw.sort((a, b) => b.expCount - a.expCount || a.rank - b.rank);
+  else if (_eloSort === 'imp') raw.sort((a, b) => b.impCount - a.impCount || a.rank - b.rank);
+  else if (_eloSort === 'az') raw.sort((a, b) => a.name.localeCompare(b.name));
+  return raw.map(item => ({
+    ...item,
+    pts: _eloSort === 'exp' ? item.expCount
+       : _eloSort === 'imp' ? item.impCount
+       : _eloSort === 'az'  ? null
+       : item.pts,
+  }));
+};
 
 const _zoomToActiveDimFlags = () => {
   const xs = [], ys = [];
@@ -509,6 +526,22 @@ if (_eloFilterBtn) {
   _eloFilterBtn.addEventListener('click', () => {
     const collapsed = _filterSidebar.classList.toggle('collapsed');
     _filterSidebarToggle.textContent = collapsed ? '‹' : '›';
+  });
+}
+document.querySelectorAll('.elo-sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _eloSort = btn.dataset.sort;
+    document.querySelectorAll('.elo-sort-btn').forEach(b => b.classList.toggle('active', b === btn));
+    _renderElo();
+  });
+});
+const _eloFifaBtn = document.getElementById('elo-fifa-btn');
+if (_eloFifaBtn) {
+  _eloFifaBtn.addEventListener('click', () => {
+    _eloFifaOnly = !_eloFifaOnly;
+    _eloFifaBtn.classList.toggle('active', _eloFifaOnly);
+    _eloFifaBtn.textContent = _eloFifaOnly ? 'FIFA on' : 'FIFA off';
+    _renderElo();
   });
 }
 
