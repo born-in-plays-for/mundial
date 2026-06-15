@@ -388,26 +388,14 @@ const _catChecked = cat => ({qie:_fltQIE,qi:_fltQI,qe:_fltQE,q:_fltQ})[cat]?.che
 const _applyFlagFilter = () => {
   d3.selectAll('.flag-qualified[data-elo-cat]')
     .attr('visibility', function() {
-      const cat = this.getAttribute('data-elo-cat');
-      if (cat === 'e' || cat === 'o') {
-        const id = +this.getAttribute('data-id');
-        const fifa = _fifaMemberIds.has(id);
-        return (cat === 'e' ? (fifa ? _fltEF : _fltEN) : (fifa ? _fltOF : _fltON)).checked ? null : 'hidden';
-      }
-      return _catChecked(cat) ? null : 'hidden';
+      const id = +this.getAttribute('data-id');
+      return _catEloChecked(id, _fifaMemberIds.has(id)) ? null : 'hidden';
     })
     .attr('cursor', function() {
-      const hidden = this.getAttribute('visibility') === 'hidden';
-      return !hidden && enablesDim(+this.getAttribute('data-id')) ? 'pointer' : 'default';
+      return _isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
     });
-  // Build set of visible flag IDs, then sync country path cursors to match
-  const visibleFlagIds = new Set();
-  d3.selectAll('.flag-qualified[data-id]').each(function() {
-    if (this.getAttribute('visibility') !== 'hidden') visibleFlagIds.add(+this.getAttribute('data-id'));
-  });
   d3.selectAll('.country[data-id]').style('cursor', function() {
-    const id = +this.getAttribute('data-id');
-    return visibleFlagIds.has(id) && enablesDim(id) ? 'pointer' : 'default';
+    return _isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
   });
   _updateVisibleCountryCount();
 };
@@ -425,6 +413,7 @@ const _catEloChecked = (id, fifaMember) => {
   if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
   return _catChecked(cat);
 };
+const _isClickable = id => _catEloChecked(id, _fifaMemberIds.has(id)) && enablesDim(id);
 const _filterToggle = chks => { const on = chks.every(c => c.checked); chks.forEach(c => c.checked = !on); _renderElo(); _applyFlagFilter(); };
 _controlPanel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
 _controlPanel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
@@ -760,9 +749,10 @@ const showTab = name => {
     pane.hidden = pane.id !== name;
   });
   // const eloPanel   = document.getElementById('tab-elo-panel');
-  const chainPanel = document.getElementById('tab-chain-panel');
-  const toExpand   = name === 'tab-chain' ? chainPanel : null;
-  const toCollapse = [chainPanel].find(p => p && !p.classList.contains('collapsed') && p !== toExpand);
+  const chainPanel   = document.getElementById('tab-chain-panel');
+  const playersPanel = document.getElementById('tab-players-panel');
+  const toExpand   = name === 'tab-chain' ? chainPanel : name === 'tab-players' ? playersPanel : null;
+  const toCollapse = [chainPanel, playersPanel].find(p => p && !p.classList.contains('collapsed') && p !== toExpand);
   if (toCollapse) {
     toCollapse.classList.add('collapsed');
     if (toExpand) toCollapse.addEventListener('transitionend', () => toExpand.classList.remove('collapsed'), { once: true });
@@ -777,6 +767,7 @@ const showTab = name => {
     _renderElo();
     requestAnimationFrame(() => { const el = document.querySelector('#tab-elo .elo-item--active'); if (el && !_isFullyVisible(el)) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
   }
+  if (name === 'tab-players') _updatePlayersPanel();
 };
 document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
   btn.addEventListener('click', () => showTab(btn.dataset.tab));
@@ -886,6 +877,20 @@ const fmtPop = pop => parseFloat(pop.toFixed(2))
   .toLocaleString(LOCALE, { maximumFractionDigits: 2, minimumFractionDigits: 2, useGrouping: false }) + 'M';
 const popTag  = pop  => pop  ? html`<span class="tt-pop fw-normal text-nowrap">${fmtPop(pop)}</span>` : nothing;
 const capTag  = cap  => { const c = cap?.[_LANG] ?? cap?.en ?? null; return c ? html`<span class="tt-pop fw-normal text-nowrap">${c}</span>` : nothing; };
+const _playersPanelEl = document.getElementById('tab-players-panel');
+const _updatePlayersPanel = () => {
+  if (!_playersPanelEl) return;
+  const id = dimState.sourceId;
+  if (!id) { render(nothing, _playersPanelEl); return; }
+  const fc = ISO2[id];
+  const pop    = app.pop?.[fc];
+  const capObj = app.capital?.[fc];
+  const capText = capObj?.[_LANG] ?? capObj?.en ?? null;
+  render(html`<div class="d-flex justify-content-center align-items-center gap-4 pt-1  sub">
+    ${pop     ? html`<span>${fmtPop(pop)}</span>`  : nothing}
+    ${capText ? html`<span>${capText}</span>`       : nothing}
+  </div>`, _playersPanelEl);
+};
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const ptWikiRow = p => {
@@ -1127,6 +1132,7 @@ const applyDim = (sourceId, destIds, country) => {
   }
   _updateChainSelection();
   _updateEloSelection();
+  _updatePlayersPanel();
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     _playersBtn.innerHTML = '';
@@ -1184,6 +1190,7 @@ const clearDim = () => {
   if (_pb) { _pb.innerHTML = '<img class="tab-icon" src="images/empty_tab_icon.svg" aria-hidden="true">'; _pb.classList.remove('dim-selected'); }
   _updateChainSelection();
   _updateEloSelection();
+  _updatePlayersPanel();
 };
 
 // ── Activate dim from anywhere (e.g. player-table nation clicks) ──────────────
@@ -1447,11 +1454,11 @@ const onCountryClick = (event, id) => {
   if (dimState.active) {
     if (id === dimState.sourceId) { clearDim(); return; }
     if (dimState.destIds.has(id) || dimState.importIds.has(id)) { activateCountry(id); return; }
-    if (enablesDim(id)) { activateCountry(id); return; }
+    if (_isClickable(id)) { activateCountry(id); return; }
     clearDim();
     return;
   }
-  if (enablesDim(id)) { activateCountry(id); return; }
+  if (_isClickable(id)) { activateCountry(id); return; }
 };
 // ── World render ────────────────────────────────────────────────────────────
 const renderWorld = (world, ukNations) => {
@@ -1474,7 +1481,7 @@ g.selectAll('.country')
   .attr('fill', d => choroFill(+d.id, app.byId))
   .attr('stroke','#ccc8c0').attr('stroke-width',.3)
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
-  .style('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
+  .style('cursor', d => _isClickable(+d.id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
   .on('mouseleave', () => { if (!dimState.active) { hideTip(); } })
   .on('click',     (event, d) => onCountryClick(event, +d.id));
@@ -1496,7 +1503,7 @@ g.selectAll('.country-uk')
   .attr('fill', d => choroFill(d._id, app.byId))
   .attr('stroke','#ccc8c0').attr('stroke-width',.3)
   .attr('data-enables-dim', d => enablesDim(d._id) ? '' : null)
-  .style('cursor', d => enablesDim(d._id) ? 'pointer' : 'default')
+  .style('cursor', d => _isClickable(d._id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
   .on('mouseleave', () => { if (!dimState.active) hideTip(); })
   .on('click',     (event, d) => onCountryClick(event, d._id));
@@ -1559,7 +1566,7 @@ g.selectAll('.flag-qualified')
   })
   .attr('pointer-events', 'all')
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
-  .attr('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
+  .attr('cursor', d => _isClickable(+d.id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
   .on('click',     (event, d) => onCountryClick(event, +d.id));
 
@@ -1576,7 +1583,7 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
     .attr('stroke', '#fff')
     .attr('stroke-width', 0.5)
     .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+    .attr('cursor', _isClickable(id) ? 'pointer' : 'default')
     .on('mousemove', (event) => onCountryMousemove(event, id))
     .on('click',     (event) => onCountryClick(event, id));
 });
@@ -1595,7 +1602,7 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat, dLon = 0, dLat = 0 }) => {
     .attr('x', fx - FLAG/2).attr('y', fy - FLAG/2)
     .attr('pointer-events', 'all')
     .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+    .attr('cursor', _isClickable(id) ? 'pointer' : 'default')
     .on('mousemove', (event) => onCountryMousemove(event, id))
     .on('click',     (event) => onCountryClick(event, id));
 });
@@ -1615,7 +1622,7 @@ ukFeatures
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
       .attr('data-enables-dim', enablesDim(f._id) ? '' : null)
-      .attr('cursor', enablesDim(f._id) ? 'pointer' : 'default')
+      .attr('cursor', _isClickable(f._id) ? 'pointer' : 'default')
       .on('mousemove', (event) => onCountryMousemove(event, f._id))
       .on('click',     (event) => onCountryClick(event, f._id));
   });
@@ -1640,7 +1647,7 @@ worldFeatures
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
       .attr('data-enables-dim', enablesDim(id) ? '' : null)
-      .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+      .attr('cursor', _isClickable(id) ? 'pointer' : 'default')
       .on('mousemove', (event) => onCountryMousemove(event, id))
       .on('click',     (event) => onCountryClick(event, id));
   });
