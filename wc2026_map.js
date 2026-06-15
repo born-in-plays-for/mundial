@@ -560,13 +560,15 @@ const _syncMapHeight = () => {
     const mcRect  = _mc.getBoundingClientRect();
     const fromRight  = mcRect.right  - svgRect.right;
     const fromBottom = mcRect.bottom - svgRect.bottom;
+    const totalH = (_zoomResetBtn?.offsetHeight ?? 26) + 4 + (_zoomSpanBtn?.offsetHeight ?? 26);
+    const midTop = Math.round((svgRect.top - mcRect.top) + (svgRect.height - totalH) / 2);
     if (_zoomResetBtn) {
-      _zoomResetBtn.style.right = (fromRight  + 8) + 'px';
-      _zoomResetBtn.style.top   = (svgRect.top - mcRect.top + 8) + 'px';
+      _zoomResetBtn.style.right = (fromRight + 8) + 'px';
+      _zoomResetBtn.style.top   = midTop + 'px';
     }
     if (_zoomSpanBtn) {
       _zoomSpanBtn.style.right = (fromRight + 8) + 'px';
-      _zoomSpanBtn.style.top   = (svgRect.top - mcRect.top + 8 + (_zoomResetBtn?.offsetHeight ?? 26) + 4) + 'px';
+      _zoomSpanBtn.style.top   = (midTop + (_zoomResetBtn?.offsetHeight ?? 26) + 4) + 'px';
     }
     if (_zoomHintEl) {
       _zoomHintEl.style.left      = (svgRect.right - mcRect.left + 2) + 'px';

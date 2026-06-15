@@ -1,4 +1,4 @@
-#map-container { position: fixed !important; top: var(--page-header-h, var(--csb-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: 1.5rem !important; padding-right: 1.5rem !important; display: flex; justify-content: center; align-items: flex-start; background: var(--fixed-element-bg)  }
+#map-container { position: fixed !important; top: var(--page-header-h, var(--csb-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: var(--vert-gutter) !important; padding-right: var(--vert-gutter) !important; display: flex; justify-content: center; align-items: flex-start; background: var(--fixed-element-bg)  }
 
 /* map */
 svg { display: block; width: 100%; height: auto; }
@@ -7,7 +7,7 @@ svg { display: block; width: 100%; height: auto; }
 .country:hover { opacity: .7; }
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
 body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
-#zoom-hint { font-size: 10px; color: var(--color-dim); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
+#zoom-hint { font-size: 9px; color: var(--color-dim); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
 #zoom-reset, #zoom-span { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--color-divider); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--color-muted); line-height: 1; padding: 3px 7px; }
 #zoom-reset:disabled, #zoom-span:disabled { opacity: 0.35; cursor: default; }
 #legend { font-size: 11px; color: #888; }
@@ -28,4 +28,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   }
   #map { width: 100% !important; height: 100% !important; }
   #legend-parent { display: none !important; }
+  #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; }
+  #page-heading-sub { display: none !important; }
+  #control-sidebar { pointer-events: auto; }
 }
