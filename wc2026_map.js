@@ -536,26 +536,7 @@ window.addEventListener('resize', _syncPaddingTop);
 const _bottomPanel  = document.getElementById('bottom-panel');
 const _bottomTabNav = document.getElementById('bottomTabList');
 const _syncMapHeight = () => {
-  const [, , vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
   const svgEl = document.getElementById('map');
-  if (_isLandscapeMobile()) {
-    svgEl.style.width  = '';
-    svgEl.style.height = '';
-  } else {
-    const cs = getComputedStyle(_mc);
-    const contentW = _mc.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    const naturalH = contentW * vbH / vbW;
-    const maxH = Math.max(50, Math.floor(window.innerHeight * 2 / 3
-      - (_pageHeader    ? _pageHeader.offsetHeight    : 0)
-      - (_bottomTabNav  ? _bottomTabNav.offsetHeight  : 0)));
-    if (naturalH > maxH) {
-      svgEl.style.width  = Math.round(maxH * vbW / vbH) + 'px';
-      svgEl.style.height = maxH + 'px';
-    } else {
-      svgEl.style.width  = '';
-      svgEl.style.height = '';
-    }
-  }
   requestAnimationFrame(() => {
     _syncPaddingTop();
     const svgRect = svgEl.getBoundingClientRect();
