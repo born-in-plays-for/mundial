@@ -14,6 +14,7 @@
  * .csb-row              — sous-ligne de groupe
  * .csb-check            — label checkbox □/■
  * .csb-close            — bouton × fermeture
+ * .csb-badge            — ●/○ indicateur flottant droite (non superscript)
  */
 
 /* ── Container ─────────────────────────────────────────────────────────── */
@@ -62,6 +63,10 @@
   .csb-table td { padding: 2px 2px !important; }
 }
 .csb-table .form-check-input { display: none; }
+
+/* ── Badge (●/○) ───────────────────────────────────────────────────────── */
+
+.csb-badge { font-size: 7px; line-height: 1; }
 
 /* ── Column / group / row headers ──────────────────────────────────────── */
 

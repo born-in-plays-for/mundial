@@ -319,7 +319,7 @@ _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered
     <tr>
       <td class="csb-header text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
       <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em><!-- span id="csb-count" style="float:right"></span --></td>
-      <td class="csb-col text-muted" data-col="exp">${T.filterLabels.exporter}<sup style="color:#3b82f6">●</sup></td>
+      <td class="csb-col text-muted" data-col="exp"><span class="d-flex align-items-start justify-content-between"><span>${T.filterLabels.exporter}</span><span class="csb-badge" style="color:#3b82f6">●</span></span></td>
       <td class="csb-col text-muted" data-col="nexp">${T.filterLabels.nonExp}</td>
     </tr>
     <tr>
@@ -334,7 +334,7 @@ _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered
         </div>
       </td>
       <td rowspan="2" class="csb-group text-muted" data-row="q">${T.filterLabels.qualified}</td>
-      <td class="csb-row text-muted" data-row="qi">${T.filterLabels.importer}<sup style="color:#ef4444">●</sup></td>
+      <td class="csb-row text-muted" data-row="qi"><span class="d-flex align-items-start justify-content-between"><span>${T.filterLabels.importer}</span><span class="csb-badge" style="color:#ef4444">●</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
     </tr>
@@ -350,7 +350,7 @@ _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
     <tr>
-      <td class="csb-row text-muted" data-row="nqn">non-FIFA<sup>○</sup></td>
+      <td class="csb-row text-muted" data-row="nqn"><span class="d-flex align-items-start justify-content-between"><span>non-FIFA</span><span class="csb-badge">○</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-en"  checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
     </tr>
@@ -679,7 +679,7 @@ fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
   );
   d.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); });
   _applyFlagFilter();
-  if (!document.getElementById('tab-elo')?.hidden) _renderElo();
+  if (!document.getElementById('tab-elo')?.hidden && Object.keys(app.byId).length > 0) _renderElo();
 }).catch(() => {});
 
 const showTab = name => {

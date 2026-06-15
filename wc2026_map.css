@@ -116,6 +116,7 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-item--zoomable:hover { background: #f0ede8; border-color: #ccc9c0; }
 .elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
+.elo-name .elo-dot:first-child { margin-left: 3px; }
 .elo-flag { width: 20px; height: 20px; flex-shrink: 0; }
 .elo-layout { display: block; }
 .elo-main { display: block; }
