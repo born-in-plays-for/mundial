@@ -17,3 +17,15 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   #legend-bar { max-width: 90px; }
   #legend-ticks { width: 90px; font-size: 8px; }
 }
+
+@media (max-height: 500px) and (orientation: landscape) {
+  #map-container {
+    top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    z-index: 500 !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  #map { width: 100% !important; height: 100% !important; }
+  #legend-parent { display: none !important; }
+}

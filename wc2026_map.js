@@ -513,7 +513,15 @@ const _isFullyVisible = el => {
 
 // padding-top = bottom edge of fixed map container (exact, no formula needed)
 const _mc = document.getElementById('map-container');
+const _isLandscapeMobile = () => window.innerHeight <= 500 && window.innerWidth > window.innerHeight;
 const _syncPaddingTop = () => {
+  if (_isLandscapeMobile()) {
+    document.body.style.paddingTop    = '0';
+    document.body.style.paddingBottom = '0';
+    document.documentElement.style.scrollPaddingTop    = '0';
+    document.documentElement.style.scrollPaddingBottom = '0';
+    return;
+  }
   if (_mc) {
     const mapBottom = _mc.getBoundingClientRect().bottom;
     document.body.style.paddingTop = mapBottom + 'px';
@@ -527,19 +535,24 @@ const _bottomPanel  = document.getElementById('bottom-panel');
 const _bottomTabNav = document.getElementById('bottomTabList');
 const _syncMapHeight = () => {
   const [, , vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
-  const cs = getComputedStyle(_mc);
-  const contentW = _mc.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-  const naturalH = contentW * vbH / vbW;
-  const maxH = Math.max(50, Math.floor(window.innerHeight * 2 / 3
-    - (_pageHeader    ? _pageHeader.offsetHeight    : 0)
-    - (_bottomTabNav  ? _bottomTabNav.offsetHeight  : 0)));
   const svgEl = document.getElementById('map');
-  if (naturalH > maxH) {
-    svgEl.style.width  = Math.round(maxH * vbW / vbH) + 'px';
-    svgEl.style.height = maxH + 'px';
-  } else {
+  if (_isLandscapeMobile()) {
     svgEl.style.width  = '';
     svgEl.style.height = '';
+  } else {
+    const cs = getComputedStyle(_mc);
+    const contentW = _mc.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const naturalH = contentW * vbH / vbW;
+    const maxH = Math.max(50, Math.floor(window.innerHeight * 2 / 3
+      - (_pageHeader    ? _pageHeader.offsetHeight    : 0)
+      - (_bottomTabNav  ? _bottomTabNav.offsetHeight  : 0)));
+    if (naturalH > maxH) {
+      svgEl.style.width  = Math.round(maxH * vbW / vbH) + 'px';
+      svgEl.style.height = maxH + 'px';
+    } else {
+      svgEl.style.width  = '';
+      svgEl.style.height = '';
+    }
   }
   requestAnimationFrame(() => {
     _syncPaddingTop();
@@ -563,7 +576,7 @@ const _syncMapHeight = () => {
   });
 };
 if (_bottomPanel) new ResizeObserver(() => {
-  document.body.style.paddingBottom = _bottomPanel.offsetHeight + 'px';
+  if (!_isLandscapeMobile()) document.body.style.paddingBottom = _bottomPanel.offsetHeight + 'px';
   _syncMapHeight();
 }).observe(_bottomPanel);
 _syncMapHeight();
