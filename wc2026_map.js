@@ -93,7 +93,7 @@ svg.on('click', () => { clearDim(); });
 
 const zoom = d3.zoom()
 svg.call(zoom
-  .scaleExtent([1, 15])
+  .scaleExtent([1, 18])
   .on('zoom', e => {
     g.attr('transform', e.transform);
     const s = FLAG / Math.pow(e.transform.k, 1 - FLAG_SIZE_ZOOM_EXP);
@@ -145,6 +145,8 @@ svg.call(zoom
       return arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k);
     });
     _syncResetBtn(e.transform);
+    const zoomEl = document.getElementById('zoom-level');
+    if (zoomEl) zoomEl.textContent = `k=${e.transform.k.toFixed(2)}`;
   }));
 
 g.append('path').datum({type:'Sphere'})
@@ -196,12 +198,13 @@ document.querySelector('meta[name="description"]')?.setAttribute('content', T.pa
   if (!el) return;
   const q = T.pageQuote;
   el.querySelector('.pq-text').innerHTML = q.text;
-  el.querySelector('.pq-attr').innerHTML = `<span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref}`;
+  el.querySelector('.pq-attr').innerHTML = `<span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>, ${q.ref} <time datetime="${q.date}">${q.date}</time>`;
 });
 const _zoomHintEl = document.getElementById('zoom-hint');
 _zoomHintEl.textContent = T.zoomHint;
 let _initialTransform = d3.zoomIdentity;
 const _zoomResetBtn = document.getElementById('zoom-reset');
+const _zoomSpanBtn  = document.getElementById('zoom-span');
 const _syncResetBtn = t => {
   if (!_zoomResetBtn) return;
   _zoomResetBtn.disabled = Math.abs(t.k - _initialTransform.k) < 0.001
@@ -212,6 +215,10 @@ _syncResetBtn(_initialTransform);
 document.getElementById('zoom-reset').addEventListener('click', e => {
   e.stopPropagation();
   svg.transition().duration(400).call(zoom.transform, _initialTransform);
+});
+_zoomSpanBtn?.addEventListener('click', e => {
+  e.stopPropagation();
+  _zoomToLinkedFlags();
 });
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
@@ -318,7 +325,7 @@ _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered
   <tbody>
     <tr>
       <td class="csb-header text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em><!-- span id="csb-count" style="float:right"></span --></td>
+      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em>
       <td class="csb-col text-muted" data-col="exp"><span class="d-flex align-items-start justify-content-between"><span>${T.filterLabels.exporter}</span><span class="csb-badge" style="color:#3b82f6">●</span></span></td>
       <td class="csb-col text-muted" data-col="nexp">${T.filterLabels.nonExp}</td>
     </tr>
@@ -357,7 +364,6 @@ _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered
   </tbody>
 </table>`;
 
-const _filterCountEl = _controlPanel.querySelector('#csb-count');
 const _fltQIE = _controlPanel.querySelector('#filter-qie');
 const _fltQI  = _controlPanel.querySelector('#filter-qi');
 const _fltQE  = _controlPanel.querySelector('#filter-qe');
@@ -390,6 +396,15 @@ const _applyFlagFilter = () => {
       }
       return _catChecked(cat) ? null : 'hidden';
     });
+  _updateVisibleCountryCount();
+};
+const _updateVisibleCountryCount = () => {
+  const el = document.getElementById('visible-country-count');
+  if (!el) return;
+  const all = d3.selectAll('.flag-qualified[data-elo-cat]');
+  const total = _eloData?.rankings?.filter(r => !r.weirdo).length ?? all.size();
+  const visible = all.filter(function() { return this.getAttribute('visibility') !== 'hidden'; }).size();
+  el.textContent = visible === total ? `${total}` : `${visible} / ${total}`;
 };
 const _catEloChecked = (id, fifaMember) => {
   const cat = _flagCat(id);
@@ -536,6 +551,10 @@ const _syncMapHeight = () => {
       _zoomResetBtn.style.right = (fromRight  + 8) + 'px';
       _zoomResetBtn.style.top   = (svgRect.top - mcRect.top + 8) + 'px';
     }
+    if (_zoomSpanBtn) {
+      _zoomSpanBtn.style.right = (fromRight + 8) + 'px';
+      _zoomSpanBtn.style.top   = (svgRect.top - mcRect.top + 8 + (_zoomResetBtn?.offsetHeight ?? 26) + 4) + 'px';
+    }
     if (_zoomHintEl) {
       _zoomHintEl.style.left      = (svgRect.right - mcRect.left + 2) + 'px';
       _zoomHintEl.style.bottom    = fromBottom + 'px';
@@ -578,7 +597,42 @@ const _buildEloItems = () => {
   }));
 };
 
+let _worldFeatures, _ukFeatures;
+
+// For MultiPolygon features (France, Russia, USA…), path.bounds() spans all territories
+// including overseas ones. Use only the largest sub-polygon by projected bbox area.
+const _mainlandBounds = feature => {
+  const geom = feature.geometry;
+  if (geom.type !== 'MultiPolygon') return path.bounds(feature);
+  let best = null, bestArea = 0;
+  for (const coords of geom.coordinates) {
+    const sub = { type: 'Feature', geometry: { type: 'Polygon', coordinates: coords } };
+    const [[x0, y0], [x1, y1]] = path.bounds(sub);
+    const area = (x1 - x0) * (y1 - y0);
+    if (area > bestArea) { bestArea = area; best = [[x0, y0], [x1, y1]]; }
+  }
+  return best ?? path.bounds(feature);
+};
+
 const _zoomToActiveDimFlags = () => {
+  // Stage 1: zoom to source country boundaries
+  zoomToCentroid(dimState.sourceId, 1200);
+  // Stage 2: span all linked countries — commented out, preserved for future use
+  // const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
+  // svg.transition().duration(1200).call(zoom.transform, ...).on('end', () => {
+  //   const xs = [], ys = [];
+  //   g.selectAll('.flag-qualified[data-dim-visible]').each(function() {
+  //     xs.push(+this.getAttribute('data-cx')); ys.push(+this.getAttribute('data-cy'));
+  //   });
+  //   const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  //   const pad = 20;
+  //   const k = Math.max(1, Math.min(9, Math.min(vbW/(x1-x0+2*pad), vbH/(y1-y0+2*pad))));
+  //   svg.transition().duration(1500).call(zoom.transform,
+  //     d3.zoomIdentity.translate(vbX+vbW/2-k*(x0+x1)/2, vbY+vbH/2-k*(y0+y1)/2).scale(k));
+  // });
+};
+
+const _zoomToLinkedFlags = () => {
   let srcX, srcY;
   g.selectAll(`.flag-qualified[data-id="${dimState.sourceId}"]`).each(function() {
     const cx = +this.getAttribute('data-cx'), cy = +this.getAttribute('data-cy');
@@ -590,57 +644,53 @@ const _zoomToActiveDimFlags = () => {
     const cx = +this.getAttribute('data-cx'), cy = +this.getAttribute('data-cy');
     if (isFinite(cx) && isFinite(cy)) { xs.push(cx); ys.push(cy); }
   });
-  const hasLinked = xs.length > 1;
   const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
-  // Stage 1: zoom to source country at max scale
-  const maxK = 9;
-  const tx1 = vbX + vbW / 2 - maxK * srcX;
-  const ty1 = vbY + vbH / 2 - maxK * srcY;
-  // Stage 2: span all linked countries, or de-zoom if none
-  const _stage2 = () => {
-    if (hasLinked) {
-      const x0 = Math.min(...xs), x1 = Math.max(...xs);
-      const y0 = Math.min(...ys), y1 = Math.max(...ys);
-      const pad = 20;
-      const k  = Math.max(1, Math.min(9, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
-      const tx = vbX + vbW / 2 - k * (x0 + x1) / 2;
-      const ty = vbY + vbH / 2 - k * (y0 + y1) / 2;
-      svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
-    } else {
-      const k2 = 9;
-      svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k2 * srcX, vbY + vbH / 2 - k2 * srcY).scale(k2));
-    }
-  };
-  svg.transition().duration(1200)
-    .call(zoom.transform, d3.zoomIdentity.translate(tx1, ty1).scale(maxK))
-    .on('end', _stage2);
+  if (xs.length > 1) {
+    const x0 = Math.min(...xs), x1 = Math.max(...xs);
+    const y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const pad = 20;
+    const k = Math.max(1, Math.min(9, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
+    svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k * (x0 + x1) / 2, vbY + vbH / 2 - k * (y0 + y1) / 2).scale(k));
+  } else {
+    const k2 = 9;
+    svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k2 * srcX, vbY + vbH / 2 - k2 * srcY).scale(k2));
+  }
 };
 
-const zoomToCentroid = id => {
+const zoomToCentroid = (id, duration = 2000) => {
   const c = centroids[id];
   if (!c) return;
   const [cx, cy] = c;
   const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
-  const k = 8;
-  svg.transition().duration(2000).call(zoom.transform,
-    d3.zoomIdentity.translate(vbX + vbW / 2 - k * cx, vbY + vbH / 2 - k * cy).scale(k)
-  );
+  const feature = _worldFeatures?.find(f => +f.id === id) ?? _ukFeatures?.find(f => +f._id === id);
+  let k = 15, tx, ty;
+  if (feature) {
+    try {
+      const [[bx0, by0], [bx1, by1]] = _mainlandBounds(feature);
+      const bw = bx1 - bx0, bh = by1 - by0;
+      if (bw > 0 && bh > 0) {
+        const pad = 10;
+        k = Math.max(1, Math.min(vbW / (bw + 2 * pad), vbH / (bh + 2 * pad)));
+        tx = vbX + vbW / 2 - k * (bx0 + bx1) / 2;
+        ty = vbY + vbH / 2 - k * (by0 + by1) / 2;
+      }
+    } catch(e) { /* fall through */ }
+  }
+  if (tx == null) { tx = vbX + vbW / 2 - k * cx; ty = vbY + vbH / 2 - k * cy; }
+  svg.transition().duration(duration).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
 };
 
 const _renderElo = () => {
   const allItems = _buildEloItems();
   const total = _eloData?.rankings?.filter(r => !r.weirdo).length ?? 0;
   const visibleItems = allItems.filter(item => _catEloChecked(item.id, item.fifaMember));
-  const _nationsEl = document.getElementById('elo-nations');
-  if (_nationsEl) _nationsEl.textContent = T.eloNations(visibleItems.length, total);
-  if (_filterCountEl) _filterCountEl.textContent = total ? `${visibleItems.length}/${total}` : '';
   if (_eloCtrl) { _eloCtrl.show(visibleItems); return; }
   _eloCtrl = renderEloRanking(_eloMain, {
     items: allItems,
     onCountryClick: id => {
       if (dimState.sourceId === id) { clearDim(); return; }
       if (enablesDim(id)) { activateCountry(id); _zoomToActiveDimFlags(); return; }
-      if (dimState.active) { clearDim(); return; }
+      if (dimState.active) clearDim();
       zoomToCentroid(id);
     },
     isClickable:  id => enablesDim(id),
@@ -658,16 +708,8 @@ const _updateEloSelection = () => {
 };
 const _eloSourceLabelEl  = document.getElementById('elo-source-label');
 const _eloUpdatedLabelEl = document.getElementById('elo-updated-label');
-const _eloFilterBtn      = document.getElementById('elo-filter-btn');
 if (_eloSourceLabelEl)  _eloSourceLabelEl.textContent  = T.eloSource;
 if (_eloUpdatedLabelEl) _eloUpdatedLabelEl.textContent = T.eloUpdated;
-if (_eloFilterBtn) {
-  _eloFilterBtn.textContent = T.eloFilter;
-  _eloFilterBtn.addEventListener('click', () => {
-    const collapsed = _controlSidebar.classList.toggle('collapsed');
-    _controlSidebarToggle.textContent = collapsed ? '‹' : '›';
-  });
-}
 
 
 fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
@@ -689,10 +731,10 @@ const showTab = name => {
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
   });
-  const eloPanel   = document.getElementById('tab-elo-panel');
+  // const eloPanel   = document.getElementById('tab-elo-panel');
   const chainPanel = document.getElementById('tab-chain-panel');
-  const toExpand   = name === 'tab-elo' ? eloPanel : name === 'tab-chain' ? chainPanel : null;
-  const toCollapse = [eloPanel, chainPanel].find(p => p && !p.classList.contains('collapsed') && p !== toExpand);
+  const toExpand   = name === 'tab-chain' ? chainPanel : null;
+  const toCollapse = [chainPanel].find(p => p && !p.classList.contains('collapsed') && p !== toExpand);
   if (toCollapse) {
     toCollapse.classList.add('collapsed');
     if (toExpand) toCollapse.addEventListener('transitionend', () => toExpand.classList.remove('collapsed'), { once: true });
@@ -969,6 +1011,7 @@ const playerTableTemplate = sourceId => {
 
 const applyDim = (sourceId, destIds, country) => {
   dimState.active = true;
+  if (_zoomSpanBtn) _zoomSpanBtn.disabled = false;
   dimState.sourceId = sourceId;
   dimState.destIds = destIds;
 
@@ -1096,6 +1139,7 @@ const applyDim = (sourceId, destIds, country) => {
 };
 const clearDim = () => {
   dimState.active = false;
+  if (_zoomSpanBtn) _zoomSpanBtn.disabled = true;
   dimState.sourceId = null;
   dimState.destIds = new Map();
   dimState.importIds = new Map();
@@ -1373,7 +1417,9 @@ const onCountryMousemove = (event, id, topoName = '') => {
 const onCountryClick = (event, id) => {
   event.stopPropagation();
   if (dimState.active) {
+    if (id === dimState.sourceId) { clearDim(); return; }
     if (dimState.destIds.has(id) || dimState.importIds.has(id)) { activateCountry(id); return; }
+    if (enablesDim(id)) { activateCountry(id); return; }
     clearDim();
     return;
   }
@@ -1411,6 +1457,7 @@ g.append('path')
 
 // ── UK home nations (separate polygons from uk-nations.geojson) ───────────────
 const ukFeatures = ukNations.features.map(f => ({...f, _id: UK_GU_TO_ID[f.properties.GU_A3]}));
+_ukFeatures = ukFeatures;
 
 g.selectAll('.country-uk')
   .data(ukFeatures)
@@ -1426,6 +1473,7 @@ g.selectAll('.country-uk')
   .on('click',     (event, d) => onCountryClick(event, d._id));
 
 const worldFeatures = topojson.feature(world, world.objects.countries).features;
+_worldFeatures = worldFeatures;
 
 // Ocean-only clip path: sphere − land (even-odd rule punches out land areas)
 svg.append('defs').append('clipPath').attr('id', 'ocean-clip')
@@ -1588,6 +1636,7 @@ Promise.all([
   buildIndices(rawData);
   renderWorld(world, ukNations);
   _renderElo();
+  _updateVisibleCountryCount();
   // Initial zoom: fit all qualified + exporting flags so Antarctica is off-screen
   const xs = [], ys = [];
   g.selectAll('.flag-qualified[data-elo-cat]:not([data-elo-cat="o"])').each(function() {

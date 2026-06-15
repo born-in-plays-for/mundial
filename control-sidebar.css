@@ -49,14 +49,13 @@
 .csb-body {
   max-width: var(--csb-w, 300px); height: var(--csb-h, 8rem);
   transition: max-width 0.5s ease;
-  background: #f5f2ec;
+  background: #fdfcfa;
 }
 
 /* ── Table ─────────────────────────────────────────────────────────────── */
 
 .csb-table {
   border-collapse: collapse; font-size: 11px; margin: 0;
-  --bs-table-bg: #faf9f6;
 }
 .csb-table td { padding: 2px 6px !important; }
 @media (max-width: 400px) {

@@ -93,7 +93,7 @@ export const T = {
   fr: {
     pageHeading:    'Lieu de naissance des joueurs du Mondial 2026',
     pageDescription: 'Carte choroplèthe du Mondial 2026 — pays de naissance des joueurs, dont certains jouent pour un autre pays.',
-    pageQuote: { text: `« ${_CID_QUOTE} »`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Acte II, sc. 2 (Don Rodrigue) · 1637', sep: ' — ' },
+    pageQuote: { text: `« ${_CID_QUOTE} »`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Acte II, sc. 2 (Don Rodrigue)', sep: ' — ', date: '1637' },
     pageSub:       n => `${n} joueurs au total · source : Wikipedia`,
     mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs du Mondial 2026',
 
@@ -121,7 +121,6 @@ export const T = {
 
     chainLegend:   { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue pour', post: 'chemin' },
     chainSubtitle: (p, c) => `${p} joueurs · ${c} pays`,
-    eloNations:  (s, t) => s === t ? `${t} pays` : `${s} / ${t} pays`,
     eloSource:   'source : ',
     eloUpdated:  ' · mis à jour ',
     eloFilter:   'filtre',
@@ -131,7 +130,7 @@ export const T = {
   it: {
     pageHeading:    'Luogo di nascita dei giocatori dei Mondiali 2026',
     pageDescription: 'Mappa coropletica dei Mondiali 2026 — paesi di nascita dei giocatori, alcuni dei quali giocano per un altro paese.',
-    pageQuote: { text: `«${_CID_QUOTE}»`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Atto II, sc. 2 (Don Rodrigue) · 1637', sep: ' — ' },
+    pageQuote: { text: `«${_CID_QUOTE}»`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Atto II, sc. 2 (Don Rodrigue)', sep: ' — ', date: '1637' },
     pageSub:       n => `${n} giocatori in totale · fonte: Wikipedia`,
     mapAriaLabel:  'Mappa coropletica dei paesi di nascita dei giocatori dei Mondiali 2026',
 
@@ -159,7 +158,6 @@ export const T = {
 
     chainLegend:   { pre: 'Il più lungo', bornIn: 'nato in', playsFor: 'gioca per', post: 'cammino' },
     chainSubtitle: (p, c) => `${p} giocatori · ${c} paesi`,
-    eloNations:  (s, t) => s === t ? `${t} paesi` : `${s} / ${t} paesi`,
     eloSource:   'fonte: ',
     eloUpdated:  ' · aggiornato ',
     eloFilter:   'filtro',
@@ -169,7 +167,7 @@ export const T = {
   de: {
     pageHeading:    'Geburtsort der Spieler der WM 2026',
     pageDescription: 'Choroplethenkarte der WM 2026 — Geburtsländer der Spieler, darunter einige, die für ein anderes Land spielen.',
-    pageQuote: { text: `„${_CID_QUOTE}“`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Akt II, Sz. 2 (Don Rodrigue) · 1637', sep: ' – ' },
+    pageQuote: { text: `„${_CID_QUOTE}“`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Akt II, Sz. 2 (Don Rodrigue)', sep: ' – ', date: '1637' },
     pageSub:       n => `${n} Spieler insgesamt · Quelle: Wikipedia`,
     mapAriaLabel:  'Choroplethenkarte der Geburtsländer der Spieler der WM 2026',
 
@@ -197,7 +195,6 @@ export const T = {
 
     chainLegend:   { pre: 'Der längste', bornIn: 'geboren in', playsFor: 'spielt für', post: 'Weg' },
     chainSubtitle: (p, c) => `${p} Spieler · ${c} Länder`,
-    eloNations:  (s, t) => s === t ? `${t} Länder` : `${s} / ${t} Länder`,
     eloSource:   'Quelle: ',
     eloUpdated:  ' · aktualisiert ',
     eloFilter:   'Filter',
@@ -207,7 +204,7 @@ export const T = {
   es: {
     pageHeading:    'Lugar de nacimiento de los jugadores del Mundial 2026',
     pageDescription: 'Mapa coroplético del Mundial 2026 — países de nacimiento de los jugadores, algunos de los cuales juegan para otro país.',
-    pageQuote: { text: `«${_CID_QUOTE}»`, author: _CID_AUTHOR, work: 'El Cid', ref: 'Acto II, esc. 2 (Don Rodrigo) · 1637', sep: ' — ' },
+    pageQuote: { text: `«${_CID_QUOTE}»`, author: _CID_AUTHOR, work: 'El Cid', ref: 'Acto II, esc. 2 (Don Rodrigo)', sep: ' — ', date: '1637' },
     pageSub:       n => `${n} jugadores en total · fuente: Wikipedia`,
     mapAriaLabel:  'Mapa coroplético de los países de nacimiento de los jugadores del Mundial 2026',
 
@@ -235,7 +232,6 @@ export const T = {
 
     chainLegend:   { pre: 'El más largo', bornIn: 'nacido en', playsFor: 'juega para', post: 'camino' },
     chainSubtitle: (p, c) => `${p} jugadores · ${c} países`,
-    eloNations:  (s, t) => s === t ? `${t} países` : `${s} de ${t} países`,
     eloSource:   'fuente: ',
     eloUpdated:  ' · actualizado ',
     eloFilter:   'filtro',
@@ -245,7 +241,7 @@ export const T = {
   en: {
     pageHeading:    'Birthplace of 2026 World Cup Players',
     pageDescription: 'Choropleth map of the 2026 World Cup — birth countries of players, some of whom play for another country.',
-    pageQuote: { text: `‘${_CID_QUOTE}’`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Act II, sc. 2 (Don Rodrigue) · 1637', sep: ' – ' },
+    pageQuote: { text: `‘${_CID_QUOTE}’`, author: _CID_AUTHOR, work: 'Le Cid', ref: 'Act II, sc. 2 (Don Rodrigue)', sep: ' – ', date: '1637' },
     pageSub:       n => `${n} players total · source: Wikipedia`,
     mapAriaLabel:  'Choropleth map of birth countries of 2026 World Cup players',
 
@@ -273,7 +269,6 @@ export const T = {
 
     chainLegend:   { pre: 'Longest', bornIn: 'born in', playsFor: 'plays for', post: 'path' },
     chainSubtitle: (p, c) => `${p} players · ${c} countries`,
-    eloNations:  (s, t) => s === t ? `${t} countries` : `${s} of ${t} countries`,
     eloSource:   'source: ',
     eloUpdated:  ' · updated ',
     eloFilter:   'filter',
