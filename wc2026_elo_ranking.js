@@ -16,6 +16,7 @@ export function renderEloRanking(container, opts = {}) {
     items        = [],
     onCountryClick = null,
     isClickable  = null,
+    isZoomable   = null,
     isMuted      = null,
     getSelectedId = null,
     title  = 'World Football Elo Ratings',
@@ -59,7 +60,7 @@ export function renderEloRanking(container, opts = {}) {
       `<span class="elo-name">${name}${dots}</span>` +
       (pts != null ? `<span class="elo-pts"><span class="elo-pts-primary">${pts}</span>${pts2 != null ? ` (${pts2})` : ''}</span>` : '');
     if (onCountryClick) li.addEventListener('click', () => {
-      if (isClickable == null || isClickable(id)) onCountryClick(id);
+      if (isClickable == null || isClickable(id) || (isZoomable != null && isZoomable(id))) onCountryClick(id);
     });
     itemById.set(id, li);
     ul.appendChild(li);
@@ -87,6 +88,7 @@ export function renderEloRanking(container, opts = {}) {
       if (!li) continue;
       li.style.display = '';
       li.classList.toggle('elo-item--clickable', onCountryClick != null && (isClickable == null || isClickable(id)));
+      li.classList.toggle('elo-item--zoomable', onCountryClick != null && isZoomable != null && isZoomable(id) && !(isClickable == null || isClickable(id)));
       ul.appendChild(li);
       const ptsEl = li.querySelector('.elo-pts');
       if (pts != null) {

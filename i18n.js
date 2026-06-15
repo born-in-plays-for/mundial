@@ -19,6 +19,7 @@ const _OVERRIDE = {
   8261: { fr:'Écosse',            de:'Schottland',            it:'Scozia',           es:'Escocia',           en:'Scotland' },
   8262: { fr:'Pays de Galles',    de:'Wales',                 it:'Galles',           es:'Gales',             en:'Wales' },
   8263: { fr:'Irlande du Nord',   de:'Nordirland',            it:'Irlanda del Nord', es:'Irlanda del Norte', en:'Northern Ireland' },
+  383:  { fr:'Kosovo',           de:'Kosovo',                it:'Kosovo',           es:'Kosovo',            en:'Kosovo' },
   'Soviet Union':               { fr:'Union soviétique', de:'Sowjetunion',  it:'Unione Sovietica', es:'Unión Soviética',  en:'Soviet Union' },
   'Kingdom of the Netherlands': { fr:'Pays-Bas',         de:'Niederlande',  it:'Paesi Bassi',      es:'Países Bajos',     en:'Netherlands' },
 };

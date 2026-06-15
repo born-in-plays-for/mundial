@@ -2,20 +2,14 @@
   "source": "eloratings.net",
   "updated": "2026-06-14",
   "stats": {
-    "total": 243,
-    "fifaMembers": 210,
+    "total": 244,
+    "fifaMembers": 211,
     "nonFifaSovereign": 25,
     "weirdos": 8,
     "fifaOfficialCount": 211,
-    "fifaAbsences": 1
+    "fifaAbsences": 0
   },
-  "fifaAbsences": [
-    {
-      "iso2": "xk",
-      "name": "Kosovo",
-      "reason": "FIFA member since 2016; absent from eloratings.net World.tsv"
-    }
-  ],
+  "fifaAbsences": [],
   "rankings": [
     {
       "rank": 1,
@@ -2201,6 +2195,15 @@
       "iso2": "as",
       "name": "American Samoa",
       "pts": 369,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
+      "rank": null,
+      "id": 383,
+      "iso2": "xk",
+      "name": "Kosovo",
+      "pts": null,
       "fifaMember": true,
       "weirdo": false
     }

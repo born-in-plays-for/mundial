@@ -3258,5 +3258,75 @@
       "es": "Lusaka"
     },
     "population": 21314956
+  },
+  "8260": {
+    "id": 8260,
+    "alpha2": "gb-eng",
+    "alpha3": "",
+    "name": "England",
+    "capital": {
+      "en": "London",
+      "fr": "Londres",
+      "de": "London",
+      "it": "Londra",
+      "es": "Londres"
+    },
+    "population": 56490048
+  },
+  "8261": {
+    "id": 8261,
+    "alpha2": "gb-sct",
+    "alpha3": "",
+    "name": "Scotland",
+    "capital": {
+      "en": "Edinburgh",
+      "fr": "Édimbourg",
+      "de": "Edinburgh",
+      "it": "Edimburgo",
+      "es": "Edimburgo"
+    },
+    "population": 5479000
+  },
+  "8262": {
+    "id": 8262,
+    "alpha2": "gb-wls",
+    "alpha3": "",
+    "name": "Wales",
+    "capital": {
+      "en": "Cardiff",
+      "de": "Cardiff",
+      "fr": "Cardiff",
+      "it": "Cardiff",
+      "es": "Cardiff"
+    },
+    "population": 3107500
+  },
+  "8263": {
+    "id": 8263,
+    "alpha2": "gb-nir",
+    "alpha3": "",
+    "name": "Northern Ireland",
+    "capital": {
+      "en": "Belfast",
+      "fr": "Belfast",
+      "de": "Belfast",
+      "it": "Belfast",
+      "es": "Belfast"
+    },
+    "population": 1903175
+  },
+  "383": {
+    "id": 383,
+    "alpha2": "xk",
+    "alpha3": "xkx",
+    "name": "Kosovo",
+    "capital": {
+      "en": "Pristina",
+      "fr": "Pristina",
+      "de": "Pristina",
+      "it": "Priština",
+      "es": "Pristina"
+    },
+    "population": 1762009
   }
 }

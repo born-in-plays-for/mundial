@@ -561,7 +561,7 @@ const _buildEloItems = () => {
       impCount: app.importByNation[id]?.length ?? 0,
     }))
     ;
-  const _sortFns = { elo: (a, b) => a.rank - b.rank, exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
+  const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
   raw.sort((a, b) => { for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) { let d = _sortFns[_sortOrder[i]](a, b); if (i === 0 && _sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
   const primary   = _sortOrder[0];
   const secondary = _sortOrder[1];
@@ -593,7 +593,7 @@ const _zoomToActiveDimFlags = () => {
   const hasLinked = xs.length > 1;
   const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
   // Stage 1: zoom to source country at max scale
-  const maxK = 12;
+  const maxK = 9;
   const tx1 = vbX + vbW / 2 - maxK * srcX;
   const ty1 = vbY + vbH / 2 - maxK * srcY;
   // Stage 2: span all linked countries, or de-zoom if none
@@ -602,18 +602,29 @@ const _zoomToActiveDimFlags = () => {
       const x0 = Math.min(...xs), x1 = Math.max(...xs);
       const y0 = Math.min(...ys), y1 = Math.max(...ys);
       const pad = 20;
-      const k  = Math.max(1, Math.min(15, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
+      const k  = Math.max(1, Math.min(9, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
       const tx = vbX + vbW / 2 - k * (x0 + x1) / 2;
       const ty = vbY + vbH / 2 - k * (y0 + y1) / 2;
-      svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
+      svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
     } else {
-      const k2 = 8;
-      svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k2 * srcX, vbY + vbH / 2 - k2 * srcY).scale(k2));
+      const k2 = 9;
+      svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k2 * srcX, vbY + vbH / 2 - k2 * srcY).scale(k2));
     }
   };
-  svg.transition().duration(750)
+  svg.transition().duration(1200)
     .call(zoom.transform, d3.zoomIdentity.translate(tx1, ty1).scale(maxK))
     .on('end', _stage2);
+};
+
+const zoomToCentroid = id => {
+  const c = centroids[id];
+  if (!c) return;
+  const [cx, cy] = c;
+  const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
+  const k = 8;
+  svg.transition().duration(2000).call(zoom.transform,
+    d3.zoomIdentity.translate(vbX + vbW / 2 - k * cx, vbY + vbH / 2 - k * cy).scale(k)
+  );
 };
 
 const _renderElo = () => {
@@ -626,8 +637,14 @@ const _renderElo = () => {
   if (_eloCtrl) { _eloCtrl.show(visibleItems); return; }
   _eloCtrl = renderEloRanking(_eloMain, {
     items: allItems,
-    onCountryClick: id => { if (dimState.sourceId === id) { clearDim(); } else { activateCountry(id); _zoomToActiveDimFlags(); } },
-    isClickable: id => enablesDim(id),
+    onCountryClick: id => {
+      if (dimState.sourceId === id) { clearDim(); return; }
+      if (enablesDim(id)) { activateCountry(id); _zoomToActiveDimFlags(); return; }
+      if (dimState.active) { clearDim(); return; }
+      zoomToCentroid(id);
+    },
+    isClickable:  id => enablesDim(id),
+    isZoomable:   id => !enablesDim(id) && !!centroids[id],
     isMuted:     id => !QUALIFIED_NAMES[id],
     getSelectedId: () => dimState.sourceId,
     source: _eloData?.source,
@@ -719,7 +736,9 @@ const ISO2 = {
   120:'cm', 178:'cg', 208:'dk', 324:'gn', 372:'ie',
   380:'it', 398:'kz', 404:'ke', 566:'ng', 688:'rs', 705:'si',
   729:'sd', 834:'tz', 854:'bf', 818:'eg', 894:'zm',
-  531:'cw'
+  531:'cw',
+  // Kosovo: user-assigned XK / numeric 383 (not in ISO 3166-1 official table)
+  383:'xk'
 };
 
 const ISO2_REVERSE = Object.fromEntries(Object.entries(ISO2).map(([id, c]) => [c, +id]));
@@ -793,10 +812,10 @@ const centroids = {};
 
 const enablesDim = id => !!(app.byId[id] || (QUALIFIED_NAMES[id] && ((app.importByNation[id] ?? []).length > 0 || (app.nativeByNation[id] ?? []).length > 0)));
 
-const fmtPop = pop => (pop < 1 ? parseFloat(pop.toFixed(2)) : parseFloat(pop.toFixed(1)))
-  .toLocaleString(LOCALE, { maximumFractionDigits: pop < 1 ? 2 : 1, minimumFractionDigits: 0, useGrouping: false }) + 'M';
-const popTag  = pop  => pop  ? html`<span class="tt-pop fw-normal text-nowrap">${T.pop} ${fmtPop(pop)}</span>` : nothing;
-const capTag  = cap  => { const c = cap?.[ _LANG] ?? cap?.en ?? null; return c ? html`<span class="tt-pop fw-normal text-nowrap">${T.cap} ${c}</span>` : nothing; };
+const fmtPop = pop => parseFloat(pop.toFixed(2))
+  .toLocaleString(LOCALE, { maximumFractionDigits: 2, minimumFractionDigits: 2, useGrouping: false }) + 'M';
+const popTag  = pop  => pop  ? html`<span class="tt-pop fw-normal text-nowrap">${fmtPop(pop)}</span>` : nothing;
+const capTag  = cap  => { const c = cap?.[_LANG] ?? cap?.en ?? null; return c ? html`<span class="tt-pop fw-normal text-nowrap">${c}</span>` : nothing; };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const ptWikiRow = p => {
@@ -1358,10 +1377,18 @@ const onCountryClick = (event, id) => {
     clearDim();
     return;
   }
-  activateCountry(id);
+  if (enablesDim(id)) { activateCountry(id); return; }
+  zoomToCentroid(id);
 };
 // ── World render ────────────────────────────────────────────────────────────
 const renderWorld = (world, ukNations) => {
+
+// Patch topojson geometries that have no numeric id but a known name.
+// Kosovo appears in the 110m dataset with only {properties:{name:'Kosovo'}} — no id field.
+const _topoNameToId = { Kosovo: 383 };
+world.objects.countries.geometries.forEach(g => {
+  if (!g.id) { const mapped = _topoNameToId[g.properties?.name]; if (mapped) g.id = mapped; }
+});
 
 // ── World choropleth (skip UK polygon — rendered separately below) ────────────
 g.selectAll('.country')
@@ -1373,7 +1400,7 @@ g.selectAll('.country')
   .attr('fill', d => choroFill(+d.id, app.byId))
   .attr('stroke','#ccc8c0').attr('stroke-width',.3)
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
-  .style('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
+  .style('cursor', 'pointer')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
   .on('mouseleave', () => { if (!dimState.active) { hideTip(); } })
   .on('click',     (event, d) => onCountryClick(event, +d.id));
@@ -1393,7 +1420,7 @@ g.selectAll('.country-uk')
   .attr('fill', d => choroFill(d._id, app.byId))
   .attr('stroke','#ccc8c0').attr('stroke-width',.3)
   .attr('data-enables-dim', d => enablesDim(d._id) ? '' : null)
-  .style('cursor', d => enablesDim(d._id) ? 'pointer' : 'default')
+  .style('cursor', 'pointer')
   .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
   .on('mouseleave', () => { if (!dimState.active) hideTip(); })
   .on('click',     (event, d) => onCountryClick(event, d._id));
@@ -1455,7 +1482,7 @@ g.selectAll('.flag-qualified')
   })
   .attr('pointer-events', 'all')
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
-  .attr('cursor', d => enablesDim(+d.id) ? 'pointer' : 'default')
+  .attr('cursor', 'pointer')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id))
   .on('click',     (event, d) => onCountryClick(event, +d.id));
 
@@ -1472,7 +1499,7 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
     .attr('stroke', '#fff')
     .attr('stroke-width', 0.5)
     .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+    .attr('cursor', 'pointer')
     .on('mousemove', (event) => onCountryMousemove(event, id))
     .on('click',     (event) => onCountryClick(event, id));
 });
@@ -1491,14 +1518,14 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat, dLon = 0, dLat = 0 }) => {
     .attr('x', fx - FLAG/2).attr('y', fy - FLAG/2)
     .attr('pointer-events', 'all')
     .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+    .attr('cursor', 'pointer')
     .on('mousemove', (event) => onCountryMousemove(event, id))
     .on('click',     (event) => onCountryClick(event, id));
 });
 
-// ── England & Scotland flags (after the .flag-qualified join so they aren't removed by its exit) ──
+// ── UK home nations flags (after the .flag-qualified join so England/Scotland aren't removed by its exit) ──
 ukFeatures
-  .filter(f => f._id === 8260 || f._id === 8261)
+  .filter(f => f._id === 8260 || f._id === 8261 || f._id === 8262 || f._id === 8263)
   .forEach(f => {
     const ov = CENTROID_OVERRIDE[f._id];
     const [cx, cy] = ov ? projection(ov) : path.centroid(f);
@@ -1511,7 +1538,7 @@ ukFeatures
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
       .attr('data-enables-dim', enablesDim(f._id) ? '' : null)
-      .attr('cursor', enablesDim(f._id) ? 'pointer' : 'default')
+      .attr('cursor', 'pointer')
       .on('mousemove', (event) => onCountryMousemove(event, f._id))
       .on('click',     (event) => onCountryClick(event, f._id));
   });
@@ -1523,7 +1550,7 @@ g.selectAll('.flag-qualified[data-id]').attr('data-elo-cat', function() {
 
 // ── Non-qualified flags (E = exporter, O = other) ────────────────────────────
 worldFeatures
-  .filter(d => { const id = +d.id; return !QUALIFIED_NAMES[id] && !STANDALONE_IDS.has(id) && iso2ForId(id); })
+  .filter(d => { const id = +d.id; return id !== 826 && !QUALIFIED_NAMES[id] && !STANDALONE_IDS.has(id) && iso2ForId(id); })
   .forEach(d => {
     const id = +d.id;
     const [cx, cy] = dotCentroid(d);
@@ -1536,7 +1563,7 @@ worldFeatures
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
       .attr('data-enables-dim', enablesDim(id) ? '' : null)
-      .attr('cursor', enablesDim(id) ? 'pointer' : 'default')
+      .attr('cursor', 'pointer')
       .on('mousemove', (event) => onCountryMousemove(event, id))
       .on('click',     (event) => onCountryClick(event, id));
   });
@@ -1559,8 +1586,8 @@ Promise.all([
   fetch('uk-nations.geojson').then(r => r.json())
 ]).then(([rawData, world, ukNations]) => {
   buildIndices(rawData);
-  _renderElo();
   renderWorld(world, ukNations);
+  _renderElo();
   // Initial zoom: fit all qualified + exporting flags so Antarctica is off-screen
   const xs = [], ys = [];
   g.selectAll('.flag-qualified[data-elo-cat]:not([data-elo-cat="o"])').each(function() {

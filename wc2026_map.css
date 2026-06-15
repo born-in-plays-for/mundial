@@ -111,6 +111,9 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-item--clickable:hover { background: #f0ede8; border-color: #ccc9c0; }
 .elo-item--active { background: #d8d4ce !important; border-color: #c8c4be !important; }
 .elo-item--muted .elo-name { color: var(--color-muted); }
+.elo-item--muted.elo-item--clickable .elo-name { color: #888; }
+.elo-item--zoomable { cursor: pointer; }
+.elo-item--zoomable:hover { background: #f0ede8; border-color: #ccc9c0; }
 .elo-rank { font-size: 10px; color: #bbb; font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
 .filter-table .ftbl-col, .filter-table .ftbl-grp, .filter-table .ftbl-sub { cursor: pointer; white-space: nowrap; }

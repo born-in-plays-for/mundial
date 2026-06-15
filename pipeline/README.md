@@ -2,23 +2,49 @@
 
 Scripts and source data for the Mundial 2026 choropleth map.
 
-All scripts are designed to run from **any working directory** — they resolve
-paths relative to `__file__`, so `python3 pipeline/build_json.py` and
-`cd pipeline && python3 build_json.py` are equivalent.
+All scripts resolve paths relative to `__file__`, so `python3 pipeline/foo.py`
+and `cd pipeline && python3 foo.py` are equivalent.
 
 ---
 
 ## Prerequisites
 
 ```bash
-pip install requests beautifulsoup4 pandas lxml matplotlib
+pip install requests beautifulsoup4 pandas lxml matplotlib pycountry
+```
+
+Some scripts (`orchestrator.py`, `add_hdi.py`) also need:
+
+```bash
+pip install openpyxl
 ```
 
 ---
 
-## Full pipeline (start from scratch)
+## Script index
 
-### Step 1 — Scrape Wikipedia squad pages → CSV
+| Script | Output | Notes |
+|--------|--------|-------|
+| `wc2026_birthplaces.py` | `pipeline/wc2026_players.csv` | Scraper: Wikipedia squad page + Wikidata birth lookup |
+| `build_json.py` | `wc2026_map_data.json` | Rebuilds the main data file from CSV + countries.json |
+| `add_wiki_urls.py` | `wc2026_map_data.json` (in-place) | Enriches with per-language Wikipedia links |
+| `fetch_countries.py` | `countries.json` | Population + multilingual capital from mledoze + World Bank + Wikidata |
+| `patch_uk_nations.py` | `countries.json` (in-place) | Adds UK home nations (ids 8260–8263) |
+| `patch_kosovo.py` | `countries.json`, `wc2026_elo_rank.json` (in-place) | Adds Kosovo (id 383) |
+| `update_elo_rankings.py` | `wc2026_elo_rank.json` | Fetches current Elo ratings from eloratings.net |
+| `build_elo_history.py` | `wc2026_elo_history.json` | Parses eloratings.net graph.tsv for animated bar chart race |
+| `add_gdp.py` | `wc2026_gdp.json` | World Bank GDP (current USD billions) |
+| `add_gdp_pc_ppp.py` | `wc2026_gdp_pc_ppp.json` | World Bank GDP per capita PPP |
+| `add_hdi.py` | `wc2026_hdi.json` | UNDP Human Development Index |
+| `add_uk_regional_gdp.py` | enriches GDP/GDHI for UK home nations | ONS regional data |
+| `wc2026_make_ratio_chart.py` | `wc2026_export_ratio.png` | Bar chart: players exported per million population |
+| `orchestrator.py` | `triadic_profile_world.csv`, `triadic_profile_latest.csv` | Merges GDP/HDI data for correlation page |
+
+---
+
+## Core pipeline (squad data)
+
+### Step 1 — Scrape Wikipedia squads
 
 ```bash
 python3 pipeline/wc2026_birthplaces.py
@@ -33,25 +59,23 @@ Outputs:
 - `pipeline/wc2026_by_birthcountry.csv` — aggregated ranking by birth country
 
 **Known issue:** a small number of players (~20) may have `birth_country` set to
-`]`, `[a]` (Wikipedia footnote markers) or `NaN` (missing data). These are
-scraping artefacts. See *Fixing missing birth countries* below.
+`]`, `[a]` (Wikipedia footnote markers) or `NaN` (missing data). See
+*Fixing missing birth countries* below.
 
 ---
 
-### Step 2 — Rebuild JSON from CSV
+### Step 2 — Rebuild the main JSON
 
 ```bash
 python3 pipeline/build_json.py
 ```
 
-Reads `pipeline/wc2026_players.csv`, writes `wc2026_map_data.json` in the
-project root.
+Reads `pipeline/wc2026_players.csv` + `countries.json`, writes `wc2026_map_data.json`.
 
-- `data` array: players born in one country who play for another.
-- `natives`: players born in the country they play for.
-- Preserves any existing `wiki_langs` / `wiki` fields already in the JSON
-  (so it is safe to re-run after `add_wiki_urls.py` without losing Wikipedia links).
-- Preserves `pop` (population) data from the existing JSON.
+- `data` array: players born in one country who play for another
+- `natives`: players born in the country they play for
+- Preserves existing `wiki_langs` / `wiki` fields (safe to re-run after `add_wiki_urls.py`)
+- Reads population + multilingual capital from `countries.json` (keyed by lowercase alpha2)
 
 ---
 
@@ -61,64 +85,134 @@ project root.
 python3 pipeline/add_wiki_urls.py
 ```
 
-Fetches langlinks (FR / DE / IT) from the Wikipedia API for every player in
-`wc2026_map_data.json` (both `data` and `natives` sections).
+Fetches langlinks (FR / DE / IT / ES) from the Wikipedia API for every player
+in `wc2026_map_data.json` (both `data` and `natives` sections).
 
-Writes `wiki_langs: {en, fr?, de?, it?}` onto every player object.
+Writes `wiki_langs: {en, fr?, de?, it?, es?}` onto every player object.
 
 Typical run time: ~5 minutes (one API call per language per batch of 50 titles,
 with 1-second sleep between batches).
 
 ---
 
-## Partial updates
+## Population and capital data (`countries.json`)
 
-### Re-scrape only
+`countries.json` (project root) is the canonical source for population and
+multilingual capital city names, keyed by ISO numeric id (string):
 
-If squad data changes (injury replacement, late call-up):
+```json
+{
+  "250": {
+    "id": 250, "alpha2": "fr", "alpha3": "fra", "name": "France",
+    "capital": {"en":"Paris","fr":"Paris","de":"Paris","it":"Parigi","es":"París"},
+    "population": 68374591
+  }
+}
+```
+
+`build_json.py` reads from this file (indexed by lowercase alpha2). Never edit it
+manually — regenerate with the scripts below.
+
+### Rebuilding `countries.json` from scratch
 
 ```bash
-python3 pipeline/wc2026_birthplaces.py   # update CSV
-python3 pipeline/build_json.py           # rebuild JSON
-python3 pipeline/add_wiki_urls.py        # re-enrich (only new players need new calls)
+python3 pipeline/fetch_countries.py   # ~5 min — mledoze + World Bank + Wikidata
+python3 pipeline/patch_uk_nations.py  # adds England/Scotland/Wales/NI (ids 8260–8263)
+python3 pipeline/patch_kosovo.py      # adds Kosovo (id 383) + updates elo rank
+```
+
+**UK home nations** (synthetic ids 8260–8263, alpha2 codes `gb-eng` / `gb-sct` /
+`gb-wls` / `gb-nir`) are not in any standard ISO table — they must be patched in
+after `fetch_countries.py`. Population from 2021/22 census; capitals from Wikidata.
+
+**Kosovo** (user-assigned id 383, alpha2 `xk`) is not in the `iso-3166-1` package's
+numeric table and may be absent from `Intl.DisplayNames`. The patch script also moves
+Kosovo from `fifaAbsences` to `rankings` in `wc2026_elo_rank.json` with
+`rank: null, pts: null`.
+
+---
+
+## Elo rankings
+
+### Update current Elo ratings
+
+```bash
+pip install pycountry
+python3 pipeline/update_elo_rankings.py
+# Then immediately re-patch Kosovo (update_elo_rankings may overwrite it):
+python3 pipeline/patch_kosovo.py
+```
+
+Fetches `eloratings.net/World.tsv`, rewrites `wc2026_elo_rank.json`. Adds
+`weirdo` (non-sovereign / no ISO alpha-2) and `fifaMember` flags per entry.
+
+### Rebuild Elo rating history (for animated bar chart race)
+
+```bash
+python3 pipeline/build_elo_history.py
+```
+
+Parses `eloratings.net/graph.tsv` → `wc2026_elo_history.json`. Used by
+`wc2026_elo_history.html`.
+
+---
+
+## Economic / development data (correlation page)
+
+These feeds power `wc2026_correlation.html` (scatter plot of economy vs. player
+migration). Each writes a standalone JSON to the project root.
+
+```bash
+python3 pipeline/add_gdp.py          # World Bank GDP → wc2026_gdp.json
+python3 pipeline/add_gdp_pc_ppp.py   # World Bank GDP/cap PPP → wc2026_gdp_pc_ppp.json
+python3 pipeline/add_hdi.py          # UNDP HDI → wc2026_hdi.json
+python3 pipeline/add_uk_regional_gdp.py  # ONS GDHI for UK home nations
+```
+
+The `orchestrator.py` script merges all economic sources with source-priority
+rules (UNDP > World Bank > IMF; ONS for UK sub-nations) and outputs CSV files
+for further analysis — not required for the web app.
+
+---
+
+## Partial updates
+
+### Re-scrape only (after a squad change)
+
+```bash
+python3 pipeline/wc2026_birthplaces.py
+python3 pipeline/build_json.py
+python3 pipeline/add_wiki_urls.py    # only new players need new API calls
 ```
 
 ### Fixing country name mismatches
 
-Some scraped `birth_country` values use the full formal country name while `nation` uses a short form — breaking the `birth_country == nation` check that identifies players born in the country they play for. Known case:
+Some scraped `birth_country` values use the full formal country name while
+`nation` uses a short form — breaking the `birth_country == nation` check.
+`build_json.py` applies normalizations via `BIRTH_COUNTRY_ALIASES`.
+
+Known case:
 
 | `birth_country` (scraped) | `nation` | Fix |
 |---|---|---|
-| `Democratic Republic of the Congo` | `DR Congo` | normalize to `DR Congo` |
+| `Democratic Republic of the Congo` | `DR Congo` | → `DR Congo` |
 
-`build_json.py` applies these normalizations automatically via `BIRTH_COUNTRY_ALIASES`.
-If a new mismatch is discovered, add it there.
+Add new mismatches to `BIRTH_COUNTRY_ALIASES` in `build_json.py`.
 
-To check manually after step 1:
+To verify manually after step 1:
 
-```python
-import pandas as pd
-df = pd.read_csv('pipeline/wc2026_players.csv')
-mask = (df['birth_country'] == 'Democratic Republic of the Congo') & (df['nation'] == 'DR Congo')
-df.loc[mask, 'birth_country'] = 'DR Congo'
-df.to_csv('pipeline/wc2026_players.csv', index=False)
-print(f"Fixed {mask.sum()} rows")
-```
-
-Then re-run steps 2–3. Verify totals: every squad should have exactly 26 players
-(Austria and Canada are known exceptions at 25 due to injuries).
-
----
-
-### Fixing missing birth countries
-
-After step 1, check for bad rows:
-
-```python
+```bash
+python3 - <<'EOF'
 import pandas as pd
 df = pd.read_csv('pipeline/wc2026_players.csv')
 print(df[df['birth_country'].isna() | df['birth_country'].isin([']', '[a]'])])
+EOF
 ```
+
+Every squad should have exactly 26 players (Austria and Canada are known
+exceptions at 25 due to injuries/late withdrawals).
+
+### Fixing missing birth countries
 
 For each player with a bad `birth_country`:
 1. Look up their birth city/country on Wikipedia or Wikidata.
@@ -134,32 +228,17 @@ python3 pipeline/wc2026_make_ratio_chart.py              # Curaçao excluded (de
 python3 pipeline/wc2026_make_ratio_chart.py --with-curacao
 ```
 
-Outputs `wc2026_export_ratio.png` in the project root.
-
-Requires `matplotlib` (`pip install matplotlib`).
+Outputs `wc2026_export_ratio.png` in the project root. Requires `matplotlib`.
 
 ---
 
-## Files
+## Source files
 
 | File | Description |
-|---|---|
-| `wc2026_birthplaces.py` | Scraper: Wikipedia / Wikidata → CSV |
-| `build_json.py` | Rebuilds `wc2026_map_data.json` from CSV |
-| `add_wiki_urls.py` | Enriches JSON with per-language Wikipedia URLs |
-| `wc2026_make_ratio_chart.py` | Generates birth country ratio bar chart PNG |
-| `wc2026_players.csv` | Full squad roster — source of truth |
+|------|-------------|
+| `wc2026_players.csv` | Full squad roster — **source of truth** for squad data |
 | `wc2026_by_birthcountry.csv` | Aggregated ranking by birth country |
 
-The JSON (`wc2026_map_data.json`) and PNG (`wc2026_export_ratio.png`) live in
-the project root because they are served directly by the web app / referenced
-by external articles.
-
----
-
-## Population data
-
-`pop` in `wc2026_map_data.json` maps country name → population in millions.
-This is fetched once by `wc2026_birthplaces.py` via Wikidata and preserved
-across `build_json.py` runs. It does not need to be refreshed for the 2026
-tournament.
+The generated files (`wc2026_map_data.json`, `countries.json`, `wc2026_elo_rank.json`,
+`wc2026_gdp.json`, etc.) live in the project root because they are served directly
+by the web app.
