@@ -104,14 +104,23 @@ raw.data.forEach(d => {
   (d.nations || []).forEach(([nat, cnt]) => { importMap[nat] = (importMap[nat] || 0) + cnt; });
 });
 
-// Join elo ranks to canonical project names via numeric id.
-// raw.data uses project-canonical names AND has numeric ids that match wc2026_elo_rank.json.
+// raw.pop is now keyed by lowercase alpha2 ('fr': 68.3, not 'France': 68.3).
+// Use elo rankings (which carry iso2) to bridge id → alpha2 → population.
 const idToRank = new Map(eloData.rankings.map(({id, rank}) => [id, rank]));
+const idToIso2 = new Map(eloData.rankings.map(({id, iso2}) => [id, iso2?.toLowerCase()]));
 const nameToId = new Map(raw.data.map(d => [d.country, d.id]));
+
+const getPop = name => {
+  const id  = nameToId.get(name);
+  const iso2 = id != null ? idToIso2.get(id) : null;
+  return iso2 ? (raw.pop[iso2] ?? null) : null;
+};
+
+// Enumerate countries from raw.data (has canonical names + numeric ids).
 const eloRank = {};
-for (const name of Object.keys(raw.pop)) {
-  const id = nameToId.get(name);
-  if (id != null) { const r = idToRank.get(id); if (r != null) eloRank[name] = r; }
+for (const d of raw.data) {
+  const r = idToRank.get(d.id);
+  if (r != null) eloRank[d.country] = r;
 }
 
 const countries = Object.entries(eloRank)
@@ -124,7 +133,7 @@ const countries = Object.entries(eloRank)
     exports: exportMap[name] || 0,
     imports: importMap[name] || 0,
     net:    (exportMap[name] || 0) - (importMap[name] || 0),
-    pop:     raw.pop[name]
+    pop:    getPop(name),
   }));
 
 /* ── X / Y modes ───────────────────────────────────────────────────── */
