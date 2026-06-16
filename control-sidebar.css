@@ -49,7 +49,7 @@
 .csb-body {
   max-width: var(--csb-w, 300px); height: var(--csb-h, 8rem);
   transition: max-width 0.5s ease;
-  background: #fdfcfa;
+  background: var(--fixed-element-bg);
 }
 
 /* ── Table ─────────────────────────────────────────────────────────────── */
