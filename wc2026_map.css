@@ -108,6 +108,7 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-item--active { background: var(--border-strong) !important; border-color: var(--border-strong) !important; }
 .elo-item--zoomable { cursor: pointer; }
 .elo-item--zoomable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.elo-item--no-map .elo-name { text-decoration: line-through; }
 .elo-rank { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
 .elo-name .elo-dot:first-child { margin-left: 3px; }

@@ -414,7 +414,7 @@ const _catEloChecked = (id, fifaMember) => {
   if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
   return _catChecked(cat);
 };
-const _isClickable = id => _catEloChecked(id, _fifaMemberIds.has(id)) && enablesDim(id);
+const _isClickable = id => !!centroids[id];
 const _filterToggle = chks => { const on = chks.every(c => c.checked); chks.forEach(c => c.checked = !on); _renderElo(); _applyFlagFilter(); };
 _controlPanel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
 _controlPanel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
@@ -589,6 +589,7 @@ const _buildEloItems = () => {
                : (app.byId[id]?.count ?? 0) > 0 ? 'var(--color-exporter)'
                : fifaMember                  ? 'var(--color-fifa)'
                :                               'var(--color-lumpenproletariat)',
+      noMap: !centroids[id],
     }))
     ;
   const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
@@ -700,12 +701,12 @@ const _renderElo = () => {
     items: allItems,
     onCountryClick: id => {
       if (dimState.sourceId === id) { clearDim(); return; }
-      if (enablesDim(id)) { activateCountry(id); _zoomToActiveDimFlags(); return; }
-      if (dimState.active) clearDim();
-      zoomToCentroid(id);
+      activateCountry(id);
+      if (enablesDim(id) && centroids[id]) _zoomToActiveDimFlags();
+      else if (centroids[id]) zoomToCentroid(id);
     },
-    isClickable:  id => enablesDim(id),
-    isZoomable:   id => !enablesDim(id) && !!centroids[id],
+    isClickable:  () => true,
+    isZoomable:   null,
     getSelectedId: () => dimState.sourceId,
     source: _eloData?.source,
     date: _eloData?.updated,
@@ -857,7 +858,7 @@ const app = {
 };
 const centroids = {};
 
-const enablesDim = id => !!(app.byId[id] || (QUALIFIED_NAMES[id] && ((app.importByNation[id] ?? []).length > 0 || (app.nativeByNation[id] ?? []).length > 0)));
+const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
 
 const fmtPop = pop => parseFloat(pop.toFixed(2))
   .toLocaleString(LOCALE, { maximumFractionDigits: 2, minimumFractionDigits: 2, useGrouping: false }) + 'M';
@@ -1179,20 +1180,81 @@ const clearDim = () => {
   _updatePlayersPanel();
 };
 
-// ── Activate dim from anywhere (e.g. player-table nation clicks) ──────────────
+// ── Select a country that has no map dim (no centroid, or no data) ───────────
+const applyEmpty = id => {
+  dimState.active   = true;
+  dimState.sourceId = id;
+  dimState.destIds  = new Map();
+  dimState.importIds = new Map();
+  // Clear any leftover dim visuals from a previous selection
+  g.selectAll('.flag-qualified').attr('opacity', null).attr('data-dim-visible', null);
+  g.selectAll('.country').attr('data-dim-visible', null);
+  if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line,.arc-arrow').remove();
+
+  const ptEl = document.getElementById('tab-players');
+  if (ptEl) {
+    if (enablesDim(id)) {
+      _saveAccState(ptEl);
+      render(playerTableTemplate(id), ptEl);
+      _restoreAccState(ptEl);
+    } else {
+      render(html`<p class="py-4 text-center sub fst-italic">${T.noWorldCupLink}</p>`, ptEl);
+    }
+  }
+
+  const fc = ISO2[id];
+  const countryDisplay = countryName(id, QUALIFIED_NAMES[id] ?? '');
+  const _playersBtn = document.getElementById('tab-players-btn');
+  if (_playersBtn) {
+    _playersBtn.innerHTML = '';
+    const row = document.createElement('span');
+    row.className = 'd-flex align-items-center gap-2 text-start';
+    if (fc) {
+      const _img = document.createElement('img');
+      _img.src = FLAG_CDN(fc);
+      _img.className = 'rounded-circle flex-shrink-0';
+      _img.style.cssText = 'width:16px;height:16px';
+      row.appendChild(_img);
+    }
+    const col = document.createElement('span');
+    col.className = 'd-inline-flex align-items-baseline gap-1';
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = countryDisplay;
+    nameSpan.className = 'text-muted btn-name';
+    col.appendChild(nameSpan);
+    const tag = document.createElement('small');
+    tag.textContent = T.notQualified;
+    tag.className = 'tt-pop fst-italic';
+    col.appendChild(tag);
+    row.appendChild(col);
+    _playersBtn.appendChild(row);
+    const closeSpan = document.createElement('span');
+    closeSpan.className = 'btn-close btn-close-sm position-absolute top-0 end-0 m-1';
+    closeSpan.style.cssText = 'font-size:0.5rem';
+    closeSpan.setAttribute('aria-label', 'Close');
+    closeSpan.addEventListener('click', e => { e.stopPropagation(); clearDim(); });
+    _playersBtn.appendChild(closeSpan);
+    _playersBtn.classList.add('dim-selected');
+  }
+
+  _updateChainSelection();
+  _updateEloSelection();
+  _updatePlayersPanel();
+  showTab('tab-players');
+  document.body.classList.add('dim-active');
+};
+
+// ── Activate from anywhere (map click, Elo badge, player-table nation link) ──
 const activateCountry = (id, scroll = false) => {
   if (id == null) return;
-  const rec = app.byId[id];
-  if (rec) {
-    const destIds = new Map(rec.nations.flatMap(([n, c]) => {
-      const did = QUALIFIED_BY_NAME[n];
-      return did !== undefined ? [[did, c]] : [];
-    }));
-    applyDim(id, destIds, rec.country);
-  } else if (QUALIFIED_NAMES[id] && ((app.importByNation[id] ?? []).length > 0 || (app.nativeByNation[id] ?? []).length > 0)) {
-    applyDim(id, new Map(), QUALIFIED_NAMES[id]);
+  if (enablesDim(id) && centroids[id]) {
+    const rec = app.byId[id];
+    const destIds = rec
+      ? new Map(rec.nations.flatMap(([n, c]) => { const did = QUALIFIED_BY_NAME[n]; return did !== undefined ? [[did, c]] : []; }))
+      : new Map();
+    applyDim(id, destIds, rec?.country ?? QUALIFIED_NAMES[id]);
   } else {
-    return;
+    applyEmpty(id);
   }
   if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -1437,14 +1499,10 @@ const onCountryMousemove = (event, id, topoName = '') => {
 
 const onCountryClick = (event, id) => {
   event.stopPropagation();
-  if (dimState.active) {
-    if (id === dimState.sourceId) { clearDim(); return; }
-    if (dimState.destIds.has(id) || dimState.importIds.has(id)) { activateCountry(id); return; }
-    if (_isClickable(id)) { activateCountry(id); return; }
-    clearDim();
-    return;
-  }
-  if (_isClickable(id)) { activateCountry(id); return; }
+  if (!centroids[id]) return;
+  if (dimState.sourceId === id) { clearDim(); return; }
+  activateCountry(id);
+  if (enablesDim(id)) _zoomToActiveDimFlags();
 };
 // ── World render ────────────────────────────────────────────────────────────
 const renderWorld = (world, ukNations) => {

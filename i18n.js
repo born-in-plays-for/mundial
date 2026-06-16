@@ -126,6 +126,7 @@ export const T = {
     eloFilter:   'filtre',
     sortLabels: { action: 'tri', elo: 'classement', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'sélection', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualifié', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
+    noWorldCupLink: 'Aucun lien avec la Coupe du Monde — pays non qualifié et aucun joueur né ici ne représente une nation qualifiée.',
   },
   it: {
     pageHeading:    'Luogo di nascita dei giocatori dei Mondiali 2026',
@@ -163,6 +164,7 @@ export const T = {
     eloFilter:   'filtro',
     sortLabels: { action: 'ordine', elo: 'classifica', exp: 'export', imp: 'import', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'selezione', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualific.', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
+    noWorldCupLink: 'Nessun legame con il Mondiale — paese non qualificato e nessun giocatore nato qui figura in una rosa 2026.',
   },
   de: {
     pageHeading:    'Geburtsort der Spieler der WM 2026',
@@ -200,6 +202,7 @@ export const T = {
     eloFilter:   'Filter',
     sortLabels: { action: 'Sort.', elo: 'Rang', exp: 'Export', imp: 'Import', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'Auswahl', exporter: 'Export.', nonExp: 'kein-Exp.', qualified: 'qualif.', importer: 'Import.', nonImp: 'kein-Imp.', nonQual: 'nicht-qual.' },
+    noWorldCupLink: 'Kein WM-Bezug — nicht qualifiziert und kein Spieler aus diesem Land steht in einem WM-Kader 2026.',
   },
   es: {
     pageHeading:    'Lugar de nacimiento de los jugadores del Mundial 2026',
@@ -237,6 +240,7 @@ export const T = {
     eloFilter:   'filtro',
     sortLabels: { action: 'orden', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'selección', exporter: 'export.', nonExp: 'no-exp.', qualified: 'clasific.', importer: 'import.', nonImp: 'no-imp.', nonQual: 'no-clasif.' },
+    noWorldCupLink: 'Sin vínculo con el Mundial — no clasificado y ningún jugador nacido aquí figura en ninguna convocatoria 2026.',
   },
   en: {
     pageHeading:    'Birthplace of 2026 World Cup Players',
@@ -274,5 +278,6 @@ export const T = {
     eloFilter:   'filter',
     sortLabels: { action: 'sort', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'selection', exporter: 'exporter', nonExp: 'non-exp.', qualified: 'qualified', importer: 'importer', nonImp: 'non-imp.', nonQual: 'non-qual.' },
+    noWorldCupLink: 'No World Cup connection — not qualified and no players born here appear in any 2026 squad.',
   },
 }[_LANG];
