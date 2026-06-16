@@ -589,7 +589,7 @@ const _buildEloItems = () => {
   const _ptsFor = (key, item) =>
       key === 'exp'   ? item.expCount
     : key === 'imp'   ? item.impCount
-    : key === 'delta' ? item.expCount - item.impCount
+    : key === 'delta' ? `${item.expCount} − ${item.impCount}`
     : key === 'elo'   ? item.pts
     : null;
   return raw.map(item => ({

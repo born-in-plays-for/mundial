@@ -55,7 +55,8 @@ export function renderEloRanking(container, opts = {}) {
       // `<span class="elo-rank">${rank}</span>` +
       (iso2 ? `<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : `<span class="elo-flag"></span>`) +
       `<span class="elo-name"${nameColor ? ` style="color:${nameColor}"` : ''}>${name}${dots}</span>` +
-      (pts != null ? `<span class="elo-pts"><span class="elo-pts-primary">${pts}</span>${pts2 != null ? ` (${pts2})` : ''}</span>` : '');
+      (pts != null ? `<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : '');
+      // (pts != null ? `<span class="elo-pts"><span class="elo-pts-primary">${pts}</span>${pts2 != null ? ` (${pts2})` : ''}</span>` : '');
     if (onCountryClick) li.addEventListener('click', () => {
       if (isClickable == null || isClickable(id) || (isZoomable != null && isZoomable(id))) onCountryClick(id);
     });
@@ -89,7 +90,8 @@ export function renderEloRanking(container, opts = {}) {
       ul.appendChild(li);
       const ptsEl = li.querySelector('.elo-pts');
       if (pts != null) {
-        const html = `<span class="elo-pts-primary">${pts}</span>${pts2 != null ? ` (${pts2})` : ''}`;
+        const html = `<span class="elo-pts-primary">${pts}</span>`;
+        // const html = `<span class="elo-pts-primary">${pts}</span>${pts2 != null ? ` (${pts2})` : ''}`;
         if (ptsEl) ptsEl.innerHTML = html;
         else { const s = document.createElement('span'); s.className = 'elo-pts'; s.innerHTML = html; li.appendChild(s); }
       } else if (ptsEl) ptsEl.remove();
