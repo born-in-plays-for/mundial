@@ -84,7 +84,7 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .tt-divider { border-top: 1px solid var(--border); margin: 8px 0 4px; }
 
 /* player table (pt-) */
-.pt-title { font-size: 16px; font-weight: 500; }
+.pt-title { font-size: 14px; font-weight: 500; }
 .pt-country-flag { height: 20px; width: auto; border-radius: 2px; }
 .pt-nation-header { gap: 8px; padding: 10px 4px 4px; border-bottom: 1px solid var(--bg-hover); cursor: pointer; border-radius: 4px; }
 .pt-nation-header:hover { background: rgba(0,0,0,.04); }
