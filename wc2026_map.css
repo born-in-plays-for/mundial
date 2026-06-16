@@ -43,6 +43,8 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
   z-index: 100;
   background: var(--fixed-element-bg);
   border-top: 1px solid var(--border);
+  padding-left: var(--vert-gutter) !important; 
+  padding-right: var(--vert-gutter) !important;
 }
 #bottomTabContent {
     padding-left: var(--vert-gutter) !important;
@@ -116,8 +118,11 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-pts { font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 .elo-pts-primary { font-size: 10px; color: var(--text-muted); }
 
+/* scroll-to-top button */
+#scroll-top-btn { right: 12px; top: calc(-26px - 8px); }
+
 /* nav pills */
-#bottomTabList { align-items: stretch; flex-wrap: nowrap; padding-left: var(--vert-gutter) !important; padding-right: var(--vert-gutter) !important; }
+#bottomTabList { align-items: stretch; flex-wrap: nowrap; }
 #bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13px; }
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
 #tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; position: relative; }

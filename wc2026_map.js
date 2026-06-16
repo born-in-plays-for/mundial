@@ -567,6 +567,14 @@ if (_bottomPanel) new ResizeObserver(() => {
 }).observe(_bottomPanel);
 _syncMapHeight();
 
+const _scrollTopBtn = document.getElementById('scroll-top-btn');
+if (_scrollTopBtn) {
+  window.addEventListener('scroll', () => {
+    _scrollTopBtn.classList.toggle('visible', window.scrollY > 0);
+  }, { passive: true });
+  _scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+}
+
 const _buildEloItems = () => {
   const raw = (_eloData?.rankings ?? [])
     .filter(r => !r.weirdo)
