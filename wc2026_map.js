@@ -327,13 +327,13 @@ const _controlPanel = document.createElement('div');
 _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered">
   <tbody>
     <tr>
-      <td class="csb-header text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
+      <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
       <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em>
       <td class="csb-col text-muted" data-col="exp"><span class="d-flex align-items-start justify-content-between"><span>${T.filterLabels.exporter}</span><span class="csb-badge" style="color:#3b82f6">●</span></span></td>
       <td class="csb-col text-muted" data-col="nexp">${T.filterLabels.nonExp}</td>
     </tr>
     <tr>
-      <td rowspan="4" class="csb-sort-col text-muted">
+      <td rowspan="4" class="csb-sort-col csb-border-right text-muted">
         <div class="csb-sort-list d-flex flex-column h-100 position-relative">
           <button class="csb-sort-dir"></button>
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo">${T.sortLabels.elo}</div>
@@ -487,8 +487,6 @@ _controlSidebarBody.className = 'csb-body overflow-hidden';
 _controlSidebarBody.appendChild(_controlPanel);
 _controlSidebar.appendChild(_controlSidebarToggle);
 _controlSidebar.appendChild(_controlSidebarBody);
-// Extra padding for sort items = sort direction button width + gap, symmetric both sides
-const _sortExtraPad = _sortDirBtn.offsetWidth + 3;
 const _sortColEl = _controlPanel.querySelector('.csb-sort-col');
 // Measure sidebar dimensions — called on load and resize
 const _measureControlSidebar = () => {
@@ -496,15 +494,16 @@ const _measureControlSidebar = () => {
   _controlSidebar.classList.remove('collapsed');
   _controlSidebarBody.style.maxWidth = 'none';
   _controlSidebarBody.style.width = 'max-content';
+  const pad = parseInt(getComputedStyle(_controlPanel.querySelector('.csb-table')).getPropertyValue('--sort-extra-pad'));
   // Step 1: measure basic width without extra sort padding
   _sortColEl.style.setProperty('padding-left', '0', 'important');
   _sortColEl.style.setProperty('padding-right', '0', 'important');
   _controlSidebarBody.getBoundingClientRect();
   const basicW = _controlSidebarBody.offsetWidth;
   // Step 2: restore extra padding for sort button clearance
-  _sortColEl.style.setProperty('padding-left', _sortExtraPad + 'px', 'important');
-  _sortColEl.style.setProperty('padding-right', _sortExtraPad + 'px', 'important');
-  document.documentElement.style.setProperty('--csb-w', (basicW + 2 * _sortExtraPad) + 'px');
+  _sortColEl.style.setProperty('padding-left', pad + 'px', 'important');
+  _sortColEl.style.setProperty('padding-right', pad + 'px', 'important');
+  document.documentElement.style.setProperty('--csb-w', (basicW + 2 * pad) + 'px');
   document.documentElement.style.setProperty('--csb-h', _controlPanel.scrollHeight + 'px');
   _controlSidebarBody.style.maxWidth = '';
   _controlSidebarBody.style.width = '';

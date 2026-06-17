@@ -57,8 +57,10 @@
 .csb-table {
   border-collapse: collapse; font-size: 11px; margin: 0;
 }
+.csb-table { --sort-extra-pad: 26px; }
 .csb-table td { padding: 2px 6px !important; }
 @media (max-width: 400px) {
+  .csb-table { --sort-extra-pad: 20px; }
   .csb-table td { padding: 2px 2px !important; }
 }
 .csb-table .form-check-input { display: none; }
@@ -77,23 +79,22 @@
 /* ── Sort column ───────────────────────────────────────────────────────── */
 
 .csb-header {
-  border-right: 3px double var(--border) !important;
   font-style: italic;
 }
+.csb-border-right { border-right: 3px double var(--border) !important; }
 .csb-header[data-col] { cursor: pointer; }
 .csb-sort-col {
   padding: 0;
-  border-right: 3px double var(--border) !important;
   vertical-align: top;
-  width: auto;
+  width: 1px;
 }
-.csb-sort-item { cursor: pointer; padding: 0 6px; }
+.csb-sort-item { cursor: pointer; padding: 0; }
 .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
 
 .csb-sort-dir {
-  position: absolute; top: 1px; left: -17px; width: 17px; height: 17px;
+  position: absolute; top: 1px; left: calc((17px - var(--sort-extra-pad)) / 2 - 17px); width: 17px; height: 17px;
   background: url('images/sort-vertical-svgrepo-com.svg') no-repeat center / 17px 17px;
   border: none; padding: 0; cursor: pointer; opacity: 0.5;
 }
