@@ -742,31 +742,32 @@ fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
   if (!document.getElementById('tab-elo')?.hidden && Object.keys(app.byId).length > 0) _renderElo();
 }).catch(() => {});
 
-document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const name = btn.dataset.tab;
-    document.querySelectorAll('#bottomTabList button[data-tab]').forEach(b => {
-      b.classList.toggle('active', b.dataset.tab === name);
-    });
-    document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
-      pane.hidden = pane.id !== name;
-    });
-    const chainPanel = document.getElementById('chain-panel');
-    if (name === 'tab-chain') {
-      if (_chainData) {
-        _renderChain();
-        requestAnimationFrame(() => _chainUpdate?.scrollActive());
-      }
-      _expandPanel(chainPanel);
-    } else {
-      _collapsePanel(chainPanel);
-    }
-    if (name === 'tab-elo') {
-      _renderElo();
-      if (_eloCtrl) _eloCtrl.update(dimState.sourceId);
-      requestAnimationFrame(() => { const el = document.querySelector('#tab-elo .elo-item--active'); if (el && !_isFullyVisible(el)) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
-    }
+const _switchTab = name => {
+  document.querySelectorAll('#bottomTabList button[data-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name);
   });
+  document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
+    pane.hidden = pane.id !== name;
+  });
+  const chainPanel = document.getElementById('chain-panel');
+  if (name === 'tab-chain') {
+    if (_chainData) {
+      _renderChain();
+      requestAnimationFrame(() => _chainUpdate?.scrollActive());
+    }
+    _expandPanel(chainPanel);
+  } else {
+    _collapsePanel(chainPanel);
+  }
+  if (name === 'tab-elo') {
+    _renderElo();
+    if (_eloCtrl) _eloCtrl.update(dimState.sourceId);
+    requestAnimationFrame(() => { const el = document.querySelector('#tab-elo .elo-item--active'); if (el && !_isFullyVisible(el)) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+  }
+};
+document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
+  if (btn.id === 'tab-players-btn') return;
+  btn.addEventListener('click', () => _switchTab(btn.dataset.tab));
 });
 
 let _chainResizeTimer = null;
@@ -1188,7 +1189,7 @@ const applySelection = (id, destIds) => {
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     _playersBtn.className = 'nav-link dim-selected';
-    render(html`${countryPillTemplate(id)}<span class="btn-close" style="font-size:0.45rem;cursor:pointer;align-self:flex-start" aria-label="Close" @click=${e => { e.stopPropagation(); clearDim(); }}></span>`, _playersBtn);
+    render(html`<span @click=${() => _switchTab('tab-players')}>${countryPillTemplate(id)}</span><span class="btn-close" style="font-size:0.45rem;cursor:pointer;align-self:flex-start" aria-label="Close" @click=${() => clearDim()}></span>`, _playersBtn);
   }
 
   _updateChainSelection();

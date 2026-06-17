@@ -91,7 +91,7 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .pt-title { font-size: 14px; font-weight: 500; }
 .pt-country-flag { height: 20px; width: auto; border-radius: 2px; }
 .pt-nation-header { gap: 8px; padding: 10px 4px 4px; border-bottom: 1px solid var(--bg-hover); cursor: pointer; border-radius: 4px; }
-.pt-nation-header:hover { background: rgba(0,0,0,.04); }
+.pt-nation-header:hover { background: var(--bg-hover); }
 .pt-nation-header img { height: 14px; width: auto; border-radius: 2px; }
 .pt-nation-name { font-size: 13px; color: var(--color-default); }
 .pt-nation-count { font-size: 11px; color: var(--text-muted); }
@@ -132,24 +132,44 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-pts-primary { font-size: 10px; color: var(--text-muted); }
 
 /* scroll-to-top button */
-#scroll-top-btn { position: absolute; right: 12px; top: calc(-26px - 8px); }
+#scroll-top-btn { position: absolute; right: 12px; top: calc(-26px - 8px); cursor: pointer; }
+#scroll-top-btn:hover { color: #000; }
+#zoom-reset, #zoom-span { cursor: pointer; }
+#zoom-reset:hover:not(:disabled), #zoom-span:hover:not(:disabled) { color: #000; opacity: 0.8; }
+#zoom-reset:disabled, #zoom-span:disabled { cursor: default; opacity: 0.3; }
+#tab-players-btn .btn-close:hover { opacity: 1; }
 
 /* nav pills */
-#bottomTabList { align-items: center; flex-wrap: nowrap; height: 46px; }
+#bottomTabList { align-items: center; flex-wrap: nowrap; height: 46px; position: relative; }
 #bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; white-space: nowrap; font-size: 13px; position: relative; }
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
-#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; display: none; overflow: hidden; }
+#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; display: none; cursor: default; }
+#tab-players-btn .elo-item { cursor: pointer; }
+#tab-players-btn .btn-close { cursor: pointer; }
 #tab-players-btn.dim-selected { display: flex; align-items: center; gap: 4px; }
 #tab-players-btn .elo-name { overflow: hidden; text-overflow: ellipsis; }
-#bottomTabList .nav-link:hover { color: #000; }
+#tab-players-btn:hover .elo-item { background: var(--bg-hover); border-color: var(--border-strong); }
+#bottomTabList .nav-link:hover { background-color: var(--bg-hover); color: #000; }
+#tab-players-btn:hover { background-color: transparent !important; }
 #bottomTabList .nav-link.active { color: #000; }
 #bottomTabList .nav-link.active::after,
-#tab-players-btn.dim-selected::after { content: ''; position: absolute; left: 0; right: 0; bottom: -4px; border-bottom: 1.5px dotted #888; }
+#bottomTabList .nav-link:hover::after { content: ''; position: absolute; left: 0; right: 0; top: calc(50% + 17px); border-bottom: 1.5px dotted #888; }
+
+/* control sidebar table — clickable cells */
+.csb-table [data-col] { cursor: pointer; }
+.csb-table [data-col]:hover { background-color: var(--bg-hover); }
+.csb-table td:has(.csb-check) { vertical-align: middle; padding: 0; cursor: pointer; }
+.csb-table td:has(.csb-check):hover { background-color: var(--bg-hover); }
+.csb-check { display: flex; align-items: center; justify-content: center; height: 100%; cursor: pointer; }
+
+/* chain hit areas */
+.chain-hit:hover { fill: rgba(0,0,0,.06) !important; }
+[data-nav]:hover:not(:disabled) { background: var(--bg-hover) !important; }
 
 /* player table accordion overrides */
 .accordion-flush .accordion-item { background-color: transparent; border-color: var(--border); }
 .pt-acc-btn { padding: 10px 4px !important; }
 .pt-acc-btn, .pt-acc-btn:not(.collapsed) { background-color: transparent !important; color: inherit !important; box-shadow: none !important; }
-.pt-acc-btn:hover { background-color: rgba(0,0,0,.03) !important; }
+.pt-acc-btn:hover { background-color: var(--bg-hover) !important; }
 .pt-acc-static { cursor: default !important; }
 .pt-acc-static::after { display: none !important; }

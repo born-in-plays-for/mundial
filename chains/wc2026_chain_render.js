@@ -225,7 +225,7 @@ export function renderChain(chain, container, opts = {}) {
   if (onCountryClick) {
     nodes.forEach((node, i) => {
       const {x, y} = cp[i];
-      const hit = _svgEl('circle', {cx:x, cy:y, r:FR, fill:'transparent', cursor:'pointer'});
+      const hit = _svgEl('circle', {cx:x, cy:y, r:FR, fill:'transparent', cursor:'pointer', class:'chain-hit'});
       hit.addEventListener('click', () => onCountryClick(node));
       svg.appendChild(hit);
     });
