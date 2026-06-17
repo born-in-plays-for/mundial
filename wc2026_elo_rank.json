@@ -1,6 +1,6 @@
 {
   "source": "eloratings.net",
-  "updated": "2026-06-16",
+  "updated": "2026-06-17",
   "stats": {
     "total": 244,
     "fifaMembers": 211,
@@ -34,7 +34,7 @@
       "id": 250,
       "iso2": "fr",
       "name": "France",
-      "pts": 2063,
+      "pts": 2084,
       "fifaMember": true,
       "weirdo": false
     },
@@ -97,7 +97,7 @@
       "id": 578,
       "iso2": "no",
       "name": "Norway",
-      "pts": 1914,
+      "pts": 1929,
       "fifaMember": true,
       "weirdo": false
     },
@@ -184,15 +184,6 @@
     },
     {
       "rank": 20,
-      "id": 686,
-      "iso2": "sn",
-      "name": "Senegal",
-      "pts": 1860,
-      "fifaMember": true,
-      "weirdo": false
-    },
-    {
-      "rank": 21,
       "id": 792,
       "iso2": "tr",
       "name": "Türkiye",
@@ -201,7 +192,7 @@
       "weirdo": false
     },
     {
-      "rank": 22,
+      "rank": 21,
       "id": 504,
       "iso2": "ma",
       "name": "Morocco",
@@ -210,10 +201,19 @@
       "weirdo": false
     },
     {
-      "rank": 23,
+      "rank": 22,
       "id": 36,
       "iso2": "au",
       "name": "Australia",
+      "pts": 1839,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
+      "rank": 22,
+      "id": 686,
+      "iso2": "sn",
+      "name": "Senegal",
       "pts": 1839,
       "fifaMember": true,
       "weirdo": false
@@ -562,15 +562,6 @@
     },
     {
       "rank": 63,
-      "id": 368,
-      "iso2": "iq",
-      "name": "Iraq",
-      "pts": 1607,
-      "fifaMember": true,
-      "weirdo": false
-    },
-    {
-      "rank": 64,
       "id": 132,
       "iso2": "cv",
       "name": "Cabo Verde",
@@ -579,7 +570,7 @@
       "weirdo": false
     },
     {
-      "rank": 65,
+      "rank": 64,
       "id": 8263,
       "iso2": "gb-nir",
       "name": "Northern Ireland",
@@ -588,11 +579,20 @@
       "weirdo": false
     },
     {
-      "rank": 66,
+      "rank": 65,
       "id": 682,
       "iso2": "sa",
       "name": "Saudi Arabia",
       "pts": 1598,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
+      "rank": 66,
+      "id": 368,
+      "iso2": "iq",
+      "name": "Iraq",
+      "pts": 1592,
       "fifaMember": true,
       "weirdo": false
     },
