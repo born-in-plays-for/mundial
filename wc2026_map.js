@@ -416,7 +416,8 @@ const _catEloChecked = (id, fifaMember) => {
 };
 const _isClickable = id => {
   const flag = document.querySelector(`.flag-qualified[data-id="${id}"]`);
-  return !!flag && flag.getAttribute('visibility') !== 'hidden';
+  if (!flag || flag.getAttribute('visibility') === 'hidden') return false;
+  return parseFloat(flag.getAttribute('opacity') ?? '1') >= 1;
 };
 const _filterToggle = chks => { const on = chks.every(c => c.checked); chks.forEach(c => c.checked = !on); _renderElo(); _applyFlagFilter(); };
 _controlPanel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
@@ -1501,8 +1502,14 @@ const onCountryMousemove = (event, id, topoName = '') => {
 
 const onCountryClick = (event, id) => {
   event.stopPropagation();
-  if (!_isClickable(id)) return;
-  if (dimState.sourceId === id) { clearDim(); return; }
+  if (!_isClickable(id)) { 
+    if (dimState.active) clearDim(); 
+    return; 
+  }
+  if (dimState.sourceId === id) { 
+    clearDim(); 
+    return; 
+  }
   activateCountry(id);
   if (enablesDim(id)) _zoomToActiveDimFlags();
 };
