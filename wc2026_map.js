@@ -487,19 +487,23 @@ _controlSidebarBody.className = 'csb-body overflow-hidden';
 _controlSidebarBody.appendChild(_controlPanel);
 _controlSidebar.appendChild(_controlSidebarToggle);
 _controlSidebar.appendChild(_controlSidebarBody);
-// Measure natural table dimensions before first collapse
-_controlSidebar.classList.remove('collapsed');
-_controlSidebarBody.style.maxWidth = 'none';
-_controlSidebarBody.style.width = 'max-content';
-// Fix sort column width: longest item text + symmetric room for the direction button
-const _sortItemEls = Array.from(_sortListEl.querySelectorAll('.csb-sort-item'));
-const _maxItemW = Math.max(..._sortItemEls.map(el => el.offsetWidth));
-const _btnEffW  = _sortDirBtn.offsetWidth + 3; // 3px gap from edge
-document.documentElement.style.setProperty('--sort-col-w', (_maxItemW + 2 * _btnEffW + 6) + 'px');
-document.documentElement.style.setProperty('--csb-h', _controlPanel.scrollHeight + 'px');
-document.documentElement.style.setProperty('--csb-w', _controlSidebarBody.offsetWidth + 'px');
-_controlSidebarBody.style.maxWidth = '';
-_controlSidebarBody.style.width = '';
+// Measure natural table dimensions — called on load and resize
+const _measureControlSidebar = () => {
+  const wasCollapsed = _controlSidebar.classList.contains('collapsed');
+  _controlSidebar.classList.remove('collapsed');
+  _controlSidebarBody.style.maxWidth = 'none';
+  _controlSidebarBody.style.width = 'max-content';
+  const _sortItemEls = Array.from(_sortListEl.querySelectorAll('.csb-sort-item'));
+  const _maxItemW = Math.max(..._sortItemEls.map(el => el.offsetWidth));
+  const _btnEffW  = _sortDirBtn.offsetWidth + 3;
+  document.documentElement.style.setProperty('--sort-col-w', (_maxItemW + 2 * _btnEffW + 6) + 'px');
+  document.documentElement.style.setProperty('--csb-h', _controlPanel.scrollHeight + 'px');
+  document.documentElement.style.setProperty('--csb-w', _controlSidebarBody.offsetWidth + 'px');
+  _controlSidebarBody.style.maxWidth = '';
+  _controlSidebarBody.style.width = '';
+  if (wasCollapsed) _controlSidebar.classList.add('collapsed');
+};
+_measureControlSidebar();
 _controlSidebarToggle.textContent = '›';
 const _autoCollapseTimer = setTimeout(() => {
   _controlSidebarBody.style.transition = 'max-width 1s ease';
@@ -777,6 +781,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
 let _chainResizeTimer = null;
 window.addEventListener('resize', () => {
   _syncMapHeight();
+  _measureControlSidebar();
   clearTimeout(_chainResizeTimer);
   _chainResizeTimer = setTimeout(() => {
     if (_chainData && !document.getElementById('tab-chain')?.hidden) _renderChain();
