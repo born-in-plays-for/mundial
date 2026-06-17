@@ -102,7 +102,7 @@ export const T = {
 
     tabPlayersHint:'Cliquez sur un pays pour voir ses joueurs.',
 
-    noExport:      name => `Aucun joueur né ${name ? _frPrep(name) + ' ' + name : 'ici'} ne joue pour un autre pays`,
+    noExport:      name => `Aucun joueur né ${name ? _frPrep(name) + ' ' + name : 'ici'} n'est sélectionné par un autre pays qualifié.`,
     noImport:      name => `Tous les joueurs de la sélection sont nés ${name ? _frPrep(name) + ' ' + name : 'ici'}`,
     selectedBy:    n => `et sélectionné${n > 1 ? 's' : ''} par un autre pays`,
     selectedByLabel: name => `Joueurs sélectionnés par ${_frDefArt(name)}${name} nés dans un autre pays`,
@@ -126,7 +126,6 @@ export const T = {
     eloFilter:   'filtre',
     sortLabels: { action: 'tri', elo: 'classement', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'sélection', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualifié', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
-    noWorldCupLink: 'Aucun lien avec la Coupe du Monde — pays non qualifié et aucun joueur né ici ne représente une nation qualifiée.',
   },
   it: {
     pageHeading:    'Luogo di nascita dei giocatori dei Mondiali 2026',
@@ -140,7 +139,7 @@ export const T = {
 
     tabPlayersHint:'Clicca su un paese per vedere i suoi giocatori.',
 
-    noExport:      name => `Nessun giocatore nato${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'} gioca per un altro paese`,
+    noExport:      name => `Nessun giocatore nato${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'} è selezionato da un altro paese qualificato.`,
     noImport:      name => `Tutti i giocatori della rosa sono nati${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'}`,
     selectedBy:    n => `e selezionat${n === 1 ? 'o' : 'i'} da un altro paese`,
     selectedByLabel: name => `Giocatori selezionati ${_itDa(name)} ${name} nati in un altro paese`,
@@ -164,7 +163,6 @@ export const T = {
     eloFilter:   'filtro',
     sortLabels: { action: 'ordine', elo: 'classifica', exp: 'export', imp: 'import', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'selezione', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualific.', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
-    noWorldCupLink: 'Nessun legame con il Mondiale — paese non qualificato e nessun giocatore nato qui figura in una rosa 2026.',
   },
   de: {
     pageHeading:    'Geburtsort der Spieler der WM 2026',
@@ -178,7 +176,7 @@ export const T = {
 
     tabPlayersHint:'Klicke auf ein Land, um seine Spieler zu sehen.',
 
-    noExport:      name => name ? `Kein in ${name} geborener Spieler spielt für ein anderes Land` : 'Kein hier geborener Spieler spielt für ein anderes Land',
+    noExport:      name => name ? `Kein in ${name} geborener Spieler wird von einem anderen qualifizierten Land aufgestellt.` : 'Kein hier geborener Spieler wird von einem anderen qualifizierten Land aufgestellt.',
     noImport:      name => name ? `Alle Kaderspieler wurden in ${name} geboren` : 'Alle Kaderspieler wurden hier geboren',
     selectedBy:    () => 'ausgewählt von einem anderen Land',
     selectedByLabel: name => `Von ${name} ausgewählte Spieler, geboren in einem anderen Land`,
@@ -202,7 +200,6 @@ export const T = {
     eloFilter:   'Filter',
     sortLabels: { action: 'Sort.', elo: 'Rang', exp: 'Export', imp: 'Import', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'Auswahl', exporter: 'Export.', nonExp: 'kein-Exp.', qualified: 'qualif.', importer: 'Import.', nonImp: 'kein-Imp.', nonQual: 'nicht-qual.' },
-    noWorldCupLink: 'Kein WM-Bezug — nicht qualifiziert und kein Spieler aus diesem Land steht in einem WM-Kader 2026.',
   },
   es: {
     pageHeading:    'Lugar de nacimiento de los jugadores del Mundial 2026',
@@ -216,7 +213,7 @@ export const T = {
 
     tabPlayersHint:'Haz clic en un país para ver sus jugadores.',
 
-    noExport:      name => `Ningún jugador nacido${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'} juega para otro país`,
+    noExport:      name => `Ningún jugador nacido${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'} es seleccionado por otro país clasificado.`,
     noImport:      name => `Todos los jugadores de la selección nacieron${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'}`,
     selectedBy:    n => `y seleccionado${n === 1 ? '' : 's'} por otro país`,
     selectedByLabel: name => `Jugadores seleccionados por ${_esDefArt(name)}${name} nacidos en otro país`,
@@ -240,7 +237,6 @@ export const T = {
     eloFilter:   'filtro',
     sortLabels: { action: 'orden', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'selección', exporter: 'export.', nonExp: 'no-exp.', qualified: 'clasific.', importer: 'import.', nonImp: 'no-imp.', nonQual: 'no-clasif.' },
-    noWorldCupLink: 'Sin vínculo con el Mundial — no clasificado y ningún jugador nacido aquí figura en ninguna convocatoria 2026.',
   },
   en: {
     pageHeading:    'Birthplace of 2026 World Cup Players',
@@ -254,7 +250,7 @@ export const T = {
 
     tabPlayersHint:'Click a country on the map to see its players.',
 
-    noExport:      name => `No player born${name ? ' in ' + name : ' here'} plays for another country`,
+    noExport:      name => `No player born${name ? ' in ' + name : ' here'} is selected by another qualified country.`,
     noImport:      name => `All squad players were born${name ? ' in ' + name : ' here'}`,
     selectedBy:    () => 'selected by another country',
     selectedByLabel: name => `Players selected by ${name} born in another country`,
@@ -278,6 +274,5 @@ export const T = {
     eloFilter:   'filter',
     sortLabels: { action: 'sort', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'selection', exporter: 'exporter', nonExp: 'non-exp.', qualified: 'qualified', importer: 'importer', nonImp: 'non-imp.', nonQual: 'non-qual.' },
-    noWorldCupLink: 'No World Cup connection — not qualified and no players born here appear in any 2026 squad.',
   },
 }[_LANG];

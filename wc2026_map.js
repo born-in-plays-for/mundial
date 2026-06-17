@@ -1005,14 +1005,19 @@ const playerTableTemplate = sourceId => {
       data-bs-toggle="collapse" data-bs-target="#acc-${id}"
       aria-expanded="true" aria-controls="acc-${id}">${content}</button>`;
 
+  let exportHeader;
+  if (cnt > 0) {
+    exportHeader = toggleHdr('exp', html`<span class="pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</span>`);
+  } else {
+    exportHeader = staticHdr(html`<span class="pt-title color-exp">${T.noExport(name)}</span>`);
+  }
+
   return html`
     <div class="accordion accordion-flush mt-2" id="pt-acc">
 
       <div class="accordion-item">
         <h2 class="accordion-header">
-          ${cnt > 0
-            ? toggleHdr('exp', html`<span class="pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</span>`)
-            : staticHdr(html`<span class="pt-title color-exp">${T.noExport(name)}</span>`)}
+          ${exportHeader}
         </h2>
         ${cnt > 0 ? html`
         <div id="acc-exp" class="accordion-collapse collapse">
@@ -1180,13 +1185,9 @@ const applySelection = (id, destIds) => {
   // Player table
   const ptEl = document.getElementById('tab-players');
   if (ptEl) {
-    if (enablesDim(id)) {
-      _saveAccState(ptEl);
-      render(playerTableTemplate(id), ptEl);
-      _restoreAccState(ptEl);
-    } else {
-      render(html`<p class="py-4 text-center sub fst-italic">${T.noWorldCupLink}</p>`, ptEl);
-    }
+    _saveAccState(ptEl);
+    render(playerTableTemplate(id), ptEl);
+    _restoreAccState(ptEl);
   }
 
   // Tab button pill + close
