@@ -82,10 +82,10 @@
 }
 .csb-header[data-col] { cursor: pointer; }
 .csb-sort-col {
-  padding: 0 !important;
+  padding: 0;
   border-right: 3px double var(--border) !important;
   vertical-align: top;
-  width: var(--sort-col-w, 80px); min-width: var(--sort-col-w, 80px);
+  width: auto;
 }
 .csb-sort-item { cursor: pointer; padding: 0 6px; }
 .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
@@ -93,7 +93,7 @@
 /* ── Sort direction button ─────────────────────────────────────────────── */
 
 .csb-sort-dir {
-  position: absolute; top: 1px; left: 0; width: 17px; height: 17px;
+  position: absolute; top: 1px; left: -17px; width: 17px; height: 17px;
   background: url('images/sort-vertical-svgrepo-com.svg') no-repeat center / 17px 17px;
   border: none; padding: 0; cursor: pointer; opacity: 0.5;
 }

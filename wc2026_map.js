@@ -333,7 +333,7 @@ _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered
       <td class="csb-col text-muted" data-col="nexp">${T.filterLabels.nonExp}</td>
     </tr>
     <tr>
-      <td rowspan="4" class="csb-sort-col p-0 text-muted">
+      <td rowspan="4" class="csb-sort-col text-muted">
         <div class="csb-sort-list d-flex flex-column h-100 position-relative">
           <button class="csb-sort-dir"></button>
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo">${T.sortLabels.elo}</div>
@@ -487,18 +487,25 @@ _controlSidebarBody.className = 'csb-body overflow-hidden';
 _controlSidebarBody.appendChild(_controlPanel);
 _controlSidebar.appendChild(_controlSidebarToggle);
 _controlSidebar.appendChild(_controlSidebarBody);
-// Measure natural table dimensions — called on load and resize
+// Extra padding for sort items = sort direction button width + gap, symmetric both sides
+const _sortExtraPad = _sortDirBtn.offsetWidth + 3;
+const _sortColEl = _controlPanel.querySelector('.csb-sort-col');
+// Measure sidebar dimensions — called on load and resize
 const _measureControlSidebar = () => {
   const wasCollapsed = _controlSidebar.classList.contains('collapsed');
   _controlSidebar.classList.remove('collapsed');
   _controlSidebarBody.style.maxWidth = 'none';
   _controlSidebarBody.style.width = 'max-content';
-  const _sortItemEls = Array.from(_sortListEl.querySelectorAll('.csb-sort-item'));
-  const _maxItemW = Math.max(..._sortItemEls.map(el => el.offsetWidth));
-  const _btnEffW  = _sortDirBtn.offsetWidth + 3;
-  document.documentElement.style.setProperty('--sort-col-w', (_maxItemW + 2 * _btnEffW + 6) + 'px');
+  // Step 1: measure basic width without extra sort padding
+  _sortColEl.style.setProperty('padding-left', '0', 'important');
+  _sortColEl.style.setProperty('padding-right', '0', 'important');
+  _controlSidebarBody.getBoundingClientRect();
+  const basicW = _controlSidebarBody.offsetWidth;
+  // Step 2: restore extra padding for sort button clearance
+  _sortColEl.style.setProperty('padding-left', _sortExtraPad + 'px', 'important');
+  _sortColEl.style.setProperty('padding-right', _sortExtraPad + 'px', 'important');
+  document.documentElement.style.setProperty('--csb-w', (basicW + 2 * _sortExtraPad) + 'px');
   document.documentElement.style.setProperty('--csb-h', _controlPanel.scrollHeight + 'px');
-  document.documentElement.style.setProperty('--csb-w', _controlSidebarBody.offsetWidth + 'px');
   _controlSidebarBody.style.maxWidth = '';
   _controlSidebarBody.style.width = '';
   if (wasCollapsed) _controlSidebar.classList.add('collapsed');
