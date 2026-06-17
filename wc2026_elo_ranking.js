@@ -45,12 +45,12 @@ export function renderEloRanking(container, opts = {}) {
   ul.className = 'elo-list';
   const itemById = new Map();
 
-  for (const { id, rank, pts, pts2 = null, iso2, name, exp = false, imp = false, fifaMember = true, nameColor = null, noMap = false } of items) {
+  for (const { id, rank, pts, pts2 = null, iso2, name, exp = false, imp = false, fifaMember = true, nameColor = null, noMap = false, qualified = false } of items) {
     const dots = (exp ? '<sup class="elo-dot" style="color:#3b82f6" title="exports players">●</sup>' : '') +
                  (imp ? '<sup class="elo-dot" style="color:#ef4444" title="imports players">●</sup>' : '') +
                  (!fifaMember ? `<sup class="elo-dot" style="color:var(--text-muted)" title="not a FIFA member">○</sup>` : '');
     const li = document.createElement('li');
-    li.className = 'elo-item' + (noMap ? ' elo-item--no-map' : '');
+    li.className = 'elo-item' + (noMap ? ' elo-item--no-map' : '') + (qualified ? ' elo-item--qualified' : '');
     li.innerHTML =
       // `<span class="elo-rank">${rank}</span>` +
       (iso2 ? `<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : `<span class="elo-flag"></span>`) +

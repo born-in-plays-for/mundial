@@ -315,6 +315,9 @@ document.getElementById('page-header')?.appendChild(_controlSidebar);
 const _eloLayout  = document.createElement('div');
 _eloLayout.className = 'elo-layout';
 _eloLayout.appendChild(_eloMain);
+const _eloMeta = document.createElement('div');
+_eloMeta.className = 'sub mt-2';
+_eloLayout.appendChild(_eloMeta);
 document.getElementById('tab-elo')?.appendChild(_eloLayout);
 
 // ── Persistent filter table — isQualified × isImporting × isExporting cube ──
@@ -594,6 +597,7 @@ const _buildEloItems = () => {
                : fifaMember                  ? 'var(--color-fifa)'
                :                               'var(--color-lumpenproletariat)',
       noMap: !centroids[id],
+      qualified: !!QUALIFIED_NAMES[id],
     }))
     ;
   const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
@@ -700,6 +704,13 @@ const _renderElo = () => {
   const allItems = _buildEloItems();
   const total = _eloData?.rankings?.filter(r => !r.weirdo).length ?? 0;
   const visibleItems = allItems.filter(item => _catEloChecked(item.id, item.fifaMember));
+  _eloMeta.hidden = _sortOrder[0] !== 'elo';
+  if (!_eloMeta.innerHTML && (_eloData?.source || _eloData?.updated)) {
+    const parts = [];
+    if (_eloData.source) parts.push(`<a href="https://eloratings.net/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
+    if (_eloData.updated) parts.push(`updated ${_eloData.updated}`);
+    _eloMeta.innerHTML = parts.join(' · ');
+  }
   if (_eloCtrl) { _eloCtrl.show(visibleItems); return; }
   _eloCtrl = renderEloRanking(_eloMain, {
     items: allItems,
