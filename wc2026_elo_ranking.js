@@ -1,4 +1,14 @@
+import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
+
+export const pillClasses = ({ category = 'fifa', noMap = false } = {}) =>
+  'elo-item elo-item--' + category + (noMap ? ' elo-item--no-map' : '');
+
+export const pillContent = ({ iso2, name, exp = false, imp = false, fifaMember = true, pts = null } = {}) => html`
+  ${iso2 ? html`<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : nothing}
+  <span class="elo-name">${name}${exp ? html`<sup class="elo-dot" style="color:#3b82f6" title="exports players">●</sup>` : nothing}${imp ? html`<sup class="elo-dot" style="color:#ef4444" title="imports players">●</sup>` : nothing}${!fifaMember ? html`<sup class="elo-dot" style="color:var(--text-muted)" title="not a FIFA member">○</sup>` : nothing}</span>
+  ${pts != null ? html`<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : nothing}`;
 
 // opts:
 //   items        [{id, rank, pts, iso2, name, exp?, imp?}] — sorted by rank, built by caller
@@ -7,7 +17,6 @@ const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 //   onCountryClick(id)   — called on click; if null, no items are clickable
 //   isClickable(id)      — optional per-item predicate; defaults to all clickable
 //   getSelectedId()      — optional; called once at render to set initial highlight
-//   title, source, date  — header strings (currently unused — header commented out)
 //
 // Returns update(id) for surgical highlight changes after render.
 export function renderEloRanking(container, opts = {}) {
@@ -17,50 +26,24 @@ export function renderEloRanking(container, opts = {}) {
     isClickable  = null,
     isZoomable   = null,
     getSelectedId = null,
-    title  = 'World Football Elo Ratings',
-    source = 'eloratings.net',
-    date   = '',
   } = opts;
 
   const wrap = document.createElement('div');
-
-  // const hdr = document.createElement('div');
-  // hdr.className = 'elo-header';
-  // if (controls) {
-  //   hdr.style.cssText = 'flex-direction:row;align-items:flex-start;justify-content:space-between;gap:8px';
-  //   const left = document.createElement('div');
-  //   left.innerHTML =
-  //     `<span class="elo-title">${title}</span><br>` +
-  //     `<span class="elo-meta">${items.length} nations · ${source}${date ? ' · ' + date : ''}</span>`;
-  //   hdr.appendChild(left);
-  //   hdr.appendChild(controls);
-  // } else {
-  //   hdr.innerHTML =
-  //     `<span class="elo-title">${title}</span>` +
-  //     `<span class="elo-meta">${items.length} nations · ${source}${date ? ' · ' + date : ''}</span>`;
-  // }
-  // wrap.appendChild(hdr);
-
   const ul = document.createElement('ul');
   ul.className = 'elo-list';
   const itemById = new Map();
+  const itemDataById = new Map();
 
-  for (const { id, rank, pts, pts2 = null, iso2, name, exp = false, imp = false, fifaMember = true, nameColor = null, noMap = false, qualified = false } of items) {
-    const dots = (exp ? '<sup class="elo-dot" style="color:#3b82f6" title="exports players">●</sup>' : '') +
-                 (imp ? '<sup class="elo-dot" style="color:#ef4444" title="imports players">●</sup>' : '') +
-                 (!fifaMember ? `<sup class="elo-dot" style="color:var(--text-muted)" title="not a FIFA member">○</sup>` : '');
+  for (const item of items) {
+    const { id } = item;
     const li = document.createElement('li');
-    li.className = 'elo-item' + (noMap ? ' elo-item--no-map' : '') + (qualified ? ' elo-item--qualified' : '');
-    li.innerHTML =
-      // `<span class="elo-rank">${rank}</span>` +
-      (iso2 ? `<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : `<span class="elo-flag"></span>`) +
-      `<span class="elo-name"${nameColor ? ` style="color:${nameColor}"` : ''}>${name}${dots}</span>` +
-      (pts != null ? `<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : '');
-      // (pts != null ? `<span class="elo-pts"><span class="elo-pts-primary">${pts}</span>${pts2 != null ? ` (${pts2})` : ''}</span>` : '');
+    li.className = pillClasses(item);
+    render(pillContent(item), li);
     if (onCountryClick) li.addEventListener('click', () => {
       if (isClickable == null || isClickable(id) || (isZoomable != null && isZoomable(id))) onCountryClick(id);
     });
     itemById.set(id, li);
+    itemDataById.set(id, { ...item });
     ul.appendChild(li);
   }
 
@@ -83,18 +66,14 @@ export function renderEloRanking(container, opts = {}) {
     for (const li of itemById.values()) li.style.display = 'none';
     for (const { id, pts, pts2 } of visibleItems) {
       const li = itemById.get(id);
-      if (!li) continue;
+      const data = itemDataById.get(id);
+      if (!li || !data) continue;
       li.style.display = '';
       li.classList.toggle('elo-item--clickable', onCountryClick != null && (isClickable == null || isClickable(id)));
       li.classList.toggle('elo-item--zoomable', onCountryClick != null && isZoomable != null && isZoomable(id) && !(isClickable == null || isClickable(id)));
       ul.appendChild(li);
-      const ptsEl = li.querySelector('.elo-pts');
-      if (pts != null) {
-        const html = `<span class="elo-pts-primary">${pts}</span>`;
-        // const html = `<span class="elo-pts-primary">${pts}</span>${pts2 != null ? ` (${pts2})` : ''}`;
-        if (ptsEl) ptsEl.innerHTML = html;
-        else { const s = document.createElement('span'); s.className = 'elo-pts'; s.innerHTML = html; li.appendChild(s); }
-      } else if (ptsEl) ptsEl.remove();
+      data.pts = pts;
+      render(pillContent(data), li);
     }
     // FLIP: animate items that were visible before and after
     for (const { id } of visibleItems) {

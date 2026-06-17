@@ -8,11 +8,11 @@
   --border:        #e4e0d8;
   --border-strong: #c8c4be;
   --text-muted:    #999;
-  /* Elo name dignity scale */
-  --color-qualified:        var(--color-default);
-  --color-exporter:         #5e5e5d;
-  --color-fifa:             #a3a3a2;
-  --color-lumpenproletariat:#d1d1d0;
+  /* Elo name dignity scale — text colors */
+  --color-qualified:        #333;
+  --color-exporter:         #555;
+  --color-fifa:             #999;
+  --color-nonfifa:          #bbb;
 }
 
 /* base */
@@ -43,9 +43,13 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
   z-index: 100;
   background: var(--fixed-element-bg);
   border-top: 1px solid var(--border);
-  padding-left: var(--vert-gutter) !important; 
+  padding-left: var(--vert-gutter) !important;
   padding-right: var(--vert-gutter) !important;
+  display: flex; flex-direction: column;
 }
+#selection-panel { order: 2; }
+#chain-panel { order: 1; }
+#bottomTabList { order: 99; }
 #bottomTabContent {
     padding-left: var(--vert-gutter) !important;
     padding-right: var(--vert-gutter) !important;
@@ -102,14 +106,21 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-title { font-size: 14px; font-weight: 500; }
 .elo-meta { font-size: 10px; color: var(--text-muted); }
 .elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border: 1px solid var(--border); border-radius: 20px; background: #fff; }
+.elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 20px; background: #fff; }
+.elo-item--qualified { border: 1.5px solid #888; }
+.elo-item--qualified .elo-name { color: var(--color-qualified); }
+.elo-item--exporter { border: 1px solid #aaa; }
+.elo-item--exporter .elo-name { color: var(--color-exporter); }
+.elo-item--fifa { border: 1px dashed #ccc; }
+.elo-item--fifa .elo-name { color: var(--color-fifa); }
+.elo-item--nonfifa { border: 1px dotted #ddd; }
+.elo-item--nonfifa .elo-name { color: var(--color-nonfifa); }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .elo-item--active { background: var(--border-strong) !important; border-color: var(--border-strong) !important; }
 .elo-item--zoomable { cursor: pointer; }
 .elo-item--zoomable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
-.elo-item--no-map .elo-name { text-decoration: line-through; }
-.elo-item--qualified .elo-name { font-weight: 600; }
+.elo-item--no-map .elo-name { font-style: italic; }
 .elo-rank { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
 .elo-name .elo-dot:first-child { margin-left: 3px; }
@@ -121,19 +132,19 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-pts-primary { font-size: 10px; color: var(--text-muted); }
 
 /* scroll-to-top button */
-#scroll-top-btn { right: 12px; top: calc(-26px - 8px); }
+#scroll-top-btn { position: absolute; right: 12px; top: calc(-26px - 8px); }
 
 /* nav pills */
-#bottomTabList { align-items: stretch; flex-wrap: nowrap; }
-#bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; overflow: hidden; white-space: nowrap; font-size: 13px; }
+#bottomTabList { align-items: center; flex-wrap: nowrap; height: 46px; }
+#bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; white-space: nowrap; font-size: 13px; position: relative; }
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
-#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; position: relative; }
-#tab-players-btn.dim-selected { padding-right: 1.25rem !important; }
-#tab-players-btn > span { min-width: 0; overflow: hidden; }
-#tab-players-btn > span > span { min-width: 0; overflow: hidden; }
-.btn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
-#bottomTabList .nav-link:hover { background-color: var(--bg-hover); color: #000; }
-#bottomTabList .nav-link.active { background-color: var(--fixed-element-bg); color: #000; border: 1px solid #dee2e6; }
+#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; display: none; overflow: hidden; }
+#tab-players-btn.dim-selected { display: flex; align-items: center; gap: 4px; }
+#tab-players-btn .elo-name { overflow: hidden; text-overflow: ellipsis; }
+#bottomTabList .nav-link:hover { color: #000; }
+#bottomTabList .nav-link.active { color: #000; }
+#bottomTabList .nav-link.active::after,
+#tab-players-btn.dim-selected::after { content: ''; position: absolute; left: 0; right: 0; bottom: -4px; border-bottom: 1.5px dotted #888; }
 
 /* player table accordion overrides */
 .accordion-flush .accordion-item { background-color: transparent; border-color: var(--border); }

@@ -1,6 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from './chains/wc2026_chain_render.js';
-import { renderEloRanking } from './wc2026_elo_ranking.js';
+import { renderEloRanking, pillClasses, pillContent } from './wc2026_elo_ranking.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 
@@ -287,7 +287,7 @@ const _renderChain = () => {
     getSelectedIndex: _chainGetIndex,
     getPlayerWikiUrl: _chainWikiUrl,
     labels:           { ...T.chainLegend, subtitle: T.chainSubtitle },
-    headerContainer:  document.getElementById('tab-chain-panel'),
+    headerContainer:  document.getElementById('chain-panel'),
   });
 };
 // On selection change: surgical update only — no SVG rebuild, no flicker.
@@ -592,12 +592,11 @@ const _buildEloItems = () => {
       imp: (app.importByNation[id]?.length ?? 0) > 0,
       expCount: app.byId[id]?.count ?? 0,
       impCount: app.importByNation[id]?.length ?? 0,
-      nameColor: QUALIFIED_NAMES[id]         ? 'var(--color-qualified)'
-               : (app.byId[id]?.count ?? 0) > 0 ? 'var(--color-exporter)'
-               : fifaMember                  ? 'var(--color-fifa)'
-               :                               'var(--color-lumpenproletariat)',
+      category: QUALIFIED_NAMES[id]              ? 'qualified'
+              : (app.byId[id]?.count ?? 0) > 0   ? 'exporter'
+              : fifaMember                        ? 'fifa'
+              :                                     'nonfifa',
       noMap: !centroids[id],
-      qualified: !!QUALIFIED_NAMES[id],
     }))
     ;
   const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
@@ -752,26 +751,21 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
     document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
       pane.hidden = pane.id !== name;
     });
-    // const eloPanel   = document.getElementById('tab-elo-panel');
-    const chainPanel   = document.getElementById('tab-chain-panel');
-    const playersPanel = document.getElementById('tab-players-panel');
-    const toExpand   = name === 'tab-chain' ? chainPanel : name === 'tab-players' ? playersPanel : null;
-    const toCollapse = [chainPanel, playersPanel].find(p => p && !p.classList.contains('collapsed') && p !== toExpand);
-    if (toCollapse) {
-      toCollapse.classList.add('collapsed');
-      if (toExpand) toCollapse.addEventListener('transitionend', () => toExpand.classList.remove('collapsed'), { once: true });
+    const chainPanel = document.getElementById('chain-panel');
+    if (name === 'tab-chain') {
+      if (_chainData) {
+        _renderChain();
+        requestAnimationFrame(() => _chainUpdate?.scrollActive());
+      }
+      _expandPanel(chainPanel);
     } else {
-      toExpand?.classList.remove('collapsed');
-    }
-    if (name === 'tab-chain' && _chainData) {
-      _renderChain();
-      requestAnimationFrame(() => _chainUpdate?.scrollActive());
+      _collapsePanel(chainPanel);
     }
     if (name === 'tab-elo') {
       _renderElo();
+      if (_eloCtrl) _eloCtrl.update(dimState.sourceId);
       requestAnimationFrame(() => { const el = document.querySelector('#tab-elo .elo-item--active'); if (el && !_isFullyVisible(el)) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
     }
-    if (name === 'tab-players') _updatePlayersPanel();
   });
 });
 
@@ -874,16 +868,57 @@ const app = {
 const centroids = {};
 
 const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
+const categoryForId = id =>
+    QUALIFIED_NAMES[id]              ? 'qualified'
+  : (app.byId[id]?.count ?? 0) > 0  ? 'exporter'
+  : _fifaMemberIds.has(id)           ? 'fifa'
+  :                                    'nonfifa';
+
+const countryPillTemplate = id => {
+  const item = {
+    iso2: iso2ForId(id),
+    name: countryName(id, QUALIFIED_NAMES[id] ?? ''),
+    category: categoryForId(id),
+    noMap: !centroids[id],
+    exp: (app.byId[id]?.count ?? 0) > 0,
+    imp: (app.importByNation[id]?.length ?? 0) > 0,
+    fifaMember: _fifaMemberIds.has(id),
+  };
+  return html`<span class="${pillClasses(item)}">${pillContent(item)}</span>`;
+};
 
 const fmtPop = pop => parseFloat(pop.toFixed(2))
   .toLocaleString(LOCALE, { maximumFractionDigits: 2, minimumFractionDigits: 2, useGrouping: false }) + 'M';
 const popTag  = pop  => pop  ? html`<span class="tt-pop fw-normal text-nowrap">${fmtPop(pop)}</span>` : nothing;
 const capTag  = cap  => { const c = cap?.[_LANG] ?? cap?.en ?? null; return c ? html`<span class="tt-pop fw-normal text-nowrap">${c}</span>` : nothing; };
-const _playersPanelEl = document.getElementById('tab-players-panel');
-const _updatePlayersPanel = () => {
-  if (!_playersPanelEl) return;
+const _expandPanel = panel => {
+  if (!panel || !panel.classList.contains('collapsed')) return;
+  panel.classList.remove('collapsed');
+  panel.style.maxHeight = '0';
+  panel.getBoundingClientRect();
+  panel.style.maxHeight = panel.scrollHeight + 'px';
+  panel.addEventListener('transitionend', () => { panel.style.maxHeight = ''; }, { once: true });
+};
+const _collapsePanel = (panel, onDone) => {
+  if (!panel || panel.classList.contains('collapsed')) return;
+  panel.style.maxHeight = panel.scrollHeight + 'px';
+  panel.getBoundingClientRect();
+  panel.style.maxHeight = '0';
+  panel.addEventListener('transitionend', () => {
+    panel.style.maxHeight = '';
+    panel.classList.add('collapsed');
+    if (onDone) onDone();
+  }, { once: true });
+};
+
+const _selectionPanelEl = document.getElementById('selection-panel');
+const _updateSelectionPanel = (onCollapsed) => {
+  if (!_selectionPanelEl) return;
   const id = dimState.sourceId;
-  if (!id) { render(nothing, _playersPanelEl); return; }
+  if (!id) {
+    _collapsePanel(_selectionPanelEl, () => { render(nothing, _selectionPanelEl); if (onCollapsed) onCollapsed(); });
+    return;
+  }
   const fc = iso2ForId(id);
   const pop    = app.pop?.[fc];
   const capObj = app.capital?.[fc];
@@ -891,7 +926,8 @@ const _updatePlayersPanel = () => {
   render(html`<div class="d-flex justify-content-center align-items-center gap-4 pt-1  sub">
     ${pop     ? html`<span>${fmtPop(pop)}</span>`  : nothing}
     ${capText ? html`<span>${capText}</span>`       : nothing}
-  </div>`, _playersPanelEl);
+  </div>`, _selectionPanelEl);
+  _expandPanel(_selectionPanelEl);
 };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
@@ -1044,10 +1080,7 @@ const playerTableTemplate = sourceId => {
     </div>`;
 };
 
-const applyDim = (sourceId, destIds, country) => {
-  dimState.active = true;
-  if (_zoomSpanBtn) _zoomSpanBtn.disabled = false;
-  dimState.sourceId = sourceId;
+const applyDim = (sourceId, destIds) => {
   dimState.destIds = destIds;
 
   // Build import ids: birth countries Y whose players represent nation sourceId
@@ -1102,12 +1135,10 @@ const applyDim = (sourceId, destIds, country) => {
     dimState.arcsGroup.selectAll('.arc-line').remove();
     const src = centroids[sourceId];
     if (src) {
-      // Export arcs: A → X (blue)
       destIds.forEach((count, destId) => {
         const dst = centroids[destId];
         if (dst) drawArc(src, dst, count, 'export');
       });
-      // Import arcs: Y → A (red, arrow points inward)
       dimState.importIds.forEach((count, birthId) => {
         if (birthId === sourceId) return;
         const ySrc = centroids[birthId];
@@ -1116,63 +1147,56 @@ const applyDim = (sourceId, destIds, country) => {
     }
   }
 
-  const fc = iso2ForId(sourceId);
-  const countryDisplay = countryName(sourceId, country);
-  const badgeW = Math.round(countryDisplay.length * 5.8 + 46);
-  const bx = 895 - badgeW;
-  g.selectAll('.flag-qualified').raise(); // all flags above arcs
+  g.selectAll('.flag-qualified').raise();
   g.selectAll('.flag-qualified').filter(function() {
     return +this.getAttribute('data-id') === sourceId;
-  }).raise(); // source flag above other flags
+  }).raise();
+};
 
-  // ── Player table + tab label ──────────────────────────────────────────────────
+const applyEmpty = id => {
+  dimState.destIds  = new Map();
+  dimState.importIds = new Map();
+  g.selectAll('.flag-qualified').attr('opacity', null).attr('data-dim-visible', null);
+  g.selectAll('.country').attr('data-dim-visible', null);
+  if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line,.arc-arrow').remove();
+};
+
+const applySelection = (id, destIds) => {
+  dimState.active = true;
+  dimState.sourceId = id;
+  if (_zoomSpanBtn) _zoomSpanBtn.disabled = !centroids[id];
+
+  if (centroids[id]) {
+    applyDim(id, destIds);
+  } else {
+    applyEmpty(id);
+  }
+
+  // Player table
   const ptEl = document.getElementById('tab-players');
   if (ptEl) {
-    _saveAccState(ptEl);
-    render(playerTableTemplate(sourceId), ptEl);
-    _restoreAccState(ptEl);
-  }
-  _updateChainSelection();
-  _updateEloSelection();
-  _updatePlayersPanel();
-  const _playersBtn = document.getElementById('tab-players-btn');
-  if (_playersBtn) {
-    _playersBtn.innerHTML = '';
-    const isQualifiedBtn = !!QUALIFIED_NAMES[sourceId];
-    const row = document.createElement('span');
-    row.className = 'd-flex align-items-center gap-2 text-start';
-    if (fc) {
-      const _img = document.createElement('img');
-      _img.src = FLAG_CDN(fc);
-      _img.className = 'rounded-circle flex-shrink-0';
-      _img.style.cssText = 'width:16px;height:16px';
-      row.appendChild(_img);
+    if (enablesDim(id)) {
+      _saveAccState(ptEl);
+      render(playerTableTemplate(id), ptEl);
+      _restoreAccState(ptEl);
+    } else {
+      render(html`<p class="py-4 text-center sub fst-italic">${T.noWorldCupLink}</p>`, ptEl);
     }
-    const col = document.createElement('span');
-    col.className = 'd-inline-flex align-items-baseline gap-1';
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = countryDisplay;
-    nameSpan.className = (isQualifiedBtn ? 'text-body' : 'text-muted') + ' btn-name';
-    col.appendChild(nameSpan);
-    if (!isQualifiedBtn) {
-      const tag = document.createElement('small');
-      tag.textContent = T.notQualified;
-      tag.className = 'tt-pop fst-italic';
-      col.appendChild(tag);
-    }
-    row.appendChild(col);
-    _playersBtn.appendChild(row);
-    const closeSpan = document.createElement('span');
-    closeSpan.className = 'btn-close btn-close-sm position-absolute top-0 end-0 m-1';
-    closeSpan.style.cssText = 'font-size:0.5rem';
-    closeSpan.setAttribute('aria-label', 'Close');
-    closeSpan.addEventListener('click', e => { e.stopPropagation(); clearDim(); });
-    _playersBtn.appendChild(closeSpan);
-    _playersBtn.classList.add('dim-selected');
   }
 
+  // Tab button pill + close
+  const _playersBtn = document.getElementById('tab-players-btn');
+  if (_playersBtn) {
+    _playersBtn.className = 'nav-link dim-selected';
+    render(html`${countryPillTemplate(id)}<span class="btn-close" style="font-size:0.45rem;cursor:pointer;align-self:flex-start" aria-label="Close" @click=${e => { e.stopPropagation(); clearDim(); }}></span>`, _playersBtn);
+  }
+
+  _updateChainSelection();
+  _updateEloSelection();
+  _updateSelectionPanel();
   document.body.classList.add('dim-active');
 };
+
 const clearDim = () => {
   dimState.active = false;
   if (_zoomSpanBtn) _zoomSpanBtn.disabled = true;
@@ -1188,88 +1212,23 @@ const clearDim = () => {
     _saveAccState(_ptEl);
     render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
   }
-  const _pb = document.getElementById('tab-players-btn');
-  if (_pb) { _pb.innerHTML = '<img class="tab-icon" src="images/empty_tab_icon.svg" aria-hidden="true">'; _pb.classList.remove('dim-selected'); }
+  _updateSelectionPanel(() => {
+    const _pb = document.getElementById('tab-players-btn');
+    if (_pb) { render(nothing, _pb); _pb.className = 'nav-link'; }
+  });
   _updateChainSelection();
   _updateEloSelection();
-  _updatePlayersPanel();
-};
-
-// ── Select a country that has no map dim (no centroid, or no data) ───────────
-const applyEmpty = id => {
-  dimState.active   = true;
-  dimState.sourceId = id;
-  dimState.destIds  = new Map();
-  dimState.importIds = new Map();
-  // Clear any leftover dim visuals from a previous selection
-  g.selectAll('.flag-qualified').attr('opacity', null).attr('data-dim-visible', null);
-  g.selectAll('.country').attr('data-dim-visible', null);
-  if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line,.arc-arrow').remove();
-
-  const ptEl = document.getElementById('tab-players');
-  if (ptEl) {
-    if (enablesDim(id)) {
-      _saveAccState(ptEl);
-      render(playerTableTemplate(id), ptEl);
-      _restoreAccState(ptEl);
-    } else {
-      render(html`<p class="py-4 text-center sub fst-italic">${T.noWorldCupLink}</p>`, ptEl);
-    }
-  }
-
-  const fc = iso2ForId(id);
-  const countryDisplay = countryName(id, QUALIFIED_NAMES[id] ?? '');
-  const _playersBtn = document.getElementById('tab-players-btn');
-  if (_playersBtn) {
-    _playersBtn.innerHTML = '';
-    const row = document.createElement('span');
-    row.className = 'd-flex align-items-center gap-2 text-start';
-    if (fc) {
-      const _img = document.createElement('img');
-      _img.src = FLAG_CDN(fc);
-      _img.className = 'rounded-circle flex-shrink-0';
-      _img.style.cssText = 'width:16px;height:16px';
-      row.appendChild(_img);
-    }
-    const col = document.createElement('span');
-    col.className = 'd-inline-flex align-items-baseline gap-1';
-    const nameSpan = document.createElement('span');
-    nameSpan.textContent = countryDisplay;
-    nameSpan.className = 'text-muted btn-name';
-    col.appendChild(nameSpan);
-    const tag = document.createElement('small');
-    tag.textContent = T.notQualified;
-    tag.className = 'tt-pop fst-italic';
-    col.appendChild(tag);
-    row.appendChild(col);
-    _playersBtn.appendChild(row);
-    const closeSpan = document.createElement('span');
-    closeSpan.className = 'btn-close btn-close-sm position-absolute top-0 end-0 m-1';
-    closeSpan.style.cssText = 'font-size:0.5rem';
-    closeSpan.setAttribute('aria-label', 'Close');
-    closeSpan.addEventListener('click', e => { e.stopPropagation(); clearDim(); });
-    _playersBtn.appendChild(closeSpan);
-    _playersBtn.classList.add('dim-selected');
-  }
-
-  _updateChainSelection();
-  _updateEloSelection();
-  _updatePlayersPanel();
-  document.body.classList.add('dim-active');
+  _updateSelectionPanel();
 };
 
 // ── Activate from anywhere (map click, Elo badge, player-table nation link) ──
 const activateCountry = (id, scroll = false) => {
   if (id == null) return;
-  if (enablesDim(id) && centroids[id]) {
-    const rec = app.byId[id];
-    const destIds = rec
-      ? new Map(rec.nations.flatMap(([n, c]) => { const did = QUALIFIED_BY_NAME[n]; return did !== undefined ? [[did, c]] : []; }))
-      : new Map();
-    applyDim(id, destIds, rec?.country ?? QUALIFIED_NAMES[id]);
-  } else {
-    applyEmpty(id);
-  }
+  const rec = app.byId[id];
+  const destIds = rec
+    ? new Map(rec.nations.flatMap(([n, c]) => { const did = QUALIFIED_BY_NAME[n]; return did !== undefined ? [[did, c]] : []; }))
+    : new Map();
+  applySelection(id, destIds);
   if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
