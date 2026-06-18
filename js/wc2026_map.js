@@ -3,6 +3,7 @@ import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent } from './wc2026_elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
+import { initSidebar } from './control_sidebar.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 
 const RATIO_MIN = 0;
@@ -284,202 +285,10 @@ fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
 
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloData   = null;
-let _sortOrder  = ['elo', 'exp', 'imp', 'delta', 'alpha'];
-let _sortDir    = 'desc';
 const _fifaMemberIds = new Set();
 render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking><div class="sub mt-2" id="elo-meta"></div></div>`, document.getElementById('tab-elo'));
 const _eloMain = document.querySelector('#tab-elo elo-ranking');
 const _eloMeta = document.getElementById('elo-meta');
-// ── Persistent filter table — isQualified × isImporting × isExporting cube ──
-const _sidebarHost = document.getElementById('sidebar-host');
-render(html`<div id="control-sidebar" class="collapsed taxonomy">
-  <button class="csb-toggle" title="Toggle filter">‹</button>
-  <div class="csb-body overflow-hidden"><table class="csb-table table table-sm table-bordered"><tbody>
-    <tr>
-      <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em></td>
-      <td class="csb-col" data-col="exp"><span class="elo-item elo-item--exp"><span class="elo-name">${T.filterLabels.exporter}</span></span></td>
-      <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
-    </tr>
-    <tr>
-      <td rowspan="4" class="csb-sort-col csb-border-right text-muted">
-        <div class="csb-sort-list d-flex flex-column h-100 position-relative">
-          <button class="csb-sort-dir"></button>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo">${T.sortLabels.elo}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="exp">${T.sortLabels.exp}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="imp">${T.sortLabels.imp}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="delta">${T.sortLabels.delta}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha">${T.sortLabels.alpha}</div>
-        </div>
-      </td>
-      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.qualified}</span></span></td>
-      <td class="csb-row" data-row="qi"><span class="elo-item elo-item--qualified elo-item--imp"><span class="elo-name">${T.filterLabels.importer}</span></span></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
-    </tr>
-    <tr>
-      <td class="csb-row" data-row="qni"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.nonImp}</span></span></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qe"  checked></label></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-q"   checked></label></td>
-    </tr>
-    <tr>
-      <td rowspan="2" class="csb-group" data-row="nq"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
-      <td class="csb-row" data-row="nqf"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-ef"  checked></label></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
-    </tr>
-    <tr>
-      <td class="csb-row" data-row="nqn"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-en"  checked></label></td>
-      <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
-    </tr>
-  </tbody></table></div>
-</div>`, _sidebarHost);
-const _controlSidebar = document.getElementById('control-sidebar');
-const _controlSidebarToggle = _controlSidebar.querySelector('.csb-toggle');
-const _controlSidebarBody = _controlSidebar.querySelector('.csb-body');
-const _controlPanel = _controlSidebarBody;
-
-const _fltQIE = _controlPanel.querySelector('#filter-qie');
-const _fltQI  = _controlPanel.querySelector('#filter-qi');
-const _fltQE  = _controlPanel.querySelector('#filter-qe');
-const _fltQ   = _controlPanel.querySelector('#filter-q');
-const _fltEF  = _controlPanel.querySelector('#filter-ef');
-const _fltOF  = _controlPanel.querySelector('#filter-of');
-const _fltEN  = _controlPanel.querySelector('#filter-en');
-const _fltON  = _controlPanel.querySelector('#filter-on');
-
-const _flagCat = id => {
-  const qual = !!QUALIFIED_NAMES[id];
-  const imp  = (app.importByCountry[id]?.length ?? 0) > 0;
-  const exp  = (app.byId[id]?.count ?? 0) > 0;
-  if  (qual &&  imp &&  exp) return 'qie';
-  if  (qual &&  imp && !exp) return 'qi';
-  if  (qual && !imp &&  exp) return 'qe';
-  if  (qual && !imp && !exp) return 'q';
-  if (!qual &&               exp) return 'e';
-  return 'o';
-};
-const _catChecked = cat => ({qie:_fltQIE,qi:_fltQI,qe:_fltQE,q:_fltQ})[cat]?.checked ?? true;
-const _applyFlagFilter = () => {
-  d3.selectAll('.flag-qualified[data-elo-cat]')
-    .attr('visibility', function() {
-      const id = +this.getAttribute('data-id');
-      return _catEloChecked(id, _fifaMemberIds.has(id)) ? null : 'hidden';
-    })
-    .attr('cursor', function() {
-      return _isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
-    });
-  d3.selectAll('.country[data-id]').style('cursor', function() {
-    return _isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
-  });
-  _updateVisibleCountryCount();
-};
-const _updateVisibleCountryCount = () => {
-  const el = document.getElementById('visible-country-count');
-  if (!el) return;
-  const all = _eloMain.querySelectorAll('.elo-item');
-  const total = all.length;
-  if (!total) return;
-  const visible = [...all].filter(li => li.style.display !== 'none').length;
-  el.textContent = `${visible} / ${total}`;
-};
-const _catEloChecked = (id, fifaMember) => {
-  const cat = _flagCat(id);
-  if (cat === 'e') return fifaMember ? _fltEF.checked : _fltEN.checked;
-  if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
-  return _catChecked(cat);
-};
-const _isClickable = id => {
-  const flag = document.querySelector(`.flag-qualified[data-id="${id}"]`);
-  if (!flag || flag.getAttribute('visibility') === 'hidden') return false;
-  return parseFloat(flag.getAttribute('opacity') ?? '1') >= 1;
-};
-const _filterToggle = chks => { const on = chks.every(c => c.checked); chks.forEach(c => c.checked = !on); _renderElo(); _applyFlagFilter(); };
-_controlPanel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
-_controlPanel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
-_controlPanel.querySelector('[data-row="qni"]' ).addEventListener('click', () => _filterToggle([_fltQE,  _fltQ]));
-_controlPanel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));
-_controlPanel.querySelector('[data-row="nqf"]' ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF]));
-_controlPanel.querySelector('[data-row="nqn"]' ).addEventListener('click', () => _filterToggle([_fltEN, _fltON]));
-_controlPanel.querySelector('[data-col="exp"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQE, _fltEF, _fltEN]));
-_controlPanel.querySelector('[data-col="nexp"]').addEventListener('click', () => _filterToggle([_fltQI,  _fltQ,  _fltOF, _fltON]));
-_controlPanel.querySelector('[data-col="all"]').addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ, _fltEF, _fltOF, _fltEN, _fltON]));
-_controlPanel.addEventListener('change', () => { _renderElo(); _applyFlagFilter(); });
-_controlPanel.querySelector('.csb-close')?.addEventListener('click', e => {
-  e.stopPropagation();
-  _controlSidebar.classList.add('collapsed');
-  _controlSidebarToggle.textContent = '‹';
-});
-const _sortListEl = _controlPanel.querySelector('.csb-sort-list');
-const _sortDirBtn = _sortListEl.querySelector('.csb-sort-dir');
-const _alphaEl = _sortListEl.querySelector('[data-sort="alpha"]');
-const _updateAlphaLabel = () => {
-  _alphaEl.textContent = _sortOrder[0] === 'alpha' && _sortDir === 'asc' ? 'Z–A' : 'A–Z';
-};
-const _updateSortCol = () => {
-  const items = Array.from(_sortListEl.querySelectorAll('.csb-sort-item'));
-  const before = new Map(items.map(el => [el, el.getBoundingClientRect().top]));
-  _sortOrder.forEach(key => { const el = _sortListEl.querySelector(`[data-sort="${key}"]`); if (el) _sortListEl.appendChild(el); });
-  _sortDirBtn.dataset.dir = _sortDir;
-  _updateAlphaLabel();
-  items.forEach(el => {
-    const delta = before.get(el) - el.getBoundingClientRect().top;
-    if (delta === 0) return;
-    el.style.transition = 'none';
-    el.style.transform = `translateY(${delta}px)`;
-    el.getBoundingClientRect(); // force reflow
-    el.style.transition = 'transform 0.25s ease';
-    el.style.transform = '';
-    el.addEventListener('transitionend', () => { el.style.transition = ''; }, { once: true });
-  });
-};
-_updateSortCol();
-_sortListEl?.addEventListener('click', e => {
-  const btn = e.target.closest('.csb-sort-dir');
-  if (btn) {
-    e.stopPropagation();
-    _sortDir = _sortDir === 'desc' ? 'asc' : 'desc';
-    _sortDirBtn.dataset.dir = _sortDir;
-    _updateAlphaLabel();
-    _renderElo(_scrollToActiveElo);
-    return;
-  }
-  const item = e.target.closest('.csb-sort-item');
-  if (item) {
-    const key = item.dataset.sort;
-    _sortOrder = [key, ..._sortOrder.filter(k => k !== key)];
-    _updateSortCol();
-    _renderElo(_scrollToActiveElo);
-  }
-});
-_controlSidebarToggle.addEventListener('click', () => {
-  const collapsed = _controlSidebar.classList.toggle('collapsed');
-  _controlSidebarToggle.textContent = collapsed ? '‹' : '›';
-});
-// Measure sidebar dimensions — called on load and resize
-const _measureControlSidebar = () => {
-  const wasCollapsed = _controlSidebar.classList.contains('collapsed');
-  _controlSidebar.classList.remove('collapsed');
-  _controlSidebarBody.style.maxWidth = 'none';
-  _controlSidebarBody.style.width = 'max-content';
-  document.documentElement.style.setProperty('--csb-w', _controlSidebarBody.offsetWidth + 'px');
-  document.documentElement.style.setProperty('--csb-h', _controlPanel.querySelector('.csb-table').offsetHeight + 'px');
-  _controlSidebarBody.style.maxWidth = '';
-  _controlSidebarBody.style.width = '';
-  if (wasCollapsed) _controlSidebar.classList.add('collapsed');
-};
-_measureControlSidebar();
-_controlSidebarToggle.textContent = '›';
-const _autoCollapseTimer = setTimeout(() => {
-  _controlSidebarBody.style.transition = 'max-width 1s ease';
-  _controlSidebar.classList.add('collapsed');
-  _controlSidebarToggle.textContent = '‹';
-  _controlSidebarBody.addEventListener('transitionend', () => {
-    _controlSidebarBody.style.transition = '';
-  }, { once: true });
-}, 3000);
-_controlSidebar.addEventListener('click', () => clearTimeout(_autoCollapseTimer), { once: true });
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
 if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.offsetHeight + 'px');
@@ -569,9 +378,9 @@ const _buildEloItems = () => {
   _eloItemsById.clear();
   raw.forEach(item => _eloItemsById.set(item.id, item));
   const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
-  raw.sort((a, b) => { for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) { let d = _sortFns[_sortOrder[i]](a, b); if (i === 0 && _sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
-  const primary   = _sortOrder[0];
-  const secondary = _sortOrder[1];
+  raw.sort((a, b) => { for (let i = 0; i < Math.min(sidebar.sortOrder.length, 3); i++) { let d = _sortFns[sidebar.sortOrder[i]](a, b); if (i === 0 && sidebar.sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
+  const primary   = sidebar.sortOrder[0];
+  const secondary = sidebar.sortOrder[1];
   const _ptsFor = (key, item) =>
       key === 'exp'   ? item.expCount
     : key === 'imp'   ? item.impCount
@@ -670,8 +479,8 @@ const zoomToCentroid = (id, duration = 2000) => {
 
 const _renderElo = (onAnimationDone) => {
   const allItems = _buildEloItems();
-  const visibleItems = allItems.filter(item => _catEloChecked(item.id, item.fifaMember));
-  _eloMeta.hidden = _sortOrder[0] !== 'elo';
+  const visibleItems = allItems.filter(item => sidebar.catEloChecked(item.id, item.fifaMember));
+  _eloMeta.hidden = sidebar.sortOrder[0] !== 'elo';
   if (!_eloMeta.innerHTML && (_eloData?.source || _eloData?.updated)) {
     const parts = [];
     if (_eloData.source) parts.push(`<a href="https://${_eloData.source}/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
@@ -698,8 +507,6 @@ const _updateEloSelection = () => {
   if (_eloMain.hasItems && !document.getElementById('tab-elo')?.hidden)
     _eloMain.update(dimState.sourceId);
 };
-
-// Elo data loaded in Promise.all below
 
 const _switchTab = name => {
   document.querySelectorAll('#bottomTabList button[data-tab]').forEach(b => {
@@ -732,7 +539,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
 let _chainResizeTimer = null;
 window.addEventListener('resize', () => {
   _syncMapHeight();
-  _measureControlSidebar();
+  sidebar.measureControlSidebar();
   clearTimeout(_chainResizeTimer);
   _chainResizeTimer = setTimeout(() => {
     if (_chainData && !document.getElementById('tab-chain')?.hidden) _renderChain();
@@ -827,6 +634,11 @@ const app = {
   eloRank: {},
 };
 const centroids = {};
+
+const _sidebarCallbacks = {};
+const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds: _fifaMemberIds, eloMain: _eloMain, callbacks: _sidebarCallbacks });
+_sidebarCallbacks.renderElo = _renderElo;
+_sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
 
 const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
 const countryPillTemplate = id => {
@@ -1428,7 +1240,7 @@ const onCountryMousemove = (event, id, topoName = '') => {
 
 const onCountryClick = (event, id) => {
   event.stopPropagation();
-  if (!_isClickable(id)) { 
+  if (!sidebar.isClickable(id)) { 
     if (dimState.active) clearDim(); 
     return; 
   }
@@ -1460,7 +1272,7 @@ g.selectAll('.country')
   .attr('fill', d => choroFill(+d.id, app.byId))
   .attr('stroke','#ccc8c0').attr('stroke-width',.3)
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
-  .style('cursor', d => _isClickable(+d.id) ? 'pointer' : 'default')
+  .style('cursor', d => sidebar.isClickable(+d.id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
   .on('mouseleave', () => { if (!dimState.active) { hideTip(); } })
   .on('click',     (event, d) => onCountryClick(event, +d.id));
@@ -1482,7 +1294,7 @@ g.selectAll('.country-uk')
   .attr('fill', d => choroFill(d._id, app.byId))
   .attr('stroke','#ccc8c0').attr('stroke-width',.3)
   .attr('data-enables-dim', d => enablesDim(d._id) ? '' : null)
-  .style('cursor', d => _isClickable(d._id) ? 'pointer' : 'default')
+  .style('cursor', d => sidebar.isClickable(d._id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
   .on('mouseleave', () => { if (!dimState.active) hideTip(); })
   .on('click',     (event, d) => onCountryClick(event, d._id));
@@ -1542,7 +1354,7 @@ worldFeatures
       .attr('x', fx - FLAG/2).attr('y', fy - FLAG/2)
       .attr('pointer-events', 'all')
       .attr('data-enables-dim', enablesDim(id) ? '' : null)
-      .attr('cursor', _isClickable(id) ? 'pointer' : 'default')
+      .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
       .on('mousemove', (event) => onCountryMousemove(event, id))
       .on('click',     (event) => onCountryClick(event, id));
     if (fp) sel.classed('offset-flag', true)
@@ -1563,7 +1375,7 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
     .attr('stroke', '#fff')
     .attr('stroke-width', 0.5)
     .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', _isClickable(id) ? 'pointer' : 'default')
+    .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
     .on('mousemove', (event) => onCountryMousemove(event, id))
     .on('click',     (event) => onCountryClick(event, id));
 });
@@ -1582,7 +1394,7 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat, dLon = 0, dLat = 0 }) => {
     .attr('x', fx - FLAG/2).attr('y', fy - FLAG/2)
     .attr('pointer-events', 'all')
     .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', _isClickable(id) ? 'pointer' : 'default')
+    .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
     .on('mousemove', (event) => onCountryMousemove(event, id))
     .on('click',     (event) => onCountryClick(event, id));
 });
@@ -1602,18 +1414,18 @@ ukFeatures
       .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
       .attr('pointer-events', 'all')
       .attr('data-enables-dim', enablesDim(f._id) ? '' : null)
-      .attr('cursor', _isClickable(f._id) ? 'pointer' : 'default')
+      .attr('cursor', sidebar.isClickable(f._id) ? 'pointer' : 'default')
       .on('mousemove', (event) => onCountryMousemove(event, f._id))
       .on('click',     (event) => onCountryClick(event, f._id));
   });
 
 // ── Stamp all flags with elo-filter category ────────────────────────────────
 g.selectAll('.flag-qualified[data-id]').attr('data-elo-cat', function() {
-  return _flagCat(+this.getAttribute('data-id'));
+  return sidebar.flagCat(+this.getAttribute('data-id'));
 });
 
 
-_applyFlagFilter();
+sidebar.applyFlagFilter();
 
 // ── Centroids map (for arc drawing) ──────────────────────────────────────────
 topojson.feature(world, world.objects.countries).features
@@ -1645,8 +1457,8 @@ Promise.all([
   renderWorld(world, ukNations);
   // Rebuild with centroids now populated, then render the elo list
   _renderElo();
-  _applyFlagFilter();
-  _updateVisibleCountryCount();
+  sidebar.applyFlagFilter();
+  sidebar.updateVisibleCountryCount();
   // Initial zoom: fit all qualified + exporting flags so Antarctica is off-screen
   const xs = [], ys = [];
   g.selectAll('.flag-qualified[data-elo-cat]:not([data-elo-cat="o"])').each(function() {
