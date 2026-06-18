@@ -94,13 +94,21 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 </div>
 
 <div>
-<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">No map centroid</div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555">Off the map</div>
+<div style="font-size:.8rem;color:#777;margin-bottom:6px">Orthogonal to the categories above.</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--fifa elo-item--no-map" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" alt="">
+    <span class="elo-name" data-id="702">Singapore</span>
+  </span>
+  <span style="font-size:.875rem"><em>Italic</em> name — too small to appear on the map.</span>
+</div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--nonfifa elo-item--no-map" style="flex-shrink:0">
-    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/va.svg" alt="">
-    <span class="elo-name" data-id="336">Vatican</span>
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/mc.svg" alt="">
+    <span class="elo-name" data-id="492">Monaco</span>
   </span>
-  <span style="font-size:.875rem"><em>Italic</em>, lightest text. Too small to appear on the 110m world map. Orthogonal to the categories above.</span>
+  <span style="font-size:.875rem">Same, here combined with non-FIFA.</span>
 </div>
 </div>
 

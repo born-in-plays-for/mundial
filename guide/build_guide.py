@@ -48,7 +48,7 @@ def take_screenshots():
     SCREENSHOTS.mkdir(exist_ok=True)
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={'width': 1280, 'height': 800})
+        page = browser.new_page(viewport={'width': 1280, 'height': 800}, device_scale_factor=2)
         page.goto(
             f'{BASE_URL}/wc2026_map_exported.html',
             wait_until='networkidle',

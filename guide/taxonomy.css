@@ -19,7 +19,7 @@
 .taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
 
 /* No map centroid: italic (contingently orthogonal) */
-.taxonomy .elo-item--no-map .elo-name { font-style: italic; color: var(--lightest-text); }
+.taxonomy .elo-item--no-map .elo-name { font-style: italic; }
 
 /* Dots via pseudo-elements */
 .taxonomy .elo-item--exp .elo-name::before {

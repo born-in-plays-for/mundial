@@ -25,6 +25,96 @@ Clicca sull'intestazione di colonna `exp.` per mostrare solo i paesi esportatori
 clicca su `qualif.` per attivare/disattivare tutte le nazioni qualificate in una volta.
 <!-- /i18n:control_sidebar -->
 
+<!-- i18n:country_taxonomy -->
+## Categorie di paesi
+
+Ogni paese è mostrato come una **pillola** il cui stile CSS ne codifica la categoria.
+
+<div class="taxonomy" style="display:flex;flex-direction:column;gap:16px;margin:1rem 0">
+
+<div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">Qualificato vs. non qualificato</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cz.svg" alt="">
+    <span class="elo-name" data-id="203">Czech Republic</span>
+  </span>
+  <span style="font-size:.875rem">Bordo pieno — qualificato per il Mondiale 2026.</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--fifa" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ua.svg" alt="">
+    <span class="elo-name" data-id="804">Ukraine</span>
+  </span>
+  <span style="font-size:.875rem">Nessun bordo — non qualificato.</span>
+</div>
+</div>
+
+<div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">FIFA vs. non-FIFA</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--fifa" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/is.svg" alt="">
+    <span class="elo-name" data-id="352">Iceland</span>
+  </span>
+  <span style="font-size:.875rem">Testo scuro — membro FIFA.</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--nonfifa" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gl.svg" alt="">
+    <span class="elo-name" data-id="304">Greenland</span>
+  </span>
+  <span style="font-size:.875rem">Testo chiaro — non membro FIFA.</span>
+</div>
+</div>
+
+<div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">Nato qui / gioca per</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--exp" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/se.svg" alt="">
+    <span class="elo-name" data-id="752">Sweden</span>
+  </span>
+  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span> Giocatori nati in questo paese giocano per un altro paese qualificato.</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--imp" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" alt="">
+    <span class="elo-name" data-id="531">Curaçao</span>
+  </span>
+  <span style="font-size:.875rem"><span style="color:#ef4444">●</span> Giocatori nati in un altro paese giocano per questo paese.</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" alt="">
+    <span class="elo-name" data-id="250">France</span>
+  </span>
+  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span><span style="color:#ef4444">●</span> Giocatori nati qui giocano per altri paesi, e giocatori nati altrove giocano per questo paese.</span>
+</div>
+</div>
+
+<div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555">Fuori dalla mappa</div>
+<div style="font-size:.8rem;color:#777;margin-bottom:6px">Ortogonale alle categorie precedenti.</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--fifa elo-item--no-map" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" alt="">
+    <span class="elo-name" data-id="702">Singapore</span>
+  </span>
+  <span style="font-size:.875rem">Nome in <em>corsivo</em> — troppo piccolo per apparire sulla mappa.</span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--nonfifa elo-item--no-map" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/mc.svg" alt="">
+    <span class="elo-name" data-id="492">Monaco</span>
+  </span>
+  <span style="font-size:.875rem">Idem, qui combinato con non-FIFA.</span>
+</div>
+</div>
+
+</div>
+<!-- /i18n:country_taxonomy -->
+
 <!-- i18n:interaction_flow -->
 ## Modello di interazione
 
