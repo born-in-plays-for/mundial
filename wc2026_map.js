@@ -568,7 +568,7 @@ const _syncMapHeight = () => {
       _zoomSpanBtn.style.top   = (midTop + (_zoomResetBtn?.offsetHeight ?? 26) + 4) + 'px';
     }
     if (_zoomHintEl) {
-      _zoomHintEl.style.left      = (svgRect.right - mcRect.left + 2) + 'px';
+      _zoomHintEl.style.left      = (svgRect.right - mcRect.left) + 'px';
       _zoomHintEl.style.bottom    = fromBottom + 'px';
       _zoomHintEl.style.maxHeight = svgRect.height + 'px';
     }
@@ -712,7 +712,7 @@ const _renderElo = () => {
   _eloMeta.hidden = _sortOrder[0] !== 'elo';
   if (!_eloMeta.innerHTML && (_eloData?.source || _eloData?.updated)) {
     const parts = [];
-    if (_eloData.source) parts.push(`<a href="https://eloratings.net/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
+    if (_eloData.source) parts.push(`<a href="https://${_eloData.source}/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
     if (_eloData.updated) {
       const d = new Date(_eloData.updated + 'T00:00:00');
       const fmt = isNaN(d) ? _eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
