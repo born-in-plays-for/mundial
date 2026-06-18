@@ -1263,7 +1263,7 @@ const showExportTip = (event, id) => {
         <div class="tt-sub">${ratio} ${T.perMillion}</div>
       </div>
       <div class="tt-label">${T.exported(rec.count, countryName(rec.id, rec.country))} ${T.selectedBy(rec.count)}</div>
-      <div class="tt-countries mb-0 fst-italic">${rec.countries.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
+      <div class="tt-countries mb-0 fst-italic">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
       <div class="tt-players ${rec.count > rec.top.length ? 'tt-more' : ''}">
         ${rec.top.map(p => html`
           <div class="tt-player">
