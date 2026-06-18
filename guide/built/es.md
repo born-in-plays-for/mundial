@@ -22,7 +22,7 @@ que controla qué países aparecen en la lista de clasificaciones Elo debajo del
 
 Las filas agrupan países por estado de clasificación; las columnas seleccionan por rol de exportación/importación.
 Haz clic en el encabezado de columna `exp.` para mostrar solo los países exportadores;
-haz clic en `qualif.` para alternar todas las naciones clasificadas a la vez.
+haz clic en `qualif.` para alternar todas las países clasificadas a la vez.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:country_taxonomy -->

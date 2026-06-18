@@ -22,7 +22,7 @@ che controlla quali paesi appaiono nell'elenco dei ranking Elo sotto la mappa.
 
 Le righe raggruppano i paesi per stato di qualificazione; le colonne selezionano per ruolo export/import.
 Clicca sull'intestazione di colonna `exp.` per mostrare solo i paesi esportatori;
-clicca su `qualif.` per attivare/disattivare tutte le nazioni qualificate in una volta.
+clicca su `qualif.` per attivare/disattivare tutte le paesi qualificate in una volta.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:country_taxonomy -->

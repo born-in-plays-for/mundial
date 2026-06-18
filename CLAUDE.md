@@ -279,7 +279,15 @@ Files to create (not yet done):
 
 ---
 
+## Terminology
+
+Always use **"country"** (or "pays", "Land", "paese", "país") instead of "nation" in all user-facing text and code. The Elo rankings include entities that are not nations (territories, dependencies, etc.).
+
+---
+
 ## Git / deployment
+
+**NEVER commit or push unless the user explicitly asks.** Do not commit after making changes — wait for the user to test first. The user will say "commit and push" when ready. Never ask "ready to commit?" either.
 
 **When asked to "commit and push", only commit and push this repo (`cthiebaud/mundial`). Never touch the parent `aequologica.github.io` repo unless explicitly asked.**
 

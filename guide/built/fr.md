@@ -22,7 +22,7 @@ qui contrôle quels pays apparaissent dans la liste des classements Elo sous la 
 
 Les lignes regroupent les pays par statut de qualification ; les colonnes sélectionnent par rôle export/import.
 Cliquez sur l'en-tête de colonne `exp.` pour n'afficher que les pays exportateurs ;
-cliquez sur `qualif.` pour basculer toutes les nations qualifiées d'un coup.
+cliquez sur `qualif.` pour basculer toutes les pays qualifiés d'un coup.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:country_taxonomy -->

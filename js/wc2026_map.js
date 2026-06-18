@@ -351,7 +351,7 @@ const _fltON  = _controlPanel.querySelector('#filter-on');
 
 const _flagCat = id => {
   const qual = !!QUALIFIED_NAMES[id];
-  const imp  = (app.importByNation[id]?.length ?? 0) > 0;
+  const imp  = (app.importByCountry[id]?.length ?? 0) > 0;
   const exp  = (app.byId[id]?.count ?? 0) > 0;
   if  (qual &&  imp &&  exp) return 'qie';
   if  (qual &&  imp && !exp) return 'qi';
@@ -378,7 +378,7 @@ const _applyFlagFilter = () => {
 const _updateVisibleCountryCount = () => {
   const el = document.getElementById('visible-country-count');
   if (!el) return;
-  const all = document.querySelectorAll('.elo-item');
+  const all = _eloMain.querySelectorAll('.elo-item');
   const total = all.length;
   if (!total) return;
   const visible = [...all].filter(li => li.style.display !== 'none').length;
@@ -557,7 +557,7 @@ const _buildEloItems = () => {
   const raw = buildEloItems({
     rankings: _eloData?.rankings ?? [],
     byId: app.byId,
-    importByNation: app.importByNation,
+    importByCountry: app.importByCountry,
     fifaMemberIds: _fifaMemberIds,
     countryNameFn: countryName,
     centroids,
@@ -770,7 +770,7 @@ const iso2ForId = id => ISO2[id] ?? whereNumeric(String(id).padStart(3,'0'))?.al
 // Birth country names not in ISO 3166-1 numeric that have a known alpha-2 code
 const _NULL_CODE = { 'Democratic Republic of the Congo': 'cd', 'U.S.': 'us', 'Isle of Man': 'im' };
 
-// Small island nations — absent from 110m topojson. A dot marker is drawn at lon/lat (choropleth color);
+// Small island countries — absent from 110m topojson. A dot marker is drawn at lon/lat (choropleth color);
 // the flag icon is offset by dLon/dLat (degrees) from the centroid so both are visible.
 // dLon: + east, − west  |  dLat: + north, − south
 const STANDALONE_FLAGS = [
@@ -801,7 +801,7 @@ const showQualifiedTip = (event, name, code) => {
   const nId = QUALIFIED_BY_NAME[name];
   if (lastTipKey !== name) {
     lastTipKey = name;
-    const hasImps = (app.importByNation[nId] ?? []).length > 0;
+    const hasImps = (app.importByCountry[nId] ?? []).length > 0;
 
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
@@ -810,7 +810,7 @@ const showQualifiedTip = (event, name, code) => {
       </div>
       <div class="tt-label">${T.noExport(countryName(nId, name))}</div>
       ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-label">${T.noImport(countryName(nId, name))}</div>`}
-      ${hasImps && (app.importByNation[nId] ?? []).length > 5 ? html`<div class="tt-more-label text-end">${T.clickForAll}</div>` : nothing}`, tt);
+      ${hasImps && (app.importByCountry[nId] ?? []).length > 5 ? html`<div class="tt-more-label text-end">${T.clickForAll}</div>` : nothing}`, tt);
   }
   positionTip(event, 200, false);
 };
@@ -826,8 +826,8 @@ const dimState = {
 };
 const app = {
   byId: {},
-  importByNation: {},
-  nativeByNation: {},
+  importByCountry: {},
+  nativeByCountry: {},
   pop: {},
   eloRank: {},
 };
@@ -894,29 +894,29 @@ const ptWikiRow = p => {
 
 const SQUAD_SIZE = { 40: 25, 124: 25 }; // Austria, Canada — injuries reduced squad to 25
 
-const buildImportColHtml = nationId => {
-  const players   = (app.importByNation[nationId] ?? []).slice().sort((a, b) => b.caps - a.caps);
-  if (players.length === 0) return html`<div class="tt-label">${T.noImport(countryName(nationId, QUALIFIED_NAMES[nationId]))}</div>`;
+const buildImportColHtml = countryId => {
+  const players   = (app.importByCountry[countryId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+  if (players.length === 0) return html`<div class="tt-label">${T.noImport(countryName(countryId, QUALIFIED_NAMES[countryId]))}</div>`;
   const byBirth   = {};
   players.forEach(p => { const l = countryName(p.birthCountryId, p.birthCountry); byBirth[l] = (byBirth[l] ?? 0) + 1; });
-  const nations   = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
+  const countries = Object.entries(byBirth).sort((a, b) => b[1] - a[1]);
   const top       = players.slice(0, 5);
-  const squadSize = SQUAD_SIZE[nationId] ?? 26;
+  const squadSize = SQUAD_SIZE[countryId] ?? 26;
   const ratio     = (players.length / squadSize * 100).toFixed(0) + '%';
 
-  const nationName = countryName(nationId, QUALIFIED_NAMES[nationId]);
+  const displayName = countryName(countryId, QUALIFIED_NAMES[countryId]);
   return html`
     <div class="tt-count-row d-flex justify-content-between align-items-center">
       <div class="tt-count color-imp">${players.length}</div>
       <div class="tt-sub">${ratio} ${T.ofSquad} (${squadSize})</div>
     </div>
-    <div class="tt-label">${T.selectedByLabel(nationName)}</div>
-    <div class="tt-nations mb-0 fst-italic">${nations.map(([n, c]) => `${n} (${c})`).join(', ')}</div>
+    <div class="tt-label">${T.selectedByLabel(displayName)}</div>
+    <div class="tt-countries mb-0 fst-italic">${countries.map(([n, c]) => `${n} (${c})`).join(', ')}</div>
     <div class="tt-players ${players.length > 5 ? 'tt-more' : ''}">
       ${top.map(p => html`
         <div class="tt-player">
           <span>${p.name}</span>
-          <span class="tt-nation text-nowrap"><span class="color-imp">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
+          <span class="tt-country text-nowrap"><span class="color-imp">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
         </div>`)}
     </div>`;
 };
@@ -925,8 +925,8 @@ const playerTableTemplate = sourceId => {
   const country       = app.byId[sourceId]?.country ?? QUALIFIED_NAMES[sourceId];
   const cnt           = app.byId[sourceId]?.count ?? 0;
   const exportPlayers = app.byId[sourceId]?.players ?? [];
-  const nativePlayers = app.nativeByNation[sourceId] ?? [];
-  const importPlayers = (app.importByNation[sourceId] ?? []).slice().sort((a, b) => b.caps - a.caps);
+  const nativePlayers = app.nativeByCountry[sourceId] ?? [];
+  const importPlayers = (app.importByCountry[sourceId] ?? []).slice().sort((a, b) => b.caps - a.caps);
   const isQualified   = !!QUALIFIED_NAMES[sourceId];
   const name          = countryName(sourceId, country);
 
@@ -971,13 +971,13 @@ const playerTableTemplate = sourceId => {
         <div id="acc-exp" class="accordion-collapse collapse">
           <div class="accordion-body px-0 pt-1">
             ${exportGroups.map(({ nation, players: gp }) => {
-              const nationId = QUALIFIED_BY_NAME[nation];
-              const nc = iso2ForId(nationId);
+              const destId = QUALIFIED_BY_NAME[nation];
+              const nc = iso2ForId(destId);
               return html`
-                <div class="pt-nation-header d-flex align-items-center" @click=${() => { activateCountry(nationId, true); _zoomToActiveDimFlags(); }}>
+                <div class="pt-country-header d-flex align-items-center" @click=${() => { activateCountry(destId, true); _zoomToActiveDimFlags(); }}>
                   ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
-                  <span class="pt-nation-name fw-medium">${countryName(nationId, nation)}</span>
-                  <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+                  <span class="pt-country-name fw-medium">${countryName(destId, nation)}</span>
+                  <span class="pt-country-count">${gp.length} ${T.players(gp.length)}</span>
                 </div>
                 ${gp.map(p => html`
                   <div class="pt-player-row d-flex justify-content-between align-items-center">
@@ -1020,10 +1020,10 @@ const playerTableTemplate = sourceId => {
               const bc = birthCountryId != null ? iso2ForId(birthCountryId) : (_NULL_CODE[birthCountry] ?? null);
               const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
               return html`
-                <div class="pt-nation-header d-flex align-items-center${clickId != null ? ' pt-nation-clickable' : ''}" @click=${clickId != null ? () => { activateCountry(clickId, true); _zoomToActiveDimFlags(); } : null}>
+                <div class="pt-country-header d-flex align-items-center${clickId != null ? ' pt-country-clickable' : ''}" @click=${clickId != null ? () => { activateCountry(clickId, true); _zoomToActiveDimFlags(); } : null}>
                   ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
-                  <span class="pt-nation-name fw-medium">${label}</span>
-                  <span class="pt-nation-count">${gp.length} ${T.players(gp.length)}</span>
+                  <span class="pt-country-name fw-medium">${label}</span>
+                  <span class="pt-country-count">${gp.length} ${T.players(gp.length)}</span>
                 </div>
                 ${gp.map(p => html`
                   <div class="pt-player-row d-flex justify-content-between align-items-center">
@@ -1041,9 +1041,9 @@ const playerTableTemplate = sourceId => {
 const applyDim = (sourceId, destIds) => {
   dimState.destIds = destIds;
 
-  // Build import ids: birth countries Y whose players represent nation sourceId
+  // Build import ids: birth countries Y whose players represent country sourceId
   dimState.importIds = new Map();
-  (app.importByNation[sourceId] ?? []).forEach(p => {
+  (app.importByCountry[sourceId] ?? []).forEach(p => {
     const cId = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
     if (cId == null) return;
     dimState.importIds.set(cId, (dimState.importIds.get(cId) ?? 0) + 1);
@@ -1181,7 +1181,7 @@ const clearDim = () => {
   _updateSelectionPanel();
 };
 
-// ── Activate from anywhere (map click, Elo badge, player-table nation link) ──
+// ── Activate from anywhere (map click, Elo badge, player-table country link) ──
 const activateCountry = (id, scroll = false) => {
   if (id == null) return;
   const rec = app.byId[id];
@@ -1200,7 +1200,7 @@ const placeFlag = (sel) => {
 };
 
 // ── Main render ───────────────────────────────────────────────────────────────
-// GU_A3 code (Natural Earth) → synthetic nation ID
+// GU_A3 code (Natural Earth) → synthetic country ID
 const UK_GU_TO_ID = {ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263};
 
 // ── Data index builder ──────────────────────────────────────────────────────
@@ -1209,18 +1209,18 @@ const DATA = rawData.data;
 if (rawData.natives) {
   Object.entries(rawData.natives).forEach(([name, players]) => {
     const nId = QUALIFIED_BY_NAME[name];
-    if (nId != null) app.nativeByNation[nId] = players;
+    if (nId != null) app.nativeByCountry[nId] = players;
   });
 }
 DATA.forEach(d => {
   d.pop        = rawData.pop[iso2ForId(d.id)] || null;
-  d.nativeCount = (app.nativeByNation[d.id] ?? []).length;
+  d.nativeCount = (app.nativeByCountry[d.id] ?? []).length;
   d.totalCount  = d.count + d.nativeCount;
   d.ratio       = d.totalCount;
   app.byId[d.id] = d;
 });
-// Add coloring entries for qualified nations all of whose players play for their own country
-Object.entries(app.nativeByNation).forEach(([nId, players]) => {
+// Add coloring entries for qualified countries all of whose players play for their own country
+Object.entries(app.nativeByCountry).forEach(([nId, players]) => {
   const id = +nId;
   if (app.byId[id]) return;
   const name = QUALIFIED_NAMES[id];
@@ -1242,8 +1242,8 @@ DATA.forEach(rec => {
     const nId = QUALIFIED_BY_NAME[p.nation];
     if (nId == null) return;
     if (countryName(rec.id, rec.country) === countryName(nId, QUALIFIED_NAMES[nId])) return;
-    if (!app.importByNation[nId]) app.importByNation[nId] = [];
-    app.importByNation[nId].push({ name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wiki_langs: p.wiki_langs });
+    if (!app.importByCountry[nId]) app.importByCountry[nId] = [];
+    app.importByCountry[nId].push({ name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wiki_langs: p.wiki_langs });
   });
 });};
 
@@ -1253,8 +1253,8 @@ DATA.forEach(rec => {
 const showExportTip = (event, id) => {
   const rec        = app.byId[id];
   if (!rec) { hideTip(); return; }
-  const hasImports   = !!QUALIFIED_NAMES[id] && (app.importByNation[id] ?? []).length > 0;
-  const importCount  = hasImports ? (app.importByNation[id] ?? []).length : 0;
+  const hasImports   = !!QUALIFIED_NAMES[id] && (app.importByCountry[id] ?? []).length > 0;
+  const importCount  = hasImports ? (app.importByCountry[id] ?? []).length : 0;
   if (lastTipKey !== id) {
     lastTipKey = id;
     const exportRatio = rec.pop && rec.count ? rec.count / rec.pop : null;
@@ -1268,12 +1268,12 @@ const showExportTip = (event, id) => {
         <div class="tt-sub">${ratio} ${T.perMillion}</div>
       </div>
       <div class="tt-label">${T.exported(rec.count, countryName(rec.id, rec.country))} ${T.selectedBy(rec.count)}</div>
-      <div class="tt-nations mb-0 fst-italic">${rec.nations.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
+      <div class="tt-countries mb-0 fst-italic">${rec.countries.map(([n, c]) => `${countryName(QUALIFIED_BY_NAME[n], n)} (${c})`).join(', ')}</div>
       <div class="tt-players ${rec.count > rec.top.length ? 'tt-more' : ''}">
         ${rec.top.map(p => html`
           <div class="tt-player">
             <span>${p.name}</span>
-            <span class="tt-nation text-nowrap"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
+            <span class="tt-country text-nowrap"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
           </div>`)}
       </div>`;
     const body = hasImports
@@ -1315,7 +1315,7 @@ const showImportTip = (event, destId) => {
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(destFc)}${countryName(destId, destName)}</span>
         <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[destFc])}${rankTag(destName)}${capTag(app.capital[destFc])}</span>
       </div>
-      <div class="tt-nations mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
+      <div class="tt-countries mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
         ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
       </div>
@@ -1326,7 +1326,7 @@ const showImportTip = (event, destId) => {
 
 const showImportSourceTip = (event, centroidId) => {
   const key        = `impsrc-${dimState.sourceId}-${centroidId}`;
-  const allPlayers = (app.importByNation[dimState.sourceId] ?? []).filter(p => {
+  const allPlayers = (app.importByCountry[dimState.sourceId] ?? []).filter(p => {
     const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
     return bid === centroidId;
   });
@@ -1342,7 +1342,7 @@ const showImportSourceTip = (event, centroidId) => {
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
         <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[bFc])}${rankTag(p0.birthCountry)}${capTag(app.capital[bFc])}</span>
       </div>
-      <div class="tt-nations mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
+      <div class="tt-countries mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
         ${players.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
       </div>
@@ -1353,7 +1353,7 @@ const showImportSourceTip = (event, centroidId) => {
 
 const showCombinedTip = (event, id) => {
   const key           = `combined-${dimState.sourceId}-${id}`;
-  const exportPlayers = (app.importByNation[dimState.sourceId] ?? []).filter(p => {
+  const exportPlayers = (app.importByCountry[dimState.sourceId] ?? []).filter(p => {
     const bid = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
     return bid === id;
   });
@@ -1374,13 +1374,13 @@ const showCombinedTip = (event, id) => {
         <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[fc])}${rankTag(destName)}${capTag(app.capital[fc])}</span>
       </div>
       ${exportPlayers.length > 0 ? html`
-        <div class="tt-nations mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
+        <div class="tt-countries mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
         <div class="tt-players ${exportPlayers.length > 5 ? 'tt-more' : ''}">
           ${topExp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>` : nothing}
       ${hasBoth ? html`<div class="tt-divider"></div>` : nothing}
       ${importPlayers.length > 0 ? html`
-        <div class="tt-nations mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${importPlayers.length})</div>
+        <div class="tt-countries mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${importPlayers.length})</div>
         <div class="tt-players ${importPlayers.length > 5 ? 'tt-more' : ''}">
           ${topImp.map(p => html`<div class="tt-player"><span>${p.name}</span></div>`)}
         </div>` : nothing}

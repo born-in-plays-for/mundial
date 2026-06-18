@@ -74,10 +74,10 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .tt-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
 .tt-not-qualified { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
 .tt-sub { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
-.tt-nations { font-size: 12px; color: #777; border-bottom: 1px solid var(--border-strong); padding-bottom: 6px; }
+.tt-countries { font-size: 12px; color: #777; border-bottom: 1px solid var(--border-strong); padding-bottom: 6px; }
 .tt-player { font-size: 10px; color: #555; padding: 3px 0; border-top: 1px solid var(--bg-hover); display: flex; justify-content: space-between; gap: 8px; }
-.tt-nations + .tt-players .tt-player:first-child { border-top: none; }
-.tt-nation { color: var(--text-muted); font-size: 10px; }
+.tt-countries + .tt-players .tt-player:first-child { border-top: none; }
+.tt-country { color: var(--text-muted); font-size: 10px; }
 .tt-more-label { color: var(--text-muted); font-size: 10px; padding-top: 6px; }
 .tt-players.tt-more::after { content: 'etc.'; display: block; text-align: left; font-style: italic; color: var(--text-muted); font-size: 10px; padding-top: 2px; }
 .tt-divider { border-top: 1px solid var(--border); margin: 8px 0 4px; }
@@ -85,11 +85,11 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 /* player table (pt-) */
 .pt-title { font-size: 14px; font-weight: 500; }
 .pt-country-flag { height: 20px; width: auto; border-radius: 2px; }
-.pt-nation-header { gap: 8px; padding: 10px 4px 4px; border-bottom: 1px solid var(--bg-hover); cursor: pointer; border-radius: 4px; }
-.pt-nation-header:hover { background: var(--bg-hover); }
-.pt-nation-header img { height: 14px; width: auto; border-radius: 2px; }
-.pt-nation-name { font-size: 13px; color: var(--color-default); }
-.pt-nation-count { font-size: 11px; color: var(--text-muted); }
+.pt-country-header { gap: 8px; padding: 10px 4px 4px; border-bottom: 1px solid var(--bg-hover); cursor: pointer; border-radius: 4px; }
+.pt-country-header:hover { background: var(--bg-hover); }
+.pt-country-header img { height: 14px; width: auto; border-radius: 2px; }
+.pt-country-name { font-size: 13px; color: var(--color-default); }
+.pt-country-count { font-size: 11px; color: var(--text-muted); }
 .pt-player-row { padding: 4px 0 4px 28px; border-bottom: 1px solid #f8f5f2; font-size: 12px; color: #444; }
 .pt-player-row:last-child { border-bottom: none; }
 .pt-caps { color: var(--text-muted); font-size: 11px; }

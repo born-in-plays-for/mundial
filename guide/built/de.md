@@ -22,7 +22,7 @@ der steuert, welche Länder in der Elo-Rangliste unter der Karte erscheinen.
 
 Zeilen gruppieren Länder nach Qualifikationsstatus; Spalten wählen nach Export-/Importrolle aus.
 Klicken Sie auf den Spaltenkopf `exp.`, um nur exportierende Länder anzuzeigen;
-klicken Sie auf `qualif.`, um alle qualifizierten Nationen auf einmal umzuschalten.
+klicken Sie auf `qualif.`, um alle qualifizierten Länder auf einmal umzuschalten.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:country_taxonomy -->

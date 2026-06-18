@@ -28,10 +28,10 @@ const [eloData, mapData] = await Promise.all([
 
 const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
 const fifaMemberIds = new Set(eloData.rankings.filter(r => r.fifaMember).map(r => r.id));
-const importByNation = {};
+const importByCountry = {};
 for (const [name, players] of Object.entries(mapData.natives ?? {})) {
   const id = QUALIFIED_BY_NAME[name];
-  if (id != null) importByNation[id] = players;
+  if (id != null) importByCountry[id] = players;
 }
 
 const meta = document.getElementById('elo-meta');
@@ -42,15 +42,15 @@ if (eloData.updated) {
   const fmt = isNaN(d) ? eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
   parts.push(`updated ${fmt}`);
 }
-meta.innerHTML = `${eloData.rankings.length} nations · ${parts.join(' · ')}`;
-
 const items = buildEloItems({
   rankings: eloData.rankings,
   byId,
-  importByNation,
+  importByCountry,
   fifaMemberIds,
   countryNameFn: countryName,
 });
+
+meta.innerHTML = `${items.length} countries · ${parts.join(' · ')}`;
 
 const el = document.getElementById('list');
 el.items = items;
