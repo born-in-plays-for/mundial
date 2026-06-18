@@ -1,6 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from './chains/wc2026_chain_render.js';
-import { renderEloRanking, pillClasses, pillContent } from './wc2026_elo_ranking.js';
+import { pillClasses, pillContent } from './wc2026_elo_ranking.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, makeCategoryFn } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 
@@ -160,26 +161,7 @@ g.append('path').datum(d3.geoGraticule()())
 const FLAG_CDN      = code => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${code}.svg`;
 const FLAG_CDN_RECT = code => `https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${code}.svg`;
 
-// ── Qualified-nation lookups ──────────────────────────────────────────────────
-const QUALIFIED_NAMES = {
-  12:'Algeria', 32:'Argentina', 36:'Australia', 40:'Austria',
-  56:'Belgium', 70:'Bosnia and Herzegovina', 76:'Brazil', 124:'Canada',
-  132:'Cape Verde', 170:'Colombia', 191:'Croatia', 203:'Czech Republic',
-  180:'DR Congo', 818:'Egypt', 218:'Ecuador', 250:'France', 276:'Germany',
-  288:'Ghana', 332:'Haiti', 364:'Iran', 368:'Iraq', 384:'Ivory Coast',
-  392:'Japan', 400:'Jordan', 484:'Mexico', 504:'Morocco', 528:'Netherlands',
-  554:'New Zealand', 578:'Norway', 591:'Panama', 600:'Paraguay',
-  620:'Portugal', 634:'Qatar', 682:'Saudi Arabia', 686:'Senegal',
-  710:'South Africa', 410:'South Korea', 724:'Spain', 752:'Sweden',
-  756:'Switzerland', 788:'Tunisia', 792:'Turkey',
-  8260:'England', 8261:'Scotland',
-  840:'United States', 858:'Uruguay', 860:'Uzbekistan',
-  531:'Curaçao'
-};
-
-const QUALIFIED_BY_NAME = Object.fromEntries(
-  Object.entries(QUALIFIED_NAMES).map(([id, name]) => [name, +id])
-);
+// QUALIFIED_NAMES, QUALIFIED_BY_NAME imported from qualified.js
 
 
 
@@ -301,36 +283,23 @@ fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
 });
 
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
-let _eloCtrl = null;
 let _eloData   = null;
 let _sortOrder  = ['elo', 'exp', 'imp', 'delta', 'alpha'];
 let _sortDir    = 'desc';
 const _fifaMemberIds = new Set();
-const _eloMain    = document.createElement('div');
-_eloMain.className = 'elo-main';
-const _controlSidebar = document.createElement('div');
-_controlSidebar.id = 'control-sidebar';
-_controlSidebar.classList.add('collapsed');
-document.getElementById('page-header')?.appendChild(_controlSidebar);
-const _eloLayout  = document.createElement('div');
-_eloLayout.className = 'elo-layout';
-_eloLayout.appendChild(_eloMain);
-const _eloMeta = document.createElement('div');
-_eloMeta.className = 'sub mt-2';
-_eloLayout.appendChild(_eloMeta);
-document.getElementById('tab-elo')?.appendChild(_eloLayout);
-
+render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking><div class="sub mt-2" id="elo-meta"></div></div>`, document.getElementById('tab-elo'));
+const _eloMain = document.querySelector('#tab-elo elo-ranking');
+const _eloMeta = document.getElementById('elo-meta');
 // ── Persistent filter table — isQualified × isImporting × isExporting cube ──
-// Row and column headers are clickable: toggles all checkboxes in that row/column.
-// The same DOM node is re-appended on each render so checked state survives tab switches.
-const _controlPanel = document.createElement('div');
-_controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered">
-  <tbody>
+const _sidebarHost = document.getElementById('sidebar-host');
+render(html`<div id="control-sidebar" class="collapsed taxonomy">
+  <button class="csb-toggle" title="Toggle filter">‹</button>
+  <div class="csb-body overflow-hidden"><table class="csb-table table table-sm table-bordered"><tbody>
     <tr>
       <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em>
-      <td class="csb-col text-muted" data-col="exp"><span class="d-flex align-items-start justify-content-between"><span>${T.filterLabels.exporter}</span><span class="csb-badge" style="color:#3b82f6">●</span></span></td>
-      <td class="csb-col text-muted" data-col="nexp">${T.filterLabels.nonExp}</td>
+      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em></td>
+      <td class="csb-col" data-col="exp"><span class="elo-item elo-item--exp"><span class="elo-name">${T.filterLabels.exporter}</span></span></td>
+      <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
     </tr>
     <tr>
       <td rowspan="4" class="csb-sort-col csb-border-right text-muted">
@@ -343,29 +312,33 @@ _controlPanel.innerHTML = `<table class="csb-table table table-sm table-bordered
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha">${T.sortLabels.alpha}</div>
         </div>
       </td>
-      <td rowspan="2" class="csb-group text-muted" data-row="q">${T.filterLabels.qualified}</td>
-      <td class="csb-row text-muted" data-row="qi"><span class="d-flex align-items-start justify-content-between"><span>${T.filterLabels.importer}</span><span class="csb-badge" style="color:#ef4444">●</span></span></td>
+      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.qualified}</span></span></td>
+      <td class="csb-row" data-row="qi"><span class="elo-item elo-item--qualified elo-item--imp"><span class="elo-name">${T.filterLabels.importer}</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
     </tr>
     <tr>
-      <td class="csb-row text-muted" data-row="qni">${T.filterLabels.nonImp}</td>
+      <td class="csb-row" data-row="qni"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.nonImp}</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qe"  checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-q"   checked></label></td>
     </tr>
     <tr>
-      <td rowspan="2" class="csb-group text-muted" data-row="nq">${T.filterLabels.nonQual}</td>
-      <td class="csb-row text-muted" data-row="nqf">FIFA</td>
+      <td rowspan="2" class="csb-group" data-row="nq"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
+      <td class="csb-row" data-row="nqf"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-ef"  checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
     <tr>
-      <td class="csb-row text-muted" data-row="nqn"><span class="d-flex align-items-start justify-content-between"><span>non-FIFA</span><span class="csb-badge">○</span></span></td>
+      <td class="csb-row" data-row="nqn"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-en"  checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
     </tr>
-  </tbody>
-</table>`;
+  </tbody></table></div>
+</div>`, _sidebarHost);
+const _controlSidebar = document.getElementById('control-sidebar');
+const _controlSidebarToggle = _controlSidebar.querySelector('.csb-toggle');
+const _controlSidebarBody = _controlSidebar.querySelector('.csb-body');
+const _controlPanel = _controlSidebarBody;
 
 const _fltQIE = _controlPanel.querySelector('#filter-qie');
 const _fltQI  = _controlPanel.querySelector('#filter-qi');
@@ -480,19 +453,10 @@ _sortListEl?.addEventListener('click', e => {
     _renderElo();
   }
 });
-const _controlSidebarToggle = document.createElement('button');
-_controlSidebarToggle.className = 'csb-toggle';
-_controlSidebarToggle.title = 'Toggle filter';
-_controlSidebarToggle.textContent = '‹';
 _controlSidebarToggle.addEventListener('click', () => {
   const collapsed = _controlSidebar.classList.toggle('collapsed');
   _controlSidebarToggle.textContent = collapsed ? '‹' : '›';
 });
-const _controlSidebarBody = document.createElement('div');
-_controlSidebarBody.className = 'csb-body overflow-hidden';
-_controlSidebarBody.appendChild(_controlPanel);
-_controlSidebar.appendChild(_controlSidebarToggle);
-_controlSidebar.appendChild(_controlSidebarBody);
 // Measure sidebar dimensions — called on load and resize
 const _measureControlSidebar = () => {
   const wasCollapsed = _controlSidebar.classList.contains('collapsed');
@@ -500,7 +464,7 @@ const _measureControlSidebar = () => {
   _controlSidebarBody.style.maxWidth = 'none';
   _controlSidebarBody.style.width = 'max-content';
   document.documentElement.style.setProperty('--csb-w', _controlSidebarBody.offsetWidth + 'px');
-  document.documentElement.style.setProperty('--csb-h', _controlPanel.scrollHeight + 'px');
+  document.documentElement.style.setProperty('--csb-h', _controlPanel.querySelector('.csb-table').offsetHeight + 'px');
   _controlSidebarBody.style.maxWidth = '';
   _controlSidebarBody.style.width = '';
   if (wasCollapsed) _controlSidebar.classList.add('collapsed');
@@ -598,10 +562,7 @@ const _buildEloItems = () => {
       imp: (app.importByNation[id]?.length ?? 0) > 0,
       expCount: app.byId[id]?.count ?? 0,
       impCount: app.importByNation[id]?.length ?? 0,
-      category: QUALIFIED_NAMES[id]              ? 'qualified'
-              : (app.byId[id]?.count ?? 0) > 0   ? 'exporter'
-              : fifaMember                        ? 'fifa'
-              :                                     'nonfifa',
+      category: categoryForId(id),
       noMap: !centroids[id],
     }))
     ;
@@ -720,26 +681,21 @@ const _renderElo = () => {
     }
     _eloMeta.innerHTML = parts.join(' · ');
   }
-  if (_eloCtrl) { _eloCtrl.show(visibleItems); return; }
-  _eloCtrl = renderEloRanking(_eloMain, {
-    items: allItems,
-    onCountryClick: id => {
-      if (dimState.sourceId === id) { clearDim(); return; }
-      activateCountry(id);
-      if (enablesDim(id) && centroids[id]) _zoomToActiveDimFlags();
-      else if (centroids[id]) zoomToCentroid(id);
-    },
-    isClickable:  () => true,
-    isZoomable:   null,
-    getSelectedId: () => dimState.sourceId,
-    source: _eloData?.source,
-    date: _eloData?.updated,
-  });
-  _eloCtrl.show(visibleItems);
+  if (_eloMain.hasItems) { _eloMain.show(visibleItems); return; }
+  _eloMain.onCountryClick = id => {
+    if (dimState.sourceId === id) { clearDim(); return; }
+    activateCountry(id);
+    if (enablesDim(id) && centroids[id]) _zoomToActiveDimFlags();
+    else if (centroids[id]) zoomToCentroid(id);
+  };
+  _eloMain.isClickable = () => true;
+  _eloMain.items = allItems;
+  _eloMain.show(visibleItems);
+  if (dimState.sourceId) _eloMain.update(dimState.sourceId);
 };
 const _updateEloSelection = () => {
-  if (_eloCtrl && !document.getElementById('tab-elo')?.hidden)
-    _eloCtrl.update(dimState.sourceId);
+  if (_eloMain.hasItems && !document.getElementById('tab-elo')?.hidden)
+    _eloMain.update(dimState.sourceId);
 };
 
 fetch('./wc2026_elo_rank.json').then(r => r.json()).then(d => {
@@ -771,7 +727,7 @@ const _switchTab = name => {
   }
   if (name === 'tab-elo') {
     _renderElo();
-    if (_eloCtrl) _eloCtrl.update(dimState.sourceId);
+    _eloMain.update(dimState.sourceId);
     requestAnimationFrame(() => { const el = document.querySelector('#tab-elo .elo-item--active'); if (el && !_isFullyVisible(el)) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
   }
 };
@@ -880,11 +836,7 @@ const app = {
 const centroids = {};
 
 const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
-const categoryForId = id =>
-    QUALIFIED_NAMES[id]              ? 'qualified'
-  : (app.byId[id]?.count ?? 0) > 0  ? 'exporter'
-  : _fifaMemberIds.has(id)           ? 'fifa'
-  :                                    'nonfifa';
+const categoryForId = id => makeCategoryFn(app.byId, _fifaMemberIds)(id);
 
 const countryPillTemplate = id => {
   const item = {
@@ -1200,7 +1152,7 @@ const applySelection = (id, destIds) => {
   // Tab button pill + close
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
-    _playersBtn.className = 'nav-link dim-selected';
+    _playersBtn.className = 'nav-link dim-selected taxonomy';
     const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
     render(html`
       <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>

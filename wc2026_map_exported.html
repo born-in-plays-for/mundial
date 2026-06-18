@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="wc2026_map.css">
 <link rel="stylesheet" href="map-container.css">
 <link rel="stylesheet" href="control-sidebar.css">
+<link rel="stylesheet" href="guide/taxonomy.css">
 </head>
 <body>
 <header id="page-header" class="container-xxl px-0">
@@ -46,6 +47,7 @@
       <p class="pq-attr"></p>
   </div>
   </div>
+  <div id="sidebar-host" style="grid-row:1;grid-column:1;justify-self:end;align-self:start;z-index:10"></div>
 </header>
 <div id="map-container" class="flex-column container-xxl px-0 pt-2 mt-0 position-relative">
   <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of players born in one country, playing for another"></svg>
@@ -75,7 +77,7 @@
 </div>
 
 <main id="bottomTabContent" class="container-xxl px-4 mt-2">
-  <div id="tab-elo"></div>
+  <div id="tab-elo" class="taxonomy"></div>
   <div id="tab-players" hidden></div>
   <div id="tab-chain" hidden></div>
 </main>

@@ -6,6 +6,7 @@
 <title>Guide — Thiebaud's Mundial</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="wc2026_map.css">
+<link rel="stylesheet" href="guide/taxonomy.css">
 <style>
 body {
   background: var(--fixed-element-bg, #faf9f6);
@@ -16,6 +17,8 @@ body {
   max-width: 720px;
   margin: 0 auto;
 }
+
+/* Guide content styles — :not(.taxonomy *) excludes taxonomy pill samples */
 
 /* title */
 #guide-body h1 {
@@ -46,14 +49,14 @@ body {
 }
 
 /* paragraph */
-#guide-body p {
+#guide-body p:not(.taxonomy *) {
   font-size: .925rem;
   line-height: 1.7;
   color: #333;
 }
 
 /* inline code — UI element names */
-#guide-body code {
+#guide-body code:not(.taxonomy *) {
   font-size: .82em;
   background: var(--bg-hover, #f0ede8);
   padding: .1em .38em;
@@ -62,7 +65,7 @@ body {
 }
 
 /* image */
-#guide-body img {
+#guide-body img:not(.taxonomy *) {
   max-width: 100%;
   border: 1px solid var(--border, #e4e0d8);
   border-radius: 6px;
@@ -178,6 +181,7 @@ body {
 <div id="guide-body"><p id="loading">Loading…</p></div>
 <script type="module">
 import { marked }  from 'https://cdn.jsdelivr.net/npm/marked@14/+esm';
+import { countryName } from './i18n.js';
 import mermaid     from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 
 mermaid.initialize({ startOnLoad: false, theme: 'neutral', fontFamily: 'inherit' });
@@ -195,7 +199,7 @@ marked.use({
   }
 });
 
-const lang = ['fr', 'de', 'it', 'es'].find(l => (navigator.languages?.[0] ?? '').startsWith(l)) ?? 'en';
+const lang = new URLSearchParams(location.search).get('lang') ?? ['fr', 'de', 'it', 'es'].find(l => (navigator.languages?.[0] ?? '').startsWith(l)) ?? 'en';
 const el   = document.getElementById('guide-body');
 
 // Try built/{lang}.md first, fall back to guide.md (English, unbuilt markers are invisible)
@@ -210,6 +214,9 @@ if (!md) {
   el.innerHTML = '<p id="loading">Guide not built — run: <code>python3 guide/build_guide.py</code></p>';
 } else {
   el.innerHTML = marked.parse(md);
+  el.querySelectorAll('.elo-name[data-id]').forEach(span => {
+    span.textContent = countryName(+span.dataset.id, span.textContent);
+  });
   await mermaid.run();
 }
 </script>

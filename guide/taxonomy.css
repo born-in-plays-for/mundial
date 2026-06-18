@@ -1,0 +1,30 @@
+/* Taxonomy overrides for guide pill samples */
+
+
+.taxonomy {
+  --darkest-text:  #333;
+  --medium-text:   #555;
+  --light-text:    #999;
+  --lightest-text: #bbb;
+}
+
+/* Default: darkest text */
+.taxonomy .elo-name { color: var(--darkest-text); }
+
+/* Qualified vs. non qualified: solid 1px border vs. no border */
+.taxonomy .elo-item--qualified { border: 1px solid #888; }
+.taxonomy .elo-item:not(.elo-item--qualified) { border: none; }
+
+/* Non-FIFA: light text */
+.taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
+
+/* No map centroid: italic (contingently orthogonal) */
+.taxonomy .elo-item--no-map .elo-name { font-style: italic; color: var(--lightest-text); }
+
+/* Dots via pseudo-elements */
+.taxonomy .elo-item--exp .elo-name::before {
+  content: '●'; color: #3b82f6; font-size: 7px; margin-right: 2px; vertical-align: super;
+}
+.taxonomy .elo-item--imp .elo-name::after {
+  content: '●'; color: #ef4444; font-size: 7px; margin-left: 1px; vertical-align: super;
+}
