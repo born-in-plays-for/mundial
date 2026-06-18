@@ -1634,8 +1634,14 @@ Promise.all([
   );
   eloData.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); });
   buildIndices(rawData);
-  _renderElo();
+  // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
+  buildEloItems({
+    rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,
+    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName,
+  }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations);
+  // Rebuild with centroids now populated, then render the elo list
+  _renderElo();
   _applyFlagFilter();
   _updateVisibleCountryCount();
   // Initial zoom: fit all qualified + exporting flags so Antarctica is off-screen
