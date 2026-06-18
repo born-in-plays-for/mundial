@@ -97,10 +97,10 @@
 
 #control-sidebar .csb-sort-dir {
   position: absolute; top: 1px; left: calc((17px - var(--sort-extra-pad)) / 2 - 17px); width: 17px; height: 17px;
-  background: url('images/sort-vertical-svgrepo-com.svg') no-repeat center / 17px 17px;
+  background: url('../images/sort-vertical-svgrepo-com.svg') no-repeat center / 17px 17px;
   border: none; padding: 0; cursor: pointer; opacity: 0.5;
 }
-#control-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('images/sort-vertical-asc.svg'); }
+#control-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
 #control-sidebar .csb-sort-dir:hover { opacity: 1; }
 
 /* ── Checkbox ──────────────────────────────────────────────────────────── */

@@ -2,11 +2,13 @@ import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/l
 
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 
-export const pillClasses = ({ category = 'fifa', noMap = false, exp = false, imp = false } = {}) =>
-  'elo-item elo-item--' + category
-  + (noMap ? ' elo-item--no-map' : '')
+export const pillClasses = ({ qualified = false, fifaMember = true, noMap = false, exp = false, imp = false } = {}) =>
+  'elo-item'
+  + (qualified ? ' elo-item--qualified' : '')
+  + (!fifaMember ? ' elo-item--nonfifa' : '')
   + (exp ? ' elo-item--exp' : '')
-  + (imp ? ' elo-item--imp' : '');
+  + (imp ? ' elo-item--imp' : '')
+  + (noMap ? ' elo-item--no-map' : '');
 
 export const pillContent = ({ iso2, name, pts = null } = {}) => html`
   ${iso2 ? html`<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : nothing}

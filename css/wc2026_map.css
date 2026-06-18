@@ -8,11 +8,6 @@
   --border:        #e4e0d8;
   --border-strong: #c8c4be;
   --text-muted:    #999;
-  /* Elo name dignity scale — text colors */
-  --color-qualified:        #333;
-  --color-exporter:         #555;
-  --color-fifa:             #999;
-  --color-nonfifa:          #bbb;
 }
 
 /* base */
@@ -107,20 +102,11 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .elo-meta { font-size: 10px; color: var(--text-muted); }
 .elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 20px; background: #fff; }
-.elo-item--qualified { border: 1.5px solid #888; }
-.elo-item--qualified .elo-name { color: var(--color-qualified); }
-.elo-item--exporter { border: 1px solid #aaa; }
-.elo-item--exporter .elo-name { color: var(--color-exporter); }
-.elo-item--fifa { border: 1px dashed #ccc; }
-.elo-item--fifa .elo-name { color: var(--color-fifa); }
-.elo-item--nonfifa { border: 1px dotted #ddd; }
-.elo-item--nonfifa .elo-name { color: var(--color-nonfifa); }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .elo-item--active { background: var(--border-strong) !important; border-color: var(--border-strong) !important; }
 .elo-item--zoomable { cursor: pointer; }
 .elo-item--zoomable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
-.elo-item--no-map .elo-name { font-style: italic; }
 .elo-rank { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
 .elo-name .elo-dot:first-child { margin-left: 3px; }

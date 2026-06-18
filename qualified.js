@@ -18,8 +18,16 @@ export const QUALIFIED_BY_NAME = Object.fromEntries(
   Object.entries(QUALIFIED_NAMES).map(([id, name]) => [name, +id])
 );
 
-export const makeCategoryFn = (byId, fifaMemberIds) => id =>
-    QUALIFIED_NAMES[id]              ? 'qualified'
-  : (byId[id]?.count ?? 0) > 0      ? 'exporter'
-  : fifaMemberIds.has(id)            ? 'fifa'
-  :                                    'nonfifa';
+export const buildEloItems = ({ rankings, byId, importByNation, fifaMemberIds, countryNameFn, centroids }) =>
+  rankings
+    .filter(r => !r.weirdo)
+    .map(({ id, rank, pts, iso2, name, fifaMember }) => ({
+      id, rank, pts: pts ?? '—', iso2, name: countryNameFn(id, name),
+      fifaMember,
+      qualified: !!QUALIFIED_NAMES[id],
+      exp: (byId[id]?.count ?? 0) > 0,
+      imp: (importByNation[id]?.length ?? 0) > 0,
+      expCount: byId[id]?.count ?? 0,
+      impCount: importByNation[id]?.length ?? 0,
+      noMap: centroids ? !centroids[id] : false,
+    }));

@@ -42,7 +42,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
   <span style="font-size:.875rem">Solid border — qualified for the 2026 World Cup.</span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
-  <span class="elo-item elo-item--fifa" style="flex-shrink:0">
+  <span class="elo-item" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ua.svg" alt="">
     <span class="elo-name" data-id="804">Ukraine</span>
   </span>
@@ -53,7 +53,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 <div>
 <div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">FIFA vs. non-FIFA</div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-item elo-item--fifa" style="flex-shrink:0">
+  <span class="elo-item" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/is.svg" alt="">
     <span class="elo-name" data-id="352">Iceland</span>
   </span>
@@ -97,7 +97,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 <div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555">Off the map</div>
 <div style="font-size:.8rem;color:#777;margin-bottom:6px">Orthogonal to the categories above.</div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-item elo-item--fifa elo-item--no-map" style="flex-shrink:0">
+  <span class="elo-item elo-item--no-map" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" alt="">
     <span class="elo-name" data-id="702">Singapore</span>
   </span>

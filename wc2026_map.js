@@ -1,7 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from './chains/wc2026_chain_render.js';
 import { pillClasses, pillContent } from './wc2026_elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, makeCategoryFn } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 
@@ -552,20 +552,18 @@ if (_scrollTopBtn) {
   _scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
+const _eloItemsById = new Map();
 const _buildEloItems = () => {
-  const raw = (_eloData?.rankings ?? [])
-    .filter(r => !r.weirdo)
-    .map(({ id, rank, pts, iso2, name, fifaMember }) => ({
-      id, rank, pts, iso2, name: countryName(id, name),
-      fifaMember,
-      exp: (app.byId[id]?.count ?? 0) > 0,
-      imp: (app.importByNation[id]?.length ?? 0) > 0,
-      expCount: app.byId[id]?.count ?? 0,
-      impCount: app.importByNation[id]?.length ?? 0,
-      category: categoryForId(id),
-      noMap: !centroids[id],
-    }))
-    ;
+  const raw = buildEloItems({
+    rankings: _eloData?.rankings ?? [],
+    byId: app.byId,
+    importByNation: app.importByNation,
+    fifaMemberIds: _fifaMemberIds,
+    countryNameFn: countryName,
+    centroids,
+  });
+  _eloItemsById.clear();
+  raw.forEach(item => _eloItemsById.set(item.id, item));
   const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
   raw.sort((a, b) => { for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) { let d = _sortFns[_sortOrder[i]](a, b); if (i === 0 && _sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
   const primary   = _sortOrder[0];
@@ -578,7 +576,7 @@ const _buildEloItems = () => {
     : null;
   return raw.map(item => ({
     ...item,
-    pts:  primary === 'alpha' ? null : primary === 'elo' ? (item.pts ?? '—') : _ptsFor(primary, item),
+    pts:  primary === 'alpha' ? null : primary === 'elo' ? item.pts : _ptsFor(primary, item),
     pts2: secondary ? _ptsFor(secondary, item) : null,
   }));
 };
@@ -836,18 +834,9 @@ const app = {
 const centroids = {};
 
 const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
-const categoryForId = id => makeCategoryFn(app.byId, _fifaMemberIds)(id);
-
 const countryPillTemplate = id => {
-  const item = {
-    iso2: iso2ForId(id),
-    name: countryName(id, QUALIFIED_NAMES[id] ?? ''),
-    category: categoryForId(id),
-    noMap: !centroids[id],
-    exp: (app.byId[id]?.count ?? 0) > 0,
-    imp: (app.importByNation[id]?.length ?? 0) > 0,
-    fifaMember: _fifaMemberIds.has(id),
-  };
+  const item = _eloItemsById.get(id);
+  if (!item) return nothing;
   return html`<span class="${pillClasses(item)}">${pillContent(item)}</span>`;
 };
 

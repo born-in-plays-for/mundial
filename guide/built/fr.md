@@ -42,7 +42,7 @@ Chaque pays est affiché sous forme de **pastille** dont le style CSS encode sa 
   <span style="font-size:.875rem">Bordure pleine — qualifié pour la Coupe du Monde 2026.</span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
-  <span class="elo-item elo-item--fifa" style="flex-shrink:0">
+  <span class="elo-item" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ua.svg" alt="">
     <span class="elo-name" data-id="804">Ukraine</span>
   </span>
@@ -53,7 +53,7 @@ Chaque pays est affiché sous forme de **pastille** dont le style CSS encode sa 
 <div>
 <div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">FIFA vs. non-FIFA</div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-item elo-item--fifa" style="flex-shrink:0">
+  <span class="elo-item" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/is.svg" alt="">
     <span class="elo-name" data-id="352">Iceland</span>
   </span>
@@ -97,7 +97,7 @@ Chaque pays est affiché sous forme de **pastille** dont le style CSS encode sa 
 <div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555">Hors carte</div>
 <div style="font-size:.8rem;color:#777;margin-bottom:6px">Orthogonal aux catégories ci-dessus.</div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-item elo-item--fifa elo-item--no-map" style="flex-shrink:0">
+  <span class="elo-item elo-item--no-map" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" alt="">
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
