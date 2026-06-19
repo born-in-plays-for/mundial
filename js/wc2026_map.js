@@ -380,7 +380,7 @@ const _buildEloItems = () => {
   });
   _eloItemsById.clear();
   raw.forEach(item => _eloItemsById.set(item.id, item));
-  const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), pop: (a, b) => (b.pop ?? 0) - (a.pop ?? 0), alpha: (a, b) => a.name.localeCompare(b.name) };
+  const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount) || (b.expCount + b.impCount) - (a.expCount + a.impCount), pop: (a, b) => (b.pop ?? 0) - (a.pop ?? 0), alpha: (a, b) => a.name.localeCompare(b.name) };
   raw.sort((a, b) => { for (let i = 0; i < Math.min(sidebar.sortOrder.length, 3); i++) { let d = _sortFns[sidebar.sortOrder[i]](a, b); if (i === 0 && sidebar.sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
   const primary   = sidebar.sortOrder[0];
   const secondary = sidebar.sortOrder[1];
@@ -716,7 +716,7 @@ const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
 const countryPillTemplate = id => {
   const item = _eloItemsById.get(id);
   if (!item) return nothing;
-  return html`<span class="${pillClasses(item)}">${pillContent(item)}</span>`;
+  return html`<span class="${pillClasses(item)}">${pillContent({ ...item, pts: null })}</span>`;
 };
 
 const fmtPop = pop => parseFloat(pop.toFixed(2))
