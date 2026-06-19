@@ -1270,7 +1270,6 @@ const onCountryClick = (event, id) => {
     return; 
   }
   activateCountry(id);
-  if (enablesDim(id)) _zoomToActiveDimFlags();
 };
 // ── World render ────────────────────────────────────────────────────────────
 const renderWorld = (world, ukNations) => {
