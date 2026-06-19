@@ -191,6 +191,85 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _toggle.textContent = collapsed ? '‹' : '›';
   });
 
+  // ── Swipe-to-reveal / swipe-to-hide drawer gesture ──
+  const _pageHeader = document.getElementById('page-header');
+  let _swX0 = null, _swDragging = false, _swExpanding = false;
+  const _maxW = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--csb-w')) || 300;
+
+  const _swStart = e => {
+    _swX0 = e.touches[0].clientX;
+    _swDragging = false;
+  };
+
+  const _swMove = (e, expanding) => {
+    if (_swX0 == null) return;
+    const dx = e.touches[0].clientX - _swX0;
+    const absDx = Math.abs(dx);
+    if (!_swDragging && absDx < 10) return;
+    if (!_swDragging) {
+      if (expanding && dx > 0) { _swX0 = null; return; }
+      if (!expanding && dx < 0) { _swX0 = null; return; }
+      _swDragging = true;
+      _swExpanding = expanding;
+      _body.style.transition = 'none';
+      if (expanding) _el.classList.remove('collapsed');
+    }
+    const mw = _maxW();
+    let w;
+    if (_swExpanding) {
+      w = Math.min(mw, Math.max(0, -dx));
+    } else {
+      w = Math.min(mw, Math.max(0, mw - dx));
+    }
+    _body.style.maxWidth = w + 'px';
+    _toggle.style.opacity = String(0.4 + 0.6 * (w / mw));
+  };
+
+  const _swEnd = e => {
+    if (_swX0 == null && !_swDragging) return;
+    const mw = _maxW();
+    if (!_swDragging) {
+      _swX0 = null;
+      return;
+    }
+    _swDragging = false;
+    _swX0 = null;
+    const cur = parseFloat(_body.style.maxWidth) || 0;
+    const threshold = mw * 0.3;
+    const open = _swExpanding ? cur >= threshold : cur >= (mw - threshold);
+    _body.style.transition = 'max-width 0.3s ease';
+    _toggle.style.transition = 'opacity 0.3s ease';
+    if (open) {
+      _body.style.maxWidth = mw + 'px';
+      _toggle.style.opacity = '';
+      _el.classList.remove('collapsed');
+      _toggle.textContent = '›';
+    } else {
+      _body.style.maxWidth = '0px';
+      _toggle.style.opacity = '';
+      _el.classList.add('collapsed');
+      _toggle.textContent = '‹';
+    }
+    const _cleanup = () => {
+      _body.style.transition = '';
+      _body.style.maxWidth = '';
+      _toggle.style.transition = '';
+    };
+    _body.addEventListener('transitionend', _cleanup, { once: true });
+    setTimeout(_cleanup, 350);
+  };
+
+  if (_pageHeader) {
+    _pageHeader.addEventListener('touchstart', _swStart, { passive: true });
+    _pageHeader.addEventListener('touchmove', e => _swMove(e, true), { passive: true });
+    _pageHeader.addEventListener('touchend', _swEnd);
+    _pageHeader.addEventListener('touchcancel', _swEnd);
+  }
+  _el.addEventListener('touchstart', _swStart, { passive: true });
+  _el.addEventListener('touchmove', e => _swMove(e, false), { passive: true });
+  _el.addEventListener('touchend', _swEnd);
+  _el.addEventListener('touchcancel', _swEnd);
+
   // ── Measure sidebar dimensions ──
   const measureControlSidebar = () => {
     const wasCollapsed = _el.classList.contains('collapsed');
@@ -204,18 +283,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (wasCollapsed) _el.classList.add('collapsed');
   };
   measureControlSidebar();
-
-  // ── Auto-collapse after 3s ──
-  _toggle.textContent = '›';
-  const _autoCollapseTimer = setTimeout(() => {
-    _body.style.transition = 'max-width 1s ease';
-    _el.classList.add('collapsed');
-    _toggle.textContent = '‹';
-    _body.addEventListener('transitionend', () => {
-      _body.style.transition = '';
-    }, { once: true });
-  }, 3000);
-  _el.addEventListener('click', () => clearTimeout(_autoCollapseTimer), { once: true });
 
   return {
     get sortOrder() { return _sortOrder; },
