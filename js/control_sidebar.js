@@ -10,7 +10,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   <div class="csb-body overflow-hidden"><table class="csb-table table table-sm table-bordered"><tbody>
     <tr>
       <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em>${T.filterLabels.action}</em></td>
+      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em class="elo-item"> ${T.filterLabels.action}</em></td>
       <td class="csb-col" data-col="exp"><span class="elo-item elo-item--exp"><span class="elo-name">${T.filterLabels.exporter}</span></span></td>
       <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
     </tr>
