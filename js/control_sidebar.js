@@ -97,7 +97,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const total = all.length;
     if (!total) return;
     const visible = [...all].filter(li => li.style.display !== 'none').length;
-    el.textContent = `${visible} / ${total}`;
+    el.textContent = `${visible}/${total}`;
   };
 
   const applyFlagFilter = () => {

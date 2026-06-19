@@ -13,7 +13,12 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #scroll-top-btn.visible { display: flex; }
 #zoom-reset:disabled, #zoom-span:disabled { opacity: 0.35; cursor: default; }
 #legend { font-size: 11px; color: var(--text-muted); }
+#legend-countries, #legend-born { font-size: 11px; color: #bbb; }
+#legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }
+#legend-born::before { content: '#'; margin-right: 0.25em; }
+#legend-born::after { content: '→'; margin-left: 0.25em; }
 #legend-bar { height: 10px; flex: 1; max-width: 280px; }
+#legend-ticks, #legend-outlier-count { font-family: var(--bs-font-monospace); }
 #legend-ticks { width: 280px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
 @media (max-width: 767.98px) {
   #legend-bar { max-width: 90px; }

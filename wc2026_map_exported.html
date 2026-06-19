@@ -52,11 +52,15 @@
 <div id="map-container" class="flex-column container-xxl px-0 pt-2 mt-0 position-relative">
   <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of players born in one country, playing for another"></svg>
   <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-2">
-    <span class="sub font-monospace align-self-start d-flex gap-2">
-      <span id="visible-country-count"></span>
-      <span id="zoom-level" hidden></span>
+    <span class="sub align-self-start d-flex">
+      <span id="visible-country-count" class="font-monospace"></span>
+      &nbsp;
+      <span id="legend-countries" class="sub mb-auto"></span>
     </span>
-    <div id="legend" class="d-flex align-items-center gap-2">
+    <span id="zoom-level" hidden></span>
+    <div id="legend" class="d-flex align-items-center">
+      <div id="legend-born" class="sub mb-auto"></div>
+      &nbsp;
       <div class="d-flex flex-column pe-2">
         <div class="d-flex align-items-center justify-content-center" style="height:10px">
           <div style="width:10px;height:10px;border-radius:50%;background:#000"></div>

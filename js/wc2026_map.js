@@ -204,6 +204,8 @@ _zoomSpanBtn?.addEventListener('click', e => {
   _zoomToLinkedFlags();
 });
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
+document.getElementById('legend-countries').textContent = T.legendCountries;
+document.getElementById('legend-born').textContent = T.legendBorn;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
 
 // Chain tab: load data lazily, render when tab is shown, re-render on resize
