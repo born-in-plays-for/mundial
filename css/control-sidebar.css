@@ -12,7 +12,7 @@
  * .csb-col              — en-tête de colonne cliquable (exp / non-exp)
  * .csb-group            — en-tête de groupe de lignes (qualifié / non-qual.)
  * .csb-row              — sous-ligne de groupe
- * .csb-check            — label checkbox □/■
+ * .csb-check            — label checkbox □/▣
  * .csb-close            — bouton × fermeture
  */
 
@@ -95,7 +95,7 @@
 }
 #control-sidebar .csb-sort-item { cursor: pointer; padding: 0; }
 #control-sidebar .csb-sort-item:first-of-type { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
-#control-sidebar .csb-sort-item:nth-child(n+3 of .csb-sort-item) { color: #bbb; }
+#control-sidebar .csb-sort-item:nth-child(n+3 of .csb-sort-item) { color: #999; }
 #control-sidebar .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
@@ -112,4 +112,4 @@
 
 #control-sidebar .csb-check { cursor: pointer; color: var(--text-muted); }
 #control-sidebar .csb-check::before { content: '□'; }
-#control-sidebar .csb-check:has(input:checked)::before { content: '■'; }
+#control-sidebar .csb-check:has(input:checked)::before { content: '▣'; } /* ■ */
