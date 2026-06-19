@@ -87,6 +87,7 @@
   padding: 0 var(--sort-extra-pad);
   vertical-align: top;
   width: 1px;
+  height: 1px;
 }
 #control-sidebar .csb-sort-list::after {
   content: '}'; position: absolute; right: calc((17px - var(--sort-extra-pad)) / 2 - 17px); top: 0;

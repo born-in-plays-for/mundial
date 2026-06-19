@@ -1,7 +1,7 @@
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks }) {
-  let _sortOrder = ['elo', 'exp', 'imp', 'delta', 'alpha'];
+  let _sortOrder = ['elo', 'pop', 'delta', 'alpha'];
   let _sortDir = 'desc';
 
   const _sidebarHost = document.getElementById('sidebar-host');
@@ -19,8 +19,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         <div class="csb-sort-list d-flex flex-column h-100 position-relative">
           <button class="csb-sort-dir"></button>
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo">${T.sortLabels.elo}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="exp">${T.sortLabels.exp}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="imp">${T.sortLabels.imp}</div>
+          <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="exp">${T.sortLabels.exp}</div> -->
+          <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="imp">${T.sortLabels.imp}</div> -->
+          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="pop">${T.sortLabels.pop}</div>
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="delta">${T.sortLabels.delta}</div>
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha">${T.sortLabels.alpha}</div>
         </div>

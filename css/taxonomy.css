@@ -28,7 +28,7 @@
   content: '◀'; color: #ef4444; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
 }
 .taxonomy .elo-item--exp.elo-item--imp .elo-name::after {
-  content: '◀\2009▶'; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
+  content: '◀▶'; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
   background: linear-gradient(90deg, #ef4444 45%, #3b82f6 55%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }

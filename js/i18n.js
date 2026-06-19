@@ -125,7 +125,7 @@ export const T = {
     eloUpdated:  'mis à jour le ',
     eloFilter:   'filtre',
     legendCountries: 'pays', legendBorn: 'nés',
-    sortLabels: { action: 'tri', elo: 'classement', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
+    sortLabels: { action: 'tri', elo: 'classement', exp: 'exports', imp: 'imports', pop: 'population', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'filtre', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualifié', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
   },
   it: {
@@ -163,7 +163,7 @@ export const T = {
     eloUpdated:  'aggiornato il ',
     eloFilter:   'filtro',
     legendCountries: 'paesi', legendBorn: 'nati',
-    sortLabels: { action: 'ordine', elo: 'classifica', exp: 'export', imp: 'import', delta: 'Δ', alpha: 'A–Z' },
+    sortLabels: { action: 'ordine', elo: 'classifica', exp: 'export', imp: 'import', pop: 'popolazione', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'filtro', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualific.', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
   },
   de: {
@@ -201,7 +201,7 @@ export const T = {
     eloUpdated:  'aktualisiert am ',
     eloFilter:   'Filter',
     legendCountries: 'Länder', legendBorn: 'geboren',
-    sortLabels: { action: 'Sort.', elo: 'Rang', exp: 'Export', imp: 'Import', delta: 'Δ', alpha: 'A–Z' },
+    sortLabels: { action: 'Sort.', elo: 'Rang', exp: 'Export', imp: 'Import', pop: 'Bevölkerung', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'Filter', exporter: 'Export.', nonExp: 'kein-Exp.', qualified: 'qualif.', importer: 'Import.', nonImp: 'kein-Imp.', nonQual: 'nicht-qual.' },
   },
   es: {
@@ -239,7 +239,7 @@ export const T = {
     eloUpdated:  'actualizado el ',
     eloFilter:   'filtro',
     legendCountries: 'países', legendBorn: 'nacidos',
-    sortLabels: { action: 'orden', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
+    sortLabels: { action: 'orden', elo: 'ranking', exp: 'exports', imp: 'imports', pop: 'población', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'filtro', exporter: 'export.', nonExp: 'no-exp.', qualified: 'clasific.', importer: 'import.', nonImp: 'no-imp.', nonQual: 'no-clasif.' },
   },
   en: {
@@ -277,7 +277,7 @@ export const T = {
     eloUpdated:  'updated ',
     eloFilter:   'filter',
     legendCountries: 'countries', legendBorn: 'born',
-    sortLabels: { action: 'sort', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
+    sortLabels: { action: 'sort', elo: 'ranking', exp: 'exports', imp: 'imports', pop: 'population', delta: 'Δ', alpha: 'A–Z' },
     filterLabels: { action: 'filter', exporter: 'exporter', nonExp: 'non-exp.', qualified: 'qualified', importer: 'importer', nonImp: 'non-imp.', nonQual: 'non-qual.' },
   },
 }[_LANG];

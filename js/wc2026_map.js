@@ -376,18 +376,20 @@ const _buildEloItems = () => {
     fifaMemberIds: _fifaMemberIds,
     countryNameFn: countryName,
     centroids,
+    pop: app.pop,
   });
   _eloItemsById.clear();
   raw.forEach(item => _eloItemsById.set(item.id, item));
-  const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), alpha: (a, b) => a.name.localeCompare(b.name) };
+  const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount), pop: (a, b) => (b.pop ?? 0) - (a.pop ?? 0), alpha: (a, b) => a.name.localeCompare(b.name) };
   raw.sort((a, b) => { for (let i = 0; i < Math.min(sidebar.sortOrder.length, 3); i++) { let d = _sortFns[sidebar.sortOrder[i]](a, b); if (i === 0 && sidebar.sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
   const primary   = sidebar.sortOrder[0];
   const secondary = sidebar.sortOrder[1];
   const _ptsFor = (key, item) =>
       key === 'exp'   ? item.expCount
     : key === 'imp'   ? item.impCount
-    : key === 'delta' ? `${item.expCount} − ${item.impCount}`
+    : key === 'delta' ? (item.impCount && item.expCount ? `${item.impCount} · ${item.expCount}` : item.impCount || item.expCount || null)
     : key === 'elo'   ? item.pts
+    : key === 'pop'   ? (item.pop ? fmtPop(item.pop) : null)
     : null;
   return raw.map(item => ({
     ...item,
@@ -1013,7 +1015,8 @@ const applySelection = (id, destIds) => {
     _saveAccState(ptEl);
     render(playerTableTemplate(id), ptEl);
     _restoreAccState(ptEl);
-    window.scrollTo({ top: 0 });
+    if (document.getElementById('tab-chain')?.hidden !== false)
+      window.scrollTo({ top: 0 });
   }
 
   // Tab button pill + close
@@ -1525,7 +1528,7 @@ Promise.all([
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
     rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,
-    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName,
+    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop,
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations);
   // Rebuild with centroids now populated, then render the elo list
