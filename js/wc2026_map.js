@@ -508,10 +508,27 @@ const _updateEloSelection = () => {
     _eloMain.update(dimState.sourceId);
 };
 
+const _tabIndicator = document.getElementById('tab-indicator');
+const _tabNav = document.getElementById('bottomTabList');
+const _positionIndicator = (animate = true) => {
+  const active = _tabNav.querySelector('.nav-link.active');
+  if (!active || !_tabIndicator) return;
+  if (!animate) _tabIndicator.style.transition = 'none';
+  const pill = active.querySelector('.elo-item');
+  const target = pill || active;
+  const navRect = _tabNav.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  _tabIndicator.style.left = (targetRect.left - navRect.left) + 'px';
+  _tabIndicator.style.width = targetRect.width + 'px';
+  if (!animate) requestAnimationFrame(() => { _tabIndicator.style.transition = ''; });
+};
+_positionIndicator(false);
+
 const _switchTab = name => {
   document.querySelectorAll('#bottomTabList button[data-tab]').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === name);
   });
+  _positionIndicator();
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
   });
@@ -540,6 +557,7 @@ let _chainResizeTimer = null;
 window.addEventListener('resize', () => {
   _syncMapHeight();
   sidebar.measureControlSidebar();
+  _positionIndicator(false);
   clearTimeout(_chainResizeTimer);
   _chainResizeTimer = setTimeout(() => {
     if (_chainData && !document.getElementById('tab-chain')?.hidden) _renderChain();
@@ -948,7 +966,8 @@ const applySelection = (id, destIds) => {
   // Tab button pill + close
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
-    _playersBtn.className = 'nav-link dim-selected taxonomy';
+    const wasActive = _playersBtn.classList.contains('active');
+    _playersBtn.className = 'nav-link dim-selected taxonomy' + (wasActive ? ' active' : '');
     const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
     render(html`
       <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>
@@ -956,6 +975,7 @@ const applySelection = (id, destIds) => {
       <span class="btn-close" style="cursor:pointer;${_closeStyle}" aria-label="Close"
             @click=${() => clearDim()}></span>
     `, _playersBtn);
+    requestAnimationFrame(() => _positionIndicator());
   }
 
   _updateChainSelection();
@@ -982,6 +1002,7 @@ const clearDim = () => {
   _updateSelectionPanel(() => {
     const _pb = document.getElementById('tab-players-btn');
     if (_pb) { render(nothing, _pb); _pb.className = 'nav-link'; }
+    requestAnimationFrame(() => _positionIndicator(false));
   });
   _updateChainSelection();
   _updateEloSelection();

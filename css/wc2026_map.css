@@ -138,8 +138,7 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 #bottomTabList .nav-link:hover { background-color: var(--bg-hover); color: #000; }
 #tab-players-btn:hover { background-color: transparent !important; }
 #bottomTabList .nav-link.active { color: #000; }
-#bottomTabList .nav-link.active::after,
-#bottomTabList .nav-link:hover::after { content: ''; position: absolute; left: 0; right: 0; top: calc(50% + 17px); border-bottom: 1.5px dotted #888; }
+#tab-indicator { position: absolute; bottom: 6px; height: 0; border-bottom: 1.5px dotted #888; pointer-events: none; transition: left 0.3s ease, width 0.3s ease; }
 
 /* control sidebar table — clickable cells */
 .csb-table [data-col] { cursor: pointer; }
