@@ -22,16 +22,17 @@
 
 /* Dots via pseudo-elements — both on the right of the name */
 .taxonomy .elo-item--exp:not(.elo-item--imp) .elo-name::after {
-  content: '●'; color: #3b82f6; font-size: 8px; margin-left: 2px; vertical-align: super;
+  content: '▶'; color: #3b82f6; font-size: 14px; margin-left: 2px; /* vertical-align: super;  ● */
 }
 .taxonomy .elo-item--imp:not(.elo-item--exp) .elo-name::after {
-  content: '●'; color: #ef4444; font-size: 8px; margin-left: 2px; vertical-align: super;
+  content: '◀'; color: #ef4444; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
 }
 .taxonomy .elo-item--exp.elo-item--imp .elo-name::after {
-  content: '●\2009●'; font-size: 8px; margin-left: 2px; vertical-align: super;
+  content: '▶\2009◀'; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
   background: linear-gradient(90deg, #3b82f6 45%, #ef4444 55%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* Smaller dots inside the control sidebar */
-#control-sidebar .elo-name::after { font-size: 6px !important; }
+/* Smaller dots inside the control sidebar 
+*/
+#control-sidebar .elo-name::after { font-size: 9px !important; }
