@@ -270,6 +270,68 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _el.addEventListener('touchend', _swEnd);
   _el.addEventListener('touchcancel', _swEnd);
 
+  // ── Map swipe zone (top-right 1/3 × 1/3 of map, landscape mobile) ──
+  // Listens on the SVG itself (capture phase) so taps and D3 zoom/pan pass
+  // through normally. Only intercepts when the gesture is a clear leftward
+  // horizontal swipe originating in the zone.
+  const _mapSvg = document.getElementById('map');
+  if (_mapSvg) {
+    let _mzActive = false, _mzCaptured = false, _mzX0 = null, _mzY0 = null;
+
+    const _inZone = (x, y) => {
+      const r = _mapSvg.getBoundingClientRect();
+      return x >= r.left + r.width * 2 / 3 && y <= r.top + r.height / 3;
+    };
+
+    _mapSvg.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      _mzActive = _inZone(t.clientX, t.clientY);
+      _mzCaptured = false;
+      if (_mzActive) {
+        _mzX0 = t.clientX;
+        _mzY0 = t.clientY;
+        _swStart(e);
+      }
+    }, { capture: true, passive: true });
+
+    _mapSvg.addEventListener('touchmove', e => {
+      if (!_mzActive) return;
+      if (_mzX0 == null) return;
+      const t = e.touches[0];
+      if (!_mzCaptured) {
+        const dx = t.clientX - _mzX0;
+        const dy = t.clientY - _mzY0;
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+        if (dx >= 0 || Math.abs(dy) > Math.abs(dx)) {
+          _mzActive = false;
+          _mzX0 = null;
+          _swX0 = null;
+          return;
+        }
+        _mzCaptured = true;
+      }
+      e.stopPropagation();
+      e.preventDefault();
+      _swMove(e, true);
+    }, { capture: true, passive: false });
+
+    _mapSvg.addEventListener('touchend', e => {
+      if (_mzCaptured) { e.stopPropagation(); e.preventDefault(); _swEnd(e); }
+      _mzActive = false;
+      _mzCaptured = false;
+      _mzX0 = null;
+      _mzY0 = null;
+    }, { capture: true });
+
+    _mapSvg.addEventListener('touchcancel', e => {
+      if (_mzCaptured) { e.stopPropagation(); _swEnd(e); }
+      _mzActive = false;
+      _mzCaptured = false;
+      _mzX0 = null;
+      _mzY0 = null;
+    }, { capture: true });
+  }
+
   // ── Measure sidebar dimensions ──
   const measureControlSidebar = () => {
     const wasCollapsed = _el.classList.contains('collapsed');
