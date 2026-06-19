@@ -126,7 +126,7 @@ export const T = {
     eloFilter:   'filtre',
     legendCountries: 'pays', legendBorn: 'nés',
     sortLabels: { action: 'tri', elo: 'classement', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
-    filterLabels: { action: 'sélection', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualifié', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
+    filterLabels: { action: 'filtre', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualifié', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
   },
   it: {
     pageHeading:    'Luogo di nascita dei giocatori dei Mondiali 2026',
@@ -164,7 +164,7 @@ export const T = {
     eloFilter:   'filtro',
     legendCountries: 'paesi', legendBorn: 'nati',
     sortLabels: { action: 'ordine', elo: 'classifica', exp: 'export', imp: 'import', delta: 'Δ', alpha: 'A–Z' },
-    filterLabels: { action: 'selezione', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualific.', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
+    filterLabels: { action: 'filtro', exporter: 'export.', nonExp: 'non-exp.', qualified: 'qualific.', importer: 'import.', nonImp: 'non-imp.', nonQual: 'non-qual.' },
   },
   de: {
     pageHeading:    'Geburtsort der Spieler der WM 2026',
@@ -202,7 +202,7 @@ export const T = {
     eloFilter:   'Filter',
     legendCountries: 'Länder', legendBorn: 'geboren',
     sortLabels: { action: 'Sort.', elo: 'Rang', exp: 'Export', imp: 'Import', delta: 'Δ', alpha: 'A–Z' },
-    filterLabels: { action: 'Auswahl', exporter: 'Export.', nonExp: 'kein-Exp.', qualified: 'qualif.', importer: 'Import.', nonImp: 'kein-Imp.', nonQual: 'nicht-qual.' },
+    filterLabels: { action: 'Filter', exporter: 'Export.', nonExp: 'kein-Exp.', qualified: 'qualif.', importer: 'Import.', nonImp: 'kein-Imp.', nonQual: 'nicht-qual.' },
   },
   es: {
     pageHeading:    'Lugar de nacimiento de los jugadores del Mundial 2026',
@@ -240,7 +240,7 @@ export const T = {
     eloFilter:   'filtro',
     legendCountries: 'países', legendBorn: 'nacidos',
     sortLabels: { action: 'orden', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
-    filterLabels: { action: 'selección', exporter: 'export.', nonExp: 'no-exp.', qualified: 'clasific.', importer: 'import.', nonImp: 'no-imp.', nonQual: 'no-clasif.' },
+    filterLabels: { action: 'filtro', exporter: 'export.', nonExp: 'no-exp.', qualified: 'clasific.', importer: 'import.', nonImp: 'no-imp.', nonQual: 'no-clasif.' },
   },
   en: {
     pageHeading:    'Birthplace of 2026 World Cup Players',
@@ -278,6 +278,6 @@ export const T = {
     eloFilter:   'filter',
     legendCountries: 'countries', legendBorn: 'born',
     sortLabels: { action: 'sort', elo: 'ranking', exp: 'exports', imp: 'imports', delta: 'Δ', alpha: 'A–Z' },
-    filterLabels: { action: 'selection', exporter: 'exporter', nonExp: 'non-exp.', qualified: 'qualified', importer: 'importer', nonImp: 'non-imp.', nonQual: 'non-qual.' },
+    filterLabels: { action: 'filter', exporter: 'exporter', nonExp: 'non-exp.', qualified: 'qualified', importer: 'importer', nonImp: 'non-imp.', nonQual: 'non-qual.' },
   },
 }[_LANG];

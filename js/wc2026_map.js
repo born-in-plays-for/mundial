@@ -482,7 +482,7 @@ const zoomToCentroid = (id, duration = 2000) => {
 const _renderElo = (onAnimationDone) => {
   const allItems = _buildEloItems();
   const visibleItems = allItems.filter(item => sidebar.catEloChecked(item.id, item.fifaMember));
-  _eloMeta.hidden = sidebar.sortOrder[0] !== 'elo';
+  _eloMeta.hidden = sidebar.sortOrder[0] !== 'elo' || visibleItems.length === 0;
   if (!_eloMeta.innerHTML && (_eloData?.source || _eloData?.updated)) {
     const parts = [];
     if (_eloData.source) parts.push(`<a href="https://${_eloData.source}/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
