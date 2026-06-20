@@ -24,6 +24,7 @@ body { background: #f5f2ec; color: var(--color-default); }
 
 /* page header — grid so both children share row 1/col 1 and the row height = max(quote, sidebar) */
 #page-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--fixed-element-bg); padding: 0; display: grid; }
+#page-header ~ * { user-select: none; -webkit-user-select: none; }
 #page-heading-sub { grid-row: 1; grid-column: 1; padding: 0.4rem 1.5rem; padding-left: var(--vert-gutter); padding-right: var(--vert-gutter); align-self: stretch; margin: 0 !important; position: relative; display: flex; flex-direction: column; }
 
 /* page quote (pq-) */
