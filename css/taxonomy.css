@@ -17,8 +17,9 @@
 /* Non-FIFA: light text */
 .taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
 
-/* No map centroid: italic (contingently orthogonal) */
+/* No map centroid: italic name + dimmed flag */
 .taxonomy .elo-item--no-map .elo-name { font-style: italic; }
+.taxonomy .elo-item--no-map .elo-flag { opacity: 0.35; }
 
 /* Dots via pseudo-elements — both on the right of the name */
 .taxonomy .elo-item--exp:not(.elo-item--imp) .elo-name::after {
