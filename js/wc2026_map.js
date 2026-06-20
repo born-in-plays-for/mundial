@@ -176,14 +176,84 @@ const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840
 // Apply locale to static page elements
 document.title = DOCUMENT_TITLE;
 document.querySelector('meta[name="description"]')?.setAttribute('content', T.pageDescription);
-['page-heading-sub'].forEach(id => {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const quotes = T.pageQuotes;
-  const q = quotes[Math.floor(Math.random() * quotes.length)];
-  el.querySelector('.pq-text').innerHTML = q.text;
-  el.querySelector('.pq-attr').innerHTML = `<span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>${q.ref ? ', ' + q.ref : ''} <time datetime="${q.date}">${q.date}</time>`;
-});
+const _quotes = T.pageQuotes;
+let _quoteIdx = Math.floor(Math.random() * _quotes.length);
+const _pqWrap = document.querySelector('#page-heading-sub .pq-wrap');
+const _pqPrev = _pqWrap.querySelector('.pq-prev');
+const _pqCur  = _pqWrap.querySelector('.pq-cur');
+const _pqDotsEl = document.querySelector('#page-heading-sub .pq-dots');
+_pqDotsEl.innerHTML = _quotes.map((_, i) => `<span class="pq-dot${i === _quoteIdx ? ' active' : ''}"></span>`).join('');
+const _pqDots = _pqDotsEl.querySelectorAll('.pq-dot');
+const _fmtAttr = q => `<span class="pq-author">${q.author}</span>${q.sep}<cite>${q.work}</cite>${q.ref ? ', ' + q.ref : ''} <time datetime="${q.date}">${q.date}</time>`;
+const _fillPanel = (panel, idx) => {
+  const q = _quotes[idx];
+  panel.querySelector('.pq-text').innerHTML = q.text;
+  panel.querySelector('.pq-attr').innerHTML = _fmtAttr(q);
+};
+const _prevIdx = () => (_quoteIdx + _quotes.length - 1) % _quotes.length;
+_fillPanel(_pqCur, _quoteIdx);
+_fillPanel(_pqPrev, _prevIdx());
+{
+  let x0 = null, sidebarWasOpen = false, dragging = false;
+  const hdr = document.getElementById('page-header');
+  const setDrag = dx => {
+    _pqPrev.style.transform = `translateX(calc(-100% + ${dx}px))`;
+    _pqCur.style.transform  = `translateX(${dx}px)`;
+  };
+  const clearDrag = () => {
+    _pqPrev.style.transform = '';
+    _pqCur.style.transform  = '';
+    _pqPrev.style.transition = '';
+    _pqCur.style.transition  = '';
+  };
+  const setTransition = val => {
+    _pqPrev.style.transition = val;
+    _pqCur.style.transition  = val;
+  };
+  hdr.addEventListener('touchstart', e => {
+    x0 = e.touches[0].clientX;
+    dragging = false;
+    const csb = document.getElementById('control-sidebar');
+    sidebarWasOpen = csb && !csb.classList.contains('collapsed');
+    setTransition('none');
+  }, { passive: true });
+  hdr.addEventListener('touchmove', e => {
+    if (x0 == null || sidebarWasOpen) return;
+    const dx = e.touches[0].clientX - x0;
+    if (!dragging && dx > 10) dragging = true;
+    if (dragging) setDrag(Math.max(0, dx));
+  }, { passive: true });
+  hdr.addEventListener('touchend', e => {
+    if (x0 == null) { clearDrag(); return; }
+    const dx = e.changedTouches[0].clientX - x0;
+    x0 = null;
+    if (!dragging || sidebarWasOpen) { clearDrag(); return; }
+    dragging = false;
+    const w = _pqWrap.offsetWidth;
+    if (dx < 50) {
+      setTransition('transform .2s ease-out');
+      setDrag(0);
+      setTimeout(clearDrag, 220);
+      return;
+    }
+    setTransition('transform .2s ease-out');
+    setDrag(w);
+    setTimeout(() => {
+      _quoteIdx = _prevIdx();
+      _fillPanel(_pqCur, _quoteIdx);
+      _fillPanel(_pqPrev, _prevIdx());
+      _pqDots.forEach((d, i) => d.classList.toggle('active', i === _quoteIdx));
+      clearDrag();
+      if (_pageHeader) {
+        requestAnimationFrame(() => {
+          document.documentElement.style.setProperty('--page-header-h', _pageHeader.offsetHeight + 'px');
+          _syncPaddingTop();
+        });
+      }
+    }, 220);
+  });
+  hdr.addEventListener('touchcancel', () => { x0 = null; dragging = false; clearDrag(); });
+}
 const _zoomHintEl = document.getElementById('zoom-hint');
 _zoomHintEl.textContent = T.zoomHint;
 let _initialTransform = d3.zoomIdentity;
