@@ -16,17 +16,27 @@ body { background: #f5f2ec; }
 #tooltip .tt-count { color: #1d4ed8; font-weight: 700; }
 #tooltip .tt-players { line-height: 1.5; }
 #legend .bar { height: 10px; border-radius: 2px; flex: 1; max-width: 200px; }
+#pc-btn { position: absolute; z-index: 10; transform: translateX(-50%); }
+#pc-tip {
+  position: fixed; z-index: 1090; display: none;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  max-width: 90vw; max-height: 80vh; overflow-y: auto;
+}
+#pc-tip-content {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5rem;
+}
+#pc-tip .pc-dept { border-left: 3px solid #3b82f6; padding-left: 0.75rem; }
 </style>
 </head>
 <body>
 
 <div class="container-xxl">
   <div class="d-flex align-items-start gap-2 pt-4 pb-1">
-    <a id="back-btn" href="/" aria-label="Back to map" class="text-muted text-decoration-none fs-3 lh-1" style="opacity:.6;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">‹</a>
+    <a id="back-btn" href="/" aria-label="Back to map" class="btn btn-light btn-sm text-muted text-decoration-none fs-5 lh-1 px-2 py-0">‹</a>
     <h1 class="fs-5 fw-bold mb-0">Joueurs nés en France par département</h1>
   </div>
   <p id="subtitle" class="text-muted small pb-3">Mondial 2026 · toutes sélections confondues</p>
-  <div id="map"></div>
+  <div id="map" class="position-relative"></div>
   <div id="legend" class="d-flex align-items-center gap-2 py-2 small text-muted">
     <span>0</span>
     <div class="bar" style="background: linear-gradient(to right, #eff6ff, #3b82f6, #1e3a5f)"></div>
@@ -40,6 +50,10 @@ body { background: #f5f2ec; }
   <div class="tt-name fs-6"></div>
   <div class="tt-count"></div>
   <div class="tt-players text-secondary" style="font-size: 0.7rem"></div>
+</div>
+
+<div id="pc-tip" class="bg-white border rounded-3 shadow px-3 py-2">
+  <div id="pc-tip-content"></div>
 </div>
 
 <script type="module">
@@ -188,14 +202,69 @@ const resize = () => {
     .on('mousemove', onMove)
     .on('mouseleave', onLeave);
 
-  pcG.append('text')
-    .attr('x', pcX + pcSize / 2).attr('y', pcY + pcSize + pcPad + 12)
-    .attr('text-anchor', 'middle').attr('font-size', 9).attr('fill', '#999')
-    .text('Petite couronne');
+  // HTML button overlay for "Petite couronne" label
+  let pcBtn = document.getElementById('pc-btn');
+  if (!pcBtn) {
+    pcBtn = document.createElement('button');
+    pcBtn.id = 'pc-btn';
+    pcBtn.className = 'btn btn-light btn-sm text-muted';
+    pcBtn.style.fontSize = '9px';
+    pcBtn.textContent = 'Petite couronne';
+    container.appendChild(pcBtn);
+  }
+  pcBtn.style.left = (pcX + pcSize / 2) + 'px';
+  pcBtn.style.top = (pcY + pcSize + pcPad + 4) + 'px';
 };
 
 resize();
 window.addEventListener('resize', resize);
+
+// Petite couronne summary tooltip
+const PC_NAMES = {75: 'Paris', 92: 'Hauts-de-Seine', 93: 'Seine-Saint-Denis', 94: 'Val-de-Marne'};
+const pcTip = document.getElementById('pc-tip');
+const pcTipContent = document.getElementById('pc-tip-content');
+const pcBtn = document.getElementById('pc-btn');
+let pcTipVisible = false;
+
+const buildPcTip = () => {
+  const depts = ['93','75','94','92'];
+  let total = 0;
+  const sections = depts.map(code => {
+    const players = deptPlayers[code] ?? [];
+    total += players.length;
+    const rows = players
+      .sort((a, b) => (a.export === b.export ? 0 : a.export ? -1 : 1))
+      .map(p => {
+        const badge = p.role === 'coach' ? ' <span class="badge text-bg-warning" style="font-size:9px">coach</span>' : '';
+        const arrow = p.export ? ` <span class="text-danger">→ ${p.nation}</span>` : '';
+        return `${p.name}${badge}${arrow}`;
+      }).join('<br>');
+    return `<div class="pc-dept py-2">
+      <div class="fw-bold">${PC_NAMES[code]} (${code})</div>
+      <div class="text-primary fw-bold">${players.length} joueur${players.length > 1 ? 's' : ''}</div>
+      <div class="text-secondary" style="font-size:0.75rem">${rows}</div>
+    </div>`;
+  }).join('');
+  pcTipContent.innerHTML = sections;
+  pcTipContent.insertAdjacentHTML('beforebegin',
+    `<div id="pc-tip-header" class="fw-bold fs-6 pb-2 border-bottom mb-2">Paris et petite couronne · ${total} joueurs</div>`);
+};
+buildPcTip();
+
+const showPcTip = () => {
+  pcTipVisible = true;
+  pcTip.style.display = 'block';
+};
+
+const hidePcTip = () => {
+  pcTipVisible = false;
+  pcTip.style.display = 'none';
+};
+
+pcBtn.addEventListener('click', () => { pcTipVisible ? hidePcTip() : showPcTip(); });
+pcBtn.addEventListener('mouseenter', showPcTip);
+pcBtn.addEventListener('mouseleave', hidePcTip);
+document.addEventListener('click', e => { if (pcTipVisible && !pcTip.contains(e.target) && e.target !== pcBtn) hidePcTip(); });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
