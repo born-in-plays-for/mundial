@@ -63,13 +63,14 @@ done:
     work: Il Giorno
     date: 1971
 
-pending:
   # Poesie medievale & Renaissance
   - original: "Mais ou sont les neiges d'antan ?"
+    detournement: "Mais ou sont les sélections d'antan ?"
     author: "Francois Villon"
     work: "Ballade des dames du temps jadis"
     date: 1461
 
+pending:
   - original: "En mon pays suis en terre lointaine."
     author: "Francois Villon"
     work: "Ballade du concours de Blois"
