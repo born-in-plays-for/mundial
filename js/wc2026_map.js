@@ -1655,9 +1655,9 @@ Promise.all([
   _renderElo();
   sidebar.applyFlagFilter();
   sidebar.updateVisibleCountryCount();
-  // Initial zoom: fit all qualified + exporting flags so Antarctica is off-screen
+  // Initial zoom: fit ALL flags so every country is visible (including Falklands etc.)
   const xs = [], ys = [];
-  g.selectAll('.flag-qualified[data-elo-cat]:not([data-elo-cat="o"])').each(function() {
+  g.selectAll('.flag-qualified[data-elo-cat]').each(function() {
     const cx = +this.getAttribute('data-cx');
     const cy = +this.getAttribute('data-cy');
     if (isFinite(cx) && isFinite(cy)) { xs.push(cx); ys.push(cy); }

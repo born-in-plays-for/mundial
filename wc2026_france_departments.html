@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mondial 2026 · Joueurs nés en France par département</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<style>
+body { background: #f5f2ec; }
+.dept { stroke: #b0a99e; stroke-width: 0.4; cursor: pointer; transition: stroke-width 0.15s; }
+.dept:hover { stroke: #333; stroke-width: 1.5; }
+#tooltip {
+  position: fixed; pointer-events: none; z-index: 1080; display: none; max-width: 320px;
+}
+#tooltip .tt-name { font-weight: 700; }
+#tooltip .tt-count { color: #1d4ed8; font-weight: 700; }
+#tooltip .tt-players { line-height: 1.5; }
+#legend .bar { height: 10px; border-radius: 2px; flex: 1; max-width: 200px; }
+</style>
+</head>
+<body>
+
+<div class="container-xxl">
+  <div class="d-flex align-items-start gap-2 pt-4 pb-1">
+    <a id="back-btn" href="/" aria-label="Back to map" class="text-muted text-decoration-none fs-3 lh-1" style="opacity:.6;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">‹</a>
+    <h1 class="fs-5 fw-bold mb-0">Joueurs nés en France par département</h1>
+  </div>
+  <p id="subtitle" class="text-muted small pb-3">Mondial 2026 · toutes sélections confondues</p>
+  <div id="map"></div>
+  <div id="legend" class="d-flex align-items-center gap-2 py-2 small text-muted">
+    <span>0</span>
+    <div class="bar" style="background: linear-gradient(to right, #eff6ff, #3b82f6, #1e3a5f)"></div>
+    <span id="legend-max"></span>
+    <span class="ms-2">joueurs</span>
+  </div>
+  <p class="text-muted small pb-4">Source : Wikipédia · effectifs Mondial 2026</p>
+</div>
+
+<div id="tooltip" class="bg-white border rounded-3 shadow-sm px-3 py-2 small">
+  <div class="tt-name fs-6"></div>
+  <div class="tt-count"></div>
+  <div class="tt-players text-secondary" style="font-size: 0.7rem"></div>
+</div>
+
+<script type="module">
+import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7.8.5/+esm';
+
+const PLAYER_DEPT = {"Karim Boudiaf":"92","Johny Placide":"93","Martin Expérience":"44","Duckens Nazon":"92","Jean-Ricner Bellegarde":"92","Alexandre Pierre":"93","Ruben Providence":"77","Lenny Joseph":"75","Wilson Isidor":"35","Yassin Fortuné":"93","Josué Casimir":"971","Jean-Kévin Duverne":"75","Dominique Simon":"95","Ayyoub Bouaddi":"60","Issa Diop":"31","Samir El Mourabet":"67","Gessime Yassine":"13","Neil El Aynaoui":"54","Redouane Halhal":"34","Yahia Fofana":"75","Seko Fofana":"75","Ange-Yoan Bonny":"93","Elye Wahi":"91","Guéla Doué":"49","Nicolas Pépé":"78","Evan Ndicka":"75","Evann Guessand":"2A","Montassar Talbi":"75","Dylan Bronn":"06","Elias Achouri":"93","Hannibal Mejbri":"94","Ismaël Gharbi":"75","Ellyes Skhiri":"34","Yan Valery":"94","Logan Costa":"93","Willy Semedo":"93","Steven Moreira":"93","Aymeric Laporte":"47","Malo Gusto":"69","Lucas Digne":"77","Dayot Upamecano":"27","Jules Koundé":"75","Manu Koné":"92","Ousmane Dembélé":"27","Aurélien Tchouaméni":"76","Kylian Mbappé":"75","Bradley Barcola":"69","N'Golo Kanté":"75","Adrien Rabiot":"94","Ibrahima Konaté":"75","Mike Maignan":"973","William Saliba":"93","Warren Zaïre-Emery":"93","Théo Hernandez":"13","Désiré Doué":"49","Lucas Hernandez":"13","Jean-Philippe Mateta":"93","Robin Risser":"68","Rayan Cherki":"69","Maghnes Akliouche":"93","Maxence Lacroix":"94","Yehvann Diouf":"93","Mamadou Sarr":"13","Kalidou Koulibaly":"88","Iliman Ndiaye":"76","Édouard Mendy":"76","Moussa Niakhaté":"59","Ibrahim Mbaye":"78","Mory Diaw":"78","Antoine Mendy":"13","Pape Gueye":"93","Melvin Mastil":"74","Aïssa Mandi":"51","Riyad Mahrez":"92","Houssem Aouar":"69","Amine Gouiri":"38","Farès Chaïbi":"69","Anis Hadj Moussa":"75","Jaouen Hadjam":"75","Rayan Aït-Nouri":"93","Nabil Bentaleb":"59","Luca Zidane":"13","Farès Ghedjemis":"93","Samir Chergui":"91","Lionel Mpasi":"77","Steve Kapuadi":"72","Dylan Batubinsika":"95","Nathanaël Mbuku":"94","Samuel Moutoussamy":"75","Gaël Kakuta":"59","Cédric Bakambu":"94","Yoane Wissa":"91","Simon Banza":"60","Gédéon Kalulu":"69","Arthur Masuaku":"59","Jordan Ayew":"13","Elisha Owusu":"93","Marvin Senaya":"94","Haissem Hassan":"75","Sébastien Migné":"85","Emerse Faé":"44","Hervé Renard":"73","Rudi Garcia":"77","Didier Deschamps":"64","Sébastien Desabre":"26"};
+
+const mapData = await fetch('./wc2026_map_data.json').then(r => r.json());
+
+const allPlayers = [
+  ...mapData.data.flatMap(rec => rec.players.map(p => ({...p, birth_country: rec.country}))),
+  ...Object.entries(mapData.natives).flatMap(([nation, ps]) => ps.map(p => ({...p, nation, birth_country: nation})))
+];
+
+const deptPlayers = {};
+for (const p of allPlayers) {
+  if (p.birth_country !== 'France') continue;
+  const dept = PLAYER_DEPT[p.name];
+  if (!dept) continue;
+  if (!deptPlayers[dept]) deptPlayers[dept] = [];
+  deptPlayers[dept].push({ name: p.name, nation: p.nation, export: p.birth_country !== p.nation, role: p.role });
+}
+
+const allDeptPlayers = Object.values(deptPlayers).flat();
+const nCoaches = allDeptPlayers.filter(p => p.role === 'coach').length;
+const nPlayers = allDeptPlayers.length - nCoaches;
+document.getElementById('subtitle').textContent =
+  `Mondial 2026 · ${allDeptPlayers.length} : ${nPlayers} joueurs et ${nCoaches} sélectionneurs · toutes sélections confondues`;
+
+const maxCount = Math.max(...Object.values(deptPlayers).map(a => a.length));
+document.getElementById('legend-max').textContent = maxCount;
+
+const color = d3.scaleSequential()
+  .domain([0, maxCount])
+  .interpolator(t => d3.interpolateBlues(0.15 + t * 0.85));
+
+const geoUrl = 'https://raw.githubusercontent.com/Kaosamami/france-geojson/main/departement_avec_outremer_rapproch%C3%A9e.geojson';
+const geo = await fetch(geoUrl).then(r => r.json());
+
+const container = document.getElementById('map');
+let W, H;
+
+const projection = d3.geoConicConformal().center([2.5, 46.5]);
+const path = d3.geoPath(projection);
+
+const svg = d3.select('#map').append('svg');
+const mapG = svg.append('g');
+
+const zoom = d3.zoom()
+  .scaleExtent([1, 12])
+  .on('zoom', ({transform}) => { mapG.attr('transform', transform); });
+svg.call(zoom);
+svg.on('dblclick.zoom', () => svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity));
+
+const fillFn = d => {
+  const n = (deptPlayers[d.properties.code] ?? []).length;
+  return n > 0 ? color(n) : '#e0ddd8';
+};
+
+const tt = document.getElementById('tooltip');
+const ttName = tt.querySelector('.tt-name');
+const ttCount = tt.querySelector('.tt-count');
+const ttPlayers = tt.querySelector('.tt-players');
+
+const onMove = (event, d) => {
+  const code = d.properties.code;
+  const name = d.properties.nom;
+  const players = deptPlayers[code] ?? [];
+  ttName.textContent = `${name} (${code})`;
+  if (players.length === 0) {
+    ttCount.textContent = 'Aucun joueur';
+    ttPlayers.innerHTML = '';
+  } else {
+    ttCount.textContent = `${players.length} joueur${players.length > 1 ? 's' : ''}`;
+    ttPlayers.innerHTML = players
+      .sort((a, b) => (a.export === b.export ? 0 : a.export ? -1 : 1))
+      .map(p => {
+        const badge = p.role === 'coach' ? ' <span style="color:#7b6b3a;background:#f5ecd0;border-radius:3px;padding:0 3px;font-size:9px">coach</span>' : '';
+        const arrow = p.export ? ` <span style="color:#ef4444">→ ${p.nation}</span>` : '';
+        return `${p.name}${badge}${arrow}`;
+      }).join('<br>');
+  }
+  tt.style.display = 'block';
+  const ttW = tt.offsetWidth, ttH = tt.offsetHeight;
+  let left = event.clientX + 12;
+  if (left + ttW + 8 > window.innerWidth) left = event.clientX - ttW - 12;
+  let top = event.clientY - ttH - 8;
+  if (top < 8) top = event.clientY + 16;
+  tt.style.left = Math.max(8, left) + 'px';
+  tt.style.top = Math.max(8, Math.min(top, window.innerHeight - ttH - 8)) + 'px';
+};
+const onLeave = () => { tt.style.display = 'none'; };
+
+const PC_CODES = new Set(['75','92','93','94']);
+const PC_CONTEXT = new Set(['75','92','93','94','77','78','91','95']);
+const pcFeatures = geo.features.filter(f => PC_CONTEXT.has(f.properties.code));
+const pcProj = d3.geoConicConformal().center([2.35, 48.86]);
+const pcPath = d3.geoPath(pcProj);
+let pcG;
+
+const resize = () => {
+  W = container.clientWidth;
+  H = W * 0.85;
+
+  svg.attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+  svg.call(zoom.transform, d3.zoomIdentity);
+
+  projection.scale(W * 3.2).translate([W / 2, H / 2]);
+  mapG.selectAll('path')
+    .data(geo.features)
+    .join('path')
+    .attr('class', 'dept')
+    .attr('d', path)
+    .attr('fill', fillFn)
+    .on('mousemove', onMove)
+    .on('mouseleave', onLeave);
+
+  // Petite couronne inset
+  const pcSize = Math.min(W * 0.18, 150);
+  const pcPad = 4;
+  const pcX = W - pcSize - pcPad - 30, pcY = 16;
+
+  if (pcG) pcG.remove();
+  svg.select('defs').remove();
+  pcG = svg.append('g');
+
+  const clipId = 'pc-clip';
+  svg.append('defs').append('clipPath').attr('id', clipId)
+    .append('rect').attr('x', pcX).attr('y', pcY).attr('width', pcSize).attr('height', pcSize).attr('rx', 6);
+
+  pcG.append('rect')
+    .attr('x', pcX - pcPad).attr('y', pcY - pcPad)
+    .attr('width', pcSize + pcPad * 2).attr('height', pcSize + pcPad * 2)
+    .attr('rx', 6).attr('fill', '#fff').attr('stroke', '#ccc').attr('stroke-width', 0.8);
+
+  pcProj.scale(W * 28).translate([pcX + pcSize / 2, pcY + pcSize / 2]);
+  pcG.append('g').attr('clip-path', `url(#${clipId})`)
+    .selectAll('path')
+    .data(pcFeatures)
+    .join('path')
+    .attr('class', 'dept')
+    .attr('d', pcPath)
+    .attr('fill', fillFn)
+    .attr('stroke', d => PC_CODES.has(d.properties.code) ? '#b0a99e' : '#d0ccc6')
+    .attr('stroke-width', d => PC_CODES.has(d.properties.code) ? 0.6 : 0.3)
+    .on('mousemove', onMove)
+    .on('mouseleave', onLeave);
+
+  pcG.append('text')
+    .attr('x', pcX + pcSize / 2).attr('y', pcY + pcSize + pcPad + 12)
+    .attr('text-anchor', 'middle').attr('font-size', 9).attr('fill', '#999')
+    .text('Petite couronne');
+};
+
+resize();
+window.addEventListener('resize', resize);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
