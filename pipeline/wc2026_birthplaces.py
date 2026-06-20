@@ -354,7 +354,8 @@ SELECT ?item ?birthCityLabel ?birthCountryLabel WHERE {{
 
 def enrich_with_wikidata(players: list) -> None:
     """Complète birth_city / birth_country via Wikidata pour les joueurs sans lieu."""
-    need_enrichment = [p for p in players if not p['birth_city'] and p['wiki_title']]
+    need_enrichment = [p for p in players
+                       if p['wiki_title'] and (not p['birth_city'] or p['birth_city'] == p['birth_country'])]
     if not need_enrichment:
         return
 
@@ -371,13 +372,15 @@ def enrich_with_wikidata(players: list) -> None:
 
     enriched = 0
     for p in players:
-        if p['birth_city'] or not p['wiki_title']:
+        if not p['wiki_title']:
+            continue
+        if p['birth_city'] and p['birth_city'] != p['birth_country']:
             continue
         qid = title_to_qid.get(p['wiki_title'])
         if not qid:
             continue
         city, country = qid_to_birth.get(qid, ('', ''))
-        if city or country:
+        if city and city != country:
             p['birth_city']    = city
             p['birth_country'] = country
             enriched += 1
@@ -422,7 +425,8 @@ def _parse_wikipedia_birthplace(soup: BeautifulSoup) -> tuple:
 
 def enrich_with_wikipedia_pages(players: list) -> None:
     """Enrichit via les pages Wikipedia individuelles des joueurs sans lieu de naissance."""
-    missing = [p for p in players if not p['birth_city'] and p['wiki_title']]
+    missing = [p for p in players
+               if p['wiki_title'] and (not p['birth_city'] or p['birth_city'] == p['birth_country'])]
     if not missing:
         return
     print(f"\n📖 Pages Wikipedia individuelles pour {len(missing)} joueurs ...")

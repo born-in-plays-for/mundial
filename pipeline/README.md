@@ -26,8 +26,9 @@ pip install openpyxl
 | Script | Output | Notes |
 |--------|--------|-------|
 | `wc2026_birthplaces.py` | `pipeline/wc2026_players.csv` | Scraper: Wikipedia squad page + Wikidata birth lookup |
-| `build_json.py` | `wc2026_map_data.json` | Rebuilds the main data file from CSV + countries.json |
-| `add_wiki_urls.py` | `wc2026_map_data.json` (in-place) | Enriches with per-language Wikipedia links |
+| `wc2026_coaches.py` | `pipeline/wc2026_coaches.csv` | Scraper: coaches from Wikipedia squad page + Wikidata birth lookup |
+| `build_json.py` | `wc2026_map_data.json` | Rebuilds the main data file from CSV + countries.json + coaches CSV |
+| `add_wiki_urls.py` | `wc2026_map_data.json` (in-place) | Enriches with per-language Wikipedia links (players + coaches) |
 | `fetch_countries.py` | `countries.json` | Population + multilingual capital from mledoze + World Bank + Wikidata |
 | `patch_uk_nations.py` | `countries.json` (in-place) | Adds UK home nations (ids 8260–8263) |
 | `patch_kosovo.py` | `countries.json`, `wc2026_elo_rank.json` (in-place) | Adds Kosovo (id 383) |
@@ -64,16 +65,42 @@ Outputs:
 
 ---
 
+### Step 1b — Scrape coaches
+
+```bash
+python3 pipeline/wc2026_coaches.py
+```
+
+Extracts all 48 head coaches from the same Wikipedia squad page, with nationality
+(flag detection for foreign coaches) and birthplace via Wikidata SPARQL.
+
+Outputs `pipeline/wc2026_coaches.csv` — 1 row per coach with birth city/country.
+
+Coaches born in the UK get their `birth_country` resolved to the specific home
+nation (England, Scotland, Wales, Northern Ireland) via the `UK_CITY_TO_NATION`
+map in the script. If a new UK-born coach appears and their city is not in the
+map, the script prints a warning — add the city manually.
+
+**⚠ Mid-tournament coaching changes:** The scraper pulls coaches from the Wikipedia
+squad page at scrape time. If a coach is replaced mid-tournament (as happened with
+Tunisia: Sabri Lamouchi → Hervé Renard after matchday 1), the CSV may need a
+manual edit if Wikipedia hasn't been updated yet. Always verify
+`pipeline/wc2026_coaches.csv` after a re-scrape during the tournament.
+
+---
+
 ### Step 2 — Rebuild the main JSON
 
 ```bash
 python3 pipeline/build_json.py
 ```
 
-Reads `pipeline/wc2026_players.csv` + `countries.json`, writes `wc2026_map_data.json`.
+Reads `pipeline/wc2026_players.csv` + `pipeline/wc2026_coaches.csv` (optional) +
+`countries.json`, writes `wc2026_map_data.json`.
 
-- `data` array: players born in one country who play for another
-- `natives`: players born in the country they play for
+- `data` array: players/coaches born in one country who play for/coach another
+- `natives`: players/coaches born in the country they play for/coach
+- Coaches carry `"role":"coach"` in the JSON — the frontend badges them distinctly
 - Preserves existing `wiki_langs` / `wiki` fields (safe to re-run after `add_wiki_urls.py`)
 - Reads population + multilingual capital from `countries.json` (keyed by lowercase alpha2)
 
@@ -218,6 +245,29 @@ For each player with a bad `birth_country`:
 1. Look up their birth city/country on Wikipedia or Wikidata.
 2. Edit `pipeline/wc2026_players.csv` directly.
 3. Re-run steps 2–3.
+
+### Birth-city quality: `birth_city == birth_country`
+
+Wikidata sometimes returns only the country (or a vague region name) instead of
+a proper city for `P19` (place of birth), resulting in `birth_city` equal to
+`birth_country` (e.g. `birth_city=France, birth_country=France`).
+
+`wc2026_birthplaces.py` now treats `birth_city == birth_country` as "missing" in
+both enrichment passes (Wikidata SPARQL and Wikipedia page fallback), so
+**re-running the scraper** should resolve most of these automatically.
+
+If some still remain after a scrape (e.g. when Wikipedia's infobox also lacks the
+city), edit `pipeline/wc2026_players.csv` directly and re-run steps 2–3.
+
+Previously patched manually:
+
+| Player | Scraped `birth_city` | Correct `birth_city` | Source |
+|--------|---------------------|----------------------|--------|
+| Callan Elliot | `Scotland` | `Dumfries` | [BBC](https://www.bbc.com/news/articles/czx8pllvpv7o) |
+| Lenny Joseph | `France` | `Paris` | [Wikipedia](https://en.wikipedia.org/wiki/Lenny_Joseph) |
+| Ahmed Qasem | `Sweden` | `Motala` | [MLS](https://www.mlssoccer.com/players/ahmed-qasem/) |
+| Simon Banza | `France` | `Creil` | [Wikipedia](https://en.wikipedia.org/wiki/Simon_Banza) |
+| Igor Matanović | `Germany` | `Hamburg` | [Wikipedia](https://en.wikipedia.org/wiki/Igor_Matanovi%C4%87) |
 
 ---
 
