@@ -26,12 +26,12 @@ body { background: #f5f2ec; }
       <h1 class="fs-5 fw-bold mb-0">Live Game</h1>
       <p class="text-muted small mb-0">World Cup 2026</p>
     </div>
-    <button id="refresh-btn" class="btn btn-outline-secondary btn-sm ms-auto">Refresh</button>
+    <span id="ws-status" class="badge bg-secondary ms-auto">connecting…</span>
   </div>
 
   <div id="no-match" class="alert alert-secondary d-none">No World Cup match currently live.</div>
   <div id="matches"></div>
-  <div id="loading" class="text-muted small">Loading live fixtures…</div>
+  <div id="loading" class="text-muted small">Connecting to backend…</div>
 </div>
 
 <script type="module">
@@ -203,58 +203,63 @@ const renderMatch = (fix, lineups) => {
   return html;
 };
 
-const refresh = async () => {
+const lineupsCache = {};
+const _h = {'ngrok-skip-browser-warning': '1'};
+
+const fetchLineups = async (fixtureId) => {
+  if (lineupsCache[fixtureId]) return lineupsCache[fixtureId];
   try {
-    const _h = {'ngrok-skip-browser-warning': '1'};
-    const fixtures = await fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json());
-    document.getElementById('loading').classList.add('d-none');
-
-    if (fixtures.length === 0) {
-      document.getElementById('no-match').classList.remove('d-none');
-      document.getElementById('matches').innerHTML = '';
-      return;
-    }
-
-    document.getElementById('no-match').classList.add('d-none');
-    let html = '';
-
-    for (const fix of fixtures) {
-      const fixId = fix.fixture.id;
-      let lineups = [];
-      try {
-        lineups = await fetch(`${PROXY}/api/lineups/${fixId}`, {headers: _h}).then(r => r.json());
-      } catch {}
-      html += renderMatch(fix, lineups);
-    }
-
-    document.getElementById('matches').innerHTML = html;
-  } catch (err) {
-    document.getElementById('loading').textContent = `Error: ${err.message}. Is the backend running?`;
-    document.getElementById('loading').classList.remove('d-none');
-  }
+    const data = await fetch(`${PROXY}/api/lineups/${fixtureId}`, {headers: _h}).then(r => r.json());
+    if (data.length > 0) lineupsCache[fixtureId] = data;
+    return data;
+  } catch { return []; }
 };
 
-const THROTTLE = 5 * 60_000;
-let lastRefresh = 0;
-const refreshBtn = document.getElementById('refresh-btn');
+const renderFixtures = async (fixtures) => {
+  document.getElementById('loading').classList.add('d-none');
 
-const throttledRefresh = async () => {
-  const now = Date.now();
-  const wait = THROTTLE - (now - lastRefresh);
-  if (lastRefresh && wait > 0) {
-    refreshBtn.textContent = `Wait ${Math.ceil(wait / 1000)}s`;
+  if (fixtures.length === 0) {
+    document.getElementById('no-match').classList.remove('d-none');
+    document.getElementById('matches').innerHTML = '';
     return;
   }
-  refreshBtn.disabled = true;
-  refreshBtn.textContent = 'Refreshing…';
-  lastRefresh = Date.now();
-  await refresh();
-  refreshBtn.disabled = false;
-  refreshBtn.textContent = 'Refresh';
+
+  document.getElementById('no-match').classList.add('d-none');
+  let html = '';
+
+  for (const fix of fixtures) {
+    const lineups = await fetchLineups(fix.fixture.id);
+    html += renderMatch(fix, lineups);
+  }
+
+  document.getElementById('matches').innerHTML = html;
 };
 
-refreshBtn.addEventListener('click', throttledRefresh);
-throttledRefresh();
+const badge = document.getElementById('ws-status');
+const sioScript = document.createElement('script');
+sioScript.src = 'https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js';
+sioScript.onload = () => {
+  const sock = io(PROXY, {transports: ['websocket']});
+
+  sock.on('connect', async () => {
+    badge.textContent = 'live';
+    badge.className = 'badge bg-success ms-auto';
+    try {
+      const fixtures = await fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json());
+      renderFixtures(fixtures);
+    } catch {}
+  });
+
+  sock.on('disconnect', () => {
+    badge.textContent = 'disconnected';
+    badge.className = 'badge bg-danger ms-auto';
+  });
+
+  sock.on('live_update', (fixtures) => {
+    renderFixtures(fixtures);
+  });
+};
+document.head.appendChild(sioScript);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
