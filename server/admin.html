@@ -47,7 +47,7 @@ body { background: #f5f2ec; }
       <div id="activity-log" class="mb-3"></div>
       <table class="table table-sm table-hover">
         <thead>
-          <tr><th></th><th>Picture</th><th>Name</th><th>Email</th><th>Last login</th><th></th></tr>
+          <tr><th></th><th>Picture</th><th>Name</th><th>Device</th><th>Last login</th><th></th></tr>
         </thead>
         <tbody id="users-tbody"></tbody>
       </table>
@@ -64,6 +64,7 @@ body { background: #f5f2ec; }
 <script>
 const BACKEND = window.location.origin;
 let socket = null;
+let mySid = null;
 
 async function onGoogleSignIn(response) {
   const r = await fetch(`${BACKEND}/api/auth/google`, {
@@ -73,14 +74,20 @@ async function onGoogleSignIn(response) {
     body: JSON.stringify({credential: response.credential})
   });
   const data = await r.json();
-  if (data.user) showUser(data.user, data.admin);
+  if (data.user) {
+    mySid = data.sid;
+    showUser(data.user, data.admin);
+  }
 }
 
 async function checkSession() {
   try {
     const r = await fetch(`${BACKEND}/api/auth/me`, {credentials: 'include'});
     const data = await r.json();
-    if (data.user) showUser(data.user, data.admin);
+    if (data.user) {
+      mySid = data.sid;
+      showUser(data.user, data.admin);
+    }
   } catch {}
 }
 
@@ -140,18 +147,31 @@ function renderUsers() {
       <td>${u.name}</td>
       <td>${u.email}</td>
       <td class="text-muted small">${u.last_login ?? '—'}</td>
-      <td></td>
+      <td><button class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size:10px" onclick="deleteUser('${u.email}')">delete</button></td>
     </tr>`];
       }
-      return sessions.map((s, i) => `
+      const isMyUser = sessions.some(s => s.sid === mySid);
+      const otherSessions = sessions.filter(s => s.sid !== mySid);
+      return sessions.map((s, i) => {
+        const isMe = s.sid === mySid;
+        const kickBtn = isMe
+          ? `<button class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size:10px" disabled>kick</button>`
+          : `<button class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size:10px" onclick="kickSession('${s.sid}')">kick</button>`;
+        let userBtns = '';
+        if (i === 0) {
+          const kickAllDisabled = otherSessions.length === 0;
+          userBtns = `<button class="btn btn-outline-warning btn-sm py-0 px-1 me-1" style="font-size:10px" onclick="kickAll('${u.email}')" ${kickAllDisabled ? 'disabled' : ''}>kick all</button><button class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size:10px" onclick="deleteUser('${u.email}')" ${isMyUser ? 'disabled' : ''}>delete</button>`;
+        }
+        return `
     <tr>
       <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#198754"></span></td>
       <td>${i === 0 ? `<img src="${u.picture}" class="rounded-circle" width="28" height="28" alt="" referrerpolicy="no-referrer">` : ''}</td>
       <td>${i === 0 ? u.name : ''}</td>
       <td><span class="text-muted small">${s.device}</span></td>
       <td class="text-muted small">${s.time}</td>
-      <td><button class="btn btn-outline-danger btn-sm py-0 px-1" style="font-size:10px" onclick="kickSession('${s.sid}')">kick</button></td>
-    </tr>`);
+      <td class="text-nowrap">${i === 0 ? userBtns : kickBtn}</td>
+    </tr>`;
+      });
     }).join('');
 }
 
@@ -161,6 +181,25 @@ async function kickSession(sid) {
     headers: {'Content-Type': 'application/json'},
     credentials: 'include',
     body: JSON.stringify({sid})
+  });
+}
+
+async function kickAll(email) {
+  await fetch(BACKEND + '/api/admin/kick', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
+    body: JSON.stringify({email})
+  });
+}
+
+async function deleteUser(email) {
+  if (!confirm(`Delete ${email} from user history?`)) return;
+  await fetch(BACKEND + '/api/admin/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
+    body: JSON.stringify({email})
   });
 }
 
@@ -179,6 +218,19 @@ function addActivity(type, user) {
   log.prepend(el);
   // Keep last 20
   while (log.children.length > 20) log.lastChild.remove();
+}
+
+function isMySession(sid, email) {
+  if (sid) return sid === mySid;
+  return email === document.getElementById('user-email')?.textContent;
+}
+
+function showSignedOut() {
+  if (socket) socket.disconnect();
+  document.getElementById('signed-in').classList.add('d-none');
+  document.getElementById('admin-section').classList.add('d-none');
+  document.getElementById('not-admin').classList.add('d-none');
+  document.getElementById('signed-out').classList.remove('d-none');
 }
 
 function connectWebSocket() {
@@ -204,8 +256,20 @@ function connectWebSocket() {
 
   socket.on('user_logout', user => {
     addActivity('logout', user);
-    onlineSessions = onlineSessions.filter(s => s.email !== user.email);
+    if (user.sid) {
+      onlineSessions = onlineSessions.filter(s => s.sid !== user.sid);
+    } else {
+      onlineSessions = onlineSessions.filter(s => s.email !== user.email);
+    }
     renderUsers();
+    if (isMySession(user.sid, user.email)) showSignedOut();
+  });
+
+  socket.on('user_deleted', ({email}) => {
+    delete allUsers[email];
+    onlineSessions = onlineSessions.filter(s => s.email !== email);
+    renderUsers();
+    if (isMySession(null, email)) showSignedOut();
   });
 
   socket.on('user_kicked', ({email, sid}) => {
@@ -216,25 +280,16 @@ function connectWebSocket() {
       onlineSessions = onlineSessions.filter(s => s.email !== email);
     }
     renderUsers();
-    const myEmail = document.getElementById('user-email')?.textContent;
-    if (myEmail === email) {
+    if (isMySession(sid, email)) {
       fetch(BACKEND + '/api/auth/logout', {method: 'POST', credentials: 'include'}).catch(() => {});
-      document.getElementById('signed-in').classList.add('d-none');
-      document.getElementById('admin-section').classList.add('d-none');
-      document.getElementById('not-admin').classList.add('d-none');
-      document.getElementById('signed-out').classList.remove('d-none');
-      socket.disconnect();
+      showSignedOut();
     }
   });
 }
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
-  if (socket) socket.disconnect();
   await fetch(`${BACKEND}/api/auth/logout`, {method: 'POST', credentials: 'include'});
-  document.getElementById('signed-in').classList.add('d-none');
-  document.getElementById('admin-section').classList.add('d-none');
-  document.getElementById('not-admin').classList.add('d-none');
-  document.getElementById('signed-out').classList.remove('d-none');
+  showSignedOut();
 });
 
 checkSession();

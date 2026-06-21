@@ -7,3 +7,4 @@ pipeline/FIFA_Coca-Cola Men's World Ranking_files/
 server/client_secret_*.json
 server/users.json
 server/.env
+server/backend.log

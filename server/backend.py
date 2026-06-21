@@ -31,10 +31,20 @@ WebSocket events (admin):
     server → client: 'user_logout' {user}
 """
 
-import os, time, sys, json, uuid, re
+import os, time, sys, json, uuid, re, logging
 from pathlib import Path
 from flask import Flask, jsonify, request, session, send_file
 from flask_socketio import SocketIO
+
+log = logging.getLogger("mundial")
+log.setLevel(logging.DEBUG)
+_fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
+_sh = logging.StreamHandler()
+_sh.setFormatter(_fmt)
+log.addHandler(_sh)
+_fh = logging.FileHandler(Path(__file__).parent / "backend.log")
+_fh.setFormatter(_fmt)
+log.addHandler(_fh)
 
 API_KEY = os.environ.get("API_FOOTBALL_KEY", "")
 if not API_KEY:
@@ -58,10 +68,22 @@ ONLINE_SESSIONS = {}  # session_id → {email, user, device, time}
 def _parse_device(ua):
     ua = ua or ""
     browser = "Unknown"
-    if "Edg/" in ua: browser = "Edge"
-    elif "Chrome/" in ua: browser = "Chrome"
-    elif "Safari/" in ua and "Chrome" not in ua: browser = "Safari"
-    elif "Firefox/" in ua: browser = "Firefox"
+    ver = ""
+    m = None
+    if "Edg/" in ua:
+        browser = "Edge"
+        m = re.search(r"Edg/(\d+)", ua)
+    elif "Chrome/" in ua:
+        browser = "Chrome"
+        m = re.search(r"Chrome/(\d+)", ua)
+    elif "Safari/" in ua and "Chrome" not in ua:
+        browser = "Safari"
+        m = re.search(r"Version/(\d+)", ua)
+    elif "Firefox/" in ua:
+        browser = "Firefox"
+        m = re.search(r"Firefox/(\d+)", ua)
+    if m:
+        ver = " " + m.group(1)
     os_name = "Unknown"
     if "Macintosh" in ua: os_name = "macOS"
     elif "Windows" in ua: os_name = "Windows"
@@ -69,7 +91,7 @@ def _parse_device(ua):
     elif "iPad" in ua: os_name = "iPad"
     elif "Android" in ua: os_name = "Android"
     elif "Linux" in ua: os_name = "Linux"
-    return f"{browser} / {os_name}"
+    return f"{browser}{ver} / {os_name}"
 
 def _load_users():
     if USERS_FILE.exists():
@@ -89,7 +111,10 @@ def cached_get(path, params):
     key = f"{url}?{params}"
     now = time.time()
     if key in CACHE and now - CACHE[key]["t"] < CACHE_TTL:
+        age = int(now - CACHE[key]["t"])
+        log.debug("CACHE HIT  %s %s (age %ds)", path, params, age)
         return CACHE[key]["data"]
+    log.info("CACHE MISS %s %s → fetching from API", path, params)
     r = req.get(url, headers={"x-apisports-key": API_KEY}, params=params, timeout=10)
     r.raise_for_status()
     data = r.json().get("response", [])
@@ -120,11 +145,13 @@ def cors(response):
 def live():
     fixtures = cached_get("/fixtures", {"live": "all"})
     wc = [f for f in fixtures if f["league"]["name"] == "World Cup"]
+    log.info("GET /api/live → %d fixtures (%d WC)", len(fixtures), len(wc))
     return jsonify(wc)
 
 @app.route("/api/lineups/<int:fixture_id>")
 def lineups(fixture_id):
     data = cached_get("/fixtures/lineups", {"fixture": fixture_id})
+    log.info("GET /api/lineups/%d → %d teams", fixture_id, len(data))
     return jsonify(data)
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
@@ -150,18 +177,19 @@ def auth_google():
         "last_login": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
-    session["user"] = user
-
     users = _load_users()
     users[user["email"]] = user
     _save_users(users)
 
     sid = str(uuid.uuid4())[:8]
+    session["user"] = user
+    session["sid"] = sid
     device = _parse_device(request.headers.get("User-Agent"))
     ONLINE_SESSIONS[sid] = {
         "email": user["email"], "user": user, "device": device,
         "time": user["last_login"], "sid": sid,
     }
+    log.info("LOGIN  %s [%s] sid=%s", user["email"], device, sid)
     socketio.emit("user_login", {**user, "device": device, "sid": sid})
 
     return jsonify({"user": user, "admin": user["email"] in ADMIN_EMAILS, "sid": sid})
@@ -169,9 +197,13 @@ def auth_google():
 @app.route("/api/auth/me")
 def auth_me():
     user = session.get("user")
+    sid = session.get("sid")
     if not user:
+        log.debug("GET /api/auth/me → no session")
         return jsonify({"user": None}), 200
-    return jsonify({"user": user, "admin": user["email"] in ADMIN_EMAILS})
+    tracked = sid in ONLINE_SESSIONS if sid else False
+    log.debug("GET /api/auth/me → %s sid=%s tracked=%s", user["email"], sid, tracked)
+    return jsonify({"user": user, "admin": user["email"] in ADMIN_EMAILS, "sid": sid})
 
 @app.route("/api/auth/logout", methods=["POST"])
 def auth_logout():
@@ -179,17 +211,23 @@ def auth_logout():
     data = request.json or {}
     sid = data.get("sid")
     email = data.get("email")
+    logged_out_sid = None
     if sid and sid in ONLINE_SESSIONS:
         entry = ONLINE_SESSIONS.pop(sid)
         user = entry["user"]
+        logged_out_sid = sid
     elif email:
         for k, v in list(ONLINE_SESSIONS.items()):
             if v["email"] == email:
                 ONLINE_SESSIONS.pop(k)
                 user = v["user"]
+                logged_out_sid = k
                 break
     if user:
-        socketio.emit("user_logout", user)
+        log.info("LOGOUT %s sid=%s (online: %d remaining)", user.get("email", "?"), logged_out_sid, len(ONLINE_SESSIONS))
+        socketio.emit("user_logout", {**user, "sid": logged_out_sid})
+    else:
+        log.warning("LOGOUT with no matching session (sid=%s email=%s)", sid, email)
     return jsonify({"ok": True})
 
 # ── Pages ────────────────────────────────────────────────────────────────────
@@ -225,16 +263,40 @@ def admin_kick():
     email = request.json.get("email")
     if sid and sid in ONLINE_SESSIONS:
         entry = ONLINE_SESSIONS.pop(sid)
+        log.info("KICK   %s sid=%s (online: %d remaining)", entry["email"], sid, len(ONLINE_SESSIONS))
         socketio.emit("user_kicked", {"email": entry["email"], "sid": sid})
     elif email:
+        count = sum(1 for v in ONLINE_SESSIONS.values() if v["email"] == email)
         for k, v in list(ONLINE_SESSIONS.items()):
             if v["email"] == email:
                 ONLINE_SESSIONS.pop(k)
+        log.info("KICK   %s (all %d sessions, online: %d remaining)", email, count, len(ONLINE_SESSIONS))
         socketio.emit("user_kicked", {"email": email})
     else:
         return jsonify({"error": "missing sid or email"}), 400
     return jsonify({"ok": True})
 
+@app.route("/api/admin/delete", methods=["POST"])
+def admin_delete():
+    user = session.get("user")
+    if not user or user["email"] not in ADMIN_EMAILS:
+        return jsonify({"error": "forbidden"}), 403
+    email = request.json.get("email")
+    if not email:
+        return jsonify({"error": "missing email"}), 400
+    for k, v in list(ONLINE_SESSIONS.items()):
+        if v["email"] == email:
+            ONLINE_SESSIONS.pop(k)
+    socketio.emit("user_kicked", {"email": email})
+    users = _load_users()
+    if email in users:
+        del users[email]
+        _save_users(users)
+    log.info("DELETE %s (removed from users.json + all sessions)", email)
+    socketio.emit("user_deleted", {"email": email})
+    return jsonify({"ok": True})
+
 if __name__ == "__main__":
-    print(f"Proxy → {API_BASE}")
+    log.info("Proxy → %s", API_BASE)
+    log.info("Admin emails: %s", ADMIN_EMAILS)
     socketio.run(app, host="0.0.0.0", port=5002, allow_unsafe_werkzeug=True)

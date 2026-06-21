@@ -66,7 +66,14 @@ async function checkSession() {
   try {
     const r = await fetch(`${BACKEND}/api/auth/me`, {credentials: 'include'});
     const data = await r.json();
-    if (data.user) showUser(data.user);
+    if (data.user) {
+      if (window.opener) {
+        window.opener.postMessage({type: 'mundial_auth', user: data.user, admin: data.admin, sid: data.sid}, '*');
+        setTimeout(() => window.close(), 300);
+        return;
+      }
+      showUser(data.user);
+    }
   } catch {}
 }
 
