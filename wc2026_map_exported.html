@@ -147,7 +147,7 @@
       BACKEND = cfg.backend_url;
     }
     if (!BACKEND) return;
-    await fetch(BACKEND + '/api/auth/me', {credentials: 'include', signal: AbortSignal.timeout(3000)});
+    await fetch(BACKEND + '/api/auth/me', {credentials: 'include', signal: AbortSignal.timeout(3000), headers: {'ngrok-skip-browser-warning': '1'}});
   } catch { return; }
 
   authBar.style.display = '';

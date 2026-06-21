@@ -103,7 +103,7 @@ def handle_preflight():
         origin = request.headers.get("Origin", "*")
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, ngrok-skip-browser-warning"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         return response
 
@@ -112,7 +112,7 @@ def cors(response):
     origin = request.headers.get("Origin", "*")
     response.headers["Access-Control-Allow-Origin"] = origin
     response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, ngrok-skip-browser-warning"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
 

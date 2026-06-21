@@ -202,7 +202,8 @@ const renderMatch = (fix, lineups) => {
 
 const refresh = async () => {
   try {
-    const fixtures = await fetch(`${PROXY}/api/live`).then(r => r.json());
+    const _h = {'ngrok-skip-browser-warning': '1'};
+    const fixtures = await fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json());
     document.getElementById('loading').classList.add('d-none');
 
     if (fixtures.length === 0) {
@@ -218,7 +219,7 @@ const refresh = async () => {
       const fixId = fix.fixture.id;
       let lineups = [];
       try {
-        lineups = await fetch(`${PROXY}/api/lineups/${fixId}`).then(r => r.json());
+        lineups = await fetch(`${PROXY}/api/lineups/${fixId}`, {headers: _h}).then(r => r.json());
       } catch {}
       html += renderMatch(fix, lineups);
     }
