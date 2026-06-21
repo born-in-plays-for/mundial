@@ -50,6 +50,7 @@ ngrok http 5002
 ```
 
 Free API key: https://dashboard.api-football.com/register (100 requests/day, live endpoints only).
+Dashboard (usage stats, key): https://dashboard.api-football.com/
 
 ## URLs
 
