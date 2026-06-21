@@ -26,6 +26,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
+  mundial-auth-bar { display: none !important; }
   #map-container {
     top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
     z-index: 500 !important;
@@ -35,7 +36,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   }
   #map { width: 100% !important; height: 100% !important; }
   #legend-parent { display: none !important; }
-  #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; }
+  #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; margin-top: 0 !important; }
   #page-heading-sub { display: none !important; }
   #control-sidebar { pointer-events: auto; }
 }
