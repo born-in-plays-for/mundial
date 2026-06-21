@@ -7,7 +7,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Interactive D3.js choropleth map of the 2026 FIFA World Cup tracking player "exports": players born in one country who represent another. Normalised by population. Includes a Python scraping/data pipeline and several standalone infographic HTML files.
 
 Live at: **https://mundial.cthiebaud.com/**
-GitHub: **https://github.com/cthiebaud/mundial** (standalone repo)
+
+### Repositories
+
+| Repo | Content | Deploys to |
+|---|---|---|
+| **[cthiebaud/mundial](https://github.com/cthiebaud/mundial)** | Static frontend (HTML, JS, CSS, JSON, pipeline, infographics, chains) | GitHub Pages |
+| **[cthiebaud/mundial-server](https://github.com/cthiebaud/mundial-server)** | Backend (Flask, admin, login, WebSocket, API-Football proxy) | Runs locally (+ ngrok) |
+
+The backend repo lives at `../mundial-server` (sibling directory). See its own `README.md` and `LOGIN_SPEC.md` for backend documentation.
 
 ---
 
@@ -33,6 +41,7 @@ GitHub: **https://github.com/cthiebaud/mundial** (standalone repo)
 | `wc2026_og_v3.png` | 1200×640 Open Graph preview image for LinkedIn/social |
 | `chains/` | Export chain infographics — see section below |
 | `pipeline/` | Data acquisition scripts and source CSVs — see `pipeline/README.md` |
+| `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
 
 ---
 
@@ -293,14 +302,18 @@ Always use **"country"** (or "pays", "Land", "paese", "país") instead of "natio
 
 **NEVER commit or push unless the user explicitly asks.** Do not commit after making changes — wait for the user to test first. The user will say "commit and push" when ready. Never ask "ready to commit?" either.
 
-**When asked to "commit and push", only commit and push this repo (`cthiebaud/mundial`). Never touch the parent `aequologica.github.io` repo unless explicitly asked.**
+**When asked to "commit and push", only commit and push this repo (`cthiebaud/mundial`). Never touch `cthiebaud/mundial-server` or `aequologica.github.io` unless explicitly asked.**
 
 ```bash
-# Standalone repo only
+# This repo only
 git add <files> && git commit -m "..." && git push
 ```
 
-The live site is now served directly from the `cthiebaud/mundial` repo at **https://mundial.cthiebaud.com/**.
+The live site is served from the `cthiebaud/mundial` repo at **https://mundial.cthiebaud.com/** via GitHub Pages.
+
+The backend (`cthiebaud/mundial-server`) runs locally and is exposed via ngrok. It is **not** deployed to GitHub Pages — changes to that repo do not trigger a Pages deploy.
+
+`backend_config.json` is the only file in this repo that the backend touches — `mundial-server/start.sh` updates it with the ngrok URL and pushes.
 
 `aequologica.cthiebaud.com/mundial/` is a static redirect page — it redirects to `https://mundial.cthiebaud.com/` and requires no further maintenance.
 
