@@ -24,6 +24,7 @@ body { background: #f5f2ec; }
       <h1 class="fs-5 fw-bold mb-0">Live Game</h1>
       <p class="text-muted small mb-0">World Cup 2026</p>
     </div>
+    <button id="refresh-btn" class="btn btn-outline-secondary btn-sm ms-auto">Refresh</button>
   </div>
 
   <div id="no-match" class="alert alert-secondary d-none">No World Cup match currently live.</div>
@@ -231,8 +232,27 @@ const refresh = async () => {
   }
 };
 
-refresh();
-setInterval(refresh, 60_000);
+const THROTTLE = 5 * 60_000;
+let lastRefresh = 0;
+const refreshBtn = document.getElementById('refresh-btn');
+
+const throttledRefresh = async () => {
+  const now = Date.now();
+  const wait = THROTTLE - (now - lastRefresh);
+  if (lastRefresh && wait > 0) {
+    refreshBtn.textContent = `Wait ${Math.ceil(wait / 1000)}s`;
+    return;
+  }
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = 'Refreshing…';
+  lastRefresh = Date.now();
+  await refresh();
+  refreshBtn.disabled = false;
+  refreshBtn.textContent = 'Refresh';
+};
+
+refreshBtn.addEventListener('click', throttledRefresh);
+throttledRefresh();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
