@@ -33,7 +33,18 @@ body { background: #f5f2ec; }
 
 <script type="module">
 
-const PROXY = 'http://localhost:5002';
+let PROXY;
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  PROXY = 'http://localhost:5002';
+} else {
+  try {
+    const cfg = await fetch('./backend_config.json').then(r => r.json());
+    PROXY = cfg.backend_url;
+  } catch {
+    document.getElementById('loading').textContent = 'Backend not configured.';
+    throw new Error('no backend');
+  }
+}
 
 // Build name → birth_country lookup from our data with fuzzy matching
 const mapData = await fetch('./wc2026_map_data.json').then(r => r.json());
@@ -214,7 +225,7 @@ const refresh = async () => {
 
     document.getElementById('matches').innerHTML = html;
   } catch (err) {
-    document.getElementById('loading').textContent = `Error: ${err.message}. Is the proxy running on port 5000?`;
+    document.getElementById('loading').textContent = `Error: ${err.message}. Is the backend running?`;
     document.getElementById('loading').classList.remove('d-none');
   }
 };
