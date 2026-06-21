@@ -13,6 +13,15 @@ body { background: #f5f2ec; }
 .team-flag { width: 32px; height: 24px; border-radius: 3px; }
 .lineup-card { min-width: 280px; }
 .sub { color: #888; }
+.evt { font-size: 12px; padding: 3px 0; border-bottom: 1px solid #eee; }
+.evt:last-child { border-bottom: none; }
+.evt-min { width: 3em; text-align: right; font-weight: 700; color: #888; }
+.evt-icon { width: 1.5em; text-align: center; }
+.evt-goal { color: #198754; }
+.evt-card-yellow { color: #ffc107; }
+.evt-card-red { color: #dc3545; }
+.evt-subst { color: #0d6efd; }
+.evt-var { color: #6f42c1; }
 </style>
 </head>
 <body>
@@ -161,12 +170,46 @@ const renderTeam = (lineup, side) => {
     </div>`;
 };
 
+const renderEvent = (evt) => {
+  const min = evt.time.elapsed + (evt.time.extra ? '+' + evt.time.extra : '');
+  const player = evt.player?.name ?? '';
+  const assist = evt.assist?.name;
+  let icon = '', cls = '', detail = '';
+
+  if (evt.type === 'Goal') {
+    icon = '⚽'; cls = 'evt-goal';
+    detail = player + (assist ? ` (${assist})` : '') + (evt.detail !== 'Normal Goal' ? ` · ${evt.detail}` : '');
+  } else if (evt.type === 'Card') {
+    const isRed = evt.detail?.includes('Red');
+    icon = isRed ? '🟥' : '🟨';
+    cls = isRed ? 'evt-card-red' : 'evt-card-yellow';
+    detail = player;
+  } else if (evt.type === 'subst') {
+    icon = '🔄'; cls = 'evt-subst';
+    detail = `${assist ?? '?'} → ${player}`;
+  } else if (evt.type === 'Var') {
+    icon = '📺'; cls = 'evt-var';
+    detail = `${player} · ${evt.detail ?? 'VAR'}`;
+  } else {
+    icon = '·';
+    detail = `${player} · ${evt.detail ?? evt.type}`;
+  }
+
+  return `<div class="evt d-flex align-items-center gap-2 ${cls}">
+    <span class="evt-min">${min}'</span>
+    <span class="evt-icon">${icon}</span>
+    <span class="fi fi-${flagCode(evt.team?.name ?? '')}" style="font-size:10px"></span>
+    <span>${detail}</span>
+  </div>`;
+};
+
 const renderMatch = (fix, lineups) => {
   const home = fix.teams.home;
   const away = fix.teams.away;
   const score = fix.goals;
   const status = fix.fixture.status;
   const venue = fix.fixture.venue;
+  const events = fix.events ?? [];
 
   const homeISO = flagCode(home.name);
   const awayISO = flagCode(away.name);
@@ -187,6 +230,7 @@ const renderMatch = (fix, lineups) => {
             ${venue?.name ? ' · ' + venue.name : ''}
           </div>
         </div>
+        ${events.length > 0 ? `<div class="card-body py-2 px-3">${events.map(renderEvent).join('')}</div>` : ''}
       </div>`;
 
   if (lineups.length === 2) {
