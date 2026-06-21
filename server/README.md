@@ -116,7 +116,7 @@ The main map page uses a **popup** to sign in — the Google button is rendered 
 |---|---|
 | `http://localhost:5002` | Local dev (backend-served login/admin pages) |
 | `https://mundial.cthiebaud.com` | Production (GitHub Pages) — not strictly needed since popup runs on backend origin |
-| `https://xxx.ngrok-free.dev` | ngrok tunnel (update when URL changes) |
+| `https://xxx.ngrok-free.dev` | ngrok tunnel (usually stable, update if it changes) |
 
 Note: `http://localhost:4040` is **not** needed — the map page uses the popup flow, so Google only sees the backend origin.
 
@@ -188,7 +188,10 @@ ngrok http 5002
 
 ngrok gives a public `https://` URL tunneling to your local port 5002. WebSockets work through ngrok — use `{transports: ['websocket']}` on the client to avoid CORS issues with polling fallback.
 
-**Remember:** add the new ngrok URL to Google OAuth authorized JavaScript origins each time it changes (free tier = ephemeral URL).
+**ngrok URL stability:** on the free plan, the URL is technically ephemeral but in practice tends to stay the same across restarts. If it ever changes, you'll need to:
+
+1. Update `backend_config.json` with the new URL and push to GitHub
+2. Add the new URL to Google OAuth authorized JavaScript origins
 
 ### Automated startup
 
