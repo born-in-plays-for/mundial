@@ -35,6 +35,38 @@ body { background: #f5f2ec; }
 
 const PROXY = 'http://localhost:5002';
 
+// Build name → birth_country lookup from our data with fuzzy matching
+const mapData = await fetch('./wc2026_map_data.json').then(r => r.json());
+const _norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const _exactBC = {};    // exact name → birth_country
+const _normBC = {};     // normalized name → birth_country
+const _lastNameBC = {}; // normalized last name → birth_country (only if unique)
+const _lastNameConflict = new Set();
+
+for (const rec of mapData.data) {
+  for (const p of rec.players) {
+    _exactBC[p.name] = rec.country;
+    _normBC[_norm(p.name)] = rec.country;
+    const last = _norm(p.name.split(' ').pop());
+    if (_lastNameBC[last] && _lastNameBC[last] !== rec.country) _lastNameConflict.add(last);
+    _lastNameBC[last] = rec.country;
+  }
+}
+
+const getBirthCountry = (apiName) => {
+  if (_exactBC[apiName]) return _exactBC[apiName];
+  const n = _norm(apiName);
+  if (_normBC[n]) return _normBC[n];
+  // Try last name only (API often uses "K. Mbappé" or just "Mbappé")
+  const last = _norm(apiName.split(' ').pop());
+  if (_lastNameBC[last] && !_lastNameConflict.has(last)) return _lastNameBC[last];
+  // Try if any normalized key contains or is contained by the API name
+  for (const [key, country] of Object.entries(_normBC)) {
+    if (key.includes(n) || n.includes(key)) return country;
+  }
+  return null;
+};
+
 const flagCode = name => {
   const MAP = {
     'Germany':'de','Ivory Coast':'ci','France':'fr','Brazil':'br','Argentina':'ar',
@@ -72,12 +104,17 @@ const renderTeam = (lineup, side) => {
   const formation = lineup.formation ?? '?';
   const iso = flagCode(team.name);
 
-  const playerRow = (p, isSub) => `
+  const playerRow = (p, isSub) => {
+    const born = getBirthCountry(p.name);
+    const isForeign = born && born !== team.name;
+    const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="Born in ${born}"></span>` : '';
+    return `
     <tr class="${isSub ? 'sub' : ''}">
       <td class="player-num">${p.number}</td>
       <td class="player-pos"><small>${posLabel(p.pos)}</small></td>
-      <td>${p.name}</td>
+      <td>${p.name}${bornTag}</td>
     </tr>`;
+  };
 
   return `
     <div class="lineup-card card flex-fill">
@@ -87,6 +124,17 @@ const renderTeam = (lineup, side) => {
         <span class="text-muted ms-auto">${formation}</span>
       </div>
       <div class="card-body p-0">
+        ${lineup.coach ? (() => {
+          const c = lineup.coach;
+          const born = getBirthCountry(c.name);
+          const isForeign = born && born !== team.name;
+          const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="Born in ${born}"></span>` : '';
+          return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
+            <img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">
+            <span class="small">${c.name}${bornTag}</span>
+            <span class="text-muted small ms-auto">Coach</span>
+          </div>`;
+        })() : ''}
         <table class="table table-sm mb-0">
           <tbody>
             <tr><td colspan="3" class="fw-bold small text-muted px-3 pt-2">Starting XI</td></tr>
