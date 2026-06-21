@@ -4,7 +4,3 @@ __pycache__/
 pipeline/FIFA_Coca-Cola Men's World Ranking.html
 pipeline/FIFA_Coca-Cola Men's World Ranking_files/
 /screenshots/
-server/client_secret_*.json
-server/users.json
-server/.env
-server/backend.log
