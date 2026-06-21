@@ -1,6 +1,6 @@
 {
   "source": "eloratings.net",
-  "updated": "2026-06-20",
+  "updated": "2026-06-21",
   "stats": {
     "total": 244,
     "fifaMembers": 211,
@@ -61,12 +61,21 @@
       "id": 76,
       "iso2": "br",
       "name": "Brazil",
-      "pts": 1978,
+      "pts": 1986,
       "fifaMember": true,
       "weirdo": false
     },
     {
       "rank": 7,
+      "id": 528,
+      "iso2": "nl",
+      "name": "Netherlands",
+      "pts": 1972,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
+      "rank": 8,
       "id": 620,
       "iso2": "pt",
       "name": "Portugal",
@@ -75,20 +84,11 @@
       "weirdo": false
     },
     {
-      "rank": 8,
-      "id": 528,
-      "iso2": "nl",
-      "name": "Netherlands",
-      "pts": 1944,
-      "fifaMember": true,
-      "weirdo": false
-    },
-    {
       "rank": 9,
       "id": 276,
       "iso2": "de",
       "name": "Germany",
-      "pts": 1939,
+      "pts": 1954,
       "fifaMember": true,
       "weirdo": false
     },
@@ -202,15 +202,6 @@
     },
     {
       "rank": 22,
-      "id": 792,
-      "iso2": "tr",
-      "name": "Türkiye",
-      "pts": 1849,
-      "fifaMember": true,
-      "weirdo": false
-    },
-    {
-      "rank": 23,
       "id": 686,
       "iso2": "sn",
       "name": "Senegal",
@@ -219,7 +210,7 @@
       "weirdo": false
     },
     {
-      "rank": 24,
+      "rank": 23,
       "id": 840,
       "iso2": "us",
       "name": "United States",
@@ -228,7 +219,25 @@
       "weirdo": false
     },
     {
+      "rank": 24,
+      "id": 600,
+      "iso2": "py",
+      "name": "Paraguay",
+      "pts": 1816,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
       "rank": 25,
+      "id": 792,
+      "iso2": "tr",
+      "name": "Türkiye",
+      "pts": 1813,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
+      "rank": 26,
       "id": 36,
       "iso2": "au",
       "name": "Australia",
@@ -237,16 +246,7 @@
       "weirdo": false
     },
     {
-      "rank": 26,
-      "id": 600,
-      "iso2": "py",
-      "name": "Paraguay",
-      "pts": 1780,
-      "fifaMember": true,
-      "weirdo": false
-    },
-    {
-      "rank": 26,
+      "rank": 27,
       "id": 804,
       "iso2": "ua",
       "name": "Ukraine",
@@ -319,15 +319,6 @@
     },
     {
       "rank": 35,
-      "id": 752,
-      "iso2": "se",
-      "name": "Sweden",
-      "pts": 1755,
-      "fifaMember": true,
-      "weirdo": false
-    },
-    {
-      "rank": 36,
       "id": 300,
       "iso2": "gr",
       "name": "Greece",
@@ -336,16 +327,7 @@
       "weirdo": false
     },
     {
-      "rank": 37,
-      "id": 384,
-      "iso2": "ci",
-      "name": "Côte d'Ivoire",
-      "pts": 1743,
-      "fifaMember": true,
-      "weirdo": false
-    },
-    {
-      "rank": 38,
+      "rank": 36,
       "id": 688,
       "iso2": "rs",
       "name": "Serbia",
@@ -354,11 +336,29 @@
       "weirdo": false
     },
     {
-      "rank": 39,
+      "rank": 37,
       "id": 862,
       "iso2": "ve",
       "name": "Venezuela, Bolivarian Republic of",
       "pts": 1733,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
+      "rank": 38,
+      "id": 384,
+      "iso2": "ci",
+      "name": "Côte d'Ivoire",
+      "pts": 1728,
+      "fifaMember": true,
+      "weirdo": false
+    },
+    {
+      "rank": 39,
+      "id": 752,
+      "iso2": "se",
+      "name": "Sweden",
+      "pts": 1727,
       "fifaMember": true,
       "weirdo": false
     },
@@ -687,20 +687,20 @@
       "weirdo": false
     },
     {
-      "rank": 76,
-      "id": 332,
-      "iso2": "ht",
-      "name": "Haiti",
-      "pts": 1536,
+      "rank": 77,
+      "id": 854,
+      "iso2": "bf",
+      "name": "Burkina Faso",
+      "pts": 1529,
       "fifaMember": true,
       "weirdo": false
     },
     {
       "rank": 78,
-      "id": 854,
-      "iso2": "bf",
-      "name": "Burkina Faso",
-      "pts": 1529,
+      "id": 332,
+      "iso2": "ht",
+      "name": "Haiti",
+      "pts": 1528,
       "fifaMember": true,
       "weirdo": false
     },
