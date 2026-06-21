@@ -82,7 +82,7 @@ def _save_users(users):
 # ── API-Football proxy ───────────────────────────────────────────────────────
 
 CACHE = {}
-CACHE_TTL = 60
+CACHE_TTL = 300
 
 def cached_get(path, params):
     url = f"{API_BASE}{path}"
