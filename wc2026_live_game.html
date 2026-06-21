@@ -289,13 +289,11 @@ sioScript.onload = () => {
     if (active) {
       badge.textContent = 'live';
       badge.className = 'badge bg-success ms-auto';
+      document.getElementById('matches').style.opacity = '';
     } else {
-      badge.textContent = 'not active';
+      badge.textContent = 'last known';
       badge.className = 'badge bg-warning text-dark ms-auto';
-      document.getElementById('loading').classList.add('d-none');
-      document.getElementById('no-match').classList.remove('d-none');
-      document.getElementById('no-match').textContent = 'Live tracking is not active.';
-      document.getElementById('matches').innerHTML = '';
+      document.getElementById('matches').style.opacity = '0.5';
     }
   };
 
@@ -306,7 +304,7 @@ sioScript.onload = () => {
         fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json()),
       ]);
       setPollStatus(active);
-      if (active) renderFixtures(fixtures);
+      renderFixtures(fixtures);
     } catch {
       badge.textContent = 'error';
       badge.className = 'badge bg-danger ms-auto';
