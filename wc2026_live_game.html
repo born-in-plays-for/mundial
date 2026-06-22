@@ -29,6 +29,9 @@ body { background: #f5f2ec; }
 .stat-bar { height: 100%; border-radius: 3px; }
 .stat-bar-home { background: #0d6efd; }
 .stat-bar-away { background: #dc3545; }
+.fix-pill { cursor: pointer; border: 1px solid #dee2e6; border-radius: 20px; padding: 4px 12px; font-size: 12px; background: #fff; transition: all .15s; white-space: nowrap; }
+.fix-pill:hover { border-color: #999; }
+.fix-pill.active { background: #1C274C; color: #fff; border-color: #1C274C; }
 </style>
 </head>
 <body>
@@ -45,6 +48,7 @@ body { background: #f5f2ec; }
     <span id="ws-status" class="badge bg-secondary ms-auto">connecting…</span>
   </div>
 
+  <div id="fix-selector" class="d-flex gap-2 mb-3 d-none"></div>
   <div id="no-match" class="alert alert-secondary d-none">No World Cup match currently live.</div>
   <div id="matches"></div>
   <div id="loading" class="text-muted small">Connecting to backend…</div>
@@ -298,24 +302,65 @@ const fetchLineups = async (fixtureId) => {
   } catch { return []; }
 };
 
+let allFixtures = [];
+let selectedFixId = null;
+
+const renderSelectedFixture = async () => {
+  const matchesEl = document.getElementById('matches');
+  const fix = allFixtures.find(f => f.fixture.id === selectedFixId);
+  if (!fix) { matchesEl.innerHTML = ''; return; }
+  const lineups = await fetchLineups(fix.fixture.id);
+  matchesEl.innerHTML = renderMatch(fix, lineups);
+};
+
+const renderSelector = () => {
+  const sel = document.getElementById('fix-selector');
+  if (allFixtures.length <= 1) {
+    sel.classList.add('d-none');
+    return;
+  }
+  sel.classList.remove('d-none');
+  sel.innerHTML = allFixtures.map(fix => {
+    const h = fix.teams.home;
+    const a = fix.teams.away;
+    const s = fix.fixture.status;
+    const active = fix.fixture.id === selectedFixId ? 'active' : '';
+    const elapsed = s.elapsed ? ` · ${s.elapsed}'` : '';
+    return `<span class="fix-pill ${active}" data-fid="${fix.fixture.id}">
+      <span class="fi fi-${flagCode(h.name)}" style="font-size:11px"></span>
+      ${fix.goals.home ?? '–'}–${fix.goals.away ?? '–'}
+      <span class="fi fi-${flagCode(a.name)}" style="font-size:11px"></span>${elapsed}
+    </span>`;
+  }).join('');
+  sel.querySelectorAll('.fix-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      selectedFixId = parseInt(pill.dataset.fid);
+      renderSelector();
+      renderSelectedFixture();
+    });
+  });
+};
+
 const renderFixtures = async (fixtures) => {
   document.getElementById('loading').classList.add('d-none');
+  allFixtures = fixtures;
 
   if (fixtures.length === 0) {
     document.getElementById('no-match').classList.remove('d-none');
+    document.getElementById('fix-selector').classList.add('d-none');
     document.getElementById('matches').innerHTML = '';
+    selectedFixId = null;
     return;
   }
 
   document.getElementById('no-match').classList.add('d-none');
-  let html = '';
 
-  for (const fix of fixtures) {
-    const lineups = await fetchLineups(fix.fixture.id);
-    html += renderMatch(fix, lineups);
+  if (!selectedFixId || !fixtures.find(f => f.fixture.id === selectedFixId)) {
+    selectedFixId = fixtures[0].fixture.id;
   }
 
-  document.getElementById('matches').innerHTML = html;
+  renderSelector();
+  await renderSelectedFixture();
 };
 
 const badge = document.getElementById('ws-status');
@@ -324,9 +369,9 @@ sioScript.src = 'https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.
 sioScript.onload = () => {
   const sock = io(PROXY, {transports: ['websocket']});
 
-  const setPollStatus = (active) => {
+  const setPollStatus = (active, fixtures = []) => {
     if (active) {
-      badge.textContent = 'live';
+      badge.textContent = fixtures.length > 0 ? `live · ${fixtures.length} match${fixtures.length > 1 ? 'es' : ''}` : 'live';
       badge.className = 'badge bg-success ms-auto';
       document.getElementById('matches').style.opacity = '';
     } else {
@@ -338,12 +383,12 @@ sioScript.onload = () => {
 
   sock.on('connect', async () => {
     try {
-      const [{active}, fixtures] = await Promise.all([
+      const [{active, fixtures: trackedIds}, liveData] = await Promise.all([
         fetch(`${PROXY}/api/poll/active`, {headers: _h}).then(r => r.json()),
         fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json()),
       ]);
-      setPollStatus(active);
-      renderFixtures(fixtures);
+      setPollStatus(active, trackedIds);
+      renderFixtures(liveData);
     } catch {
       badge.textContent = 'error';
       badge.className = 'badge bg-danger ms-auto';
@@ -355,8 +400,8 @@ sioScript.onload = () => {
     badge.className = 'badge bg-danger ms-auto';
   });
 
-  sock.on('poll_status', ({active}) => {
-    setPollStatus(active);
+  sock.on('poll_status', ({active, fixtures: trackedIds}) => {
+    setPollStatus(active, trackedIds ?? []);
   });
 
   sock.on('live_update', (fixtures) => {
