@@ -1,0 +1,617 @@
+{
+  "title": "Longest chain — both directions (undirected)",
+  "subtitle": "Mondial 2026 · 43 players · 44 countries",
+  "source": "source : Wikipédia · effectifs Mondial 2026",
+  "mode": "both",
+  "mode_description": "both directions (undirected)",
+  "nodes": [
+    {
+      "country": "Kingdom of the Netherlands",
+      "code": "nl"
+    },
+    {
+      "country": "Curaçao",
+      "code": "cw"
+    },
+    {
+      "country": "Netherlands",
+      "code": "nl"
+    },
+    {
+      "country": "Cape Verde",
+      "code": "cv"
+    },
+    {
+      "country": "Portugal",
+      "code": "pt"
+    },
+    {
+      "country": "Brazil",
+      "code": "br"
+    },
+    {
+      "country": "Paraguay",
+      "code": "py"
+    },
+    {
+      "country": "Uruguay",
+      "code": "uy"
+    },
+    {
+      "country": "United States",
+      "code": "us"
+    },
+    {
+      "country": "Mexico",
+      "code": "mx"
+    },
+    {
+      "country": "Colombia",
+      "code": "co"
+    },
+    {
+      "country": "Argentina",
+      "code": "ar"
+    },
+    {
+      "country": "Ecuador",
+      "code": "ec"
+    },
+    {
+      "country": "Germany",
+      "code": "de"
+    },
+    {
+      "country": "Jordan",
+      "code": "jo"
+    },
+    {
+      "country": "Morocco",
+      "code": "ma"
+    },
+    {
+      "country": "Spain",
+      "code": "es"
+    },
+    {
+      "country": "Ghana",
+      "code": "gh"
+    },
+    {
+      "country": "France",
+      "code": "fr"
+    },
+    {
+      "country": "Egypt",
+      "code": "eg"
+    },
+    {
+      "country": "Qatar",
+      "code": "qa"
+    },
+    {
+      "country": "Senegal",
+      "code": "sn"
+    },
+    {
+      "country": "Belgium",
+      "code": "be"
+    },
+    {
+      "country": "DR Congo",
+      "code": "cd"
+    },
+    {
+      "country": "Switzerland",
+      "code": "ch"
+    },
+    {
+      "country": "Haiti",
+      "code": "ht"
+    },
+    {
+      "country": "Canada",
+      "code": "ca"
+    },
+    {
+      "country": "Ivory Coast",
+      "code": "ci"
+    },
+    {
+      "country": "England",
+      "code": "gb-eng"
+    },
+    {
+      "country": "Scotland",
+      "code": "gb-sct"
+    },
+    {
+      "country": "New Zealand",
+      "code": "nz"
+    },
+    {
+      "country": "Australia",
+      "code": "au"
+    },
+    {
+      "country": "Croatia",
+      "code": "hr"
+    },
+    {
+      "country": "Austria",
+      "code": "at"
+    },
+    {
+      "country": "Bosnia and Herzegovina",
+      "code": "ba"
+    },
+    {
+      "country": "Denmark",
+      "code": "dk"
+    },
+    {
+      "country": "Iraq",
+      "code": "iq"
+    },
+    {
+      "country": "Norway",
+      "code": "no"
+    },
+    {
+      "country": "Tunisia",
+      "code": "tn"
+    },
+    {
+      "country": "Sweden",
+      "code": "se"
+    },
+    {
+      "country": "Turkey",
+      "code": "tr"
+    },
+    {
+      "country": "Italy",
+      "code": "it"
+    },
+    {
+      "country": "Uzbekistan",
+      "code": "uz"
+    },
+    {
+      "country": "Kazakhstan",
+      "code": "kz"
+    }
+  ],
+  "links": [
+    {
+      "player": "Tyrick Bodak",
+      "city": "",
+      "caps": 4,
+      "direction": "fwd",
+      "birth_country": "Kingdom of the Netherlands",
+      "plays_for": "Curaçao",
+      "birth_code": "nl",
+      "plays_code": "cw"
+    },
+    {
+      "player": "Eloy Room",
+      "city": "",
+      "caps": 71,
+      "direction": "bwd",
+      "birth_country": "Netherlands",
+      "plays_for": "Curaçao",
+      "birth_code": "nl",
+      "plays_code": "cw"
+    },
+    {
+      "player": "Garry Rodrigues",
+      "city": "",
+      "caps": 59,
+      "direction": "fwd",
+      "birth_country": "Netherlands",
+      "plays_for": "Cape Verde",
+      "birth_code": "nl",
+      "plays_code": "cv"
+    },
+    {
+      "player": "Hélio Varela",
+      "city": "",
+      "caps": 20,
+      "direction": "bwd",
+      "birth_country": "Portugal",
+      "plays_for": "Cape Verde",
+      "birth_code": "pt",
+      "plays_code": "cv"
+    },
+    {
+      "player": "Matheus Nunes",
+      "city": "",
+      "caps": 19,
+      "direction": "bwd",
+      "birth_country": "Brazil",
+      "plays_for": "Portugal",
+      "birth_code": "br",
+      "plays_code": "pt"
+    },
+    {
+      "player": "Maurício",
+      "city": "",
+      "caps": 2,
+      "direction": "fwd",
+      "birth_country": "Brazil",
+      "plays_for": "Paraguay",
+      "birth_code": "br",
+      "plays_code": "py"
+    },
+    {
+      "player": "Gastón Olveira",
+      "city": "",
+      "caps": 1,
+      "direction": "bwd",
+      "birth_country": "Uruguay",
+      "plays_for": "Paraguay",
+      "birth_code": "uy",
+      "plays_code": "py"
+    },
+    {
+      "player": "Juan Manuel Sanabria",
+      "city": "",
+      "caps": 5,
+      "direction": "bwd",
+      "birth_country": "United States",
+      "plays_for": "Uruguay",
+      "birth_code": "us",
+      "plays_code": "uy"
+    },
+    {
+      "player": "Alejandro Zendejas",
+      "city": "",
+      "caps": 14,
+      "direction": "bwd",
+      "birth_country": "Mexico",
+      "plays_for": "United States",
+      "birth_code": "mx",
+      "plays_code": "us"
+    },
+    {
+      "player": "Julián Quiñones",
+      "city": "",
+      "caps": 21,
+      "direction": "bwd",
+      "birth_country": "Colombia",
+      "plays_for": "Mexico",
+      "birth_code": "co",
+      "plays_code": "mx"
+    },
+    {
+      "player": "Néstor Lorenzo",
+      "city": "",
+      "caps": 0,
+      "direction": "bwd",
+      "birth_country": "Argentina",
+      "plays_for": "Colombia",
+      "birth_code": "ar",
+      "plays_code": "co"
+    },
+    {
+      "player": "Hernán Galíndez",
+      "city": "",
+      "caps": 34,
+      "direction": "fwd",
+      "birth_country": "Argentina",
+      "plays_for": "Ecuador",
+      "birth_code": "ar",
+      "plays_code": "ec"
+    },
+    {
+      "player": "John Yeboah",
+      "city": "",
+      "caps": 22,
+      "direction": "bwd",
+      "birth_country": "Germany",
+      "plays_for": "Ecuador",
+      "birth_code": "de",
+      "plays_code": "ec"
+    },
+    {
+      "player": "Ali Azaizeh",
+      "city": "",
+      "caps": 3,
+      "direction": "fwd",
+      "birth_country": "Germany",
+      "plays_for": "Jordan",
+      "birth_code": "de",
+      "plays_code": "jo"
+    },
+    {
+      "player": "Jamal Sellami",
+      "city": "",
+      "caps": 0,
+      "direction": "bwd",
+      "birth_country": "Morocco",
+      "plays_for": "Jordan",
+      "birth_code": "ma",
+      "plays_code": "jo"
+    },
+    {
+      "player": "Achraf Hakimi",
+      "city": "",
+      "caps": 95,
+      "direction": "bwd",
+      "birth_country": "Spain",
+      "plays_for": "Morocco",
+      "birth_code": "es",
+      "plays_code": "ma"
+    },
+    {
+      "player": "Iñaki Williams",
+      "city": "",
+      "caps": 26,
+      "direction": "fwd",
+      "birth_country": "Spain",
+      "plays_for": "Ghana",
+      "birth_code": "es",
+      "plays_code": "gh"
+    },
+    {
+      "player": "Jordan Ayew",
+      "city": "",
+      "caps": 120,
+      "direction": "bwd",
+      "birth_country": "France",
+      "plays_for": "Ghana",
+      "birth_code": "fr",
+      "plays_code": "gh"
+    },
+    {
+      "player": "Haissem Hassan",
+      "city": "",
+      "caps": 3,
+      "direction": "fwd",
+      "birth_country": "France",
+      "plays_for": "Egypt",
+      "birth_code": "fr",
+      "plays_code": "eg"
+    },
+    {
+      "player": "Ahmed Alaaeldin",
+      "city": "",
+      "caps": 67,
+      "direction": "fwd",
+      "birth_country": "Egypt",
+      "plays_for": "Qatar",
+      "birth_code": "eg",
+      "plays_code": "qa"
+    },
+    {
+      "player": "Issa Laye",
+      "city": "",
+      "caps": 3,
+      "direction": "bwd",
+      "birth_country": "Senegal",
+      "plays_for": "Qatar",
+      "birth_code": "sn",
+      "plays_code": "qa"
+    },
+    {
+      "player": "Amadou Onana",
+      "city": "",
+      "caps": 28,
+      "direction": "fwd",
+      "birth_country": "Senegal",
+      "plays_for": "Belgium",
+      "birth_code": "sn",
+      "plays_code": "be"
+    },
+    {
+      "player": "Théo Bongonda",
+      "city": "",
+      "caps": 37,
+      "direction": "fwd",
+      "birth_country": "Belgium",
+      "plays_for": "DR Congo",
+      "birth_code": "be",
+      "plays_code": "cd"
+    },
+    {
+      "player": "Charles Pickel",
+      "city": "",
+      "caps": 33,
+      "direction": "bwd",
+      "birth_country": "Switzerland",
+      "plays_for": "DR Congo",
+      "birth_code": "ch",
+      "plays_code": "cd"
+    },
+    {
+      "player": "Keeto Thermoncy",
+      "city": "",
+      "caps": 1,
+      "direction": "fwd",
+      "birth_country": "Switzerland",
+      "plays_for": "Haiti",
+      "birth_code": "ch",
+      "plays_code": "ht"
+    },
+    {
+      "player": "Josué Duverger",
+      "city": "",
+      "caps": 6,
+      "direction": "bwd",
+      "birth_country": "Canada",
+      "plays_for": "Haiti",
+      "birth_code": "ca",
+      "plays_code": "ht"
+    },
+    {
+      "player": "Ismaël Koné",
+      "city": "",
+      "caps": 39,
+      "direction": "bwd",
+      "birth_country": "Ivory Coast",
+      "plays_for": "Canada",
+      "birth_code": "ci",
+      "plays_code": "ca"
+    },
+    {
+      "player": "Marc Guéhi",
+      "city": "",
+      "caps": 27,
+      "direction": "fwd",
+      "birth_country": "Ivory Coast",
+      "plays_for": "England",
+      "birth_code": "ci",
+      "plays_code": "gb-eng"
+    },
+    {
+      "player": "Scott McTominay",
+      "city": "",
+      "caps": 69,
+      "direction": "fwd",
+      "birth_country": "England",
+      "plays_for": "Scotland",
+      "birth_code": "gb-eng",
+      "plays_code": "gb-sct"
+    },
+    {
+      "player": "Callan Elliot",
+      "city": "",
+      "caps": 10,
+      "direction": "fwd",
+      "birth_country": "Scotland",
+      "plays_for": "New Zealand",
+      "birth_code": "gb-sct",
+      "plays_code": "nz"
+    },
+    {
+      "player": "Lachlan Bayliss",
+      "city": "",
+      "caps": 3,
+      "direction": "bwd",
+      "birth_country": "Australia",
+      "plays_for": "New Zealand",
+      "birth_code": "au",
+      "plays_code": "nz"
+    },
+    {
+      "player": "Miloš Degenek",
+      "city": "",
+      "caps": 56,
+      "direction": "bwd",
+      "birth_country": "Croatia",
+      "plays_for": "Australia",
+      "birth_code": "hr",
+      "plays_code": "au"
+    },
+    {
+      "player": "Mateo Kovačić",
+      "city": "",
+      "caps": 112,
+      "direction": "bwd",
+      "birth_country": "Austria",
+      "plays_for": "Croatia",
+      "birth_code": "at",
+      "plays_code": "hr"
+    },
+    {
+      "player": "Amar Dedić",
+      "city": "",
+      "caps": 27,
+      "direction": "fwd",
+      "birth_country": "Austria",
+      "plays_for": "Bosnia and Herzegovina",
+      "birth_code": "at",
+      "plays_code": "ba"
+    },
+    {
+      "player": "Amir Hadžiahmetović",
+      "city": "",
+      "caps": 35,
+      "direction": "bwd",
+      "birth_country": "Denmark",
+      "plays_for": "Bosnia and Herzegovina",
+      "birth_code": "dk",
+      "plays_code": "ba"
+    },
+    {
+      "player": "Frans Putros",
+      "city": "",
+      "caps": 26,
+      "direction": "fwd",
+      "birth_country": "Denmark",
+      "plays_for": "Iraq",
+      "birth_code": "dk",
+      "plays_code": "iq"
+    },
+    {
+      "player": "Marko Farji",
+      "city": "",
+      "caps": 10,
+      "direction": "bwd",
+      "birth_country": "Norway",
+      "plays_for": "Iraq",
+      "birth_code": "no",
+      "plays_code": "iq"
+    },
+    {
+      "player": "Sebastian Tounekti",
+      "city": "",
+      "caps": 11,
+      "direction": "fwd",
+      "birth_country": "Norway",
+      "plays_for": "Tunisia",
+      "birth_code": "no",
+      "plays_code": "tn"
+    },
+    {
+      "player": "Moutaz Neffati",
+      "city": "",
+      "caps": 5,
+      "direction": "bwd",
+      "birth_country": "Sweden",
+      "plays_for": "Tunisia",
+      "birth_code": "se",
+      "plays_code": "tn"
+    },
+    {
+      "player": "Deniz Gül",
+      "city": "",
+      "caps": 7,
+      "direction": "fwd",
+      "birth_country": "Sweden",
+      "plays_for": "Turkey",
+      "birth_code": "se",
+      "plays_code": "tr"
+    },
+    {
+      "player": "Vincenzo Montella",
+      "city": "",
+      "caps": 0,
+      "direction": "bwd",
+      "birth_country": "Italy",
+      "plays_for": "Turkey",
+      "birth_code": "it",
+      "plays_code": "tr"
+    },
+    {
+      "player": "Fabio Cannavaro",
+      "city": "",
+      "caps": 0,
+      "direction": "fwd",
+      "birth_country": "Italy",
+      "plays_for": "Uzbekistan",
+      "birth_code": "it",
+      "plays_code": "uz"
+    },
+    {
+      "player": "Utkir Yusupov",
+      "city": "",
+      "caps": 39,
+      "direction": "bwd",
+      "birth_country": "Kazakhstan",
+      "plays_for": "Uzbekistan",
+      "birth_code": "kz",
+      "plays_code": "uz"
+    }
+  ]
+}

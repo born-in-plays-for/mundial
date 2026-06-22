@@ -372,7 +372,7 @@ Requires a local server (same `fetch()` constraint as the map).
 | File | Loads |
 |---|---|
 | `wc2026_chain_parameterized.html` | Any JSON via `?data=<file>`, default: `wc2026_chain_main.json` |
-| `wc2026_chain_longest.html` | Any JSON via `?data=<file>`, default: `wc2026_chain_longest.json` |
+| `wc2026_chain_longest.html` | Any JSON via `?data=<file>`, default: `subgraphs/longest_both.json` |
 | `wc2026_chain_directed.html` | Hardcoded to `wc2026_chain_directed.json` |
 
 **Data:**
@@ -380,7 +380,7 @@ Requires a local server (same `fetch()` constraint as the map).
 | File | Content |
 |---|---|
 | `wc2026_chain_main.json` | UK → France → … → Croatia (7 hops) |
-| `wc2026_chain_longest.json` | Full longest chain (37 links, 38 countries — Nigeria → … → Saudi Arabia) |
+| `subgraphs/` | Longest paths by direction (fwd/bwd/both) — see `subgraphs/README.md` |
 | `wc2026_chain_directed.json` | Directed graph of all chains |
 | `wc2026_chain_italy.json` | Italy variant (Marcus Thuram first link) |
 | `wc2026_chain_kaz.json` | Kazakhstan → … → Algeria (5 hops) |

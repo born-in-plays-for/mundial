@@ -337,6 +337,8 @@ const _chainGetIndex   = () => {
   return _chainData.nodes.findIndex(n => ISO2_REVERSE[n.code] === dimState.sourceId);
 };
 let _chainData = null, _chainUpdate = null;
+const _chainVariants = {}; // {both, fwd, bwd}
+let _chainMode = 'both';
 
 /* ── Accordion state persistence ─────────────────────────────────────────────
    Bootstrap's Collapse instances get confused across lit-html renders.
@@ -383,7 +385,13 @@ const _chainWikiUrl = name => {
 };
 const _renderChain = () => {
   if (!_chainData) return;
-  _chainUpdate = renderChain(_chainData, document.getElementById('tab-chain'), {
+  let chainContent = document.getElementById('chain-content');
+  if (!chainContent) {
+    chainContent = document.createElement('div');
+    chainContent.id = 'chain-content';
+    document.getElementById('tab-chain').appendChild(chainContent);
+  }
+  _chainUpdate = renderChain(_chainData, chainContent, {
     onCountryClick:   _chainOnClick,
     getSelectedIndex: _chainGetIndex,
     getPlayerWikiUrl: _chainWikiUrl,
@@ -396,9 +404,35 @@ const _updateChainSelection = () => {
   if (_chainUpdate && !document.getElementById('tab-chain')?.hidden)
     _chainUpdate(_chainGetIndex());
 };
-fetch('./chains/wc2026_chain_longest.json').then(r => r.json()).then(d => {
-  _chainData = d;
-  if (!document.getElementById('tab-chain')?.hidden) _renderChain();
+const _chainToggleHtml = `<div class="d-flex justify-content-center gap-1 py-2" id="chain-mode-toggle">
+  <button class="chain-mode-btn" data-mode="bwd" title="Import direction">← import</button>
+  <button class="chain-mode-btn active" data-mode="both" title="Both directions">both</button>
+  <button class="chain-mode-btn" data-mode="fwd" title="Export direction">export →</button>
+</div>`;
+const _switchChainMode = (mode) => {
+  if (!_chainVariants[mode]) return;
+  _chainMode = mode;
+  _chainData = _chainVariants[mode];
+  document.querySelectorAll('#chain-mode-toggle .chain-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  _renderChain();
+};
+Promise.all([
+  fetch('./chains/subgraphs/longest_both.json').then(r => r.json()),
+  fetch('./chains/subgraphs/longest_fwd.json').then(r => r.json()),
+  fetch('./chains/subgraphs/longest_bwd.json').then(r => r.json()),
+]).then(([both, fwd, bwd]) => {
+  _chainVariants.both = both;
+  _chainVariants.fwd = fwd;
+  _chainVariants.bwd = bwd;
+  _chainData = both;
+  const tab = document.getElementById('tab-chain');
+  tab.insertAdjacentHTML('afterbegin', _chainToggleHtml);
+  tab.querySelectorAll('.chain-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => _switchChainMode(btn.dataset.mode));
+  });
+  if (!tab.hidden) _renderChain();
 });
 
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar

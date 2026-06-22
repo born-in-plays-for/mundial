@@ -1,0 +1,211 @@
+{
+  "title": "Longest chain — plays for ← born in (import direction)",
+  "subtitle": "Mondial 2026 · 14 players · 15 countries",
+  "source": "source : Wikipédia · effectifs Mondial 2026",
+  "mode": "bwd",
+  "mode_description": "plays for ← born in (import direction)",
+  "nodes": [
+    {
+      "country": "New Zealand",
+      "code": "nz"
+    },
+    {
+      "country": "Scotland",
+      "code": "gb-sct"
+    },
+    {
+      "country": "Australia",
+      "code": "au"
+    },
+    {
+      "country": "Croatia",
+      "code": "hr"
+    },
+    {
+      "country": "Bosnia and Herzegovina",
+      "code": "ba"
+    },
+    {
+      "country": "United States",
+      "code": "us"
+    },
+    {
+      "country": "Mexico",
+      "code": "mx"
+    },
+    {
+      "country": "Colombia",
+      "code": "co"
+    },
+    {
+      "country": "Argentina",
+      "code": "ar"
+    },
+    {
+      "country": "Spain",
+      "code": "es"
+    },
+    {
+      "country": "France",
+      "code": "fr"
+    },
+    {
+      "country": "England",
+      "code": "gb-eng"
+    },
+    {
+      "country": "Germany",
+      "code": "de"
+    },
+    {
+      "country": "Uzbekistan",
+      "code": "uz"
+    },
+    {
+      "country": "Italy",
+      "code": "it"
+    }
+  ],
+  "links": [
+    {
+      "player": "Callan Elliot",
+      "city": "",
+      "caps": 10,
+      "direction": "bwd",
+      "birth_country": "Scotland",
+      "plays_for": "New Zealand",
+      "birth_code": "gb-sct",
+      "plays_code": "nz"
+    },
+    {
+      "player": "Lyndon Dykes",
+      "city": "",
+      "caps": 51,
+      "direction": "bwd",
+      "birth_country": "Australia",
+      "plays_for": "Scotland",
+      "birth_code": "au",
+      "plays_code": "gb-sct"
+    },
+    {
+      "player": "Miloš Degenek",
+      "city": "",
+      "caps": 56,
+      "direction": "bwd",
+      "birth_country": "Croatia",
+      "plays_for": "Australia",
+      "birth_code": "hr",
+      "plays_code": "au"
+    },
+    {
+      "player": "Ante Budimir",
+      "city": "",
+      "caps": 37,
+      "direction": "bwd",
+      "birth_country": "Bosnia and Herzegovina",
+      "plays_for": "Croatia",
+      "birth_code": "ba",
+      "plays_code": "hr"
+    },
+    {
+      "player": "Esmir Bajraktarević",
+      "city": "",
+      "caps": 15,
+      "direction": "bwd",
+      "birth_country": "United States",
+      "plays_for": "Bosnia and Herzegovina",
+      "birth_code": "us",
+      "plays_code": "ba"
+    },
+    {
+      "player": "Alejandro Zendejas",
+      "city": "",
+      "caps": 14,
+      "direction": "bwd",
+      "birth_country": "Mexico",
+      "plays_for": "United States",
+      "birth_code": "mx",
+      "plays_code": "us"
+    },
+    {
+      "player": "Julián Quiñones",
+      "city": "",
+      "caps": 21,
+      "direction": "bwd",
+      "birth_country": "Colombia",
+      "plays_for": "Mexico",
+      "birth_code": "co",
+      "plays_code": "mx"
+    },
+    {
+      "player": "Néstor Lorenzo",
+      "city": "",
+      "caps": 0,
+      "direction": "bwd",
+      "birth_country": "Argentina",
+      "plays_for": "Colombia",
+      "birth_code": "ar",
+      "plays_code": "co"
+    },
+    {
+      "player": "Nico Paz",
+      "city": "",
+      "caps": 8,
+      "direction": "bwd",
+      "birth_country": "Spain",
+      "plays_for": "Argentina",
+      "birth_code": "es",
+      "plays_code": "ar"
+    },
+    {
+      "player": "Aymeric Laporte",
+      "city": "",
+      "caps": 44,
+      "direction": "bwd",
+      "birth_country": "France",
+      "plays_for": "Spain",
+      "birth_code": "fr",
+      "plays_code": "es"
+    },
+    {
+      "player": "Michael Olise",
+      "city": "",
+      "caps": 15,
+      "direction": "bwd",
+      "birth_country": "England",
+      "plays_for": "France",
+      "birth_code": "gb-eng",
+      "plays_code": "fr"
+    },
+    {
+      "player": "Thomas Tuchel",
+      "city": "",
+      "caps": 0,
+      "direction": "bwd",
+      "birth_country": "Germany",
+      "plays_for": "England",
+      "birth_code": "de",
+      "plays_code": "gb-eng"
+    },
+    {
+      "player": "Waldemar Anton",
+      "city": "",
+      "caps": 12,
+      "direction": "bwd",
+      "birth_country": "Uzbekistan",
+      "plays_for": "Germany",
+      "birth_code": "uz",
+      "plays_code": "de"
+    },
+    {
+      "player": "Fabio Cannavaro",
+      "city": "",
+      "caps": 0,
+      "direction": "bwd",
+      "birth_country": "Italy",
+      "plays_for": "Uzbekistan",
+      "birth_code": "it",
+      "plays_code": "uz"
+    }
+  ]
+}

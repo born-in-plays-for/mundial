@@ -37,7 +37,7 @@ The **chain snake panel** updates at each step — highlighting the current link
 
 ## Source data
 
-**`chains/wc2026_chain_longest.json`** — already exists, 38 nodes + 37 links.
+**`chains/subgraphs/longest_both.json`** — 44 nodes + 43 links.
 
 Key fields per link:
 ```json
@@ -143,7 +143,7 @@ Expected coverage:
 
 | File | Notes |
 |------|-------|
-| `chains/wc2026_chain_longest.json` | Chain data ✅ |
+| `chains/subgraphs/longest_both.json` | Chain data ✅ |
 | `chains/wc2026_chain_render.js` | Chain SVG renderer ✅ — adapt for animation |
 | `uk-nations.geojson` | UK home nation polygons ✅ |
 | `wc2026_map.js` | Reference for D3 zoom patterns ✅ |

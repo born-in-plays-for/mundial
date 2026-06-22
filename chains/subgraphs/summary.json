@@ -1,0 +1,20 @@
+[
+  {
+    "mode": "fwd",
+    "description": "born in \u2192 plays for (export direction)",
+    "countries": 15,
+    "links": 14
+  },
+  {
+    "mode": "bwd",
+    "description": "plays for \u2190 born in (import direction)",
+    "countries": 15,
+    "links": 14
+  },
+  {
+    "mode": "both",
+    "description": "both directions (undirected)",
+    "countries": 44,
+    "links": 43
+  }
+]

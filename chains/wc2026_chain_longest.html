@@ -20,7 +20,7 @@ import { renderChain } from './wc2026_chain_render.js';
 const container = document.getElementById('container');
 const sourceEl  = document.getElementById('source');
 let chainData = null, resizeTimer = null;
-const dataFile = new URLSearchParams(location.search).get('data') || 'wc2026_chain_longest.json';
+const dataFile = new URLSearchParams(location.search).get('data') || 'subgraphs/longest_both.json';
 fetch(dataFile)
   .then(r => r.json())
   .then(chain => {

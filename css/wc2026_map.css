@@ -157,6 +157,10 @@ body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */
 .csb-table td:has(.csb-check):hover { background-color: var(--bg-hover); }
 .csb-check { display: flex; align-items: center; justify-content: center; height: 100%; cursor: pointer; }
 
+/* chain mode toggle */
+.chain-mode-btn { border: 1px solid #dee2e6; border-radius: 16px; padding: 2px 12px; font-size: 11px; background: #fff; color: #888; cursor: pointer; transition: all .15s; }
+.chain-mode-btn:hover { border-color: #999; }
+.chain-mode-btn.active { background: #1C274C; color: #fff; border-color: #1C274C; }
 /* chain hit areas */
 .chain-hit:hover { fill: rgba(0,0,0,.06) !important; }
 [data-nav]:hover:not(:disabled) { background: var(--bg-hover) !important; }
