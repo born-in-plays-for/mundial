@@ -367,22 +367,10 @@ with sync_playwright() as p:
 
 Requires a local server (same `fetch()` constraint as the map).
 
-**Renderers:**
-
-| File | Loads |
+| File | Purpose |
 |---|---|
-| `wc2026_chain_parameterized.html` | Any JSON via `?data=<file>`, default: `wc2026_chain_main.json` |
-| `wc2026_chain_longest.html` | Any JSON via `?data=<file>`, default: `subgraphs/longest_both.json` |
-| `wc2026_chain_directed.html` | Hardcoded to `wc2026_chain_directed.json` |
-
-**Data:**
-
-| File | Content |
-|---|---|
-| `wc2026_chain_main.json` | UK → France → … → Croatia (7 hops) |
-| `subgraphs/` | Longest paths by direction (fwd/bwd/both) — see `subgraphs/README.md` |
-| `wc2026_chain_directed.json` | Directed graph of all chains |
-| `wc2026_chain_italy.json` | Italy variant (Marcus Thuram first link) |
-| `wc2026_chain_kaz.json` | Kazakhstan → … → Algeria (5 hops) |
-| `wc2026_chain_loop.json` | Bosnia ⇄ Croatia mutual cycle |
-| `VIDEO_BRIEF.md` | Handoff brief for the LinkedIn video production (see below) |
+| `wc2026_chain_longest.html` | Snake renderer — loads any chain JSON via `?data=<file>`, default: `subgraphs/longest_both.json` |
+| `wc2026_chain_render.js` | Shared chain SVG renderer (ES module, used by map + longest.html) |
+| `wc2026_chain_loop.json` | Bosnia ⇄ Croatia mutual cycle (bidirectional export edge case) |
+| `subgraphs/` | Longest paths by direction (fwd/bwd/both) + OR-Tools script — see `subgraphs/README.md` |
+| `VIDEO_BRIEF.md` | Handoff brief for the LinkedIn video production |

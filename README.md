@@ -17,9 +17,7 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup showing **where play
 | https://mundial.cthiebaud.com/wc2026_elo_history.html | Animated Elo rating history (bar chart race) |
 | https://mundial.cthiebaud.com/infographics/wc2026_top_exporters.html | Top birth-country infographic (1080×1920) |
 | https://mundial.cthiebaud.com/infographics/wc2026_top_importers.html | Top importing-country infographic (1080×1920) |
-| https://mundial.cthiebaud.com/chains/wc2026_chain_parameterized.html | Chain renderer — `?data=wc2026_chain_main.json` (default), `_italy.json`, `_kaz.json`, `_loop.json`, `_longest.json` |
-| https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html | Snake renderer — `?data=subgraphs/longest_both.json` (default), any chain JSON |
-| https://mundial.cthiebaud.com/chains/wc2026_chain_directed.html | Directed-graph renderer — hardcoded to `wc2026_chain_directed.json` |
+| https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html | Chain snake renderer — `?data=subgraphs/longest_both.json` (default), any chain JSON |
 
 ---
 
@@ -75,21 +73,11 @@ Infographics visualising multi-hop birth-country → plays-for paths.
 
 | File | Purpose |
 |---|---|
-| `wc2026_chain_parameterized.html` | Generic renderer — loads any chain via `?data=<file>` (default: `_main.json`) |
-| `wc2026_chain_longest.html` | Snake renderer for the longest chain — loads any chain via `?data=<file>` (default: `subgraphs/longest_both.json`) |
-| `wc2026_chain_directed.html` | Directed-graph renderer — loads `_directed.json` |
-
-**Data:**
-
-| File | Content |
-|---|---|
-| `wc2026_chain_main.json` | UK → France → … → Croatia (7 hops) |
-| `subgraphs/` | Longest paths by direction (fwd/bwd/both) — computed by `subgraphs/compute_longest_paths.py` |
-| `wc2026_chain_directed.json` | Directed graph of all chains |
-| `wc2026_chain_italy.json` | Italy variant (Marcus Thuram first link) |
-| `wc2026_chain_kaz.json` | Kazakhstan → … → Algeria (5 hops) |
-| `wc2026_chain_loop.json` | Bosnia ⇄ Croatia mutual cycle |
-| `VIDEO_BRIEF.md` | Production brief for the LinkedIn chain video (to be implemented) |
+| `wc2026_chain_longest.html` | Snake renderer — loads any chain JSON via `?data=<file>` (default: `subgraphs/longest_both.json`) |
+| `wc2026_chain_render.js` | Shared chain SVG renderer (ES module) |
+| `wc2026_chain_loop.json` | Bosnia ⇄ Croatia mutual cycle (bidirectional export edge case) |
+| `subgraphs/` | Longest paths by direction (fwd/bwd/both) — see `subgraphs/README.md` |
+| `VIDEO_BRIEF.md` | Production brief for the LinkedIn chain video |
 
 ---
 
