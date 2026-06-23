@@ -367,7 +367,13 @@ const badge = document.getElementById('ws-status');
 const sioScript = document.createElement('script');
 sioScript.src = 'https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js';
 sioScript.onload = () => {
-  const sock = io(PROXY, {transports: ['websocket']});
+  const sock = io(PROXY, {
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 30000,
+  });
 
   const setPollStatus = (active, fixtures = []) => {
     if (active) {
@@ -382,6 +388,7 @@ sioScript.onload = () => {
   };
 
   sock.on('connect', async () => {
+    console.log('[live] WebSocket connected, id:', sock.id);
     try {
       const [{active, fixtures: trackedIds}, liveData] = await Promise.all([
         fetch(`${PROXY}/api/poll/active`, {headers: _h}).then(r => r.json()),
@@ -395,9 +402,24 @@ sioScript.onload = () => {
     }
   });
 
-  sock.on('disconnect', () => {
+  sock.on('disconnect', (reason) => {
+    console.warn('[live] WebSocket disconnected:', reason);
     badge.textContent = 'disconnected';
     badge.className = 'badge bg-danger ms-auto';
+  });
+
+  sock.on('reconnect_attempt', (attempt) => {
+    console.log('[live] WebSocket reconnection attempt', attempt);
+    badge.textContent = `reconnecting… (${attempt})`;
+    badge.className = 'badge bg-warning text-dark ms-auto';
+  });
+
+  sock.on('reconnect', (attempt) => {
+    console.log('[live] WebSocket reconnected after', attempt, 'attempt(s)');
+  });
+
+  sock.on('connect_error', (err) => {
+    console.warn('[live] WebSocket connect error:', err.message);
   });
 
   sock.on('poll_status', ({active, fixtures: trackedIds}) => {

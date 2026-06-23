@@ -161,7 +161,37 @@ class MundialAuthBar extends HTMLElement {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js';
     script.onload = () => {
-      const sock = io(this.BACKEND, {transports: ['websocket']});
+      const sock = io(this.BACKEND, {
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 30000,
+      });
+
+      sock.on('connect', () => {
+        console.log('[auth-bar] WebSocket connected, id:', sock.id);
+        this._hideConnectionToast();
+        this._refreshAuth();
+      });
+
+      sock.on('disconnect', (reason) => {
+        console.warn('[auth-bar] WebSocket disconnected:', reason);
+        this._showConnectionToast('Connection lost — reconnecting…', 'warning');
+      });
+
+      sock.on('reconnect', (attempt) => {
+        console.log('[auth-bar] WebSocket reconnected after', attempt, 'attempt(s)');
+      });
+
+      sock.on('reconnect_attempt', (attempt) => {
+        console.log('[auth-bar] WebSocket reconnection attempt', attempt);
+      });
+
+      sock.on('connect_error', (err) => {
+        console.warn('[auth-bar] WebSocket connect error:', err.message);
+      });
+
       sock.on('user_kicked', ({email, sid: kickedSid}) => {
         const mySid = localStorage.getItem('mundial_sid');
         const raw = localStorage.getItem('mundial_user');
@@ -173,8 +203,56 @@ class MundialAuthBar extends HTMLElement {
           else if (!kickedSid && cur === email) this._signOut();
         } catch {}
       });
+
+      sock.on('user_login', ({email}) => {
+        console.log('[auth-bar] user_login event:', email);
+      });
+
+      sock.on('user_logout', ({email}) => {
+        console.log('[auth-bar] user_logout event:', email);
+        const raw = localStorage.getItem('mundial_user');
+        if (!raw) return;
+        try {
+          const data = JSON.parse(raw);
+          const cur = (data.user ?? data).email;
+          if (cur === email) this._signOut();
+        } catch {}
+      });
     };
     document.head.appendChild(script);
+  }
+
+  async _refreshAuth() {
+    try {
+      const resp = await fetch(this.BACKEND + '/api/auth/me', {
+        credentials: 'include',
+        signal: AbortSignal.timeout(3000),
+        headers: {'ngrok-skip-browser-warning': '1'}
+      });
+      const data = await resp.json();
+      if (data.user) {
+        localStorage.setItem('mundial_user', JSON.stringify(data));
+        this._showUser(data.user, data.admin ?? false);
+      } else {
+        this._signOut();
+      }
+    } catch {}
+  }
+
+  _showConnectionToast(msg, type) {
+    this._hideConnectionToast();
+    const toast = document.createElement('div');
+    toast.id = 'mundial-conn-toast';
+    const bg = type === 'warning' ? '#fff3cd' : '#d1e7dd';
+    const color = type === 'warning' ? '#664d03' : '#0f5132';
+    toast.style.cssText = `position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:9999;padding:6px 16px;border-radius:6px;font-size:12px;background:${bg};color:${color};box-shadow:0 2px 8px rgba(0,0,0,.15);transition:opacity .3s`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+  }
+
+  _hideConnectionToast() {
+    const existing = document.getElementById('mundial-conn-toast');
+    if (existing) existing.remove();
   }
 }
 
