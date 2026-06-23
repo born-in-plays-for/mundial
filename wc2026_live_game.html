@@ -264,7 +264,7 @@ const renderMatch = (fix, lineups) => {
             <span class="fi fi-${awayISO} team-flag"></span>
           </div>
           <div class="text-center text-muted small">
-            ${status.long}${status.elapsed ? ' · ' + status.elapsed + '\'' : ''}
+            ${status.long}${status.elapsed ? ' · ' + status.elapsed + (status.extra ? '+' + status.extra : '') + '\'' : ''}
             ${venue?.city ? ' · ' + venue.city : ''}
           </div>
         </div>
@@ -325,7 +325,7 @@ const renderSelector = () => {
     const a = fix.teams.away;
     const s = fix.fixture.status;
     const active = fix.fixture.id === selectedFixId ? 'active' : '';
-    const elapsed = s.elapsed ? ` · ${s.elapsed}'` : '';
+    const elapsed = s.elapsed ? ` · ${s.elapsed}${s.extra ? '+' + s.extra : ''}'` : '';
     return `<span class="fix-pill ${active}" data-fid="${fix.fixture.id}">
       <span class="fi fi-${flagCode(h.name)}" style="font-size:11px"></span>
       ${fix.goals.home ?? '–'}–${fix.goals.away ?? '–'}
