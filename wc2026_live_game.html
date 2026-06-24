@@ -34,10 +34,12 @@ body { background: #f5f2ec; }
 .grp-table td { padding: 3px 6px !important; white-space: nowrap; }
 .grp-table .grp-team { text-align: left; min-width: 100px; }
 .grp-table .grp-num { text-align: center; min-width: 24px; }
+.grp-table .grp-gfga { text-align: center; min-width: 24px; }
+@media (max-width: 575.98px) { .grp-gfga { display: none; } }
 .grp-table .grp-pts { font-weight: 700; }
 .grp-qualify { background: rgba(25, 135, 84, 0.06); }
 .grp-maybe { background: rgba(255, 193, 7, 0.08); }
-.grp-playing { font-weight: 600; }
+.grp-playing { background: rgba(13, 110, 253, 0.04); }
 .grp-title { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
 .fix-pill { cursor: pointer; border: 1px solid #dee2e6; border-radius: 20px; padding: 4px 12px; font-size: 12px; background: #fff; transition: all .15s; white-space: nowrap; }
 .fix-pill:hover { border-color: #999; }
@@ -302,7 +304,7 @@ const renderMatch = (fix, lineups) => {
           <div class="d-flex justify-content-center align-items-center gap-3 py-2">
             <span class="fi fi-${homeISO} team-flag"></span>
             <span class="fw-bold">${home.name}</span>
-            <span class="fs-3 fw-bold px-2">${score.home ?? '–'} — ${score.away ?? '–'}</span>
+            <span class="fs-3 fw-bold px-2" style="white-space:nowrap">${score.home ?? '–'} — ${score.away ?? '–'}</span>
             <span class="fw-bold">${away.name}</span>
             <span class="fi fi-${awayISO} team-flag"></span>
           </div>
@@ -315,19 +317,36 @@ const renderMatch = (fix, lineups) => {
       </div>`;
 
   const statsHtml = renderStats(statistics);
+  const fid = fix.fixture.id;
+
+  html += `<div class="accordion mt-2" id="acc-${fid}">`;
+
   if (statsHtml) {
-    html += `<div class="card mt-2"><div class="card-body py-2 px-3">${statsHtml}</div></div>`;
+    html += `
+      <div class="accordion-item">
+        <h2 class="accordion-header"><button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#acc-stats-${fid}">${T.liveStats ?? 'Statistics'}</button></h2>
+        <div id="acc-stats-${fid}" class="accordion-collapse collapse" data-bs-parent="#acc-${fid}">
+          <div class="accordion-body py-2 px-3">${statsHtml}</div>
+        </div>
+      </div>`;
   }
 
   if (lineups.length === 2) {
     html += `
-      <div class="d-flex gap-3 mt-2 flex-wrap flex-md-nowrap">
-        ${renderTeam(lineups[0], 'home')}
-        ${renderTeam(lineups[1], 'away')}
+      <div class="accordion-item">
+        <h2 class="accordion-header"><button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#acc-lineups-${fid}">${T.liveLineups ?? 'Lineups'}</button></h2>
+        <div id="acc-lineups-${fid}" class="accordion-collapse collapse" data-bs-parent="#acc-${fid}">
+          <div class="accordion-body py-2 px-3">
+            <div class="d-flex gap-3 flex-wrap flex-md-nowrap">
+              ${renderTeam(lineups[0], 'home')}
+              ${renderTeam(lineups[1], 'away')}
+            </div>
+          </div>
+        </div>
       </div>`;
-  } else {
-    html += `<p class="text-muted small mt-2">${T.liveLineupsNA}</p>`;
   }
+
+  html += `</div>`;
 
   html += `</div>`;
   return html;
@@ -421,21 +440,74 @@ const computeLiveStandings = (fixtures) => {
   return results;
 };
 
+const explainRanking = (teams) => {
+  const lines = [];
+  let i = 0;
+  while (i < teams.length) {
+    let j = i + 1;
+    while (j < teams.length && teams[j].pts === teams[i].pts) j++;
+    if (j - i > 1) {
+      const tied = teams.slice(i, j);
+      const names = tied.map(t => t.name);
+      lines.push(`<strong>${names.join(', ')}</strong> are tied on <strong>${tied[0].pts} pts</strong>.`);
+      for (let k = 0; k < tied.length - 1; k++) {
+        const a = tied[k], b = tied[k + 1];
+        if (a.gd !== b.gd) {
+          lines.push(`&ensp;${a.name} ranks above ${b.name}: goal difference ${a.gd > 0 ? '+' : ''}${a.gd} vs ${b.gd > 0 ? '+' : ''}${b.gd}.`);
+        } else if (a.gf !== b.gf) {
+          lines.push(`&ensp;${a.name} ranks above ${b.name}: goals scored ${a.gf} vs ${b.gf}.`);
+        } else {
+          lines.push(`&ensp;${a.name} and ${b.name} are identical on GD and GF — head-to-head not yet implemented.`);
+        }
+      }
+    }
+    i = j;
+  }
+  if (lines.length === 0) lines.push('No tiebreakers needed — all teams have different point totals.');
+  lines.push(`<hr class="my-2"><div class="text-muted" style="font-size:11px">
+    <strong>FIFA tiebreaker rules</strong> (applied in order when teams are tied on points):
+    <ol class="mb-0 ps-3 mt-1">
+      <li>Head-to-head: points</li>
+      <li>Head-to-head: goal difference</li>
+      <li>Head-to-head: goals scored</li>
+      <li>Overall goal difference</li>
+      <li>Overall goals scored</li>
+      <li>Fair play score (cards)</li>
+      <li>FIFA ranking</li>
+    </ol>
+  </div>`);
+  return lines.join('<br>');
+};
+
 const renderStandings = (fixtures) => {
   const el = document.getElementById('group-standings');
   const groups = computeLiveStandings(fixtures);
   if (groups.length === 0) { el.innerHTML = ''; return; }
 
-  el.innerHTML = groups.map(({ letter, teams }) => `
+  el.innerHTML = groups.map(({ letter, teams }) => {
+    const explanation = explainRanking(teams);
+    return `
     <div class="card mb-2">
       <div class="card-body py-2 px-3">
-        <div class="grp-title">${T.liveGroup(letter)}</div>
+        <div class="grp-title d-flex align-items-center gap-2">
+          ${T.liveGroup(letter)}
+          <button class="btn btn-link btn-sm p-0 text-muted text-decoration-none" data-bs-toggle="modal" data-bs-target="#grp-modal-${letter}" style="font-size:11px">rules</button>
+        </div>
+    <div class="modal fade" id="grp-modal-${letter}" tabindex="-1">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header py-2">
+          <h6 class="modal-title">${T.liveGroup(letter)} — Ranking</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body small">${explanation}</div>
+      </div></div>
+    </div>
         <table class="table grp-table">
           <thead><tr>
             <th></th><th class="grp-team"></th>
             <th class="grp-num">${T.liveP}</th><th class="grp-num">${T.liveW}</th>
             <th class="grp-num">${T.liveD}</th><th class="grp-num">${T.liveL}</th>
-            <th class="grp-num">${T.liveGF}</th><th class="grp-num">${T.liveGA}</th>
+            <th class="grp-num grp-gfga">${T.liveGF}</th><th class="grp-num grp-gfga">${T.liveGA}</th>
             <th class="grp-num">${T.liveGD}</th><th class="grp-num grp-pts">${T.livePts}</th>
           </tr></thead>
           <tbody>${teams.map((t, i) => {
@@ -447,7 +519,7 @@ const renderStandings = (fixtures) => {
               <td class="grp-team">${t.name}</td>
               <td class="grp-num">${t.played}</td><td class="grp-num">${t.win}</td>
               <td class="grp-num">${t.draw}</td><td class="grp-num">${t.lose}</td>
-              <td class="grp-num">${t.gf}</td><td class="grp-num">${t.ga}</td>
+              <td class="grp-num grp-gfga">${t.gf}</td><td class="grp-num grp-gfga">${t.ga}</td>
               <td class="grp-num">${t.gd > 0 ? '+' + t.gd : t.gd}</td>
               <td class="grp-num grp-pts">${t.pts}</td>
             </tr>`;
@@ -455,7 +527,7 @@ const renderStandings = (fixtures) => {
         </table>
       </div>
     </div>
-  `).join('');
+  `;}).join('');
 };
 
 const renderSelectedFixture = async () => {
