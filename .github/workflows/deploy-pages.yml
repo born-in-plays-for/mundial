@@ -23,8 +23,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
           fetch-depth: 1
+
+      - uses: actions/cache@v4
+        id: submodule-cache
+        with:
+          path: data
+          key: data-${{ hashFiles('.gitmodules', 'data') }}
+
+      - if: steps.submodule-cache.outputs.cache-hit != 'true'
+        run: git submodule update --init --depth 1 data
 
       - uses: actions/configure-pages@v5
 
