@@ -52,24 +52,7 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup showing **where play
 
 ## Data pipeline
 
-All scripts live in `pipeline/`. See `pipeline/README.md` for full instructions.
-
-| File | Purpose |
-|---|---|
-| `pipeline/wc2026_birthplaces.py` | Scraper: Wikipedia → `pipeline/wc2026_players.csv` |
-| `pipeline/build_json.py` | Rebuilds `wc2026_map_data.json` from CSV |
-| `pipeline/add_wiki_urls.py` | Enriches JSON with per-language Wikipedia links (`wiki_langs`) |
-| `pipeline/fetch_countries.py` | Builds `countries.json` (pop + capital) from mledoze + World Bank + Wikidata |
-| `pipeline/patch_uk_nations.py` | Adds UK home nations (8260–8263) to `countries.json` |
-| `pipeline/patch_kosovo.py` | Adds Kosovo (383) to `countries.json` and `wc2026_elo_rank.json` |
-| `pipeline/update_elo_rankings.py` | Fetches current Elo ratings from eloratings.net → `wc2026_elo_rank.json` |
-| `pipeline/build_elo_history.py` | Parses eloratings.net graph.tsv → `wc2026_elo_history.json` |
-| `pipeline/add_gdp.py` | World Bank GDP → `wc2026_gdp.json` |
-| `pipeline/add_gdp_pc_ppp.py` | World Bank GDP/capita PPP → `wc2026_gdp_pc_ppp.json` |
-| `pipeline/add_hdi.py` | UNDP HDI → `wc2026_hdi.json` |
-| `pipeline/wc2026_players.csv` | Full squad roster with birth city/country (source of truth) |
-| `pipeline/wc2026_by_birthcountry.csv` | Aggregated ranking by birth country |
-| `pipeline/wc2026_make_ratio_chart.py` | Bar chart of players born in a country but playing for another |
+The data pipeline lives in **[cthiebaud/mundial-build](https://github.com/cthiebaud/mundial-build)**. Pipeline scripts output JSON/CSV files to this repo's root.
 
 ## chains/
 

@@ -12,10 +12,11 @@ Live at: **https://mundial.cthiebaud.com/**
 
 | Repo | Content | Deploys to |
 |---|---|---|
-| **[cthiebaud/mundial](https://github.com/cthiebaud/mundial)** | Static frontend (HTML, JS, CSS, JSON, pipeline, infographics, chains) | GitHub Pages |
+| **[cthiebaud/mundial](https://github.com/cthiebaud/mundial)** | Static frontend (HTML, JS, CSS, JSON, infographics, chains) | GitHub Pages |
 | **[cthiebaud/mundial-server](https://github.com/cthiebaud/mundial-server)** | Backend (Flask, admin, login, WebSocket, API-Football proxy) | Runs locally (+ ngrok) |
+| **[cthiebaud/mundial-build](https://github.com/cthiebaud/mundial-build)** | Data pipeline, scripts, dev tooling | Not deployed |
 
-The backend repo lives at `../mundial-server` (sibling directory). See its own `README.md` and `LOGIN_SPEC.md` for backend documentation.
+The backend repo lives at `../mundial-server` and the build repo at `../mundial-build` (sibling directories). See their own `README.md` files for documentation.
 
 ---
 
@@ -47,7 +48,6 @@ The backend repo lives at `../mundial-server` (sibling directory). See its own `
 | `uk-nations.geojson` | 4 UK home nations polygons (Natural Earth 50m) — England, Scotland, Wales, Northern Ireland rendered as separate choropleth features |
 | `wc2026_og_v3.png` | 1200×640 Open Graph preview image for LinkedIn/social |
 | `chains/` | Export chain infographics — see section below |
-| `pipeline/` | Data acquisition scripts and source CSVs — see `pipeline/README.md` |
 | `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
 
 ---
@@ -87,21 +87,7 @@ python3 -m http.server 8000
 
 ## Data pipeline
 
-```bash
-pip install requests beautifulsoup4 pandas lxml matplotlib
-python3 pipeline/wc2026_birthplaces.py   # → pipeline/wc2026_players.csv
-python3 pipeline/build_json.py           # → wc2026_map_data.json
-python3 pipeline/add_wiki_urls.py        # → enriches wc2026_map_data.json in-place
-```
-
-Full documentation, partial-update recipes, and troubleshooting notes in **`pipeline/README.md`**.
-
-### Generating the ratio chart
-
-```bash
-python3 pipeline/wc2026_make_ratio_chart.py              # Curaçao excluded (default)
-python3 pipeline/wc2026_make_ratio_chart.py --with-curacao
-```
+The data pipeline lives in the **[cthiebaud/mundial-build](https://github.com/cthiebaud/mundial-build)** repo (`../mundial-build` sibling directory). Pipeline scripts output JSON/CSV files to this repo's root. See `mundial-build/pipeline/README.md` for full documentation.
 
 ### Regenerating the OG image
 
