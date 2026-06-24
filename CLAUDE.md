@@ -251,6 +251,15 @@ Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via
 4. On failure: shows offline state (warning + WhatsApp icons, beige background), starts a 30s retry loop
 5. When backend comes back: `_restoreAuthSection()` swaps a fresh container via `cloneNode(false)` and re-renders with callbacks
 
+**Centralized backend connection:** The auth bar is the **single owner** of the Socket.IO connection and backend URL. It exposes `this.BACKEND` and `this.socket` as public properties. Other pages consume the connection via custom events — they never create their own Socket.IO instance or resolve the backend URL independently.
+
+**Custom events dispatched:**
+- `auth-bar-ready` `{ detail: { backend } }` — backend URL resolved, auth section visible (socket may still be loading)
+- `auth-bar-online` `{ detail: { socket, backend } }` — WebSocket connected (first connect or reconnect after offline)
+- `auth-bar-offline` `{ detail: { reason } }` — backend unreachable (initial failure, or 5s after WebSocket disconnect)
+
+**Consumer pattern** (used by `wc2026_live_game.html`): wait for `auth-bar-online` to get `{ socket, backend }`, subscribe to socket events (`poll_status`, `live_update`), listen for `auth-bar-offline` to update UI. No duplicate health checks, no duplicate Socket.IO client.
+
 **WebSocket lifecycle:** After successful init, loads `socket.io-client@4` dynamically. On disconnect, waits 5s then switches to offline mode. On reconnect, restores auth section and refreshes user session.
 
 **Sibling offset:** `_offsetSibling()` sets `top: 32px` (fixed/sticky siblings) or `marginTop: 32px` (static siblings) on the next element to account for the fixed navbar.

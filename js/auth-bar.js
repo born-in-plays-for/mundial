@@ -135,6 +135,7 @@ class MundialAuthBar extends HTMLElement {
     };
 
     render(_offlineSectionTemplate(reason, onWarnClick), section);
+    this.dispatchEvent(new CustomEvent('auth-bar-offline', { bubbles: true, detail: { reason } }));
   }
 
   _backendCheck() {
@@ -170,6 +171,7 @@ class MundialAuthBar extends HTMLElement {
     });
     const modal = document.getElementById('mundial-offline-modal');
     if (modal) modal.remove();
+    this.dispatchEvent(new CustomEvent('auth-bar-online', { bubbles: true, detail: { socket: this.socket, backend: this.BACKEND } }));
   }
 
   _freshAuthSection() {
@@ -229,7 +231,7 @@ class MundialAuthBar extends HTMLElement {
     render(_authSectionTemplate(this._authCallbacks), section);
     section.querySelectorAll('[data-ref]').forEach(el => { this._refs[el.dataset.ref] = el; });
     section.style.visibility = '';
-    this.dispatchEvent(new CustomEvent('auth-bar-ready', {bubbles: true}));
+    this.dispatchEvent(new CustomEvent('auth-bar-ready', { bubbles: true, detail: { backend: this.BACKEND } }));
 
     const stored = localStorage.getItem('mundial_user');
     if (stored) {
@@ -276,13 +278,14 @@ class MundialAuthBar extends HTMLElement {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js';
     script.onload = () => {
-      const sock = io(this.BACKEND, {
+      this.socket = io(this.BACKEND, {
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 30000,
       });
+      const sock = this.socket;
 
       let offlineTimer = null;
 
@@ -297,6 +300,7 @@ class MundialAuthBar extends HTMLElement {
           this._refreshAuth();
         } else {
           this._refreshAuth();
+          this.dispatchEvent(new CustomEvent('auth-bar-online', { bubbles: true, detail: { socket: this.socket, backend: this.BACKEND } }));
         }
       });
 

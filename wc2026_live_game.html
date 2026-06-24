@@ -64,53 +64,42 @@ document.getElementById('no-match').textContent = T.liveNoMatch;
 document.getElementById('loading').textContent = T.liveConnecting;
 
 let PROXY;
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-  PROXY = 'http://localhost:5002';
-} else {
-  try {
-    const cfg = await fetch('./backend_config.json').then(r => r.json());
-    PROXY = cfg.backend_url;
-  } catch {
-    document.getElementById('loading').textContent = T.liveNotRunning;
-    throw new Error('no backend');
-  }
-}
+const authBar = document.querySelector('mundial-auth-bar');
 
-const _backendCheck = () => fetch(PROXY + '/api/auth/me', {
-  credentials: 'include',
-  signal: AbortSignal.timeout(3000),
-  headers: {'ngrok-skip-browser-warning': '1'}
+const _waitForBackend = () => new Promise(resolve => {
+  if (authBar.BACKEND && authBar.socket?.connected) {
+    resolve({ backend: authBar.BACKEND, socket: authBar.socket });
+    return;
+  }
+  const onOnline = (e) => {
+    authBar.removeEventListener('auth-bar-online', onOnline);
+    authBar.removeEventListener('auth-bar-ready', onReady);
+    resolve(e.detail);
+  };
+  const onReady = (e) => {
+    authBar.removeEventListener('auth-bar-ready', onReady);
+    PROXY = e.detail.backend;
+    if (authBar.socket?.connected) {
+      authBar.removeEventListener('auth-bar-online', onOnline);
+      resolve({ backend: e.detail.backend, socket: authBar.socket });
+    }
+  };
+  authBar.addEventListener('auth-bar-online', onOnline);
+  authBar.addEventListener('auth-bar-ready', onReady);
 });
 
-try {
-  await _backendCheck();
-} catch {
-  const loadingEl = document.getElementById('loading');
-  const badgeEl = document.getElementById('ws-status');
+const loadingEl = document.getElementById('loading');
+const badgeEl = document.getElementById('ws-status');
+
+authBar.addEventListener('auth-bar-offline', () => {
   badgeEl.textContent = T.liveNoBackend;
   badgeEl.className = 'badge bg-warning text-dark ms-auto';
-  await new Promise(resolve => {
-    const retry = async () => {
-      let sec = 30;
-      loadingEl.innerHTML = T.liveNotRunning + ' ' + T.liveRetrying(sec);
-      await new Promise(r => {
-        const id = setInterval(() => {
-          sec--;
-          loadingEl.innerHTML = T.liveNotRunning + ' ' + T.liveRetrying(sec);
-          if (sec <= 0) { clearInterval(id); r(); }
-        }, 1000);
-      });
-      loadingEl.textContent = T.liveConnecting;
-      try {
-        await _backendCheck();
-        resolve();
-      } catch {
-        retry();
-      }
-    };
-    retry();
-  });
-}
+  loadingEl.textContent = T.liveNotRunning;
+  loadingEl.classList.remove('d-none');
+});
+
+const { backend, socket: sock } = await _waitForBackend();
+PROXY = backend;
 
 // Build name → birth_country lookup from our data with fuzzy matching
 const mapData = await fetch('./wc2026_map_data.json').then(r => r.json());
@@ -406,74 +395,44 @@ const renderFixtures = async (fixtures) => {
   await renderSelectedFixture();
 };
 
-const badge = document.getElementById('ws-status');
-const sioScript = document.createElement('script');
-sioScript.src = 'https://cdn.jsdelivr.net/npm/socket.io-client@4/dist/socket.io.min.js';
-sioScript.onload = () => {
-  const sock = io(PROXY, {
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 30000,
-  });
-
-  const setPollStatus = (active, fixtures = []) => {
-    if (active) {
-      badge.textContent = fixtures.length > 0 ? `live · ${fixtures.length} match${fixtures.length > 1 ? 'es' : ''}` : 'live';
-      badge.className = 'badge bg-success ms-auto';
-      document.getElementById('matches').style.opacity = '';
-    } else {
-      badge.textContent = 'last known';
-      badge.className = 'badge bg-warning text-dark ms-auto';
-      document.getElementById('matches').style.opacity = '0.5';
-    }
-  };
-
-  sock.on('connect', async () => {
-    console.log('[live] WebSocket connected, id:', sock.id);
-    try {
-      const [{active, fixtures: trackedIds}, liveData] = await Promise.all([
-        fetch(`${PROXY}/api/poll/active`, {headers: _h}).then(r => r.json()),
-        fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json()),
-      ]);
-      setPollStatus(active, trackedIds);
-      renderFixtures(liveData);
-    } catch {
-      badge.textContent = 'error';
-      badge.className = 'badge bg-danger ms-auto';
-    }
-  });
-
-  sock.on('disconnect', (reason) => {
-    console.warn('[live] WebSocket disconnected:', reason);
-    badge.textContent = 'disconnected';
-    badge.className = 'badge bg-danger ms-auto';
-  });
-
-  sock.on('reconnect_attempt', (attempt) => {
-    console.log('[live] WebSocket reconnection attempt', attempt);
-    badge.textContent = `reconnecting… (${attempt})`;
-    badge.className = 'badge bg-warning text-dark ms-auto';
-  });
-
-  sock.on('reconnect', (attempt) => {
-    console.log('[live] WebSocket reconnected after', attempt, 'attempt(s)');
-  });
-
-  sock.on('connect_error', (err) => {
-    console.warn('[live] WebSocket connect error:', err.message);
-  });
-
-  sock.on('poll_status', ({active, fixtures: trackedIds}) => {
-    setPollStatus(active, trackedIds ?? []);
-  });
-
-  sock.on('live_update', (fixtures) => {
-    renderFixtures(fixtures);
-  });
+const setPollStatus = (active, fixtures = []) => {
+  if (active) {
+    badgeEl.textContent = fixtures.length > 0 ? `live · ${fixtures.length} match${fixtures.length > 1 ? 'es' : ''}` : 'live';
+    badgeEl.className = 'badge bg-success ms-auto';
+    document.getElementById('matches').style.opacity = '';
+  } else {
+    badgeEl.textContent = 'last known';
+    badgeEl.className = 'badge bg-warning text-dark ms-auto';
+    document.getElementById('matches').style.opacity = '0.5';
+  }
 };
-document.head.appendChild(sioScript);
+
+const _fetchLiveData = async () => {
+  try {
+    const [{active, fixtures: trackedIds}, liveData] = await Promise.all([
+      fetch(`${PROXY}/api/poll/active`, {headers: _h}).then(r => r.json()),
+      fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json()),
+    ]);
+    setPollStatus(active, trackedIds);
+    renderFixtures(liveData);
+    loadingEl.classList.add('d-none');
+  } catch {
+    badgeEl.textContent = 'error';
+    badgeEl.className = 'badge bg-danger ms-auto';
+  }
+};
+
+await _fetchLiveData();
+
+authBar.addEventListener('auth-bar-online', () => _fetchLiveData());
+
+sock.on('poll_status', ({active, fixtures: trackedIds}) => {
+  setPollStatus(active, trackedIds ?? []);
+});
+
+sock.on('live_update', (fixtures) => {
+  renderFixtures(fixtures);
+});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

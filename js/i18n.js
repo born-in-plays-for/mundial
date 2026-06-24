@@ -203,7 +203,7 @@ export const T = {
     liveTitle: 'Match en direct', liveSubtitle: 'Coupe du monde 2026',
     liveConnecting: 'Connexion au serveur…', liveNotRunning: 'Le serveur ne tourne pas.',
     liveRetrying: s => `Nouvelle tentative dans <span style="font-family:monospace">${s}</span>s…`,
-    liveNoBackend: 'pas de serveur', liveBadgeConnecting: 'connexion…',
+    liveNoBackend: 'serveur arrêté', liveBadgeConnecting: 'connexion…',
     liveNoMatch: 'Aucun match de la Coupe du monde en cours.',
   },
   it: {
@@ -252,7 +252,7 @@ export const T = {
     liveTitle: 'Partita in diretta', liveSubtitle: 'Coppa del mondo 2026',
     liveConnecting: 'Connessione al server…', liveNotRunning: 'Il server non è attivo.',
     liveRetrying: s => `Nuovo tentativo tra <span style="font-family:monospace">${s}</span>s…`,
-    liveNoBackend: 'no server', liveBadgeConnecting: 'connessione…',
+    liveNoBackend: 'server fermo', liveBadgeConnecting: 'connessione…',
     liveNoMatch: 'Nessuna partita della Coppa del mondo in corso.',
   },
   de: {
@@ -301,7 +301,7 @@ export const T = {
     liveTitle: 'Live-Spiel', liveSubtitle: 'WM 2026',
     liveConnecting: 'Verbindung zum Server…', liveNotRunning: 'Der Server läuft nicht.',
     liveRetrying: s => `Neuer Versuch in <span style="font-family:monospace">${s}</span>s…`,
-    liveNoBackend: 'kein Server', liveBadgeConnecting: 'verbinde…',
+    liveNoBackend: 'Server gestoppt', liveBadgeConnecting: 'verbinde…',
     liveNoMatch: 'Kein WM-Spiel gerade live.',
   },
   es: {
@@ -350,7 +350,7 @@ export const T = {
     liveTitle: 'Partido en vivo', liveSubtitle: 'Copa del mundo 2026',
     liveConnecting: 'Conectando al servidor…', liveNotRunning: 'El servidor no está activo.',
     liveRetrying: s => `Reintentando en <span style="font-family:monospace">${s}</span>s…`,
-    liveNoBackend: 'sin servidor', liveBadgeConnecting: 'conectando…',
+    liveNoBackend: 'servidor parado', liveBadgeConnecting: 'conectando…',
     liveNoMatch: 'Ningún partido de la Copa del mundo en curso.',
   },
   en: {
@@ -399,7 +399,7 @@ export const T = {
     liveTitle: 'Live Game', liveSubtitle: 'World Cup 2026',
     liveConnecting: 'Connecting to backend…', liveNotRunning: 'Backend is not running.',
     liveRetrying: s => `Retrying in <span style="font-family:monospace">${s}</span>s…`,
-    liveNoBackend: 'no backend', liveBadgeConnecting: 'connecting…',
+    liveNoBackend: 'server down', liveBadgeConnecting: 'connecting…',
     liveNoMatch: 'No World Cup match currently live.',
   },
 }[_LANG];
