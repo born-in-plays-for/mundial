@@ -1668,10 +1668,10 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat }) => { centroids[id] = projection([lon
 };
 
 Promise.all([
-  fetch('wc2026_map_data.json').then(r => r.json()),
+  fetch('data/wc2026_map_data.json').then(r => r.json()),
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
-  fetch('uk-nations.geojson').then(r => r.json()),
-  fetch('./wc2026_elo_rank.json').then(r => r.json())
+  fetch('data/uk-nations.geojson').then(r => r.json()),
+  fetch('data/wc2026_elo_rank.json').then(r => r.json())
 ]).then(([rawData, world, ukNations, eloData]) => {
   _eloData = eloData;
   app.eloRank = Object.fromEntries(

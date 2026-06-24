@@ -102,7 +102,7 @@ const { backend, socket: sock } = await _waitForBackend();
 PROXY = backend;
 
 // Build name → birth_country lookup from our data with fuzzy matching
-const mapData = await fetch('./wc2026_map_data.json').then(r => r.json());
+const mapData = await fetch('./data/wc2026_map_data.json').then(r => r.json());
 const _norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 const _exactBC = {};    // exact name → birth_country
 const _normBC = {};     // normalized name → birth_country

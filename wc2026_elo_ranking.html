@@ -24,8 +24,8 @@ import { QUALIFIED_BY_NAME, buildEloItems } from './js/qualified.js';
 import { LOCALE, countryName } from './js/i18n.js';
 
 const [eloData, mapData] = await Promise.all([
-  fetch('./wc2026_elo_rank.json').then(r => r.json()),
-  fetch('./wc2026_map_data.json').then(r => r.json()),
+  fetch('./data/wc2026_elo_rank.json').then(r => r.json()),
+  fetch('./data/wc2026_map_data.json').then(r => r.json()),
 ]);
 
 const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));

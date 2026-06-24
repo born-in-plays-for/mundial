@@ -12,9 +12,9 @@ Live at: **https://mundial.cthiebaud.com/**
 
 | Repo | Content | Deploys to |
 |---|---|---|
-| **[cthiebaud/mundial](https://github.com/cthiebaud/mundial)** | Static frontend (HTML, JS, CSS, JSON, infographics, chains) | GitHub Pages |
-| **[cthiebaud/mundial-server](https://github.com/cthiebaud/mundial-server)** | Backend (Flask, admin, login, WebSocket, API-Football proxy) | Runs locally (+ ngrok) |
-| **[cthiebaud/mundial-build](https://github.com/cthiebaud/mundial-build)** | Data pipeline, scripts, dev tooling | Not deployed |
+| **[born-in-plays-for/mundial](https://github.com/born-in-plays-for/mundial)** | Static frontend (HTML, JS, CSS, JSON, infographics, chains) | GitHub Pages |
+| **[born-in-plays-for/mundial-server](https://github.com/born-in-plays-for/mundial-server)** | Backend (Flask, admin, login, WebSocket, API-Football proxy) | Runs locally (+ ngrok) |
+| **[born-in-plays-for/mundial-build](https://github.com/born-in-plays-for/mundial-build)** | Data pipeline, scripts, dev tooling | Not deployed |
 
 The backend repo lives at `../mundial-server` and the build repo at `../mundial-build` (sibling directories). See their own `README.md` files for documentation.
 
@@ -48,6 +48,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `uk-nations.geojson` | 4 UK home nations polygons (Natural Earth 50m) — England, Scotland, Wales, Northern Ireland rendered as separate choropleth features |
 | `wc2026_og_v3.png` | 1200×640 Open Graph preview image for LinkedIn/social |
 | `chains/` | Export chain infographics — see section below |
+| `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
 | `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
 
 ---
@@ -87,7 +88,7 @@ python3 -m http.server 8000
 
 ## Data pipeline
 
-The data pipeline lives in the **[cthiebaud/mundial-build](https://github.com/cthiebaud/mundial-build)** repo (`../mundial-build` sibling directory). Pipeline scripts output JSON/CSV files to this repo's root. See `mundial-build/pipeline/README.md` for full documentation.
+The data pipeline lives in the **[born-in-plays-for/mundial-build](https://github.com/born-in-plays-for/mundial-build)** repo (`../mundial-build` sibling directory). Pipeline scripts output JSON/CSV files to this repo's root. See `mundial-build/pipeline/README.md` for full documentation.
 
 ### Regenerating the OG image
 
@@ -321,16 +322,16 @@ Always use **"country"** (or "pays", "Land", "paese", "país") instead of "natio
 
 **NEVER commit or push unless the user explicitly asks.** Do not commit after making changes — wait for the user to test first. The user will say "commit and push" when ready. Never ask "ready to commit?" either.
 
-**When asked to "commit and push", only commit and push this repo (`cthiebaud/mundial`). Never touch `cthiebaud/mundial-server` or `aequologica.github.io` unless explicitly asked.**
+**When asked to "commit and push", only commit and push this repo (`born-in-plays-for/mundial`). Never touch `born-in-plays-for/mundial-server` or `aequologica.github.io` unless explicitly asked.**
 
 ```bash
 # This repo only
 git add <files> && git commit -m "..." && git push
 ```
 
-The live site is served from the `cthiebaud/mundial` repo at **https://mundial.cthiebaud.com/** via GitHub Pages.
+The live site is served from the `born-in-plays-for/mundial` repo at **https://mundial.cthiebaud.com/** via GitHub Pages.
 
-The backend (`cthiebaud/mundial-server`) runs locally and is exposed via ngrok. It is **not** deployed to GitHub Pages — changes to that repo do not trigger a Pages deploy.
+The backend (`born-in-plays-for/mundial-server`) runs locally and is exposed via ngrok. It is **not** deployed to GitHub Pages — changes to that repo do not trigger a Pages deploy.
 
 `backend_config.json` is the only file in this repo that the backend touches — `mundial-server/start.sh` updates it with the ngrok URL and pushes.
 

@@ -12,9 +12,9 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup showing **where play
 |---|---|
 | https://mundial.cthiebaud.com/ | Entry point — redirects to the map |
 | https://mundial.cthiebaud.com/wc2026_map_exported.html | Main choropleth map |
-| https://mundial.cthiebaud.com/wc2026_correlation.html | Economy vs. player migration scatter plot (GDP/HDI) |
+| https://mundial.cthiebaud.com/pages/wc2026_correlation.html | Economy vs. player migration scatter plot (GDP/HDI) |
 | https://mundial.cthiebaud.com/wc2026_elo_ranking.html | Standalone World Football Elo ranking page |
-| https://mundial.cthiebaud.com/wc2026_elo_history.html | Animated Elo rating history (bar chart race) |
+| https://mundial.cthiebaud.com/pages/wc2026_elo_history.html | Animated Elo rating history (bar chart race) |
 | https://mundial.cthiebaud.com/infographics/wc2026_top_exporters.html | Top birth-country infographic (1080×1920) |
 | https://mundial.cthiebaud.com/infographics/wc2026_top_importers.html | Top importing-country infographic (1080×1920) |
 | https://mundial.cthiebaud.com/wc2026_france_departments.html | France departments choropleth |
@@ -52,7 +52,7 @@ Interactive D3.js choropleth map of the 2026 FIFA World Cup showing **where play
 
 ## Data pipeline
 
-The data pipeline lives in **[cthiebaud/mundial-build](https://github.com/cthiebaud/mundial-build)**. Pipeline scripts output JSON/CSV files to this repo's root.
+The data pipeline lives in **[born-in-plays-for/mundial-build](https://github.com/born-in-plays-for/mundial-build)**. Pipeline scripts output JSON/CSV files to this repo's root.
 
 ## chains/
 
