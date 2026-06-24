@@ -173,7 +173,7 @@ const renderTeam = (lineup, side) => {
   const playerRow = (p, isSub) => {
     const born = getBirthCountry(p.name);
     const isForeign = born && born !== team.name;
-    const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="Born in ${born}"></span>` : '';
+    const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(born)}"></span>` : '';
     return `
     <tr class="${isSub ? 'sub' : ''}">
       <td class="player-num">${p.number}</td>
@@ -194,18 +194,18 @@ const renderTeam = (lineup, side) => {
           const c = lineup.coach;
           const born = getBirthCountry(c.name);
           const isForeign = born && born !== team.name;
-          const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="Born in ${born}"></span>` : '';
+          const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(born)}"></span>` : '';
           return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
             <img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">
             <span class="small">${c.name}${bornTag}</span>
-            <span class="text-muted small ms-auto">Coach</span>
+            <span class="text-muted small ms-auto">${T.liveCoach}</span>
           </div>`;
         })() : ''}
         <table class="table table-sm mb-0">
           <tbody>
-            <tr><td colspan="3" class="fw-bold small text-muted px-3 pt-2">Starting XI</td></tr>
+            <tr><td colspan="3" class="fw-bold small text-muted px-3 pt-2">${T.liveStartXI}</td></tr>
             ${lineup.startXI.map(p => playerRow(p.player, false)).join('')}
-            <tr><td colspan="3" class="fw-bold small text-muted px-3 pt-2">Substitutes</td></tr>
+            <tr><td colspan="3" class="fw-bold small text-muted px-3 pt-2">${T.liveSubs}</td></tr>
             ${(lineup.substitutes ?? []).map(p => playerRow(p.player, true)).join('')}
           </tbody>
         </table>
@@ -265,7 +265,7 @@ const renderStats = (statistics) => {
     return `<div class="stat-row d-flex align-items-center gap-2">
       <span class="stat-val text-end">${hRaw ?? 0}</span>
       <div class="stat-bar-wrap"><div class="stat-bar stat-bar-home" style="width:${hPct}%;margin-left:auto"></div></div>
-      <span class="stat-label">${type}</span>
+      <span class="stat-label">${T.liveStatLabel(type)}</span>
       <div class="stat-bar-wrap"><div class="stat-bar stat-bar-away" style="width:${aPct}%"></div></div>
       <span class="stat-val">${aRaw ?? 0}</span>
     </div>`;
@@ -315,7 +315,7 @@ const renderMatch = (fix, lineups) => {
         ${renderTeam(lineups[1], 'away')}
       </div>`;
   } else {
-    html += `<p class="text-muted small mt-2">Lineups not yet available</p>`;
+    html += `<p class="text-muted small mt-2">${T.liveLineupsNA}</p>`;
   }
 
   html += `</div>`;
@@ -397,7 +397,7 @@ const renderFixtures = async (fixtures) => {
 
 const setPollStatus = (active, fixtures = []) => {
   if (active) {
-    badgeEl.textContent = fixtures.length > 0 ? `live · ${fixtures.length} match${fixtures.length > 1 ? 'es' : ''}` : 'live';
+    badgeEl.textContent = fixtures.length > 0 ? `${T.liveLive} · ${T.liveMatches(fixtures.length)}` : T.liveLive;
     badgeEl.className = 'badge bg-success ms-auto';
     document.getElementById('matches').style.opacity = '';
   } else {
@@ -417,7 +417,7 @@ const _fetchLiveData = async () => {
     renderFixtures(liveData);
     loadingEl.classList.add('d-none');
   } catch {
-    badgeEl.textContent = 'error';
+    badgeEl.textContent = T.liveError;
     badgeEl.className = 'badge bg-danger ms-auto';
   }
 };
