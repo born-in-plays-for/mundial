@@ -21,7 +21,8 @@ jobs:
       - name: Pull latest data
         run: |
           cd data
-          git pull origin main
+          git checkout main
+          git pull --ff-only origin main
 
       - name: Commit and push if changed
         run: |
