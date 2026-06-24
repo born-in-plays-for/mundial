@@ -401,7 +401,7 @@ const setPollStatus = (active, fixtures = []) => {
     badgeEl.className = 'badge bg-success ms-auto';
     document.getElementById('matches').style.opacity = '';
   } else {
-    badgeEl.textContent = 'last known';
+    badgeEl.textContent = T.liveLastKnown;
     badgeEl.className = 'badge bg-warning text-dark ms-auto';
     document.getElementById('matches').style.opacity = '0.5';
   }
