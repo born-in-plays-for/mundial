@@ -12,11 +12,12 @@ Live at: **https://mundial.cthiebaud.com/**
 
 | Repo | Content | Deploys to |
 |---|---|---|
-| **[born-in-plays-for/mundial](https://github.com/born-in-plays-for/mundial)** | Static frontend (HTML, JS, CSS, JSON, infographics, chains) | GitHub Pages |
+| **[born-in-plays-for/mundial](https://github.com/born-in-plays-for/mundial)** | Static frontend (HTML, JS, CSS, infographics, chains) | GitHub Pages |
+| **[born-in-plays-for/mundial-data](https://github.com/born-in-plays-for/mundial-data)** | Shared data files (JSON, GeoJSON) — git submodule in both mundial and mundial-build | Not deployed independently |
 | **[born-in-plays-for/mundial-server](https://github.com/born-in-plays-for/mundial-server)** | Backend (Flask, admin, login, WebSocket, API-Football proxy) | Runs locally (+ ngrok) |
 | **[born-in-plays-for/mundial-build](https://github.com/born-in-plays-for/mundial-build)** | Data pipeline, scripts, dev tooling | Not deployed |
 
-The backend repo lives at `../mundial-server` and the build repo at `../mundial-build` (sibling directories). See their own `README.md` files for documentation.
+The backend repo lives at `../mundial-server` and the build repo at `../mundial-build` (sibling directories). The `data/` submodule (`mundial-data`) is shared between `mundial` and `mundial-build`. See their own `README.md` files for documentation.
 
 ---
 
@@ -42,10 +43,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `css/taxonomy.css` | Canonical pill styling (borders, text colors, dots via CSS) |
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
-| `wc2026_map_data.json` | All data: player exports + natives by birth country + population + `wiki_langs` |
-| `wc2026_elo_rank.json` | Current World Football Elo ratings (fetched at runtime) |
-| `countries.json` | Population + multilingual capital names by ISO numeric id |
-| `uk-nations.geojson` | 4 UK home nations polygons (Natural Earth 50m) — England, Scotland, Wales, Northern Ireland rendered as separate choropleth features |
+| `data/` | Git submodule → `mundial-data` repo. Contains all pipeline-generated data: `wc2026_map_data.json`, `wc2026_elo_rank.json`, `wc2026_elo_history.json`, `countries.json`, `uk-nations.geojson`, `wc2026_gdp.json`, `wc2026_gdp_pc_ppp.json`, `wc2026_hdi.json` |
 | `wc2026_og_v3.png` | 1200×640 Open Graph preview image for LinkedIn/social |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
@@ -88,7 +86,23 @@ python3 -m http.server 8000
 
 ## Data pipeline
 
-The data pipeline lives in the **[born-in-plays-for/mundial-build](https://github.com/born-in-plays-for/mundial-build)** repo (`../mundial-build` sibling directory). Pipeline scripts output JSON/CSV files to this repo's root. See `mundial-build/pipeline/README.md` for full documentation.
+The data pipeline lives in the **[born-in-plays-for/mundial-build](https://github.com/born-in-plays-for/mundial-build)** repo (`../mundial-build` sibling directory). Pipeline scripts output JSON/CSV files to the `data/` submodule (the `mundial-data` repo), which is shared between `mundial` and `mundial-build`. See `mundial-build/pipeline/README.md` for full documentation.
+
+### Data submodule workflow
+
+```bash
+# After running the pipeline in mundial-build:
+cd ../mundial-build/data
+git add -A && git commit -m "update data" && git push
+
+# Then in mundial, pull the latest data:
+cd data
+git pull origin main
+cd ..
+git add data && git commit -m "update data submodule" && git push
+```
+
+All frontend `fetch()` calls reference `data/` paths (e.g. `fetch('data/wc2026_map_data.json')`). Pages in `pages/` use `../data/` since they are one level deeper.
 
 ### Regenerating the OG image
 
@@ -141,11 +155,11 @@ The four home nations (England, Scotland, Wales, Northern Ireland) are handled a
 - `wc2026_players.csv` birth countries: all resolved from city lookup — no "United Kingdom" entries
 - Synthetic IDs (no ISO 3166-1 numeric): `8260=England`, `8261=Scotland`, `8262=Wales`, `8263=Northern Ireland`
 - ISO2 flag codes: `gb-eng`, `gb-sct`, `gb-wls`, `gb-nir`
-- Map rendering: world atlas feature 826 (UK) is **skipped** (flags are filtered by `_eloItemsById.has(id)` — only countries in the Elo rankings get a flag); `uk-nations.geojson` renders the 4 nations as separate polygons
+- Map rendering: world atlas feature 826 (UK) is **skipped** (flags are filtered by `_eloItemsById.has(id)` — only countries in the Elo rankings get a flag); `data/uk-nations.geojson` renders the 4 nations as separate polygons
 - All 4 UK nations render their flag on the map — the UK nation filter covers all four: `f._id === 8260 || f._id === 8261 || f._id === 8262 || f._id === 8263`
 - Scotland centroid manually overridden to `[-4.2, 56.8]` (island bias in auto-centroid)
 - All flags (qualified + non-qualified) placed in a single `forEach` loop filtered by Elo membership
-- Population + capital patched via `pipeline/patch_uk_nations.py` (Wikidata SPARQL for capitals, 2021/22 census populations); stored in `countries.json` under keys `"8260"`–`"8263"` with alpha2 as the lookup key
+- Population + capital patched via `pipeline/patch_uk_nations.py` (Wikidata SPARQL for capitals, 2021/22 census populations); stored in `data/countries.json` under keys `"8260"`–`"8263"` with alpha2 as the lookup key
 
 ### Kosovo (id=383)
 Kosovo is absent from the `iso-3166-1` npm package's numeric table and may be absent from `Intl.DisplayNames`. Special handling:
@@ -159,7 +173,7 @@ Kosovo is absent from the `iso-3166-1` npm package's numeric table and may be ab
   ```
 - `ISO2` map has `383: 'xk'` so `iso2ForId(383)` returns `'xk'`
 - `i18n.js _OVERRIDE` has `383: { fr:'Kosovo', de:'Kosovo', it:'Kosovo', es:'Kosovo', en:'Kosovo' }` — bypasses all ISO lookups
-- Added to `wc2026_elo_rank.json` rankings with `rank: null, pts: null, fifaMember: true` (not on eloratings.net)
+- Added to `data/wc2026_elo_rank.json` rankings with `rank: null, pts: null, fifaMember: true` (not on eloratings.net)
 - Patched via `pipeline/patch_kosovo.py` (Wikidata SPARQL for Pristina translations, World Bank 2022 population)
 
 ### Small island countries (standalone flags)
@@ -277,21 +291,21 @@ The filter sidebar's natural height is measured before its first collapse (`clas
 Order matters for SVG z-layering:
 1. World choropleth paths (skip 826)
 2. Mesh borders
-3. UK nation paths (from `uk-nations.geojson`)
+3. UK nation paths (from `data/uk-nations.geojson`)
 4. `arcsGroup` (below all flags)
 5. Leader lines (ocean-clipped)
 6. All flags via unified `forEach` (filtered by `_eloItemsById`)
 7. Standalone dots + flags (Cape Verde, Curaçao)
 8. UK nation flags
 
-### `countries.json` — population + capital lookup
-`countries.json` (project root) is the canonical source for population and multilingual capital city names. Shape:
+### `data/countries.json` — population + capital lookup
+`data/countries.json` (in the `mundial-data` submodule) is the canonical source for population and multilingual capital city names. Shape:
 ```json
 { "250": { "id": 250, "alpha2": "fr", "alpha3": "fra", "name": "France",
            "capital": {"en":"Paris","fr":"Paris","de":"Paris","it":"Parigi","es":"París"},
            "population": 68374591 } }
 ```
-Keys are ISO numeric ids (strings). Special entries: `"8260"`–`"8263"` (UK home nations, alpha2 = `gb-eng` etc.) and `"383"` (Kosovo, alpha2 = `xk`). The pipeline reads this file in `build_json.py` to populate `pop` and `capital` in `wc2026_map_data.json` (looked up by lowercase alpha2).
+Keys are ISO numeric ids (strings). Special entries: `"8260"`–`"8263"` (UK home nations, alpha2 = `gb-eng` etc.) and `"383"` (Kosovo, alpha2 = `xk`). The pipeline reads this file in `build_json.py` to populate `pop` and `capital` in `data/wc2026_map_data.json` (looked up by lowercase alpha2).
 
 Generated by: `pipeline/fetch_countries.py` (mledoze + World Bank + Wikidata). Post-patched by `pipeline/patch_uk_nations.py` and `pipeline/patch_kosovo.py`.
 
