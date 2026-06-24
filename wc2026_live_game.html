@@ -530,12 +530,22 @@ const renderStandings = (fixtures) => {
   `;}).join('');
 };
 
+const _openAccordions = new Set();
+
 const renderSelectedFixture = async () => {
   const matchesEl = document.getElementById('matches');
+  matchesEl.querySelectorAll('.accordion-collapse.show').forEach(el => _openAccordions.add(el.id.replace(/^acc-(stats|lineups)-\d+$/, '$1')));
   const fix = allFixtures.find(f => f.fixture.id === selectedFixId);
   if (!fix) { matchesEl.innerHTML = ''; return; }
   const lineups = await fetchLineups(fix.fixture.id);
   matchesEl.innerHTML = renderMatch(fix, lineups);
+  const fid = fix.fixture.id;
+  for (const section of _openAccordions) {
+    const el = document.getElementById(`acc-${section}-${fid}`);
+    if (el) el.classList.add('show');
+    const btn = el?.previousElementSibling?.querySelector('.accordion-button');
+    if (btn) btn.classList.remove('collapsed');
+  }
 };
 
 const renderSelector = () => {
