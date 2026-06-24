@@ -12,7 +12,7 @@ Live at: **https://mundial.cthiebaud.com/**
 
 | Repo | Content | Deploys to |
 |---|---|---|
-| **[born-in-plays-for/mundial](https://github.com/born-in-plays-for/mundial)** | Static frontend (HTML, JS, CSS, infographics, chains) | GitHub Pages |
+| **[born-in-plays-for/mundial](https://github.com/born-in-plays-for/mundial)** | Static frontend (HTML, JS, CSS, chains) | GitHub Pages |
 | **[born-in-plays-for/mundial-data](https://github.com/born-in-plays-for/mundial-data)** | Shared data files (JSON, GeoJSON) — git submodule in both mundial and mundial-build | Not deployed independently |
 | **[born-in-plays-for/mundial-server](https://github.com/born-in-plays-for/mundial-server)** | Backend (Flask, admin, login, WebSocket, API-Football proxy) | Runs locally (+ ngrok) |
 | **[born-in-plays-for/mundial-build](https://github.com/born-in-plays-for/mundial-build)** | Data pipeline, scripts, dev tooling | Not deployed |
@@ -353,47 +353,6 @@ The backend (`born-in-plays-for/mundial-server`) runs locally and is exposed via
 
 After deploying, re-scrape LinkedIn preview:
 **https://www.linkedin.com/post-inspector/**
-
----
-
-## Social card infographics (`infographics/`)
-
-Vertical 1080×1920 cards for Instagram/LinkedIn, rendered as JPGs via Playwright.
-
-### Files
-
-| File | Purpose |
-|---|---|
-| `wc2026_top_exporters.html` | Top 5 birth countries by raw player count |
-| `wc2026_top_importers.html` | Top importing countries (players born elsewhere) |
-| `wc2026_top_exporters.jpg` | Rendered output |
-| `wc2026_top_importers.jpg` | Rendered output |
-| `3664.jpeg` | Background photo (used by top_exporters) |
-
-### Design
-
-- Body fixed at 1080×1920px, `overflow: hidden`
-- `.bg` layer: `background-image` + `filter: brightness(…) saturate(…)`
-- `.overlay` layer: `linear-gradient` for readability
-- `.content` layer: `z-index:1`, flex column, `padding: 110px 90px 90px`
-- Flags via `circle-flags` CDN (`cdn.jsdelivr.net/npm/circle-flags@2/flags/<code>.svg`)
-- Amber accent: `#fbbf24` / `#d97706`; bars use `linear-gradient(90deg, #d97706, #fbbf24)`
-
-### Rendering
-
-Requires the local server running (`python3 -m http.server 8000`).
-
-```python
-from playwright.sync_api import sync_playwright
-with sync_playwright() as p:
-    browser = p.chromium.launch()
-    page = browser.new_page(viewport={"width": 1080, "height": 1920})
-    page.goto("http://localhost:8000/infographics/wc2026_top_exporters.html",
-              wait_until="networkidle", timeout=30000)
-    page.wait_for_timeout(2000)
-    page.screenshot(path="infographics/wc2026_top_exporters.jpg")
-    browser.close()
-```
 
 ---
 
