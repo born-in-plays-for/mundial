@@ -77,17 +77,20 @@ body { background: #f5f2ec; }
   <div id="group-standings" class="mb-3"></div>
   <div id="no-match" class="alert alert-secondary d-none">No World Cup match currently live.</div>
   <div id="matches"></div>
-  <div id="loading" class="text-muted small">Connecting to backend…</div>
+  <div id="loading" class="text-muted small d-flex align-items-center gap-2">
+    <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
+    <span>Connecting to backend…</span>
+  </div>
 </div>
 
 <script type="module">
-import { T, wikiUrl } from './js/i18n.js';
+import { T, wikiUrl, regionName } from './js/i18n.js';
 
 document.getElementById('live-title').textContent = T.liveTitle(0);
 document.getElementById('live-subtitle').textContent = T.liveSubtitle;
 document.getElementById('ws-status').textContent = T.liveBadgeConnecting;
 document.getElementById('no-match').textContent = T.liveNoMatch;
-document.getElementById('loading').textContent = T.liveConnecting;
+document.getElementById('loading').querySelector('span').textContent = T.liveConnecting;
 
 let PROXY;
 const authBar = document.querySelector('mundial-auth-bar');
@@ -115,6 +118,8 @@ const _waitForBackend = () => new Promise(resolve => {
 });
 
 const loadingEl = document.getElementById('loading');
+const loadingSpinner = loadingEl.querySelector('.spinner-border');
+const loadingText = loadingEl.querySelector('span');
 const badgeEl = document.getElementById('ws-status');
 
 const retryBtn = document.getElementById('ws-retry');
@@ -122,7 +127,8 @@ const retryBtn = document.getElementById('ws-retry');
 authBar.addEventListener('auth-bar-offline', () => {
   badgeEl.textContent = T.liveNoBackend;
   badgeEl.className = 'badge bg-warning text-dark';
-  loadingEl.textContent = T.liveNotRunning;
+  loadingSpinner.classList.add('d-none');
+  loadingText.textContent = T.liveNotRunning;
   loadingEl.classList.remove('d-none');
   retryBtn.classList.remove('d-none');
 });
@@ -135,7 +141,9 @@ retryBtn.addEventListener('click', () => {
   retryBtn.classList.add('d-none');
   badgeEl.textContent = T.liveBadgeConnecting;
   badgeEl.className = 'badge bg-secondary';
-  loadingEl.textContent = T.liveConnecting;
+  loadingSpinner.classList.remove('d-none');
+  loadingText.textContent = T.liveConnecting;
+  loadingEl.classList.remove('d-none');
   authBar._init();
 });
 
@@ -234,6 +242,8 @@ const flagCode = name => {
   return MAP[name] ?? name.toLowerCase().slice(0, 2);
 };
 
+const localName = name => regionName(flagCode(name), name);
+
 const posLabel = pos => ({G:'GK', D:'DF', M:'MF', F:'FW'}[pos] ?? pos ?? '');
 
 const renderTeam = (lineup, side) => {
@@ -244,7 +254,7 @@ const renderTeam = (lineup, side) => {
   const playerRow = (p, isSub) => {
     const born = getBirthCountry(p.name);
     const isForeign = born && born !== team.name;
-    const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(born)}"></span>` : '';
+    const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(localName(born))}"></span>` : '';
     return `
     <tr class="${isSub ? 'sub' : ''}">
       <td class="player-num">${p.number}</td>
@@ -257,7 +267,7 @@ const renderTeam = (lineup, side) => {
     <div class="lineup-card card flex-fill">
       <div class="card-header d-flex align-items-center gap-2 ${side === 'home' ? '' : 'flex-row-reverse'}">
         <span class="fi fi-${iso} team-flag"></span>
-        <span class="fw-bold">${team.name}</span>
+        <span class="fw-bold">${localName(team.name)}</span>
         <span class="text-muted ms-auto">${formation}</span>
       </div>
       <div class="card-body p-0">
@@ -265,7 +275,7 @@ const renderTeam = (lineup, side) => {
           const c = lineup.coach;
           const born = getBirthCountry(c.name);
           const isForeign = born && born !== team.name;
-          const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(born)}"></span>` : '';
+          const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(localName(born))}"></span>` : '';
           return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
             <img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">
             <span class="small">${wikiLink(c.name)}${bornTag}</span>
@@ -361,9 +371,9 @@ const renderMatch = (fix, lineups) => {
         <div class="card-header">
           <div class="d-flex justify-content-center align-items-center gap-3 py-2">
             <span class="fi fi-${homeISO} team-flag"></span>
-            <span class="fw-bold">${home.name}</span>
+            <span class="fw-bold">${localName(home.name)}</span>
             <span class="fs-3 fw-bold px-2" style="white-space:nowrap">${score.home ?? '–'} — ${score.away ?? '–'}</span>
-            <span class="fw-bold">${away.name}</span>
+            <span class="fw-bold">${localName(away.name)}</span>
             <span class="fi fi-${awayISO} team-flag"></span>
           </div>
           <div class="text-center text-muted small">
@@ -516,16 +526,16 @@ const explainRanking = (teams) => {
     while (j < teams.length && teams[j].pts === teams[i].pts) j++;
     if (j - i > 1) {
       const tied = teams.slice(i, j);
-      const names = tied.map(t => t.name);
+      const names = tied.map(t => localName(t.name));
       lines.push(`<strong>${names.join(', ')}</strong> are tied on <strong>${tied[0].pts} pts</strong>.`);
       for (let k = 0; k < tied.length - 1; k++) {
         const a = tied[k], b = tied[k + 1];
         if (a.gd !== b.gd) {
-          lines.push(`&ensp;${a.name} ranks above ${b.name}: goal difference ${a.gd > 0 ? '+' : ''}${a.gd} vs ${b.gd > 0 ? '+' : ''}${b.gd}.`);
+          lines.push(`&ensp;${localName(a.name)} ranks above ${localName(b.name)}: goal difference ${a.gd > 0 ? '+' : ''}${a.gd} vs ${b.gd > 0 ? '+' : ''}${b.gd}.`);
         } else if (a.gf !== b.gf) {
-          lines.push(`&ensp;${a.name} ranks above ${b.name}: goals scored ${a.gf} vs ${b.gf}.`);
+          lines.push(`&ensp;${localName(a.name)} ranks above ${localName(b.name)}: goals scored ${a.gf} vs ${b.gf}.`);
         } else {
-          lines.push(`&ensp;${a.name} and ${b.name} are identical on GD and GF — head-to-head not yet implemented.`);
+          lines.push(`&ensp;${localName(a.name)} and ${localName(b.name)} are identical on GD and GF — head-to-head not yet implemented.`);
         }
       }
     }
@@ -557,9 +567,9 @@ const renderGroupResults = (letter, teamToGroup) => {
   return matches.map(f => {
     const h = f.teams.home, a = f.teams.away;
     return `<div class="grp-result">
-      <span class="grp-result-home">${h.name} <span class="fi fi-${flagCode(h.name)}" style="font-size:12px"></span></span>
+      <span class="grp-result-home">${localName(h.name)} <span class="fi fi-${flagCode(h.name)}" style="font-size:12px"></span></span>
       <span class="grp-result-score">${f.goals.home}</span><span class="grp-result-score">${f.goals.away}</span>
-      <span class="grp-result-away"><span class="fi fi-${flagCode(a.name)}" style="font-size:12px"></span> ${a.name}</span>
+      <span class="grp-result-away"><span class="fi fi-${flagCode(a.name)}" style="font-size:12px"></span> ${localName(a.name)}</span>
     </div>`;
   }).join('');
 };
@@ -603,7 +613,7 @@ const renderStandings = (fixtures) => {
             const iso = flagCode(t.name);
             return `<tr class="${cls} ${playing}">
               <td><span class="fi fi-${iso}" style="font-size:14px"></span></td>
-              <td class="grp-team">${t.name}</td>
+              <td class="grp-team">${localName(t.name)}</td>
               <td class="grp-num">${t.played}</td><td class="grp-num">${t.win}</td>
               <td class="grp-num">${t.draw}</td><td class="grp-num">${t.lose}</td>
               <td class="grp-num grp-gfga">${t.gf}</td><td class="grp-num grp-gfga">${t.ga}</td>
