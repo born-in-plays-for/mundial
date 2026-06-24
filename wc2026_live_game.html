@@ -49,6 +49,8 @@ body { background: #f5f2ec; }
 .fix-pill { cursor: pointer; border: 1px solid #dee2e6; border-radius: 20px; padding: 4px 12px; font-size: 12px; background: #fff; transition: all .15s; white-space: nowrap; }
 .fix-pill:hover { border-color: #999; }
 .fix-pill.active { background: #1C274C; color: #fff; border-color: #1C274C; }
+.pt-wiki { color: inherit; border-bottom: 1px dotted #888; }
+.pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
 </style>
 </head>
 <body>
@@ -78,7 +80,7 @@ body { background: #f5f2ec; }
 </div>
 
 <script type="module">
-import { T } from './js/i18n.js';
+import { T, wikiUrl } from './js/i18n.js';
 
 document.getElementById('live-title').textContent = T.liveTitle(0);
 document.getElementById('live-subtitle').textContent = T.liveSubtitle;
@@ -146,14 +148,22 @@ const _exactBC = {};    // exact name → birth_country
 const _normBC = {};     // normalized name → birth_country
 const _lastNameBC = {}; // normalized last name → birth_country (only if unique)
 const _lastNameConflict = new Set();
+const _exactWiki = {};  // exact name → wiki_langs
+const _normWiki = {};   // normalized name → wiki_langs
+const _lastNameWiki = {};
 
 for (const rec of mapData.data) {
   for (const p of rec.players) {
     _exactBC[p.name] = rec.country;
     _normBC[_norm(p.name)] = rec.country;
+    if (p.wiki_langs) {
+      _exactWiki[p.name] = p.wiki_langs;
+      _normWiki[_norm(p.name)] = p.wiki_langs;
+    }
     const last = _norm(p.name.split(' ').pop());
     if (_lastNameBC[last] && _lastNameBC[last] !== rec.country) _lastNameConflict.add(last);
     _lastNameBC[last] = rec.country;
+    if (p.wiki_langs) _lastNameWiki[last] = p.wiki_langs;
   }
 }
 
@@ -169,6 +179,28 @@ const getBirthCountry = (apiName) => {
     if (key.includes(n) || n.includes(key)) return country;
   }
   return null;
+};
+
+const getWikiLangs = (apiName) => {
+  if (_exactWiki[apiName]) return _exactWiki[apiName];
+  const n = _norm(apiName);
+  if (_normWiki[n]) return _normWiki[n];
+  const last = _norm(apiName.split(' ').pop());
+  if (_lastNameWiki[last] && !_lastNameConflict.has(last)) return _lastNameWiki[last];
+  for (const [key, wl] of Object.entries(_normWiki)) {
+    if (key.includes(n) || n.includes(key)) return wl;
+  }
+  return null;
+};
+
+const wikiLink = (name) => {
+  const wl = getWikiLangs(name);
+  if (!wl) return name;
+  const url = wikiUrl({ wiki_langs: wl });
+  const en = wl.en ?? null;
+  if (url) return `<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${name}</a>`;
+  if (en) return `${name} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)`;
+  return name;
 };
 
 const flagCode = name => {
@@ -216,7 +248,7 @@ const renderTeam = (lineup, side) => {
     <tr class="${isSub ? 'sub' : ''}">
       <td class="player-num">${p.number}</td>
       <td class="player-pos"><small>${posLabel(p.pos)}</small></td>
-      <td>${p.name}${bornTag}</td>
+      <td>${wikiLink(p.name)}${bornTag}</td>
     </tr>`;
   };
 
@@ -235,7 +267,7 @@ const renderTeam = (lineup, side) => {
           const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(born)}"></span>` : '';
           return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
             <img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">
-            <span class="small">${c.name}${bornTag}</span>
+            <span class="small">${wikiLink(c.name)}${bornTag}</span>
             <span class="text-muted small ms-auto">${T.liveCoach}</span>
           </div>`;
         })() : ''}
