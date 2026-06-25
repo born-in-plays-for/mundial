@@ -142,6 +142,7 @@ authBar.addEventListener('auth-bar-offline', (e) => {
   loadingText.textContent = T.liveNotRunning;
   loadingEl.classList.remove('d-none');
   retryBtn.classList.remove('d-none');
+  document.getElementById('no-match').classList.add('d-none');
 });
 
 authBar.addEventListener('auth-bar-online', () => {
@@ -699,7 +700,7 @@ const renderFixtures = async (fixtures) => {
   allFixtures = fixtures;
 
   if (fixtures.length === 0) {
-    document.getElementById('no-match').classList.remove('d-none');
+    if (_pollActive) document.getElementById('no-match').classList.remove('d-none');
     document.getElementById('fix-selector').classList.add('d-none');
     document.getElementById('matches').innerHTML = '';
     selectedFixId = null;
@@ -717,7 +718,9 @@ const renderFixtures = async (fixtures) => {
   await renderSelectedFixture();
 };
 
+let _pollActive = false;
 const setPollStatus = (active, fixtures = []) => {
+  _pollActive = active;
   if (active) {
     const text = fixtures.length > 0 ? `${T.liveLive} · ${T.liveMatches(fixtures.length)}` : T.liveLive;
     setBadge(text, 'bg-success', 'radio-minimalistic-svgrepo-com.svg');
@@ -740,6 +743,7 @@ const _fetchLiveData = async () => {
     loadingEl.classList.add('d-none');
   } catch {
     setBadge(T.liveError, 'bg-danger', 'shield-warning-svgrepo-com.svg');
+    document.getElementById('no-match').classList.add('d-none');
   }
 };
 
