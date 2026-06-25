@@ -25,11 +25,15 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Get data submodule SHA
+        id: data-sha
+        run: echo "sha=$(git rev-parse HEAD:data)" >> $GITHUB_OUTPUT
+
       - uses: actions/cache@v4
         id: submodule-cache
         with:
           path: data
-          key: data-${{ hashFiles('.gitmodules', 'data') }}
+          key: data-${{ steps.data-sha.outputs.sha }}
 
       - if: steps.submodule-cache.outputs.cache-hit != 'true'
         run: git submodule update --init --depth 1 data
