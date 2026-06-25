@@ -8,7 +8,7 @@ svg { display: block; width: 100%; height: auto; }
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
 body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
-#zoom-reset, #zoom-span, #scroll-top-btn { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--text-muted); line-height: 1; font-size: 14px; width: 28px; height: 26px; padding: 0; display: flex; align-items: center; justify-content: center; }
+#zoom-reset, #zoom-span, #scroll-top-btn { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
 #scroll-top-btn { display: none; }
 #scroll-top-btn.visible { display: flex; }
 #zoom-reset:disabled, #zoom-span:disabled { opacity: 0.35; cursor: default; }
