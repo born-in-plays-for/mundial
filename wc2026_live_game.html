@@ -65,9 +65,10 @@ body { background: #f5f2ec; }
       <p id="live-subtitle" class="text-muted small mb-0">World Cup 2026</p>
     </div>
     <div class="ms-auto d-flex flex-column align-items-end gap-1">
-      <span class="d-flex align-items-center gap-1">
+      <span class="d-flex align-items-center gap-2">
+        <span id="ws-icon"></span>
         <span id="ws-status" class="badge bg-secondary">connecting…</span>
-        <button id="ws-retry" class="btn btn-sm btn-outline-warning d-none" style="font-size:11px;padding:2px 8px">↻</button>
+        <button id="ws-retry" class="btn btn-sm btn-outline-secondary d-none" style="font-size:11px;padding:2px 8px">↻</button>
       </span>
       <a href="https://dashboard.api-football.com/" target="_blank" rel="noopener" class="btn btn-light btn-sm text-muted text-decoration-none fs-6 lh-1 px-2 py-1">API</a>
     </div>
@@ -88,7 +89,6 @@ import { T, wikiUrl, regionName } from './js/i18n.js';
 
 document.getElementById('live-title').textContent = T.liveTitle(0);
 document.getElementById('live-subtitle').textContent = T.liveSubtitle;
-document.getElementById('ws-status').textContent = T.liveBadgeConnecting;
 document.getElementById('no-match').textContent = T.liveNoMatch;
 document.getElementById('loading').querySelector('span').textContent = T.liveConnecting;
 
@@ -121,12 +121,23 @@ const loadingEl = document.getElementById('loading');
 const loadingSpinner = loadingEl.querySelector('.spinner-border');
 const loadingText = loadingEl.querySelector('span');
 const badgeEl = document.getElementById('ws-status');
+const iconEl = document.getElementById('ws-icon');
+const setBadge = (text, cls, icon) => {
+  iconEl.innerHTML = icon.includes('.svg') ? `<img src="images/solar_linear/${icon}" width="24" height="24">` : icon;
+  badgeEl.textContent = text;
+  badgeEl.className = `badge ${cls}`;
+};
+setBadge(T.liveBadgeConnecting, 'bg-secondary', 'link-svgrepo-com.svg');
 
 const retryBtn = document.getElementById('ws-retry');
 
-authBar.addEventListener('auth-bar-offline', () => {
-  badgeEl.textContent = T.liveNoBackend;
-  badgeEl.className = 'badge bg-warning text-dark';
+authBar.addEventListener('auth-bar-offline', (e) => {
+  const cat = e.detail?.category;
+  if (cat === 'connection') {
+    setBadge(T.liveError, 'bg-danger', 'shield-warning-svgrepo-com.svg');
+  } else {
+    setBadge(T.liveNoBackend, 'bg-warning text-dark', 'plug-circle-svgrepo-com.svg');
+  }
   loadingSpinner.classList.add('d-none');
   loadingText.textContent = T.liveNotRunning;
   loadingEl.classList.remove('d-none');
@@ -139,8 +150,7 @@ authBar.addEventListener('auth-bar-online', () => {
 
 retryBtn.addEventListener('click', () => {
   retryBtn.classList.add('d-none');
-  badgeEl.textContent = T.liveBadgeConnecting;
-  badgeEl.className = 'badge bg-secondary';
+  setBadge(T.liveBadgeConnecting, 'bg-secondary', 'link-svgrepo-com.svg');
   loadingSpinner.classList.remove('d-none');
   loadingText.textContent = T.liveConnecting;
   loadingEl.classList.remove('d-none');
@@ -709,12 +719,11 @@ const renderFixtures = async (fixtures) => {
 
 const setPollStatus = (active, fixtures = []) => {
   if (active) {
-    badgeEl.textContent = fixtures.length > 0 ? `${T.liveLive} · ${T.liveMatches(fixtures.length)}` : T.liveLive;
-    badgeEl.className = 'badge bg-success ms-auto';
+    const text = fixtures.length > 0 ? `${T.liveLive} · ${T.liveMatches(fixtures.length)}` : T.liveLive;
+    setBadge(text, 'bg-success', 'radio-minimalistic-svgrepo-com.svg');
     document.getElementById('matches').style.opacity = '';
   } else {
-    badgeEl.textContent = T.liveLastKnown;
-    badgeEl.className = 'badge bg-warning text-dark ms-auto';
+    setBadge(T.liveLastKnown, 'bg-warning text-dark', '🙈🙉🙊');
     document.getElementById('matches').style.opacity = '0.5';
   }
 };
@@ -729,8 +738,7 @@ const _fetchLiveData = async () => {
     renderFixtures(liveData);
     loadingEl.classList.add('d-none');
   } catch {
-    badgeEl.textContent = T.liveError;
-    badgeEl.className = 'badge bg-danger ms-auto';
+    setBadge(T.liveError, 'bg-danger', 'shield-warning-svgrepo-com.svg');
   }
 };
 
