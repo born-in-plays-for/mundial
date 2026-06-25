@@ -66,7 +66,7 @@ body { background: #f5f2ec; }
       <p id="live-subtitle" class="text-muted small mb-0">World Cup 2026</p>
     </div>
     <div class="ms-auto d-flex flex-column align-items-end gap-1">
-      <span class="hstack gap-1">
+      <span class="hstack gap-1 align-items-center">
         <span id="ws-icon"></span>
         <span id="ws-status" class="badge bg-secondary">connecting…</span>
         <button id="ws-retry" class="btn btn-sm btn-outline-secondary d-none" style="font-size:11px;padding:2px 8px">↻</button>
@@ -300,7 +300,7 @@ const renderTeam = (lineup, side) => {
           const isForeign = born && born !== team.name;
           const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(localName(born))}"></span>` : '';
           return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
-            <img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">
+            ${c.photo ? `<img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">` : ''}
             <span class="small">${wikiLink(c.name)}${bornTag}</span>
             <span class="text-muted small ms-auto">${T.liveCoach}</span>
           </div>`;
@@ -413,19 +413,15 @@ const renderMatch = (fix, lineups) => {
 
   html += `<div class="accordion mt-2" id="acc-${fid}">`;
 
-  if (events.length > 0) {
+  if (!untracked) {
     html += `
-      <div class="accordion-item${untracked ? ' d-none' : ''}">
+      <div class="accordion-item">
         <h2 class="accordion-header"><button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#acc-events-${fid}">${T.liveEvents ?? 'Events'}</button></h2>
         <div id="acc-events-${fid}" class="accordion-collapse collapse" data-bs-parent="#acc-${fid}">
           <div class="accordion-body py-2 px-3">${events.map(renderEvent).join('')}</div>
         </div>
-      </div>`;
-  }
-
-  if (statsHtml) {
-    html += `
-      <div class="accordion-item${untracked ? ' d-none' : ''}">
+      </div>
+      <div class="accordion-item">
         <h2 class="accordion-header"><button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#acc-stats-${fid}">${T.liveStats ?? 'Statistics'}</button></h2>
         <div id="acc-stats-${fid}" class="accordion-collapse collapse" data-bs-parent="#acc-${fid}">
           <div class="accordion-body py-2 px-3">${statsHtml}</div>
