@@ -415,7 +415,7 @@ const renderMatch = (fix, lineups) => {
 
   if (events.length > 0) {
     html += `
-      <div class="accordion-item">
+      <div class="accordion-item${untracked ? ' d-none' : ''}">
         <h2 class="accordion-header"><button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#acc-events-${fid}">${T.liveEvents ?? 'Events'}</button></h2>
         <div id="acc-events-${fid}" class="accordion-collapse collapse" data-bs-parent="#acc-${fid}">
           <div class="accordion-body py-2 px-3">${events.map(renderEvent).join('')}</div>
@@ -425,7 +425,7 @@ const renderMatch = (fix, lineups) => {
 
   if (statsHtml) {
     html += `
-      <div class="accordion-item">
+      <div class="accordion-item${untracked ? ' d-none' : ''}">
         <h2 class="accordion-header"><button class="accordion-button collapsed py-2 small" type="button" data-bs-toggle="collapse" data-bs-target="#acc-stats-${fid}">${T.liveStats ?? 'Statistics'}</button></h2>
         <div id="acc-stats-${fid}" class="accordion-collapse collapse" data-bs-parent="#acc-${fid}">
           <div class="accordion-body py-2 px-3">${statsHtml}</div>
@@ -735,12 +735,14 @@ const renderFixtures = async (fixtures) => {
 
 let _pollActive = false;
 const _fixtureCount = (fixtures) => Array.isArray(fixtures) ? fixtures.length : Object.keys(fixtures ?? {}).length;
-const setPollStatus = (tracking, fixtures = {}) => {
-  _pollActive = tracking;
-  if (tracking) {
-    const n = _fixtureCount(fixtures);
-    const text = n > 0 ? `${T.liveLive} · ${T.liveMatches(n)}` : T.liveLive;
-    setBadge(text, 'bg-success', 'radio-minimalistic-svgrepo-com.svg');
+const setPollStatus = (discovering, tracking, fixtures = {}) => {
+  const active = discovering || tracking;
+  _pollActive = active;
+  if (active && _fixtureCount(fixtures) > 0) {
+    setBadge(T.liveLive, 'bg-success', 'radio-minimalistic-svgrepo-com.svg');
+    document.getElementById('matches').style.opacity = '';
+  } else if (active) {
+    setBadge(T.liveSearching, 'bg-info', 'radio-minimalistic-svgrepo-com.svg');
     document.getElementById('matches').style.opacity = '';
   } else {
     setBadge(T.liveLastKnown, 'bg-warning text-dark', '<span style="white-space:nowrap">🙈🙉🙊</span>');
@@ -751,11 +753,11 @@ const setPollStatus = (tracking, fixtures = {}) => {
 
 const _fetchLiveData = async () => {
   try {
-    const [{tracking, fixtures: trackedIds}, liveData] = await Promise.all([
+    const [{discovering, tracking, fixtures: trackedIds}, liveData] = await Promise.all([
       fetch(`${PROXY}/api/poll/active`, {headers: _h}).then(r => r.json()),
       fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json()),
     ]);
-    setPollStatus(tracking, trackedIds);
+    setPollStatus(discovering ?? false, tracking, trackedIds);
     renderFixtures(liveData);
     loadingEl.classList.add('d-none');
   } catch {
@@ -777,8 +779,8 @@ await _fetchLiveData();
 
 authBar.addEventListener('auth-bar-online', () => _fetchLiveData());
 
-sock.on('poll_status', ({tracking, fixtures: trackedFixtures}) => {
-  setPollStatus(tracking, trackedFixtures ?? {});
+sock.on('poll_status', ({discovering, tracking, fixtures: trackedFixtures}) => {
+  setPollStatus(discovering ?? false, tracking, trackedFixtures ?? {});
 });
 
 sock.on('live_update', (fixtures) => {
