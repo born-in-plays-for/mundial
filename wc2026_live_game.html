@@ -723,7 +723,7 @@ const setPollStatus = (active, fixtures = []) => {
     setBadge(text, 'bg-success', 'radio-minimalistic-svgrepo-com.svg');
     document.getElementById('matches').style.opacity = '';
   } else {
-    setBadge(T.liveLastKnown, 'bg-warning text-dark', '🙈🙉🙊');
+    setBadge(T.liveLastKnown, 'bg-warning text-dark', '<span style="white-space:nowrap">🙈🙉🙊</span>');
     document.getElementById('matches').style.opacity = '0.5';
   }
 };
