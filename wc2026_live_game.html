@@ -50,6 +50,7 @@ body { background: #f5f2ec; }
 .fix-pill { cursor: pointer; border: 1px solid #dee2e6; border-radius: 20px; padding: 4px 12px; font-size: 12px; background: #fff; transition: all .15s; white-space: nowrap; }
 .fix-pill:hover { border-color: #999; }
 .fix-pill.active { background: #1C274C; color: #fff; border-color: #1C274C; }
+.fix-pill-untracked { opacity: 0.5; border-style: dashed; }
 .pt-wiki { color: inherit; border-bottom: 1px dotted #888; }
 .pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
 </style>
@@ -242,7 +243,7 @@ const flagCode = name => {
     'Slovenia':'si','Slovakia':'sk','Georgia':'ge','New Zealand':'nz',
     'China':'cn','Indonesia':'id','India':'in','Iraq':'iq','Jordan':'jo',
     'Uzbekistan':'uz','Palestine':'ps','Syria':'sy','Bahrain':'bh','Oman':'om',
-    'Kuwait':'kw','Cape Verde':'cv','DR Congo':'cd','Mali':'ml',
+    'Kuwait':'kw','Cape Verde':'cv','Curaçao':'cw','Curacao':'cw','DR Congo':'cd','Mali':'ml',
     'Burkina Faso':'bf','Guinea':'gn','Mozambique':'mz','Tanzania':'tz',
     'South Africa':'za','Kenya':'ke','Uganda':'ug','Zimbabwe':'zw',
     'Zambia':'zm','Angola':'ao','Benin':'bj','Togo':'tg','Niger':'ne',
@@ -376,8 +377,10 @@ const renderMatch = (fix, lineups) => {
   const homeISO = flagCode(home.name);
   const awayISO = flagCode(away.name);
 
+  const untracked = fix._tracked === false;
+
   let html = `
-    <div class="mb-4">
+    <div class="mb-4" ${untracked ? 'style="opacity:0.5"' : ''}>
       <div class="card">
         <div class="card-header">
           <div class="d-flex justify-content-center align-items-center gap-3 py-2">
@@ -678,8 +681,9 @@ const renderSelector = () => {
     const a = fix.teams.away;
     const s = fix.fixture.status;
     const active = fix.fixture.id === selectedFixId ? 'active' : '';
+    const untracked = fix._tracked === false ? 'fix-pill-untracked' : '';
     const elapsed = s.elapsed && !['HT','FT','AET','PEN','BT','ET'].includes(s.short) ? ` · ${s.elapsed}${s.extra ? '+' + s.extra : ''}'` : '';
-    return `<span class="fix-pill ${active}" data-fid="${fix.fixture.id}">
+    return `<span class="fix-pill ${active} ${untracked}" data-fid="${fix.fixture.id}">
       <span class="fi fi-${flagCode(h.name)}" style="font-size:11px"></span>
       ${fix.goals.home ?? '–'}–${fix.goals.away ?? '–'}
       <span class="fi fi-${flagCode(a.name)}" style="font-size:11px"></span>${elapsed}
@@ -719,10 +723,12 @@ const renderFixtures = async (fixtures) => {
 };
 
 let _pollActive = false;
-const setPollStatus = (tracking, fixtures = []) => {
+const _fixtureCount = (fixtures) => Array.isArray(fixtures) ? fixtures.length : Object.keys(fixtures ?? {}).length;
+const setPollStatus = (tracking, fixtures = {}) => {
   _pollActive = tracking;
   if (tracking) {
-    const text = fixtures.length > 0 ? `${T.liveLive} · ${T.liveMatches(fixtures.length)}` : T.liveLive;
+    const n = _fixtureCount(fixtures);
+    const text = n > 0 ? `${T.liveLive} · ${T.liveMatches(n)}` : T.liveLive;
     setBadge(text, 'bg-success', 'radio-minimalistic-svgrepo-com.svg');
     document.getElementById('matches').style.opacity = '';
   } else {
@@ -760,8 +766,8 @@ await _fetchLiveData();
 
 authBar.addEventListener('auth-bar-online', () => _fetchLiveData());
 
-sock.on('poll_status', ({tracking, fixtures: trackedIds}) => {
-  setPollStatus(tracking, trackedIds ?? []);
+sock.on('poll_status', ({tracking, fixtures: trackedFixtures}) => {
+  setPollStatus(tracking, trackedFixtures ?? {});
 });
 
 sock.on('live_update', (fixtures) => {
