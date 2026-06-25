@@ -187,6 +187,17 @@ for (const rec of mapData.data) {
     if (p.wiki_langs) _lastNameWiki[last] = p.wiki_langs;
   }
 }
+// Also index native players (born & plays for same country) for wiki links
+for (const players of Object.values(mapData.natives ?? {})) {
+  for (const p of players) {
+    if (!p.wiki_langs) continue;
+    if (!_exactWiki[p.name]) _exactWiki[p.name] = p.wiki_langs;
+    const n = _norm(p.name);
+    if (!_normWiki[n]) _normWiki[n] = p.wiki_langs;
+    const last = _norm(p.name.split(' ').pop());
+    if (!_lastNameWiki[last]) _lastNameWiki[last] = p.wiki_langs;
+  }
+}
 
 const getBirthCountry = (apiName) => {
   if (_exactBC[apiName]) return _exactBC[apiName];
