@@ -316,6 +316,29 @@ Order matters for SVG z-layering:
 
 The live game page is a self-contained HTML file using plain ES module script (no lit-html — dynamic HTML uses template literals and `innerHTML`). It consumes the auth bar's Socket.IO connection via `auth-bar-online` / `auth-bar-offline` events.
 
+**Badge / poll status**
+
+Three states, driven by `discovering` only — the server's auto-track on/off is an internal detail never sent to clients:
+
+| State | Condition | Badge |
+|---|---|---|
+| Live | `discovering && knownFixtures > 0` | green "live" |
+| Listening | `discovering && knownFixtures === 0` | blue "à l'écoute" |
+| Deaf & mute | `!discovering` | yellow warning |
+
+`poll_status` shape: `{ discovering, fixtures, wc_only }` — note `tracking` is intentionally absent from the broadcast.
+
+**Untracked fixtures**
+
+Each fixture in `live_update` carries a `_tracked: bool` flag set by the server. Untracked fixtures are:
+- Dimmed (50% opacity)
+- Events and statistics accordion items hidden via `d-none` (not removed — gentler, more robust)
+- Compositions accordion always shown (stable data even without live tracking)
+
+**Curaçao flag**
+
+`flagCode()` has an explicit `'Curaçao': 'cw'` mapping to prevent the generic 2-char fallback from returning `'cu'` (Cuba).
+
 **Player lookup — team-scoped only**
 
 At load time, `wc2026_map_data.json` is fetched and two per-team indexes are built:
@@ -340,7 +363,7 @@ Keys are country names (matching `p.nation` in export records). These players ha
 - Events and stats accordion items are always rendered for tracked fixtures, even when the API hasn't sent data yet — they just appear empty. Only untracked fixtures hide these sections.
 - Untracked fixtures are visually dimmed (50% opacity in match view, dashed border on selector pill).
 - `renderGroupResults` only renders finished matches (`FT`, `AET`, `PEN`) — future and live fixtures are excluded to avoid showing placeholder scores.
-- `poll_status` socket event shape: `{ discovering, tracking, fixtures: {} }` where `fixtures` is an object keyed by fixture id (not an array).
+- `poll_status` socket event shape: `{ discovering, fixtures: {} }` where `fixtures` is an object keyed by fixture id (not an array). `tracking` is absent — it is an internal server detail.
 
 ### `data/countries.json` — population + capital lookup
 `data/countries.json` (in the `mundial-data` submodule) is the canonical source for population and multilingual capital city names. Shape:
