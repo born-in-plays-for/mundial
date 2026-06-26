@@ -31,13 +31,16 @@ jobs:
         id: data-sha
         run: echo "sha=$(git rev-parse HEAD:data)" >> $GITHUB_OUTPUT
 
-      - uses: actions/cache@v4
+      - name: Cache submodule (push only)
         id: submodule-cache
+        if: github.event_name == 'push'
+        uses: actions/cache@v4
         with:
           path: data
           key: data-${{ steps.data-sha.outputs.sha }}
 
-      - if: steps.submodule-cache.outputs.cache-hit != 'true'
+      - name: Update submodule
+        if: github.event_name != 'push' || steps.submodule-cache.outputs.cache-hit != 'true'
         run: git submodule update --init --depth 1 data
 
       - uses: actions/configure-pages@v5
