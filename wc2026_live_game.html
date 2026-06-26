@@ -69,9 +69,6 @@ body { background: #f5f2ec; }
     </div>
     <div class="ms-auto d-flex flex-column align-items-end gap-1">
       <span class="hstack gap-1">
-        <a id="admin-link" href="#" target="_blank" rel="noopener" class="text-decoration-none d-none" style="line-height:0;opacity:.6;transition:opacity .2s" title="Admin" aria-label="Admin" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">
-          <img src="images/solar_linear/settings-svgrepo-com.svg" width="24" height="24" alt="Admin">
-        </a>
         <span id="ws-icon"></span>
         <span id="ws-status" class="badge bg-secondary">connecting…</span>
         <button id="ws-retry" class="btn btn-sm btn-outline-secondary d-none" style="font-size:11px;padding:2px 8px">↻</button>
@@ -155,29 +152,22 @@ authBar.addEventListener('auth-bar-online', () => {
   retryBtn.classList.add('d-none');
 });
 
-const adminLink = document.getElementById('admin-link');
-const updateAdminLink = () => {
+const updateAdminStatus = () => {
   const stored = localStorage.getItem('mundial_user');
-  if (stored) {
-    try {
-      const data = JSON.parse(stored);
-      const isAdmin = data.admin ?? false;
-      if (isAdmin) {
-        adminLink.href = PROXY + '/admin';
-        adminLink.classList.remove('d-none');
-      } else {
-        adminLink.classList.add('d-none');
-      }
-    } catch {
-      adminLink.classList.add('d-none');
-    }
+  const isAdmin = stored ? (() => { try { return JSON.parse(stored).admin ?? false; } catch { return false; } })() : false;
+  if (isAdmin) {
+    badgeEl.style.cursor = 'pointer';
+    badgeEl.title = 'Click to open admin panel';
+    badgeEl.onclick = () => window.open(PROXY + '/admin', '_blank');
   } else {
-    adminLink.classList.add('d-none');
+    badgeEl.style.cursor = 'default';
+    badgeEl.title = '';
+    badgeEl.onclick = null;
   }
 };
-updateAdminLink();
-authBar.addEventListener('auth-bar-online', updateAdminLink);
-window.addEventListener('message', updateAdminLink);
+updateAdminStatus();
+authBar.addEventListener('auth-bar-online', updateAdminStatus);
+window.addEventListener('message', updateAdminStatus);
 
 retryBtn.addEventListener('click', () => {
   retryBtn.classList.add('d-none');
