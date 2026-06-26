@@ -152,9 +152,16 @@ authBar.addEventListener('auth-bar-online', () => {
   retryBtn.classList.add('d-none');
 });
 
-const updateAdminStatus = () => {
-  const stored = localStorage.getItem('mundial_user');
-  const isAdmin = stored ? (() => { try { return JSON.parse(stored).admin ?? false; } catch { return false; } })() : false;
+const updateAdminStatus = (e) => {
+  let isAdmin;
+  if (e?.data?.type === 'mundial_auth') {
+    isAdmin = e.data.admin ?? false;
+  } else if (e?.data?.type === 'mundial_kicked') {
+    isAdmin = false;
+  } else {
+    const stored = localStorage.getItem('mundial_user');
+    isAdmin = stored ? (() => { try { return JSON.parse(stored).admin ?? false; } catch { return false; } })() : false;
+  }
   if (isAdmin) {
     badgeEl.style.cursor = 'pointer';
     badgeEl.title = 'Click to open admin panel';
