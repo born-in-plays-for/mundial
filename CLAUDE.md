@@ -312,6 +312,36 @@ Order matters for SVG z-layering:
 7. Standalone dots + flags (Cape Verde, Curaçao)
 8. UK nation flags
 
+### `wc2026_live_game.html` — live game page architecture
+
+The live game page is a self-contained HTML file using plain ES module script (no lit-html — dynamic HTML uses template literals and `innerHTML`). It consumes the auth bar's Socket.IO connection via `auth-bar-online` / `auth-bar-offline` events.
+
+**Player lookup — team-scoped only**
+
+At load time, `wc2026_map_data.json` is fetched and two per-team indexes are built:
+- `_teamWiki[teamName]` → `{ exact, norm, lastName }` — maps player names to `wiki_langs`
+- `_teamBC[teamName]` → `{ lastName → birthCountry }` — maps last names to birth country
+
+Export players (`mapData.data[].players`) are indexed under `p.nation` (the squad country). Native players (`mapData.natives[country]` — players born AND playing for the same country) are indexed under `country`.
+
+`getBirthCountry(apiName, teamName)` and `getWikiLangs(apiName, teamName)` search **only within `_teamBC[teamName]` / `_teamWiki[teamName]`** — there is no global fallback. When team is known, a "Smith" on Sweden's team will only match Swedish players named Smith, never a different Smith from another team. Both functions try exact name → normalized name → last name within the team's index, in that order.
+
+Global `_exactBC` / `_normBC` maps are also built (for exact/normalized full-name matches within `getBirthCountry`) but the last-name fallback is strictly team-scoped.
+
+**`mapData.natives` structure**
+
+Top-level key in `wc2026_map_data.json` alongside `data`, `pop`, `capital`. Shape:
+```json
+{ "Sweden": [{ "name": "Eric Smith", "caps": 1, "wiki_langs": { "en": "...", "fr": "..." } }] }
+```
+Keys are country names (matching `p.nation` in export records). These players have no "born in" flag since birth country = squad country, but they do get Wikipedia links.
+
+**Accordion and UI behaviour**
+- Events and stats accordion items are always rendered for tracked fixtures, even when the API hasn't sent data yet — they just appear empty. Only untracked fixtures hide these sections.
+- Untracked fixtures are visually dimmed (50% opacity in match view, dashed border on selector pill).
+- `renderGroupResults` only renders finished matches (`FT`, `AET`, `PEN`) — future and live fixtures are excluded to avoid showing placeholder scores.
+- `poll_status` socket event shape: `{ discovering, tracking, fixtures: {} }` where `fixtures` is an object keyed by fixture id (not an array).
+
 ### `data/countries.json` — population + capital lookup
 `data/countries.json` (in the `mundial-data` submodule) is the canonical source for population and multilingual capital city names. Shape:
 ```json
@@ -367,6 +397,10 @@ The backend (`born-in-plays-for/mundial-server`) runs locally and is exposed via
 
 After deploying, re-scrape LinkedIn preview:
 **https://www.linkedin.com/post-inspector/**
+
+### CI — deploy-pages.yml cache key
+
+The Pages deploy workflow caches the `data/` submodule. The cache key uses the **actual submodule commit SHA** via `git rev-parse HEAD:data` — do not replace this with `hashFiles('data')`, which always returns the same hash when the submodule is uninitialized (empty directory after checkout without `submodules: true`), causing the cache to never invalidate after daily Elo updates.
 
 ---
 
