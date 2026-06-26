@@ -108,6 +108,22 @@ The data pipeline lives in the **[born-in-plays-for/mundial-build](https://githu
 5. **Site live**: Pages redeploys with new data within minutes
 6. **Local pull**: Developers simply `git pull` — submodules auto-update if `submodule.recurse = true`
 
+### Deploy strategy and cache optimization
+
+The `deploy-pages.yml` workflow is smart about when to use caching to balance speed vs. freshness:
+
+| Trigger | Cache behavior | Deploy time | When |
+|---------|---|---|---|
+| **Push to main** (code-only) | Use cache | ~17-21s ⚡ | Frontend code changes, docs, config updates |
+| **repository_dispatch** (from update-data-submodule) | Skip cache, fetch fresh | ~1m 40s | Daily Elo data updates (once per day) |
+| **workflow_dispatch** (manual trigger) | Skip cache, fetch fresh | ~1m 40s | Manual refreshes when needed |
+
+**How it works:** The workflow checks `github.event_name` at runtime:
+- `push` events use the data submodule cache (fast, for code-only deploys)
+- `repository_dispatch` and `workflow_dispatch` skip cache and fetch fresh submodule (ensures data is always current)
+
+This means code changes deploy quickly (~20s) while data updates are always thorough (~1m 40s, only daily).
+
 All frontend `fetch()` calls reference `data/` paths (e.g. `fetch('data/wc2026_map_data.json')`). Pages in `pages/` use `../data/` since they are one level deeper.
 
 ### Regenerating the OG image
