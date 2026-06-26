@@ -262,7 +262,7 @@ class MundialAuthBar extends HTMLElement {
     this._el('pic').src = user.picture;
     const picLink = this._el('pic-link');
     if (isAdmin) {
-      picLink.href = this.BACKEND + '/admin';
+      picLink.href = this.BACKEND + '/admin-auth';
       picLink.title = _t.navAdmin;
       picLink.style.cursor = 'pointer';
     } else {

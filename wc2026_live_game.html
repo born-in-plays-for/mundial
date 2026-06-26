@@ -69,6 +69,9 @@ body { background: #f5f2ec; }
     </div>
     <div class="ms-auto d-flex flex-column align-items-end gap-1">
       <span class="hstack gap-1">
+        <a id="admin-link" href="#" target="_blank" rel="noopener" class="text-decoration-none d-none" style="line-height:0;opacity:.6;transition:opacity .2s" title="Admin" aria-label="Admin" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">
+          <img src="images/solar_linear/settings-svgrepo-com.svg" width="24" height="24" alt="Admin">
+        </a>
         <span id="ws-icon"></span>
         <span id="ws-status" class="badge bg-secondary">connecting…</span>
         <button id="ws-retry" class="btn btn-sm btn-outline-secondary d-none" style="font-size:11px;padding:2px 8px">↻</button>
@@ -151,6 +154,30 @@ authBar.addEventListener('auth-bar-offline', (e) => {
 authBar.addEventListener('auth-bar-online', () => {
   retryBtn.classList.add('d-none');
 });
+
+const adminLink = document.getElementById('admin-link');
+const updateAdminLink = () => {
+  const stored = localStorage.getItem('mundial_user');
+  if (stored) {
+    try {
+      const data = JSON.parse(stored);
+      const isAdmin = data.admin ?? false;
+      if (isAdmin) {
+        adminLink.href = PROXY + '/admin';
+        adminLink.classList.remove('d-none');
+      } else {
+        adminLink.classList.add('d-none');
+      }
+    } catch {
+      adminLink.classList.add('d-none');
+    }
+  } else {
+    adminLink.classList.add('d-none');
+  }
+};
+updateAdminLink();
+authBar.addEventListener('auth-bar-online', updateAdminLink);
+window.addEventListener('message', updateAdminLink);
 
 retryBtn.addEventListener('click', () => {
   retryBtn.classList.add('d-none');
@@ -727,7 +754,7 @@ const renderFixtures = async (fixtures) => {
 
 let _pollActive = false;
 const _fixtureCount = (fixtures) => Array.isArray(fixtures) ? fixtures.length : Object.keys(fixtures ?? {}).length;
-const setPollStatus = (discovering, tracking, fixtures = {}) => {
+const setPollStatus = (discovering, fixtures = {}) => {
   const active = discovering;
   _pollActive = active;
   if (active && _fixtureCount(fixtures) > 0) {
@@ -745,11 +772,11 @@ const setPollStatus = (discovering, tracking, fixtures = {}) => {
 
 const _fetchLiveData = async () => {
   try {
-    const [{discovering, tracking, fixtures: trackedIds}, liveData] = await Promise.all([
+    const [{discovering, fixtures: trackedIds}, liveData] = await Promise.all([
       fetch(`${PROXY}/api/poll/active`, {headers: _h}).then(r => r.json()),
       fetch(`${PROXY}/api/live`, {headers: _h}).then(r => r.json()),
     ]);
-    setPollStatus(discovering ?? false, tracking, trackedIds);
+    setPollStatus(discovering ?? false, trackedIds);
     renderFixtures(liveData);
     loadingEl.classList.add('d-none');
   } catch {
@@ -771,8 +798,8 @@ await _fetchLiveData();
 
 authBar.addEventListener('auth-bar-online', () => _fetchLiveData());
 
-sock.on('poll_status', ({discovering, tracking, fixtures: trackedFixtures}) => {
-  setPollStatus(discovering ?? false, tracking, trackedFixtures ?? {});
+sock.on('poll_status', ({discovering, fixtures: trackedFixtures}) => {
+  setPollStatus(discovering ?? false, trackedFixtures ?? {});
 });
 
 sock.on('live_update', (fixtures) => {
