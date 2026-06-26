@@ -409,6 +409,19 @@ Always use **"country"** (or "pays", "Land", "paese", "país") instead of "natio
 
 ---
 
+## Documentation & key locations
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.md` (this file) | Frontend project instructions — architecture, components, i18n, deployment |
+| `README.md` | Frontend setup guide — running locally, tech stack, repository links |
+| `../.github/profile/README.md` | Organization overview — CI/GitHub Actions workflow across all repos |
+| `../mundial-server/CLAUDE.md` | Backend project instructions (in that repo) |
+
+The organization README at `../.github/profile/README.md` documents the cross-repo CI pipeline and is the single source of truth for the entire GitHub Actions workflow (Elo updates, data submodule, GitHub Pages deploy).
+
+---
+
 ## Git / deployment
 
 **NEVER commit or push unless the user explicitly asks.** Do not commit after making changes — wait for the user to test first. The user will say "commit and push" when ready. Never ask "ready to commit?" either.
