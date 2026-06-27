@@ -92,7 +92,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 <div>
 <div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">Born here / plays for</div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-item elo-item--qualified elo-item--exp" style="flex-shrink:0">
+  <span class="elo-item elo-item--exp" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/it.svg" alt="">
     <span class="elo-name" data-id="380">Italy</span>
   </span>
@@ -186,7 +186,7 @@ For countries with **born-in / plays-for** connections, coloured arrows also app
 
 The <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> button then fits all connected countries in view at once.
 
-Click the active badge a second time — or press **Esc** — to deselect.
+Click the active badge a second time, click anywhere else on the map, or press **Esc** to deselect.
 
 ### The Player Table
 

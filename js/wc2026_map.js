@@ -92,6 +92,7 @@ const dotCentroid = d => {
 };
 
 svg.on('click', () => { clearDim(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') clearDim(); });
 
 const zoom = d3.zoom()
 svg.call(zoom

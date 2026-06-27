@@ -175,7 +175,7 @@ For countries with **born-in / plays-for** connections, coloured arrows also app
 
 The <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> button then fits all connected countries in view at once.
 
-Click the active badge a second time — or press **Esc** — to deselect.
+Click the active badge a second time, click anywhere else on the map, or press **Esc** to deselect.
 
 ### The Player Table
 
