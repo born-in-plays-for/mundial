@@ -44,7 +44,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
 | `data/` | Git submodule → `mundial-data` repo. Contains all pipeline-generated data: `wc2026_map_data.json`, `wc2026_elo_rank.json`, `wc2026_elo_history.json`, `countries.json`, `uk-nations.geojson`, `wc2026_gdp.json`, `wc2026_gdp_pc_ppp.json`, `wc2026_hdi.json` |
-| `wc2026_og_v4.png` | 2400×1260 Open Graph preview image for LinkedIn/social (2x resolution, France tooltip) |
+| `wc2026_og_v5.png` | 1440×810 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
 | `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
@@ -128,31 +128,43 @@ All frontend `fetch()` calls reference `data/` paths (e.g. `fetch('data/wc2026_m
 
 ### Regenerating the OG image
 
+Uses `http://localhost:4040/` (local server). Output: 1440×810 PNG.
+- Clicks France flag to activate dim/arc mode (export/import arcs visible)
+- Hovers France path center to show the combined tooltip
+
 ```python
 from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     browser = p.chromium.launch()
-    page = browser.new_page(viewport={"width": 1200, "height": 630}, device_scale_factor=2)
-    page.goto("https://mundial.cthiebaud.com/wc2026_map.html",
+    page = browser.new_page(viewport={"width": 1440, "height": 810}, device_scale_factor=1)
+    page.goto("http://localhost:4040/wc2026_map.html",
               wait_until="networkidle", timeout=30000)
     page.wait_for_timeout(4000)
+    # Click France flag to activate dim/arc mode
+    page.evaluate('''() => {
+        const flag = document.querySelector('image.flag-qualified[data-id="250"]');
+        if (flag) flag.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    }''')
+    page.wait_for_timeout(2000)
+    # Hover France path center to show tooltip
     page.evaluate('''() => {
         const path = document.querySelector('path[data-id="250"]');
         if (path) {
             const rect = path.getBoundingClientRect();
-            const evt = new MouseEvent('mouseover', {
-                bubbles: true, clientX: rect.x + 20, clientY: rect.y + 10
-            });
-            path.dispatchEvent(evt);
-            path.dispatchEvent(new MouseEvent('mousemove', {
-                bubbles: true, clientX: rect.x + 20, clientY: rect.y + 10
-            }));
+            const cx = rect.x + rect.width / 2;
+            const cy = rect.y + rect.height / 2;
+            path.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: cx, clientY: cy }));
+            path.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: cx, clientY: cy }));
         }
     }''')
     page.wait_for_timeout(1500)
-    page.screenshot(path="wc2026_og_v4.png")
+    page.screenshot(path="wc2026_og_v5.png")
     browser.close()
 ```
+
+After regenerating, re-scrape LinkedIn and Facebook previews:
+- **LinkedIn**: https://www.linkedin.com/post-inspector/
+- **Facebook**: https://developers.facebook.com/tools/debug/
 
 ---
 
