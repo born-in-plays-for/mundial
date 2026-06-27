@@ -1492,6 +1492,9 @@ world.objects.countries.geometries.forEach(g => {
   if (!g.id) { const mapped = _topoNameToId[g.properties?.name]; if (mapped) g.id = mapped; }
 });
 
+// ── Ocean background — fills the full projection area before land paths ──────
+g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','#b8d8ea').attr('stroke','none');
+
 // ── World choropleth (skip UK polygon — rendered separately below) ────────────
 g.selectAll('.country')
   .data(topojson.feature(world, world.objects.countries).features
