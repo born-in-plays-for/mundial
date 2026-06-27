@@ -31,9 +31,12 @@ which controls which country flags appear on the map and which countries appear 
 
 ### The filter matrix
 
-Rows group countries by qualification status; columns select by export/import role.
-Click the column header `exp.` to show only exporting countries;
-click `qualif.` to toggle all qualified nations at once.
+The matrix crosses two **columns** (exporter / non-exporter) with four **rows** in two groups:
+
+- **Qualified** — split by whether the country imports players or not
+- **Non-qualified** — split by FIFA membership
+
+Uncheck any cell to hide that category. Click a row or column header to toggle the whole group at once.
 
 ### About the country reference
 
