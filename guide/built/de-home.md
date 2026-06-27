@@ -131,8 +131,8 @@ Jedes Land wird als **Pill-Badge** angezeigt, dessen CSS-Stil seine Kategorie ke
 
 ### Choropleth & Flags
 
-Each country is shaded by the number of players born there who represent another World Cup squad —
-the darker the shade, the more exported players. Countries with no exports appear in a neutral pale tone.
+Each country is shaded by the total number of World Cup players born there —
+the darker the shade, the more players. Countries with no players born there appear in a neutral pale tone.
 Qualified countries display a circular flag marker at their centroid.
 
 ### Zoom & Pan

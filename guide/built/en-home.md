@@ -4,8 +4,8 @@
 
 <!-- i18n:intro -->
 This map visualises the 2026 FIFA World Cup squads through the lens of birthplace.
-Each country is shaded by how many players born there represent **another** country
-at the tournament.
+Each country is shaded by the total number of World Cup players born there —
+whether they represent that country or another.
 <!-- /i18n:intro -->
 
 <!-- i18n:quotes -->
@@ -139,8 +139,8 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 
 ### Choropleth & Flags
 
-Each country is shaded by the number of players born there who represent another World Cup squad —
-the darker the shade, the more exported players. Countries with no exports appear in a neutral pale tone.
+Each country is shaded by the total number of World Cup players born there —
+the darker the shade, the more players. Countries with no players born there appear in a neutral pale tone.
 Qualified countries display a circular flag marker at their centroid.
 
 ### Zoom & Pan
