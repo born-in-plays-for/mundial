@@ -78,6 +78,9 @@ def take_screenshots():
 
 # ── Language builds ───────────────────────────────────────────────────────────
 
+_HTML_TAG_RE = re.compile(r'<[a-zA-Z/]')
+
+
 def _resolve(value):
     """Accept a JSON string or array-of-lines; return a plain string."""
     if isinstance(value, list):
@@ -100,23 +103,33 @@ def build_languages():
         all_keys = MARKER_RE.findall(template)
         total    = len(all_keys)
 
+        # Build a map of key → source block content for drift detection
+        source_blocks = {key: body for _, key, body, _ in all_keys}
+
         # English: copy template as-is
         shutil.copy(template_path, BUILT / f'en-{section}.md')
         print(f'  ✓ built/en-{section}.md  ({total} marker blocks)')
 
         for lang in LANGUAGES:
             translations = all_translations[lang]
+            warnings = []
 
-            def replace(m, t=translations):
+            def replace(m, t=translations, w=warnings):
                 open_tag, key, close_tag = m.group(1), m.group(2), m.group(4)
                 if key in t:
-                    return f'{open_tag}\n{_resolve(t[key])}\n{close_tag}'
+                    translated = _resolve(t[key])
+                    if _HTML_TAG_RE.search(translated):
+                        w.append(f'    ⚠  {lang}.json [{key}] contains HTML tags — i18n values should be plain text/markdown only')
+                    return f'{open_tag}\n{translated}\n{close_tag}'
                 return m.group(0)
 
             result       = MARKER_RE.sub(replace, template)
             n_translated = sum(1 for _, key, _, _ in all_keys if key in translations)
             (BUILT / f'{lang}-{section}.md').write_text(result, encoding='utf-8')
-            print(f'  ✓ built/{lang}-{section}.md  ({n_translated}/{total} keys translated)')
+            status = f'  ✓ built/{lang}-{section}.md  ({n_translated}/{total} keys translated)'
+            print(status)
+            for w in warnings:
+                print(w)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
