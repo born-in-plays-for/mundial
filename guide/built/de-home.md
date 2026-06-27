@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Born In / Plays For
+# Geboren in / Spielt für
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->
@@ -211,8 +211,10 @@ Ein Klick auf ein Badge wählt dieses Land aus und zoomt die Karte darauf.
 
 Für Länder mit **geboren hier / spielt für**-Verbindungen erscheinen auch farbige Pfeile auf der Karte:
 
-- <span style="color:#3b82f6">■</span> **blaue Pfeile**: Kader, die Spieler einschließen, die im ausgewählten Land geboren wurden
-- <span style="color:#ef4444">■</span> **rote Pfeile**: Länder, in denen anderswo geborene Spieler für diesen Kader spielen
+- {{ARROW_BLUE}} **blaue Pfeile**: Kader, die Spieler einschließen, die im ausgewählten Land geboren wurden
+- {{ARROW_RED}} **rote Pfeile**: Länder, in denen anderswo geborene Spieler für diesen Kader spielen
+
+*Die Pfeilstärke ist proportional zur Anzahl der Spieler.*
 
 Die Schaltfläche <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="anpassen"> passt dann alle verbundenen Länder in die Ansicht.
 

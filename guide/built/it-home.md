@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Born In / Plays For
+# Nato in / Gioca per
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->
@@ -211,8 +211,10 @@ Cliccare su una pillola seleziona quel paese e fa zoom sulla mappa.
 
 Per i paesi con connessioni **nato qui / gioca per**, appaiono anche frecce colorate sulla mappa:
 
-- <span style="color:#3b82f6">■</span> **frecce blu**: squadre che includono giocatori nati nel paese selezionato
-- <span style="color:#ef4444">■</span> **frecce rosse**: paesi dove giocatori nati altrove giocano per questa squadra
+- {{ARROW_BLUE}} **frecce blu**: squadre che includono giocatori nati nel paese selezionato
+- {{ARROW_RED}} **frecce rosse**: paesi dove giocatori nati altrove giocano per questa squadra
+
+*Lo spessore delle frecce è proporzionale al numero di giocatori.*
 
 Il pulsante <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="adatta"> adatta poi tutti i paesi connessi nella vista.
 

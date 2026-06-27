@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Born In / Plays For
+# Nacido en / Juega para
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->
@@ -211,8 +211,10 @@ Hacer clic en una pastilla selecciona ese país y hace zoom en el mapa.
 
 Para países con conexiones **nacido aquí / juega para**, también aparecen flechas de colores en el mapa:
 
-- <span style="color:#3b82f6">■</span> **flechas azules**: selecciones que incluyen jugadores nacidos en el país seleccionado
-- <span style="color:#ef4444">■</span> **flechas rojas**: países donde jugadores nacidos en otro lugar juegan para esta selección
+- {{ARROW_BLUE}} **flechas azules**: selecciones que incluyen jugadores nacidos en el país seleccionado
+- {{ARROW_RED}} **flechas rojas**: países donde jugadores nacidos en otro lugar juegan para esta selección
+
+*El grosor de las flechas es proporcional al número de jugadores.*
 
 El botón <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="ajustar"> ajusta entonces todos los países conectados en la vista.
 

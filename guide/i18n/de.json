@@ -1,5 +1,5 @@
 {
-  "page_title": "# Born In / Plays For",
+  "page_title": "# Geboren in / Spielt für",
   "intro": [
     "Diese Karte visualisiert die Kader der Fußball-Weltmeisterschaft 2026 unter dem Gesichtspunkt des Geburtsortes.",
     "Jedes Land ist entsprechend der Gesamtzahl der WM-Spieler eingefärbt, die dort geboren wurden —",
@@ -101,8 +101,10 @@
     "",
     "Für Länder mit **geboren hier / spielt für**-Verbindungen erscheinen auch farbige Pfeile auf der Karte:",
     "",
-    "- <span style=\"color:#3b82f6\">■</span> **blaue Pfeile**: Kader, die Spieler einschließen, die im ausgewählten Land geboren wurden",
-    "- <span style=\"color:#ef4444\">■</span> **rote Pfeile**: Länder, in denen anderswo geborene Spieler für diesen Kader spielen",
+    "- {{ARROW_BLUE}} **blaue Pfeile**: Kader, die Spieler einschließen, die im ausgewählten Land geboren wurden",
+    "- {{ARROW_RED}} **rote Pfeile**: Länder, in denen anderswo geborene Spieler für diesen Kader spielen",
+    "",
+    "*Die Pfeilstärke ist proportional zur Anzahl der Spieler.*",
     "",
     "Die Schaltfläche <img class=\"gp-icon\" src=\"images/solar_linear/maximize-square-2-svgrepo-com.svg\" alt=\"anpassen\"> passt dann alle verbundenen Länder in die Ansicht.",
     "",

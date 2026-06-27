@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Born In / Plays For
+# Né en / Joue pour
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->
@@ -211,8 +211,10 @@ Cliquer sur une pastille sélectionne ce pays et zoome la carte dessus.
 
 Pour les pays avec des connexions **né ici / joue pour**, des flèches colorées apparaissent aussi sur la carte :
 
-- <span style="color:#3b82f6">■</span> **flèches bleues** : sélections qui incluent des joueurs nés dans le pays sélectionné
-- <span style="color:#ef4444">■</span> **flèches rouges** : pays où des joueurs nés ailleurs jouent pour cette sélection
+- {{ARROW_BLUE}} **flèches bleues** : sélections qui incluent des joueurs nés dans le pays sélectionné
+- {{ARROW_RED}} **flèches rouges** : pays où des joueurs nés ailleurs jouent pour cette sélection
+
+*L'épaisseur des flèches est proportionnelle au nombre de joueurs.*
 
 Le bouton <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="ajuster"> fait alors tenir tous les pays connectés dans la vue.
 

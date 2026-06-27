@@ -183,8 +183,10 @@ Clicking a badge selects that country and zooms the map to it.
 
 For countries with **born-in / plays-for** connections, coloured arrows also appear on the map:
 
-- <span style="color:#3b82f6">■</span> **blue arrows**: squads that include players born in the selected country
-- <span style="color:#ef4444">■</span> **red arrows**: countries where players born elsewhere play for this squad
+- {{ARROW_BLUE}} **blue arrows**: squads that include players born in the selected country
+- {{ARROW_RED}} **red arrows**: countries where players born elsewhere play for this squad
+
+*Arrow thickness is proportional to the number of players.*
 
 The <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> button then fits all connected countries in view at once.
 

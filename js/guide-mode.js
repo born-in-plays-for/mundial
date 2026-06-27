@@ -21,10 +21,16 @@ const _guideToPage = {
   live: 'wc2026_live_game.html',
 };
 
+const _ARROW_BLUE = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#3b82f6" stroke-width="2.5"/><path d="M17,2.5 L24,6 L17,9.5Z" fill="#3b82f6"/></svg>';
+const _ARROW_RED  = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#ef4444" stroke-width="2.5"/><path d="M23,2.5 L16,6 L23,9.5Z" fill="#ef4444"/></svg>';
+
 marked.use({
   hooks: {
     postprocess(html) {
-      return html.replace(/<table>/g, '<table class="table table-bordered">');
+      return html
+        .replace(/<table>/g, '<table class="table table-bordered">')
+        .replace(/\{\{ARROW_BLUE\}\}/g, _ARROW_BLUE)
+        .replace(/\{\{ARROW_RED\}\}/g,  _ARROW_RED);
     }
   },
   renderer: {
@@ -98,7 +104,7 @@ function _injectStyles() {
 #mundial-guide-panel .gp-toc-list a{color:#999;text-decoration:none;font-size:.78rem;line-height:1.4;display:block}
 #mundial-guide-panel .gp-toc-list a:hover{color:#333}
 @media(max-width:767px){#mundial-guide-panel .gp-layout{flex-direction:column}#mundial-guide-panel .gp-toc{position:static;width:100%}}
-#mundial-guide-panel .gp-body h1{font-size:1.5rem;font-weight:700;margin-bottom:2rem;padding-bottom:.5rem;border-bottom:2px solid var(--border,#e4e0d8)}
+#mundial-guide-panel .gp-body h1{font-size:1.5rem;font-weight:700;margin-bottom:2rem;padding-bottom:.5rem;border-bottom:2px solid var(--border,#e4e0d8);overflow:hidden}
 #mundial-guide-panel .gp-body h2{font-size:1.05rem;font-weight:600;margin-top:2.5rem;margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--border,#e4e0d8)}
 #mundial-guide-panel .gp-body h3{font-size:.9rem;font-weight:600;margin-top:1.4rem;margin-bottom:.4rem;color:#555}
 #mundial-guide-panel .gp-body p:not(.taxonomy *){font-size:.925rem;line-height:1.7;color:#333}
@@ -113,6 +119,7 @@ function _injectStyles() {
 #mundial-guide-panel .gp-body svg+p>em:only-child{display:block;font-size:.8rem;font-style:italic;color:var(--text-muted,#999);text-align:center;margin-top:.1rem;margin-bottom:1.25rem}
 #mundial-guide-panel .gp-body::after{content:'';display:table;clear:both}
 #mundial-guide-panel{user-select:text;-webkit-user-select:text}
+#mundial-guide-panel .gp-arrow{display:inline!important;width:40px!important;height:12px!important;vertical-align:middle;flex-shrink:0}
 .gp-wip-banner{text-align:center;margin:2rem 0}
 .gp-wip-box{display:inline-block;border-radius:12px;padding:1.5rem 2.5rem;background-color:#f0ede8;background-image:repeating-linear-gradient(90deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px),repeating-linear-gradient(0deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px),repeating-linear-gradient(90deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px),repeating-linear-gradient(0deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px);background-size:100% 3px,3px 100%,100% 3px,3px 100%;background-position:0 0,100% 0,0 100%,0 0;background-repeat:no-repeat;animation:gp-wip-march .8s linear infinite}
 @keyframes gp-wip-march{to{background-position:16px 0,100% 16px,-16px 100%,0 -16px}}

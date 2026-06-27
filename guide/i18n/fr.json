@@ -1,5 +1,5 @@
 {
-  "page_title": "# Born In / Plays For",
+  "page_title": "# Né en / Joue pour",
   "intro": [
     "Cette carte visualise les effectifs de la Coupe du Monde 2026 sous l'angle du lieu de naissance.",
     "Chaque pays est coloré selon le nombre total de joueurs du Mondial qui y sont nés —",
@@ -101,8 +101,10 @@
     "",
     "Pour les pays avec des connexions **né ici / joue pour**, des flèches colorées apparaissent aussi sur la carte :",
     "",
-    "- <span style=\"color:#3b82f6\">■</span> **flèches bleues** : sélections qui incluent des joueurs nés dans le pays sélectionné",
-    "- <span style=\"color:#ef4444\">■</span> **flèches rouges** : pays où des joueurs nés ailleurs jouent pour cette sélection",
+    "- {{ARROW_BLUE}} **flèches bleues** : sélections qui incluent des joueurs nés dans le pays sélectionné",
+    "- {{ARROW_RED}} **flèches rouges** : pays où des joueurs nés ailleurs jouent pour cette sélection",
+    "",
+    "*L'épaisseur des flèches est proportionnelle au nombre de joueurs.*",
     "",
     "Le bouton <img class=\"gp-icon\" src=\"images/solar_linear/maximize-square-2-svgrepo-com.svg\" alt=\"ajuster\"> fait alors tenir tous les pays connectés dans la vue.",
     "",
