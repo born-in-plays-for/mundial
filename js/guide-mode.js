@@ -25,6 +25,10 @@ marked.use({
     }
   },
   renderer: {
+    heading({ text, depth, raw }) {
+      const id = raw.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').trim();
+      return `<h${depth} id="${id}">${text}</h${depth}>\n`;
+    },
     image({ href, title, text }) {
       const src = href.startsWith('http') ? href : `guide/${href}`;
       return `<img class="img-fluid d-block" src="${src}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
@@ -77,7 +81,16 @@ function _injectStyles() {
   const s = document.createElement('style');
   s.id = 'mundial-guide-panel-styles';
   s.textContent = `
-#mundial-guide-panel .gp-body{max-width:720px;margin:0 auto}
+#mundial-guide-panel .gp-layout{display:flex;gap:3rem;max-width:960px;margin:0 auto}
+#mundial-guide-panel .gp-body{flex:1;min-width:0}
+#mundial-guide-panel .gp-toc{width:190px;flex-shrink:0;position:sticky;top:1rem;align-self:flex-start;max-height:calc(100vh - 64px);overflow-y:auto}
+#mundial-guide-panel .gp-toc-title{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#aaa;margin-bottom:.6rem}
+#mundial-guide-panel .gp-toc-list,#mundial-guide-panel .gp-toc-list ul{list-style:none;padding:0;margin:0}
+#mundial-guide-panel .gp-toc-list li{margin:.18rem 0}
+#mundial-guide-panel .gp-toc-list ul{padding-left:.75rem;margin-top:.18rem}
+#mundial-guide-panel .gp-toc-list a{color:#999;text-decoration:none;font-size:.78rem;line-height:1.4;display:block}
+#mundial-guide-panel .gp-toc-list a:hover{color:#333}
+@media(max-width:767px){#mundial-guide-panel .gp-layout{flex-direction:column}#mundial-guide-panel .gp-toc{position:static;width:100%}}
 #mundial-guide-panel .gp-body h1{font-size:1.5rem;font-weight:700;margin-bottom:2rem;padding-bottom:.5rem;border-bottom:2px solid var(--border,#e4e0d8)}
 #mundial-guide-panel .gp-body h2{font-size:1.05rem;font-weight:600;margin-top:2.5rem;margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--border,#e4e0d8)}
 #mundial-guide-panel .gp-body h3{font-size:.9rem;font-weight:600;margin-top:1.4rem;margin-bottom:.4rem;color:#555}
@@ -116,9 +129,39 @@ async function _showSection(guideId) {
   }
   const icon = _sectionIcon(guideId);
   if (icon) body.prepend(icon);
+
+  const toc = _buildToc(body);
+  const layout = document.createElement('div');
+  layout.className = 'gp-layout';
+  layout.appendChild(body);
+  if (toc) layout.appendChild(toc);
+
   _panel.innerHTML = '';
-  _panel.appendChild(body);
+  _panel.appendChild(layout);
   _panel.scrollTop = 0;
+}
+
+function _buildToc(body) {
+  const headings = [...body.querySelectorAll('h2, h3')];
+  if (headings.length < 2) return null;
+  const _TOC_LABELS = { fr: 'Sur cette page', de: 'Auf dieser Seite', it: 'In questa pagina', es: 'En esta página' };
+  const nav = document.createElement('nav');
+  nav.className = 'gp-toc';
+  nav.innerHTML = `<strong class="gp-toc-title">${_TOC_LABELS[_LANG] ?? 'On this page'}</strong>`;
+  const root = document.createElement('ul');
+  root.className = 'gp-toc-list';
+  let h2Li = null, subUl = null;
+  headings.forEach(h => {
+    const li = document.createElement('li');
+    li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
+    if (h.tagName === 'H2') { root.appendChild(li); h2Li = li; subUl = null; }
+    else {
+      if (!subUl) { subUl = document.createElement('ul'); (h2Li ?? root).appendChild(subUl); }
+      subUl.appendChild(li);
+    }
+  });
+  nav.appendChild(root);
+  return nav;
 }
 
 async function _fetchContent(guideId) {
