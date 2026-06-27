@@ -160,11 +160,11 @@ Hover any country to see details. Tooltips are not shown on mobile.
 
 The scrollable area below the map has three tabs.
 
-### The Elo Ranking
+### The Country List
 
-The default tab lists every country as a pill badge, sorted by
-[World Football Elo rating](https://www.eloratings.net/).
-The filter & sort panel controls which badges appear and in what order.
+The default tab lists every country as a pill badge.
+The filter & sort panel controls which badges appear and in what order;
+the default sort is by [World Football Elo rating](https://www.eloratings.net/).
 
 Clicking a badge has three possible effects:
 

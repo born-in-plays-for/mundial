@@ -23,7 +23,7 @@ Long-press (or hold the mouse button) on a quote to reveal the original line; re
 ## The Filter & Sort Panel
 
 The **‹** button in the top-right corner of the header opens the filter and sort panel,
-which controls which countries appear in the Elo ranking list and the visible country count.
+which controls which country flags appear on the map and which countries appear in the list below.
 
 ![Filter and sort panel](screenshots/control_sidebar.png)
 
@@ -34,6 +34,13 @@ which controls which countries appear in the Elo ranking list and the visible co
 Rows group countries by qualification status; columns select by export/import role.
 Click the column header `exp.` to show only exporting countries;
 click `qualif.` to toggle all qualified nations at once.
+
+### About the country reference
+
+The map and the list use [eloratings.net](https://www.eloratings.net/) as the source of countries —
+not the FIFA member list. This means the list includes non-FIFA territories such as Greenland,
+Kosovo, or the four UK home nations, which are recognised by Elo but not all by FIFA.
+The default sort order is by Elo rating; other sort criteria are available in the sort column.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:country_taxonomy -->
@@ -161,11 +168,11 @@ Hover any country to see details. Tooltips are not shown on mobile.
 
 The scrollable area below the map has three tabs.
 
-### The Elo Ranking
+### The Country List
 
-The default tab lists every country as a pill badge, sorted by
-[World Football Elo rating](https://www.eloratings.net/).
-The filter & sort panel controls which badges appear and in what order.
+The default tab lists every country as a pill badge.
+The filter & sort panel controls which badges appear and in what order;
+the default sort is by [World Football Elo rating](https://www.eloratings.net/).
 
 Clicking a badge has three possible effects:
 
