@@ -31,10 +31,11 @@ BASE_URL    = 'http://localhost:4040'
 
 # Section name → source template
 GUIDES = {
-    'home':   GUIDE_DIR / 'guide-home.md',
-    'france': GUIDE_DIR / 'guide-france.md',
-    'live':   GUIDE_DIR / 'guide-live.md',
-    'auth':   GUIDE_DIR / 'guide-auth.md',
+    'home':      GUIDE_DIR / 'guide-home.md',
+    'countries': GUIDE_DIR / 'guide-countries.md',
+    'france':    GUIDE_DIR / 'guide-france.md',
+    'live':      GUIDE_DIR / 'guide-live.md',
+    'auth':      GUIDE_DIR / 'guide-auth.md',
 }
 
 # Language → Playwright locale
