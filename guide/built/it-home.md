@@ -5,7 +5,7 @@
 <!-- i18n:intro -->
 Questa mappa visualizza le rose dei Mondiali 2026 dal punto di vista del luogo di nascita.
 Ogni paese è colorato in base al numero di giocatori nati lì che rappresentano **un altro** paese
-nel torneo, normalizzato per milione di abitanti.
+nel torneo.
 <!-- /i18n:intro -->
 
 <!-- i18n:control_sidebar -->

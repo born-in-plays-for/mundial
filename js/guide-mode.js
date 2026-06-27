@@ -77,6 +77,7 @@ function _injectStyles() {
 #mundial-guide-panel .gp-body th{background:var(--bg-hover,#f0ede8);font-weight:600}
 #mundial-guide-panel .gp-body img+p>em:only-child,
 #mundial-guide-panel .gp-body svg+p>em:only-child{display:block;font-size:.8rem;font-style:italic;color:var(--text-muted,#999);text-align:center;margin-top:.1rem;margin-bottom:1.25rem}
+#mundial-guide-panel .gp-body::after{content:'';display:table;clear:both}
 `;
   document.head.appendChild(s);
 }
@@ -96,6 +97,8 @@ async function _showSection(guideId) {
     body.innerHTML = `<p style="color:var(--text-muted,#999);font-size:.9rem;margin-top:2rem;text-align:center">
       Guide for <strong>${labels[guideId] ?? guideId}</strong> is not yet available.</p>`;
   }
+  const icon = _sectionIcon(guideId);
+  if (icon) body.prepend(icon);
   _panel.innerHTML = '';
   _panel.appendChild(body);
   _panel.scrollTop = 0;
@@ -164,4 +167,19 @@ function _highlightNav(activeGuideId) {
   authBar.querySelectorAll('nav a[data-guide]').forEach(a => {
     a.style.opacity = a.dataset.guide === activeGuideId ? '1' : '.4';
   });
+}
+
+function _sectionIcon(guideId) {
+  const authBar = document.querySelector('mundial-auth-bar');
+  if (!authBar) return null;
+  const source = guideId === 'auth'
+    ? authBar.querySelector('[data-ref="sign-in"]')
+    : authBar.querySelector(`nav a[data-guide="${guideId}"]`);
+  const svg = source?.querySelector('svg');
+  if (!svg) return null;
+  const clone = svg.cloneNode(true);
+  clone.removeAttribute('width');
+  clone.removeAttribute('height');
+  clone.style.cssText = 'float:left;width:6rem;height:6rem;margin:.1rem 1.5rem .5rem 0;opacity:.2';
+  return clone;
 }

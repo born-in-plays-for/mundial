@@ -5,7 +5,7 @@
 <!-- i18n:intro -->
 Este mapa visualiza las convocatorias del Mundial 2026 desde la perspectiva del lugar de nacimiento.
 Cada país se colorea según el número de jugadores nacidos allí que representan a **otro** país
-en el torneo, normalizado por millón de habitantes.
+en el torneo.
 <!-- /i18n:intro -->
 
 <!-- i18n:control_sidebar -->

@@ -5,7 +5,7 @@
 <!-- i18n:intro -->
 Diese Karte visualisiert die Kader der Fußball-Weltmeisterschaft 2026 unter dem Gesichtspunkt des Geburtsortes.
 Jedes Land ist entsprechend der Anzahl der dort geborenen Spieler eingefärbt, die bei dem Turnier
-ein **anderes** Land vertreten, normalisiert pro Million Einwohner.
+ein **anderes** Land vertreten.
 <!-- /i18n:intro -->
 
 <!-- i18n:control_sidebar -->

@@ -5,7 +5,7 @@
 <!-- i18n:intro -->
 Cette carte visualise les effectifs de la Coupe du Monde 2026 sous l'angle du lieu de naissance.
 Chaque pays est coloré selon le nombre de joueurs nés sur son sol qui représentent **un autre** pays
-au tournoi, normalisé par million d'habitants.
+au tournoi.
 <!-- /i18n:intro -->
 
 <!-- i18n:control_sidebar -->
