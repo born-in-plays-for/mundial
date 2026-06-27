@@ -2,8 +2,8 @@
   "page_title": "# Born In / Plays For",
   "intro": [
     "Diese Karte visualisiert die Kader der Fußball-Weltmeisterschaft 2026 unter dem Gesichtspunkt des Geburtsortes.",
-    "Jedes Land ist entsprechend der Anzahl der dort geborenen Spieler eingefärbt, die bei dem Turnier",
-    "ein **anderes** Land vertreten."
+    "Jedes Land ist entsprechend der Gesamtzahl der WM-Spieler eingefärbt, die dort geboren wurden —",
+    "unabhängig davon, ob sie dieses oder ein anderes Land vertreten."
   ],
   "quotes": [
     "## Die Zitate",
@@ -43,7 +43,7 @@
     "Die Standardsortierung erfolgt nach Elo-Bewertung; andere Sortierkriterien sind in der Sortierspalte verfügbar."
   ],
   "tax_heading": "## Länderkategorien",
-  "tax_intro": "Jedes Land wird als **Pill-Badge** angezeigt, dessen CSS-Stil seine Kategorie kennzeichnet.",
+  "tax_intro": "Jedes Land wird als **Pill-Badge** angezeigt, dessen CSS-Stil seine Kategorie auf einen Blick kennzeichnet.",
   "tax_label_qualified": "Qualifiziert vs. nicht qualifiziert",
   "tax_desc_border_yes": "Durchgezogener Rand — qualifiziert für die WM 2026.",
   "tax_desc_border_no": "Kein Rand — nicht qualifiziert.",
@@ -138,10 +138,10 @@
     "| [Wikidata](https://www.wikidata.org/) | Geburtsländer |",
     "| [Weltbank](https://data.worldbank.org/) | Länderbevölkerungen |",
     "",
-    "**Die Auflösung des Geburtslandes** ist der heikelste Schritt im Pipeline.",
+    "**Die Auflösung des Geburtslandes** ist der heikelste Schritt in der Pipeline.",
     "Die Wikipedia-Kaderseite gibt nicht an, wo Spieler geboren wurden — sie liefert nur ihre Namen",
     "und Links zu ihren individuellen Wikipedia-Seiten.",
-    "Der Pipeline nutzt diese Links als Schlüssel zur Abfrage von [Wikidata](https://www.wikidata.org/)",
+    "Die Pipeline nutzt diese Links als Schlüssel zur Abfrage von [Wikidata](https://www.wikidata.org/)",
     "via SPARQL und ruft den eingetragenen Geburtsort jedes Spielers und das Land ab, zu dem dieser Ort gehört.",
     "Diese zweistufige Suche (Wikipedia → Wikidata) ermöglicht es, die geboren-hier / spielt-für-Verbindungen auf der Karte einzuzeichnen.",
     "",

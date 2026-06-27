@@ -2,8 +2,8 @@
   "page_title": "# Born In / Plays For",
   "intro": [
     "Questa mappa visualizza le rose dei Mondiali 2026 dal punto di vista del luogo di nascita.",
-    "Ogni paese è colorato in base al numero di giocatori nati lì che rappresentano **un altro** paese",
-    "nel torneo."
+    "Ogni paese è colorato in base al numero totale di giocatori del torneo nati lì —",
+    "che rappresentino quel paese o un altro."
   ],
   "quotes": [
     "## Le citazioni",
@@ -43,7 +43,7 @@
     "L'ordinamento predefinito è per rating Elo; altri criteri di ordinamento sono disponibili nella colonna di ordinamento."
   ],
   "tax_heading": "## Categorie di paesi",
-  "tax_intro": "Ogni paese è mostrato come una **pillola** il cui stile CSS ne codifica la categoria.",
+  "tax_intro": "Ogni paese è mostrato come una **pillola** il cui stile CSS ne codifica la categoria a colpo d'occhio.",
   "tax_label_qualified": "Qualificato vs. non qualificato",
   "tax_desc_border_yes": "Bordo pieno — qualificato per il Mondiale 2026.",
   "tax_desc_border_no": "Nessun bordo — non qualificato.",

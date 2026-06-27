@@ -2,8 +2,8 @@
   "page_title": "# Born In / Plays For",
   "intro": [
     "Cette carte visualise les effectifs de la Coupe du Monde 2026 sous l'angle du lieu de naissance.",
-    "Chaque pays est coloré selon le nombre de joueurs nés sur son sol qui représentent **un autre** pays",
-    "au tournoi."
+    "Chaque pays est coloré selon le nombre total de joueurs du Mondial qui y sont nés —",
+    "qu'ils représentent ce pays ou un autre."
   ],
   "quotes": [
     "## Les citations",
@@ -43,7 +43,7 @@
     "Le tri par défaut est par classement Elo ; d'autres critères de tri sont disponibles dans la colonne de tri."
   ],
   "tax_heading": "## Catégories de pays",
-  "tax_intro": "Chaque pays est affiché sous forme de **pastille** dont le style CSS encode sa catégorie.",
+  "tax_intro": "Chaque pays est affiché sous forme de **pastille** dont le style CSS encode sa catégorie en un coup d'œil.",
   "tax_label_qualified": "Qualifié vs. non qualifié",
   "tax_desc_border_yes": "Bordure pleine — qualifié pour la Coupe du Monde 2026.",
   "tax_desc_border_no": "Pas de bordure — non qualifié.",

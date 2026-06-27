@@ -2,8 +2,8 @@
   "page_title": "# Born In / Plays For",
   "intro": [
     "Este mapa visualiza las convocatorias del Mundial 2026 desde la perspectiva del lugar de nacimiento.",
-    "Cada país se colorea según el número de jugadores nacidos allí que representan a **otro** país",
-    "en el torneo."
+    "Cada país se colorea según el número total de jugadores del torneo nacidos allí —",
+    "ya sea que representen a ese país o a otro."
   ],
   "quotes": [
     "## Las citas",
@@ -43,7 +43,7 @@
     "El orden predeterminado es por clasificación Elo; otros criterios de ordenación están disponibles en la columna de ordenación."
   ],
   "tax_heading": "## Categorías de países",
-  "tax_intro": "Cada país se muestra como una **pastilla** cuyo estilo CSS codifica su categoría.",
+  "tax_intro": "Cada país se muestra como una **pastilla** cuyo estilo CSS codifica su categoría de un vistazo.",
   "tax_label_qualified": "Clasificado vs. no clasificado",
   "tax_desc_border_yes": "Borde sólido — clasificado para el Mundial 2026.",
   "tax_desc_border_no": "Sin borde — no clasificado.",

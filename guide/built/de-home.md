@@ -1,39 +1,50 @@
 <!-- i18n:page_title -->
-# Benutzerhandbuch
+# Born In / Plays For
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->
 Diese Karte visualisiert die Kader der Fußball-Weltmeisterschaft 2026 unter dem Gesichtspunkt des Geburtsortes.
-Jedes Land ist entsprechend der Anzahl der dort geborenen Spieler eingefärbt, die bei dem Turnier
-ein **anderes** Land vertreten.
+Jedes Land ist entsprechend der Gesamtzahl der WM-Spieler eingefärbt, die dort geboren wurden —
+unabhängig davon, ob sie dieses oder ein anderes Land vertreten.
 <!-- /i18n:intro -->
 
 <!-- i18n:quotes -->
-## The Quotes
+## Die Zitate
 
-The header area shows a rotating carousel of 15 famous literary quotes —
-from Villon (1461) to Simone de Beauvoir (1949) — each playfully reworded
-to swap the original key phrase for a football selection term.
+Der Kopfbereich zeigt ein rotierendes Karussell mit 15 berühmten Literaturzitaten —
+von François Villon (1461) bis Simone de Beauvoir (1949) — jedes humorvoll umgeschrieben,
+um den ursprünglichen Schlüsselbegriff durch einen Fußball-Selektionsbegriff zu ersetzen.
 
-Navigate between quotes using the dot indicators, or swipe left / right on touch screens.
-Long-press (or hold the mouse button) on a quote to reveal the original line; release to go back.
+Navigieren Sie zwischen den Zitaten mit den nach links gerichteten Chevrons oder wischen Sie auf Touchscreens nach links / rechts.
+Drücken und halten Sie (oder halten Sie die Maustaste gedrückt) auf ein Zitat, um die Originalzeile anzuzeigen; loslassen, um zurückzukehren.
 <!-- /i18n:quotes -->
 
 <!-- i18n:control_sidebar -->
-## Filter- und Sortierbereich
+## Das Filter- und Sortierpanel
 
-Die Schaltfläche **‹** in der oberen rechten Ecke der Kopfzeile öffnet den Filter- und Sortierbereich,
-der steuert, welche Länder in der Elo-Rangliste unter der Karte erscheinen.
+Die Schaltfläche <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> in der oberen rechten Ecke der Kopfzeile öffnet das Filter- und Sortierpanel,
+das steuert, was auf der Karte und in der Länderliste erscheint.
 
-![Filter- und Sortierbereich](screenshots/control_sidebar.png)
+![Filter- und Sortierpanel](screenshots/control_sidebar.png)
 
-*Sortierspalte (links) und Filtermatrix (rechts) — auf einen Zeilen- oder Spaltenkopf klicken, um eine ganze Gruppe umzuschalten.*
+*Filtermatrix (rechts) — auf einen Zeilen- oder Spaltenkopf klicken, um eine ganze Gruppe auf einmal umzuschalten.*<br>*Sortierspalte (links) — nur die obersten zwei Kriterien sind aktiv; ein Klick auf ein Kriterium verschiebt es an die erste Stelle.*
 
 ### Die Filtermatrix
 
-Zeilen gruppieren Länder nach Qualifikationsstatus; Spalten wählen nach Export-/Importrolle aus.
-Klicken Sie auf den Spaltenkopf `exp.`, um nur exportierende Länder anzuzeigen;
-klicken Sie auf `qualif.`, um alle qualifizierten Länder auf einmal umzuschalten.
+Die Matrix kreuzt zwei **Spalten** (Exporteur / Nicht-Exporteur) mit vier **Zeilen** in zwei Gruppen:
+
+- **Qualifiziert** — aufgeteilt danach, ob das Land Spieler importiert oder nicht
+- **Nicht qualifiziert** — aufgeteilt nach FIFA-Mitgliedschaft
+
+Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf einen Zeilen- oder Spaltenkopf, um die gesamte Gruppe auf einmal umzuschalten.
+
+### Zur Länderreferenz
+
+Karte und Liste verwenden [eloratings.net](https://www.eloratings.net/) als Länderquelle —
+nicht die FIFA-Mitgliederliste. Dies bedeutet, dass die Liste Nicht-FIFA-Territorien wie Grönland enthält,
+aber auch besondere Fälle wie die vier britischen Heimnationen — sub-nationale Einheiten
+mit eigener FIFA-Mitgliedschaft, die von FIFA und Elo separat anerkannt werden.
+Die Standardsortierung erfolgt nach Elo-Bewertung; andere Sortierkriterien sind in der Sortierspalte verfügbar.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:tax_heading -->
@@ -41,7 +52,7 @@ klicken Sie auf `qualif.`, um alle qualifizierten Länder auf einmal umzuschalte
 <!-- /i18n:tax_heading -->
 
 <!-- i18n:tax_intro -->
-Jedes Land wird als **Pill-Badge** angezeigt, dessen CSS-Stil seine Kategorie kennzeichnet.
+Jedes Land wird als **Pill-Badge** angezeigt, dessen CSS-Stil seine Kategorie auf einen Blick kennzeichnet.
 <!-- /i18n:tax_intro -->
 
 <div class="taxonomy" style="display:flex;flex-direction:column;gap:16px;margin:1rem 0">
@@ -103,7 +114,7 @@ Hier geboren / spielt für
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/it.svg" alt="">
     <span class="elo-name" data-id="380">Italy</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span> <!-- i18n:tax_desc_exp -->
+  <span style="font-size:.875rem"><span style="color:#3b82f6">▶</span> <!-- i18n:tax_desc_exp -->
 Spieler, die in diesem Land geboren wurden, spielen für ein anderes qualifiziertes Land.
 <!-- /i18n:tax_desc_exp --></span>
 </div>
@@ -112,7 +123,7 @@ Spieler, die in diesem Land geboren wurden, spielen für ein anderes qualifizier
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" alt="">
     <span class="elo-name" data-id="531">Curaçao</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#ef4444">●</span> <!-- i18n:tax_desc_imp -->
+  <span style="font-size:.875rem"><span style="color:#ef4444">◀</span> <!-- i18n:tax_desc_imp -->
 Spieler, die in einem anderen Land geboren wurden, spielen für dieses Land.
 <!-- /i18n:tax_desc_imp --></span>
 </div>
@@ -121,8 +132,8 @@ Spieler, die in einem anderen Land geboren wurden, spielen für dieses Land.
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" alt="">
     <span class="elo-name" data-id="250">France</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span><span style="color:#ef4444">●</span> <!-- i18n:tax_desc_both -->
-Spieler aus diesem Land spielen für andere Länder, und Spieler aus anderen Ländern spielen für dieses Land.
+  <span style="font-size:.875rem"><span style="color:#ef4444">◀</span><span style="color:#3b82f6">▶</span> <!-- i18n:tax_desc_both -->
+Spieler aus anderen Ländern spielen für dieses Land, und Spieler aus diesem Land spielen für andere Länder.
 <!-- /i18n:tax_desc_both --></span>
 </div>
 </div>
@@ -140,7 +151,7 @@ Orthogonal zu den obigen Kategorien.
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap -->
-Name in <em>Kursivschrift</em> — zu klein für die Karte.
+Name in <em>Kursivschrift</em> und gedimmte Flagge — zu klein für die Karte.
 <!-- /i18n:tax_desc_nomap --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
@@ -157,76 +168,73 @@ Ebenso, hier kombiniert mit Nicht-FIFA.
 </div>
 
 <!-- i18n:map -->
-## The Map
+## Die Karte
 
-### Choropleth & Flags
+### Choropleth und Flaggen
 
-Each country is shaded by the total number of World Cup players born there —
-the darker the shade, the more players. Countries with no players born there appear in a neutral pale tone.
-Countries currently included in the filter display a circular flag marker at their centroid.
+Jedes Land ist entsprechend der Gesamtzahl der dort geborenen WM-Spieler eingefärbt —
+je dunkler der Farbton, desto mehr Spieler. Länder, in denen keine Spieler geboren wurden, erscheinen in einem neutralen hellen Ton.
+Länder, die derzeit im Filter enthalten sind, zeigen eine kreisförmige Flaggenmarkierung.
 
-### Zoom & Pan
+### Zoom und Navigation
 
-Scroll (or pinch) to zoom · drag to pan. The <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="reset"> button resets the view.
-When a country is selected, the <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> button zooms and pans to fit all highlighted countries at once.
+Scrollen (oder kneifen) zum Zoomen · ziehen zum Verschieben. Die Schaltfläche <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="zurücksetzen"> zoomt heraus, um alle Länder in die Ansicht zu passen.
+Wenn ein Land ausgewählt ist, zoomt die Schaltfläche <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="anpassen"> und verschiebt, um alle hervorgehobenen Länder auf einmal zu zeigen.
 
-### The Legend
+### Die Legende
 
-The colour bar at the bottom of the header runs dark-to-pale from left to right,
-with reference tick values **66 · 55 · 35 · 15 · 0**.
-France, far off scale, is shown as a standalone black dot to the left of the bar.
+Die Farbbalken am unteren Rand der Kopfzeile verlaufen von dunkel nach hell von links nach rechts,
+mit den Referenzwerten **66 · 55 · 35 · 15 · 0**.
+Frankreich (**99**, weit außerhalb der Skala) wird als eigenständiger schwarzer Punkt links der Leiste dargestellt.
 
 ### Tooltips
 
-Hover any country to see details. Tooltips are not shown on mobile.
+Fahren Sie mit der Maus über ein Land, um Details zu sehen. Tooltips werden auf Mobilgeräten nicht angezeigt.
 
-- **Birth countries**: export count and top players, each with their destination flag
-- **Qualified countries that also recruit**: a right-hand column adds the import side
-- **Non-qualified birth countries**: a *not qualified* badge replaces the squad panel
+- **Geburtsländer**: Exportanzahl und Top-Spieler, jeweils mit ihrer Zielflagge
+- **Qualifizierte Länder, die auch rekrutieren**: eine rechte Spalte fügt die Importseite hinzu
+- **Nicht qualifizierte Geburtsländer**: ein Badge *nicht qualifiziert* ersetzt das Kader-Panel
 <!-- /i18n:map -->
 
 <!-- i18n:bottom_panel -->
-## The Bottom Panel
+## Das untere Panel
 
-The scrollable area below the map has three tabs.
+Der scrollbare Bereich unter der Karte hat drei Registerkarten.
 
-### The Country List
+### <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> Die Länderliste
 
-The default tab lists every country as a pill badge.
-The filter & sort panel controls which badges appear and in what order;
-the default sort is by [World Football Elo rating](https://www.eloratings.net/).
+Die Standardregisterkarte listet jedes Land als Pill-Badge auf.
+Das Filter- und Sortierpanel steuert, welche Badges erscheinen und in welcher Reihenfolge;
+die Standardsortierung erfolgt nach [Welt-Elo-Bewertung](https://www.eloratings.net/).
 
-Clicking a badge selects that country and zooms the map to it.
+Ein Klick auf ein Badge wählt dieses Land aus und zoomt die Karte darauf.
 
-For countries with **born-in / plays-for** connections, coloured arrows also appear on the map:
+Für Länder mit **geboren hier / spielt für**-Verbindungen erscheinen auch farbige Pfeile auf der Karte:
 
-- <span style="color:#3b82f6">■</span> **blue arrows**: squads that include players born in the selected country
-- <span style="color:#ef4444">■</span> **red arrows**: countries where players born elsewhere play for this squad
+- <span style="color:#3b82f6">■</span> **blaue Pfeile**: Kader, die Spieler einschließen, die im ausgewählten Land geboren wurden
+- <span style="color:#ef4444">■</span> **rote Pfeile**: Länder, in denen anderswo geborene Spieler für diesen Kader spielen
 
-The <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> button then fits all connected countries in view at once.
+Die Schaltfläche <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="anpassen"> passt dann alle verbundenen Länder in die Ansicht.
 
-Click the active badge a second time, click anywhere else on the map, or press **Esc** to deselect.
+Klicken Sie erneut auf das aktive Badge, klicken Sie woanders auf die Karte oder drücken Sie **Esc**, um die Auswahl aufzuheben.
 
-### The Player Table
+### Die Spielertabelle
 
-When a country is selected, the player table shows three sections:
+Wenn ein Land ausgewählt ist, zeigt die Spielertabelle drei Abschnitte:
 
-| Section | Contents |
+| Abschnitt | Inhalt |
 |---|---|
-| **Born here / plays for another** | Players born in this country, grouped by the squad they represent |
-| **Born here / plays for this country** | Players born here who also represent this country |
-| **Born elsewhere / plays for this country** | Players born in another country who represent this squad, grouped by birth country |
+| **Hier geboren / spielt für ein anderes** | Spieler, die in diesem Land geboren wurden, gruppiert nach dem Kader, den sie vertreten |
+| **Hier geboren / spielt für dieses Land** | Spieler, die hier geboren wurden und auch dieses Land vertreten |
+| **Woanders geboren / spielt für dieses Land** | Spieler, die in einem anderen Land geboren wurden und für diesen Kader spielen, gruppiert nach Geburtsland |
 
-Player names link to their Wikipedia page in the current interface language when available.
+Spielernamen verlinken auf ihre Wikipedia-Seite in der aktuellen Oberflächensprache, wenn verfügbar.
 
-### Export Chains
+### <img class="gp-icon" src="images/wc2026.svg" alt=""> Ketten
 
-The chain tab shows sequences where player exports link countries together:
-a player born in A plays for B, a player born in B plays for C — and so on,
-forming a chain of nationalities across the tournament.
-
-The snake diagram reads left to right; each node shows the player's name flanked by
-the birth-country flag and the squad-country flag.
+Die Ketten-Registerkarte zeigt Sequenzen von Ländern, die durch geboren-hier / spielt-für-Verbindungen verknüpft sind:
+ein Spieler, der in A geboren wurde, spielt für B, ein Spieler, der in B geboren wurde, spielt für C — und so weiter,
+und bildet eine Kette von Nationalitäten durch das Turnier.
 <!-- /i18n:bottom_panel -->
 
 <!-- i18n:data_sources -->
@@ -234,7 +242,29 @@ the birth-country flag and the squad-country flag.
 
 | Quelle | Verwendung |
 |---|---|
-| [Wikipedia](https://wikipedia.org) Kaderseiten | Spielernamen, Geburtsländer, Länderspielanzahl |
 | [eloratings.net](https://www.eloratings.net/) | Weltfußball-Elo-Ranglisten |
+| [Wikipedia — WM 2026 Kader](https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads) | Spielernamen, Länderspielanzahl |
+| [Wikipedia-API](https://en.wikipedia.org/w/api.php) | Wikipedia-Seite jedes Spielers in 5 Sprachen (en, fr, de, it, es) |
+| [Wikipedia — FIFA-Ländercodes](https://en.wikipedia.org/wiki/List_of_FIFA_country_codes) | FIFA-Mitgliedschaft |
+| [Wikidata](https://www.wikidata.org/) | Geburtsländer |
 | [Weltbank](https://data.worldbank.org/) | Länderbevölkerungen |
+
+**Die Auflösung des Geburtslandes** ist der heikelste Schritt in der Pipeline.
+Die Wikipedia-Kaderseite gibt nicht an, wo Spieler geboren wurden — sie liefert nur ihre Namen
+und Links zu ihren individuellen Wikipedia-Seiten.
+Die Pipeline nutzt diese Links als Schlüssel zur Abfrage von [Wikidata](https://www.wikidata.org/)
+via SPARQL und ruft den eingetragenen Geburtsort jedes Spielers und das Land ab, zu dem dieser Ort gehört.
+Diese zweistufige Suche (Wikipedia → Wikidata) ermöglicht es, die geboren-hier / spielt-für-Verbindungen auf der Karte einzuzeichnen.
+
+Diese Quellen speisen eine automatisierte Pipeline, die die Rohdaten zusammenführt, abgleicht und anreichert, bevor sie auf dieser Seite veröffentlicht werden.
+Elo-Ranglisten werden täglich aktualisiert; Kaderdaten werden manuell aktualisiert, wenn sich die Kader ändern.
 <!-- /i18n:data_sources -->
+
+```mermaid
+flowchart LR
+  ELO["eloratings.net\nElo rankings"] --> P
+  WP["Wikipedia\nsquad page · FIFA codes\nplayer pages × 5 languages"] --> P
+  WD["Wikidata\nbirth countries"] --> P
+  WB["World Bank\npopulations"] --> P
+  P(["data pipeline"]) --> M["this page"]
+```
