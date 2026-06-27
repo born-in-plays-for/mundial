@@ -8,5 +8,5 @@ Authentication is handled via Google OAuth — no password is stored.
 <!-- /i18n:auth_intro -->
 
 <!-- i18n:auth_coming_soon -->
-*Detailed guide content for this section is coming soon.*
+<div class="gp-wip"></div>
 <!-- /i18n:auth_coming_soon -->

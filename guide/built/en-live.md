@@ -8,5 +8,5 @@ with birth-country flags overlaid on each player card.
 <!-- /i18n:live_intro -->
 
 <!-- i18n:live_coming_soon -->
-*Detailed guide content for this section is coming soon.*
+<div class="gp-wip"></div>
 <!-- /i18n:live_coming_soon -->

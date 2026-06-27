@@ -8,5 +8,5 @@ showing the geographic spread of talent across metropolitan France and overseas 
 <!-- /i18n:france_intro -->
 
 <!-- i18n:france_coming_soon -->
-*Detailed guide content for this section is coming soon.*
+<div class="gp-wip"></div>
 <!-- /i18n:france_coming_soon -->

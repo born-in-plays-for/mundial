@@ -7,6 +7,11 @@ let _pageId = null;
 let _panel = null;
 let _navHandler = null;
 
+const _WIP_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
+  <div class="gp-wip-title">WORK IN PROGRESS</div>
+  <div class="gp-wip-sub">This guide section is under construction.</div>
+</div></div>`;
+
 const _guideToPage = {
   home: '/',
   france: 'wc2026_france_departments.html',
@@ -78,6 +83,11 @@ function _injectStyles() {
 #mundial-guide-panel .gp-body img+p>em:only-child,
 #mundial-guide-panel .gp-body svg+p>em:only-child{display:block;font-size:.8rem;font-style:italic;color:var(--text-muted,#999);text-align:center;margin-top:.1rem;margin-bottom:1.25rem}
 #mundial-guide-panel .gp-body::after{content:'';display:table;clear:both}
+.gp-wip-banner{text-align:center;margin:2rem 0}
+.gp-wip-box{display:inline-block;border-radius:12px;padding:1.5rem 2.5rem;background-color:#f0ede8;background-image:repeating-linear-gradient(90deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px),repeating-linear-gradient(0deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px),repeating-linear-gradient(90deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px),repeating-linear-gradient(0deg,#c8c4be 0,#c8c4be 8px,transparent 8px,transparent 16px);background-size:100% 3px,3px 100%,100% 3px,3px 100%;background-position:0 0,100% 0,0 100%,0 0;background-repeat:no-repeat;animation:gp-wip-march .8s linear infinite}
+@keyframes gp-wip-march{to{background-position:16px 0,100% 16px,-16px 100%,0 -16px}}
+.gp-wip-title{font-size:2.5rem;font-weight:700;color:#888;letter-spacing:.05em;line-height:1.2}
+.gp-wip-sub{font-size:.9rem;color:#999;margin-top:.4rem}
 `;
   document.head.appendChild(s);
 }
@@ -92,10 +102,9 @@ async function _showSection(guideId) {
   body.className = 'gp-body';
   if (md) {
     body.innerHTML = marked.parse(md);
+    body.querySelectorAll('.gp-wip').forEach(el => el.outerHTML = _WIP_HTML);
   } else {
-    const labels = { home: 'Map', france: 'France departments', live: 'Live game', auth: 'Authentication' };
-    body.innerHTML = `<p style="color:var(--text-muted,#999);font-size:.9rem;margin-top:2rem;text-align:center">
-      Guide for <strong>${labels[guideId] ?? guideId}</strong> is not yet available.</p>`;
+    body.innerHTML = _WIP_HTML;
   }
   const icon = _sectionIcon(guideId);
   if (icon) body.prepend(icon);

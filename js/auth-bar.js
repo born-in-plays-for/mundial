@@ -81,16 +81,17 @@ class MundialAuthBar extends HTMLElement {
           ${_navLink('/', _t.navHome, ICON_HOME, '', 'home')}
           ${_navLink('wc2026_france_departments.html', _t.navFrance, ICON_FRANCE, '', 'france')}
           ${_navLink('wc2026_live_game.html', _t.navLive, ICON_LIVE, '', 'live')}
+          <div data-ref="auth-section" data-guide="auth"
+            class="d-flex align-items-center gap-3 ms-auto">
+            ${_authSectionTemplate()}
+          </div>
           <button data-ref="guide-btn"
-            class="btn btn-outline-secondary p-0 d-flex align-items-center ms-auto"
+            class="btn btn-outline-secondary p-0 d-flex align-items-center"
             aria-label=${_t.navGuide} title=${_t.navGuide}
             data-bs-toggle="button"
             @click=${() => this._onGuideClick()}>
             ${unsafeHTML(ICON_GUIDE)}
           </button>
-          <div data-ref="auth-section" data-guide="auth" style="display:contents">
-            ${_authSectionTemplate()}
-          </div>
         </div>
       </nav>`, this);
 
