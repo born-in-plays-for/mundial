@@ -21,7 +21,7 @@
     <div id="sidebar-host"></div>
   </div>
 </header>
-<div id="main-content" class="container pb-5 taxonomy">
+<div id="main-content" class="container pb-2 taxonomy">
   <elo-ranking id="list"></elo-ranking>
 </div>
 <script type="module">
@@ -32,7 +32,7 @@ import { initSidebar } from './js/control_sidebar.js';
 
 const _header = document.getElementById('countries-header');
 const _main   = document.getElementById('main-content');
-const _syncPaddingTop = () => { _main.style.paddingTop = _header.getBoundingClientRect().bottom + 'px'; };
+const _syncPaddingTop = () => { _main.style.paddingTop = (_header.getBoundingClientRect().bottom + 6) + 'px'; };
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 
