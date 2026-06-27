@@ -5,7 +5,7 @@
 <!-- i18n:intro -->
 This map visualises the 2026 FIFA World Cup squads through the lens of birthplace.
 Each country is shaded by how many players born there represent **another** country
-at the tournament, normalised per million inhabitants.
+at the tournament.
 <!-- /i18n:intro -->
 
 <!-- i18n:control_sidebar -->

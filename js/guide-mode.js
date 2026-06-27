@@ -169,7 +169,6 @@ async function _fetchContent(guideId) {
   const candidates = [
     `guide/built/${lang}-${guideId}.md`,
     `guide/built/en-${guideId}.md`,
-    ...(guideId === 'home' ? [`guide/built/${lang}.md`, 'guide/built/en.md'] : []),
   ];
   for (const url of candidates) {
     try {
