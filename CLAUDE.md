@@ -44,7 +44,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
 | `data/` | Git submodule → `mundial-data` repo. Contains all pipeline-generated data: `wc2026_map_data.json`, `wc2026_elo_rank.json`, `wc2026_elo_history.json`, `countries.json`, `uk-nations.geojson`, `wc2026_gdp.json`, `wc2026_gdp_pc_ppp.json`, `wc2026_hdi.json` |
-| `wc2026_og_v5.png` | 2880×1620 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=2) |
+| `wc2026_og_v5.jpg` | 2880×1620 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=2) |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
 | `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
@@ -164,7 +164,7 @@ with sync_playwright() as p:
         }
     }''')
     page.wait_for_timeout(1500)
-    page.screenshot(path="wc2026_og_v5.png")
+    page.screenshot(path="wc2026_og_v5.jpg", type="jpeg", quality=90)
     browser.close()
 ```
 
