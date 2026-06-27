@@ -8,6 +8,17 @@ Cada país se colorea según el número de jugadores nacidos allí que represent
 en el torneo.
 <!-- /i18n:intro -->
 
+<!-- i18n:quotes -->
+## The Quotes
+
+The header area shows a rotating carousel of 15 famous literary quotes —
+from Villon (1461) to Simone de Beauvoir (1949) — each playfully reworded
+to swap the original key phrase for a football selection term.
+The original line appears in smaller text below so you can spot what changed.
+
+Navigate between quotes using the dot indicators, or swipe left / right on touch screens.
+<!-- /i18n:quotes -->
+
 <!-- i18n:control_sidebar -->
 ## Panel de filtro y ordenación
 
@@ -115,24 +126,76 @@ Cada país se muestra como una **pastilla** cuyo estilo CSS codifica su categor�
 </div>
 <!-- /i18n:country_taxonomy -->
 
-<!-- i18n:interaction_flow -->
-## Modelo de interacción
+<!-- i18n:map -->
+## The Map
 
-Haz clic en cualquier país del mapa — o en cualquier insignia de la lista Elo — para entrar en el **modo dim**:
-las banderas no relacionadas se atenúan, los arcos muestran los flujos de exportación, y la tabla de jugadores aparece debajo del mapa.
+### Choropleth & Flags
 
-```mermaid
-flowchart LR
-    B(Browse) -->|"clic país / insignia Elo"| D(Modo dim)
-    D -->|"clic mismo elemento"| B
-    D -->|"clic país diferente"| D
-    D -->|Esc| B
-```
+Each country is shaded by the number of players born there who represent another World Cup squad —
+the darker the shade, the more exported players. Countries with no exports appear in a neutral pale tone.
+Qualified countries display a circular flag marker at their centroid.
 
-*Hacer clic en el mismo elemento siempre vuelve a Browse.*
+### Zoom & Pan
 
-> **Consejo:** hacer clic dos veces en la insignia Elo activa cancela el modo dim sin mover el mapa.
-<!-- /i18n:interaction_flow -->
+Scroll (or pinch) to zoom · drag to pan. The **↺** button resets the view.
+In dim mode, the **⇔** button zooms and pans to fit all highlighted countries at once.
+
+### The Legend
+
+The colour bar at the bottom of the header runs dark-to-pale from left to right,
+with reference tick values **66 · 55 · 35 · 15 · 0**.
+France, far off scale, is shown as a standalone black dot to the left of the bar.
+
+### Tooltips
+
+Hover any country to see details. Tooltips are not shown on mobile.
+
+- **Birth countries**: export count and top players, each with their destination flag
+- **Qualified countries that also recruit**: a right-hand column adds the import side
+- **Non-qualified birth countries**: a *not qualified* badge replaces the squad panel
+<!-- /i18n:map -->
+
+<!-- i18n:bottom_panel -->
+## The Bottom Panel
+
+The scrollable area below the map has three tabs.
+
+### The Elo Ranking
+
+The default tab lists every country as a pill badge, sorted by
+[World Football Elo rating](https://www.eloratings.net/).
+The filter & sort panel controls which badges appear and in what order.
+
+Clicking a badge has three possible effects:
+
+- **Exporting countries** (<span style="color:#3b82f6">●</span> blue dot): activates *dim mode* —
+  unrelated flags fade on the map, arcs show export flows, and the player table opens
+- **Map-visible non-exporters**: the map zooms and pans to centre on that country
+- **Off-map / no data**: no interaction
+
+Click the active badge a second time — or press **Esc** — to return to browse mode.
+
+### The Player Table
+
+In dim mode the player table shows three sections for the selected country:
+
+| Section | Contents |
+|---|---|
+| **Exports** | Players born here, grouped by the country they represent |
+| **Natives** | Players born here who also play for this country |
+| **Imports** | Players born elsewhere who play for this country, grouped by birth country |
+
+Player names link to their Wikipedia page in the current interface language when available.
+
+### Export Chains
+
+The chain tab shows sequences where player exports link countries together:
+a player born in A plays for B, a player born in B plays for C — and so on,
+forming a chain of nationalities across the tournament.
+
+The snake diagram reads left to right; each node shows the player's name flanked by
+the birth-country flag and the squad-country flag.
+<!-- /i18n:bottom_panel -->
 
 <!-- i18n:data_sources -->
 ## Fuentes de datos
