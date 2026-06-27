@@ -46,96 +46,97 @@ Kosovo, or the four UK home nations, which are recognised by Elo but not all by 
 The default sort order is by Elo rating; other sort criteria are available in the sort column.
 <!-- /i18n:control_sidebar -->
 
-<!-- i18n:country_taxonomy -->
+<!-- i18n:tax_heading -->
 ## Country Categories
+<!-- /i18n:tax_heading -->
 
+<!-- i18n:tax_intro -->
 Every country is displayed as a **pill badge** whose CSS style encodes its category at a glance.
+<!-- /i18n:tax_intro -->
 
 <div class="taxonomy" style="display:flex;flex-direction:column;gap:16px;margin:1rem 0">
 
 <div>
-<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">Qualified vs. non-qualified</div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555"><!-- i18n:tax_label_qualified -->Qualified vs. non-qualified<!-- /i18n:tax_label_qualified --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cz.svg" alt="">
     <span class="elo-name" data-id="203">Czech Republic</span>
   </span>
-  <span style="font-size:.875rem">Solid border — qualified for the 2026 World Cup.</span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_yes -->Solid border — qualified for the 2026 World Cup.<!-- /i18n:tax_desc_border_yes --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ua.svg" alt="">
     <span class="elo-name" data-id="804">Ukraine</span>
   </span>
-  <span style="font-size:.875rem">No border — not qualified.</span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_no -->No border — not qualified.<!-- /i18n:tax_desc_border_no --></span>
 </div>
 </div>
 
 <div>
-<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">FIFA vs. non-FIFA</div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555"><!-- i18n:tax_label_fifa -->FIFA vs. non-FIFA<!-- /i18n:tax_label_fifa --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/is.svg" alt="">
     <span class="elo-name" data-id="352">Iceland</span>
   </span>
-  <span style="font-size:.875rem">Dark text — FIFA member.</span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_text_dark -->Dark text — FIFA member.<!-- /i18n:tax_desc_text_dark --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--nonfifa" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gl.svg" alt="">
     <span class="elo-name" data-id="304">Greenland</span>
   </span>
-  <span style="font-size:.875rem">Light text — not a FIFA member.</span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_text_light -->Light text — not a FIFA member.<!-- /i18n:tax_desc_text_light --></span>
 </div>
 </div>
 
 <div>
-<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555">Born here / plays for</div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:6px;color:#555"><!-- i18n:tax_label_born -->Born here / plays for<!-- /i18n:tax_label_born --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--exp" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/it.svg" alt="">
     <span class="elo-name" data-id="380">Italy</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span> Players born in this country play for another qualified country.</span>
+  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span> <!-- i18n:tax_desc_exp -->Players born in this country play for another qualified country.<!-- /i18n:tax_desc_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--imp" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" alt="">
     <span class="elo-name" data-id="531">Curaçao</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#ef4444">●</span> Players born in another country play for this country.</span>
+  <span style="font-size:.875rem"><span style="color:#ef4444">●</span> <!-- i18n:tax_desc_imp -->Players born in another country play for this country.<!-- /i18n:tax_desc_imp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" alt="">
     <span class="elo-name" data-id="250">France</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span><span style="color:#ef4444">●</span> Players born here play for other countries, and players born elsewhere play for this country.</span>
+  <span style="font-size:.875rem"><span style="color:#3b82f6">●</span><span style="color:#ef4444">●</span> <!-- i18n:tax_desc_both -->Players born here play for other countries, and players born elsewhere play for this country.<!-- /i18n:tax_desc_both --></span>
 </div>
 </div>
 
 <div>
-<div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555">Off the map</div>
-<div style="font-size:.8rem;color:#777;margin-bottom:6px">Orthogonal to the categories above.</div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555"><!-- i18n:tax_label_offmap -->Off the map<!-- /i18n:tax_label_offmap --></div>
+<div style="font-size:.8rem;color:#777;margin-bottom:6px"><!-- i18n:tax_note_offmap -->Orthogonal to the categories above.<!-- /i18n:tax_note_offmap --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--no-map" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" alt="">
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
-  <span style="font-size:.875rem"><em>Italic</em> name — too small to appear on the map.</span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap --><em>Italic</em> name — too small to appear on the map.<!-- /i18n:tax_desc_nomap --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--nonfifa elo-item--no-map" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/mc.svg" alt="">
     <span class="elo-name" data-id="492">Monaco</span>
   </span>
-  <span style="font-size:.875rem">Same, here combined with non-FIFA.</span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap_nonfifa -->Same, here combined with non-FIFA.<!-- /i18n:tax_desc_nomap_nonfifa --></span>
 </div>
 </div>
 
 </div>
-
-<!-- /i18n:country_taxonomy -->
 
 <!-- i18n:map -->
 ## The Map

@@ -78,7 +78,8 @@ def take_screenshots():
 
 # ── Language builds ───────────────────────────────────────────────────────────
 
-_HTML_TAG_RE = re.compile(r'<[a-zA-Z/]')
+# Warn on structural/layout HTML in i18n values; allow inline formatting
+_HTML_TAG_RE = re.compile(r'<(?!/?(?:em|strong|b|i|a|code|br)\b)[a-zA-Z/]')
 
 
 def _resolve(value):
