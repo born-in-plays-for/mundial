@@ -84,7 +84,7 @@ Ogni paese è mostrato come una **pillola** il cui stile CSS ne codifica la cate
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--exp" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/it.svg" alt="">
-    <span class="elo-name" data-id="752">Sweden</span>
+    <span class="elo-name" data-id="380">Italy</span>
   </span>
   <span style="font-size:.875rem"><span style="color:#3b82f6">●</span> Giocatori nati in questo paese giocano per un altro paese qualificato.</span>
 </div>

@@ -173,7 +173,7 @@ async function _fetchContent(guideId) {
   ];
   for (const url of candidates) {
     try {
-      const r = await fetch(url);
+      const r = await fetch(url, { cache: 'no-store' });
       if (r.ok) return r.text();
     } catch {}
   }
