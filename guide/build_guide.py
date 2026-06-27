@@ -4,11 +4,13 @@ Build the user guide.
 
 Steps:
   1. Capture screenshots via Playwright (uses the dev server on port 4040)
-  2. Build per-language Markdown files via i18n marker substitution
+  2. Build per-language, per-section Markdown files via i18n marker substitution
 
 Usage:
-  python3 guide/build_guide.py            # screenshots + all languages
+  python3 guide/build_guide.py            # screenshots + all sections + all languages
   python3 guide/build_guide.py --no-screenshots  # languages only (faster)
+
+Output: guide/built/{lang}-{section}.md  for each language × section combination.
 
 Requirements:
   pip install playwright
@@ -25,9 +27,16 @@ GUIDE_DIR   = Path(__file__).resolve().parent
 SCREENSHOTS = GUIDE_DIR / 'screenshots'
 BUILT       = GUIDE_DIR / 'built'
 I18N_DIR    = GUIDE_DIR / 'i18n'
-TEMPLATE    = GUIDE_DIR / 'guide.md'
 LANGUAGES   = ['fr', 'de', 'it', 'es']
 BASE_URL    = 'http://localhost:4040'
+
+# Section name → source template
+GUIDES = {
+    'home':   GUIDE_DIR / 'guide.md',
+    'france': GUIDE_DIR / 'guide-france.md',
+    'live':   GUIDE_DIR / 'guide-live.md',
+    'auth':   GUIDE_DIR / 'guide-auth.md',
+}
 
 MARKER_RE = re.compile(
     r'(<!-- i18n:(\w+) -->)(.*?)(<!-- /i18n:\2 -->)',
@@ -78,28 +87,36 @@ def _resolve(value):
 
 def build_languages():
     BUILT.mkdir(exist_ok=True)
-    template = TEMPLATE.read_text(encoding='utf-8')
-    all_keys = MARKER_RE.findall(template)
-    total    = len(all_keys)
 
-    en_path = BUILT / 'en.md'
-    shutil.copy(TEMPLATE, en_path)
-    print(f'  ✓ built/en.md  (= guide.md, {total} marker blocks)')
+    # Load all translations once
+    all_translations = {
+        lang: json.loads((I18N_DIR / f'{lang}.json').read_text(encoding='utf-8'))
+        if (I18N_DIR / f'{lang}.json').exists() else {}
+        for lang in LANGUAGES
+    }
 
-    for lang in LANGUAGES:
-        path         = I18N_DIR / f'{lang}.json'
-        translations = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+    for section, template_path in GUIDES.items():
+        template = template_path.read_text(encoding='utf-8')
+        all_keys = MARKER_RE.findall(template)
+        total    = len(all_keys)
 
-        def replace(m, t=translations):
-            open_tag, key, _, close_tag = m.group(1), m.group(2), m.group(3), m.group(4)
-            if key in t:
-                return f'{open_tag}\n{_resolve(t[key])}\n{close_tag}'
-            return m.group(0)  # untranslated → keep English
+        # English: copy template as-is
+        shutil.copy(template_path, BUILT / f'en-{section}.md')
+        print(f'  ✓ built/en-{section}.md  ({total} marker blocks)')
 
-        result       = MARKER_RE.sub(replace, template)
-        n_translated = sum(1 for _, key, _, _ in all_keys if key in translations)
-        (BUILT / f'{lang}.md').write_text(result, encoding='utf-8')
-        print(f'  ✓ built/{lang}.md  ({n_translated}/{total} keys translated)')
+        for lang in LANGUAGES:
+            translations = all_translations[lang]
+
+            def replace(m, t=translations):
+                open_tag, key, close_tag = m.group(1), m.group(2), m.group(4)
+                if key in t:
+                    return f'{open_tag}\n{_resolve(t[key])}\n{close_tag}'
+                return m.group(0)
+
+            result       = MARKER_RE.sub(replace, template)
+            n_translated = sum(1 for _, key, _, _ in all_keys if key in translations)
+            (BUILT / f'{lang}-{section}.md').write_text(result, encoding='utf-8')
+            print(f'  ✓ built/{lang}-{section}.md  ({n_translated}/{total} keys translated)')
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

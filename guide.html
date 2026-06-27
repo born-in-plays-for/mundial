@@ -198,7 +198,7 @@ const lang = new URLSearchParams(location.search).get('lang') ?? ['fr', 'de', 'i
 const el   = document.getElementById('guide-body');
 
 // Try built/{lang}.md first, fall back to guide.md (English, unbuilt markers are invisible)
-const urls = [`guide/built/${lang}.md`, 'guide/guide.md'];
+const urls = [`guide/built/${lang}-home.md`, 'guide/built/en-home.md', 'guide/guide.md'];
 let md = null;
 for (const url of urls) {
   const r = await fetch(url);

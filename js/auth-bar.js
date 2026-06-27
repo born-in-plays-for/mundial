@@ -13,9 +13,10 @@ const WA_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fil
 const WARN_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;vertical-align:-3px;display:inline-block"><path d="M3 10.4167C3 7.21907 3 5.62028 3.37752 5.08241C3.75503 4.54454 5.25832 4.02996 8.26491 3.00079L8.83772 2.80472C10.405 2.26824 11.1886 2 12 2C12.8114 2 13.595 2.26824 15.1623 2.80472L15.7351 3.00079C18.7417 4.02996 20.245 4.54454 20.6225 5.08241C21 5.62028 21 7.21907 21 10.4167C21 10.8996 21 11.4234 21 11.9914C21 17.6294 16.761 20.3655 14.1014 21.5273C13.38 21.8424 13.0193 22 12 22C10.9807 22 10.62 21.8424 9.89856 21.5273C7.23896 20.3655 3 17.6294 3 11.9914C3 11.4234 3 10.8996 3 10.4167Z" stroke="#f59e0b" stroke-width="1.5"/><path d="M12 8V12" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="15" r="1" fill="#f59e0b"/></svg>`;
 
 const _hoverStyle = 'line-height:0;opacity:.6;transition:opacity .2s';
-const _navLink = (href, label, icon, extra = '') =>
+const _navLink = (href, label, icon, extra = '', guideId = '') =>
   html`<a href=${href} class="text-decoration-none d-flex align-items-center ${extra}"
     aria-label=${label} title=${label} style=${_hoverStyle}
+    data-guide=${guideId || nothing}
     @mouseover=${e => e.currentTarget.style.opacity = 1}
     @mouseout=${e => e.currentTarget.style.opacity = .6}>${unsafeHTML(icon)}</a>`;
 
@@ -69,6 +70,7 @@ class MundialAuthBar extends HTMLElement {
   constructor() {
     super();
     this.BACKEND = '';
+    this._guideActive = false;
   }
 
   connectedCallback() {
@@ -76,11 +78,17 @@ class MundialAuthBar extends HTMLElement {
       <nav class="navbar navbar-light bg-white border-bottom py-0 px-2"
         style="position:fixed;top:0;left:0;right:0;z-index:1050;height:32px">
         <div class="container-xxl d-flex align-items-center gap-3 px-1">
-          ${_navLink('/', _t.navHome, ICON_HOME)}
-          ${_navLink('wc2026_france_departments.html', _t.navFrance, ICON_FRANCE)}
-          ${_navLink('wc2026_live_game.html', _t.navLive, ICON_LIVE)}
-          ${_navLink('guide.html', _t.navGuide, ICON_GUIDE, 'ms-auto')}
-          <div data-ref="auth-section" style="display:contents">
+          ${_navLink('/', _t.navHome, ICON_HOME, '', 'home')}
+          ${_navLink('wc2026_france_departments.html', _t.navFrance, ICON_FRANCE, '', 'france')}
+          ${_navLink('wc2026_live_game.html', _t.navLive, ICON_LIVE, '', 'live')}
+          <button data-ref="guide-btn"
+            class="btn btn-outline-secondary p-0 d-flex align-items-center ms-auto"
+            aria-label=${_t.navGuide} title=${_t.navGuide}
+            data-bs-toggle="button"
+            @click=${() => this._onGuideClick()}>
+            ${unsafeHTML(ICON_GUIDE)}
+          </button>
+          <div data-ref="auth-section" data-guide="auth" style="display:contents">
             ${_authSectionTemplate()}
           </div>
         </div>
@@ -108,12 +116,29 @@ class MundialAuthBar extends HTMLElement {
       this._refs[el.dataset.ref] = el;
     });
 
+    const _guideIdMap = {
+      '': 'home', 'index.html': 'home', 'wc2026_map_exported.html': 'home',
+      'wc2026_france_departments.html': 'france',
+      'wc2026_live_game.html': 'live',
+    };
+    this._currentGuideId = _guideIdMap[page] ?? null;
+    if (!this._currentGuideId) {
+      const btn = this._el('guide-btn');
+      if (btn) btn.disabled = true;
+    }
+
     this._el('auth-section').style.visibility = 'hidden';
     this._offsetSibling();
     this._init();
   }
 
   _el(ref) { return this._refs[ref]; }
+
+  async _onGuideClick() {
+    this._guideActive = !this._guideActive;
+    const { toggleGuide } = await import('./guide-mode.js');
+    toggleGuide(this);
+  }
 
   _showOffline(category, techDetail) {
     console.warn('[auth-bar]', techDetail);
