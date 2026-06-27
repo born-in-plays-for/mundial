@@ -137,8 +137,8 @@ Countries currently included in the filter display a circular flag marker at the
 
 ### Zoom & Pan
 
-Scroll (or pinch) to zoom · drag to pan. The **↺** button resets the view.
-When a country is selected, the **⇔** button zooms and pans to fit all highlighted countries at once.
+Scroll (or pinch) to zoom · drag to pan. The <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="reset"> button resets the view.
+When a country is selected, the <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> button zooms and pans to fit all highlighted countries at once.
 
 ### The Legend
 
