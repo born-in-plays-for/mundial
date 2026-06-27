@@ -146,15 +146,6 @@
     "Esta búsqueda en dos pasos (Wikipedia → Wikidata) es lo que hace posible trazar las conexiones nacido-aquí / juega-para en el mapa.",
     "",
     "Estas fuentes alimentan un pipeline automatizado que fusiona, cruza y enriquece los datos brutos antes de publicarlos en esta página.",
-    "Los rankings Elo se actualizan diariamente; los datos de convocatorias se actualizan manualmente cuando cambian las selecciones.",
-    "",
-    "```mermaid",
-    "flowchart LR",
-    "  ELO[\"eloratings.net\\nRankings Elo\"] --> P",
-    "  WP[\"Wikipedia\\nconvocatorias · códigos FIFA\\npáginas jugadores × 5 idiomas\"] --> P",
-    "  WD[\"Wikidata\\npaíses de nacimiento\"] --> P",
-    "  WB[\"Banco Mundial\\npoblaciones\"] --> P",
-    "  P([\"pipeline de datos\"]) --> M[\"esta página\"]",
-    "```"
+    "Los rankings Elo se actualizan diariamente; los datos de convocatorias se actualizan manualmente cuando cambian las selecciones."
   ]
 }

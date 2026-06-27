@@ -146,15 +146,6 @@
     "Cette recherche en deux étapes (Wikipedia → Wikidata) est ce qui rend possible de tracer les connexions né ici / joue pour sur la carte.",
     "",
     "Ces sources alimentent un pipeline automatisé qui fusionne, croise et enrichit les données brutes avant de les publier sur cette page.",
-    "Les classements Elo sont actualisés quotidiennement ; les données des effectifs sont mises à jour manuellement lorsque les sélections changent.",
-    "",
-    "```mermaid",
-    "flowchart LR",
-    "  ELO[\"eloratings.net\\nClassements Elo\"] --> P",
-    "  WP[\"Wikipedia\\neffectifs · codes FIFA\\npages joueurs × 5 langues\"] --> P",
-    "  WD[\"Wikidata\\npays de naissance\"] --> P",
-    "  WB[\"Banque mondiale\\npopulations\"] --> P",
-    "  P([\"pipeline de données\"]) --> M[\"cette page\"]",
-    "```"
+    "Les classements Elo sont actualisés quotidiennement ; les données des effectifs sont mises à jour manuellement lorsque les sélections changent."
   ]
 }

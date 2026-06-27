@@ -146,15 +146,6 @@
     "Diese zweistufige Suche (Wikipedia → Wikidata) ermöglicht es, die geboren-hier / spielt-für-Verbindungen auf der Karte einzuzeichnen.",
     "",
     "Diese Quellen speisen eine automatisierte Pipeline, die die Rohdaten zusammenführt, abgleicht und anreichert, bevor sie auf dieser Seite veröffentlicht werden.",
-    "Elo-Ranglisten werden täglich aktualisiert; Kaderdaten werden manuell aktualisiert, wenn sich die Kader ändern.",
-    "",
-    "```mermaid",
-    "flowchart LR",
-    "  ELO[\"eloratings.net\\nElo-Ranglisten\"] --> P",
-    "  WP[\"Wikipedia\\nKader · FIFA-Codes\\nSpielerseiten × 5 Sprachen\"] --> P",
-    "  WD[\"Wikidata\\nGeburtsländer\"] --> P",
-    "  WB[\"Weltbank\\nBevölkerungen\"] --> P",
-    "  P([\"Datenpipeline\"]) --> M[\"diese Seite\"]",
-    "```"
+    "Elo-Ranglisten werden täglich aktualisiert; Kaderdaten werden manuell aktualisiert, wenn sich die Kader ändern."
   ]
 }

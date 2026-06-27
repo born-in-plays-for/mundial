@@ -231,6 +231,7 @@ This two-step lookup (Wikipedia → Wikidata) is what makes it possible to draw 
 These sources feed an automated pipeline that merges, cross-references,
 and enriches the raw data before publishing it to this page.
 Elo rankings are refreshed daily; squad data is updated manually when squads change.
+<!-- /i18n:data_sources -->
 
 ```mermaid
 flowchart LR
@@ -240,4 +241,3 @@ flowchart LR
   WB["World Bank\npopulations"] --> P
   P(["data pipeline"]) --> M["this page"]
 ```
-<!-- /i18n:data_sources -->

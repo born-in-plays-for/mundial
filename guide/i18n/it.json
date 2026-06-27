@@ -146,15 +146,6 @@
     "Questa ricerca in due fasi (Wikipedia → Wikidata) è ciò che rende possibile tracciare le connessioni nato-qui / gioca-per sulla mappa.",
     "",
     "Queste fonti alimentano un pipeline automatizzato che unisce, incrocia e arricchisce i dati grezzi prima di pubblicarli su questa pagina.",
-    "I ranking Elo vengono aggiornati quotidianamente; i dati delle rose vengono aggiornati manualmente quando le selezioni cambiano.",
-    "",
-    "```mermaid",
-    "flowchart LR",
-    "  ELO[\"eloratings.net\\nRanking Elo\"] --> P",
-    "  WP[\"Wikipedia\\nrose · codici FIFA\\npagine giocatori × 5 lingue\"] --> P",
-    "  WD[\"Wikidata\\npaesi di nascita\"] --> P",
-    "  WB[\"Banca Mondiale\\npopolazioni\"] --> P",
-    "  P([\"pipeline dati\"]) --> M[\"questa pagina\"]",
-    "```"
+    "I ranking Elo vengono aggiornati quotidianamente; i dati delle rose vengono aggiornati manualmente quando le selezioni cambiano."
   ]
 }
