@@ -1,15 +1,15 @@
-import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 
-export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks }) {
+export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
 
   const _sidebarHost = document.getElementById('sidebar-host');
-  render(html`<div id="control-sidebar" class="collapsed taxonomy">
-  <button class="csb-toggle" title="Toggle filter">‹</button>
+  render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
+  ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="Toggle filter">‹</button>`}
   <div class="csb-body overflow-hidden"><table class="csb-table table table-sm table-bordered"><tbody>
     <tr>
-      <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span></td>
+      <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}${alwaysOpen ? nothing : html`<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span>`}</td>
       <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em class="elo-item"> ${T.filterLabels.action}</em></td>
       <td class="csb-col" data-col="exp"><span class="elo-item elo-item--exp"><span class="elo-name">${T.filterLabels.exporter}</span></span></td>
       <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
@@ -102,17 +102,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
 
   const applyFlagFilter = () => {
-    d3.selectAll('.flag-qualified[data-elo-cat]')
-      .attr('visibility', function() {
-        const id = +this.getAttribute('data-id');
-        return catEloChecked(id, fifaMemberIds.has(id)) ? null : 'hidden';
-      })
-      .attr('cursor', function() {
+    if (typeof d3 !== 'undefined') {
+      d3.selectAll('.flag-qualified[data-elo-cat]')
+        .attr('visibility', function() {
+          const id = +this.getAttribute('data-id');
+          return catEloChecked(id, fifaMemberIds.has(id)) ? null : 'hidden';
+        })
+        .attr('cursor', function() {
+          return isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
+        });
+      d3.selectAll('.country[data-id]').style('cursor', function() {
         return isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
       });
-    d3.selectAll('.country[data-id]').style('cursor', function() {
-      return isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
-    });
+    }
     updateVisibleCountryCount();
   };
 
@@ -186,12 +188,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }
   });
 
+  if (!alwaysOpen) {
   _toggle.addEventListener('click', () => {
     const collapsed = _el.classList.toggle('collapsed');
     _toggle.textContent = collapsed ? '‹' : '›';
   });
+  } // end !alwaysOpen
 
-  // ── Swipe-to-reveal / swipe-to-hide drawer gesture ──
+  // ── Swipe-to-reveal / swipe-to-hide drawer gesture (map page only) ──
+  if (!alwaysOpen) {
   const _pageHeader = document.getElementById('page-header');
   let _swX0 = null, _swDragging = false, _swExpanding = false;
   const _maxW = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--csb-w')) || 300;
@@ -270,6 +275,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _el.addEventListener('touchend', _swEnd);
   _el.addEventListener('touchcancel', _swEnd);
 
+
   // ── Map swipe zone (top-right 1/3 × 1/3 of map, landscape mobile) ──
   // Listens on the SVG itself (capture phase) so taps and D3 zoom/pan pass
   // through normally. Only intercepts when the gesture is a clear leftward
@@ -331,6 +337,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _mzY0 = null;
     }, { capture: true });
   }
+  } // end !alwaysOpen (map swipe zone)
 
   // ── Measure sidebar dimensions ──
   const measureControlSidebar = () => {

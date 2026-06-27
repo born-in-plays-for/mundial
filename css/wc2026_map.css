@@ -26,6 +26,9 @@ body { background: #f5f2ec; color: var(--color-default); }
 .link-btn { background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; color: inherit; }
 .link-btn:hover { color: #555; }
 
+/* countries page fixed header — auth-bar _offsetSibling() sets top:32px automatically */
+#countries-header { position: fixed; left: 0; right: 0; z-index: 100; background: var(--fixed-element-bg); border-bottom: 1px solid var(--border); }
+
 /* page header — grid so both children share row 1/col 1 and the row height = max(quote, sidebar) */
 #page-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--fixed-element-bg); padding: 0; display: grid; }
 #page-header ~ * { user-select: none; -webkit-user-select: none; }

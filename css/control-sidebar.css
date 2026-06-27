@@ -26,6 +26,10 @@
 
 #control-sidebar.collapsed .csb-body { max-width: 0; pointer-events: none; }
 
+/* Always-open variant (countries page) — no toggle, transparent bg, natural height */
+#control-sidebar.csb-always-open { margin-top: 0; }
+#control-sidebar.csb-always-open .csb-body { background: transparent; height: auto; max-width: none; }
+
 /* ── Toggle button ─────────────────────────────────────────────────────── */
 
 #control-sidebar .csb-toggle {
