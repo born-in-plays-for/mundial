@@ -81,8 +81,8 @@ class MundialAuthBar extends HTMLElement {
         <div class="container-xxl d-flex align-items-center gap-3 px-1">
           ${_navLink('/', _t.navHome, ICON_HOME, '', 'home')}
           ${_navLink('wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', 'countries')}
-          ${_navLink('wc2026_france_departments.html', _t.navFrance, ICON_FRANCE, '', 'france')}
-          ${_navLink('wc2026_live_game.html', _t.navLive, ICON_LIVE, '', 'live')}
+          ${_navLink('wc2026_france.html', _t.navFrance, ICON_FRANCE, '', 'france')}
+          ${_navLink('wc2026_live.html', _t.navLive, ICON_LIVE, '', 'live')}
           <div data-ref="auth-section" data-guide="auth"
             class="d-flex align-items-center gap-3 ms-auto">
             ${_authSectionTemplate()}
@@ -99,10 +99,10 @@ class MundialAuthBar extends HTMLElement {
 
     const page = location.pathname.split('/').pop() || 'index.html';
     const navLinks = {
-      '/': ['index.html', 'wc2026_map_exported.html', ''],
+      '/': ['index.html', 'wc2026_map.html', ''],
       'wc2026_countries.html': ['wc2026_countries.html'],
-      'wc2026_france_departments.html': ['wc2026_france_departments.html'],
-      'wc2026_live_game.html': ['wc2026_live_game.html'],
+      'wc2026_france.html': ['wc2026_france.html'],
+      'wc2026_live.html': ['wc2026_live.html'],
       'guide.html': ['guide.html'],
     };
     this.querySelectorAll('nav a[href]').forEach(a => {
@@ -121,10 +121,10 @@ class MundialAuthBar extends HTMLElement {
     });
 
     const _guideIdMap = {
-      '': 'home', 'index.html': 'home', 'wc2026_map_exported.html': 'home',
+      '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
       'wc2026_countries.html': 'countries',
-      'wc2026_france_departments.html': 'france',
-      'wc2026_live_game.html': 'live',
+      'wc2026_france.html': 'france',
+      'wc2026_live.html': 'live',
     };
     this._currentGuideId = _guideIdMap[page] ?? null;
     if (!this._currentGuideId) {

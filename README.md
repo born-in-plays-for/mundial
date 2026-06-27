@@ -9,9 +9,9 @@ Static frontend for the [Born In, Plays For](https://github.com/born-in-plays-fo
 | URL | Description |
 |---|---|
 | [/](https://mundial.cthiebaud.com/) | Entry point — redirects to the map |
-| [/wc2026_map_exported.html](https://mundial.cthiebaud.com/wc2026_map_exported.html) | Main choropleth map |
-| [/wc2026_france_departments.html](https://mundial.cthiebaud.com/wc2026_france_departments.html) | France departments choropleth |
-| [/wc2026_live_game.html](https://mundial.cthiebaud.com/wc2026_live_game.html) | Live game tracking (requires backend) |
+| [/wc2026_map.html](https://mundial.cthiebaud.com/wc2026_map.html) | Main choropleth map |
+| [/wc2026_france.html](https://mundial.cthiebaud.com/wc2026_france.html) | France departments choropleth |
+| [/wc2026_live.html](https://mundial.cthiebaud.com/wc2026_live.html) | Live game tracking (requires backend) |
 | [/wc2026_elo_ranking.html](https://mundial.cthiebaud.com/wc2026_elo_ranking.html) | Standalone Elo ranking page |
 | [/guide.html](https://mundial.cthiebaud.com/guide.html) | User guide |
 | [/chains/wc2026_chain_longest.html](https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html) | Export chain snake renderer |

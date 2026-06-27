@@ -26,11 +26,11 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | File | Purpose |
 |---|---|
 | `index.html` | Entry point — redirects to the map, carries OG meta tags |
-| `wc2026_map_exported.html` | Main map page (Bootstrap 5, loads JS + JSON via ES module) |
+| `wc2026_map.html` | Main map page (Bootstrap 5, loads JS + JSON via ES module) |
 
-**OG tags:** Both `index.html` and `wc2026_map_exported.html` carry identical OG meta tags. Always update **both files** together when any OG tag changes (og:image, og:url, og:title, og:description, etc.).
-| `wc2026_france_departments.html` | France departments choropleth page |
-| `wc2026_live_game.html` | Live game tracking page (Socket.IO, backend-dependent) |
+**OG tags:** Both `index.html` and `wc2026_map.html` carry identical OG meta tags. Always update **both files** together when any OG tag changes (og:image, og:url, og:title, og:description, etc.).
+| `wc2026_france.html` | France departments choropleth page |
+| `wc2026_live.html` | Live game tracking page (Socket.IO, backend-dependent) |
 | `wc2026_elo_ranking.html` | Standalone Elo ranking page |
 | `guide.html` | User guide page |
 | `js/wc2026_map.js` | ES module — D3 rendering, zoom, tooltips (lit-html), filter sidebar, Elo tab, dim/arc logic |
@@ -64,7 +64,7 @@ All dependencies served from a single CDN — **jsDelivr** (`cdn.jsdelivr.net/np
 | `flag-icons` | 7 | 4×3 rectangular flag SVGs (player lists, player table) — handles subdivision codes (`gb-eng` etc.) |
 | `lit-html` | 3 | HTML templating — **all** dynamic HTML must use lit-html (`html` + `render`), never `innerHTML` with string concatenation |
 | `iso-3166-1` | 2 | ISO 3166-1 lookups used by `i18n.js` → `countryName()` (ESM, loaded via jsDelivr) |
-| `socket.io-client` | 4 | WebSocket client — loaded dynamically by `auth-bar.js` for real-time auth events and by `wc2026_live_game.html` for live match updates |
+| `socket.io-client` | 4 | WebSocket client — loaded dynamically by `auth-bar.js` for real-time auth events and by `wc2026_live.html` for live match updates |
 | `world-atlas` | 2 | 110m TopoJSON world map fetched at runtime by `wc2026_map.js` |
 
 `wc2026_map.js` is loaded as `<script type="module">` so it can use the `import` statement at the top.
@@ -133,7 +133,7 @@ from playwright.sync_api import sync_playwright
 with sync_playwright() as p:
     browser = p.chromium.launch()
     page = browser.new_page(viewport={"width": 1200, "height": 630}, device_scale_factor=2)
-    page.goto("https://mundial.cthiebaud.com/wc2026_map_exported.html",
+    page.goto("https://mundial.cthiebaud.com/wc2026_map.html",
               wait_until="networkidle", timeout=30000)
     page.wait_for_timeout(4000)
     page.evaluate('''() => {
@@ -221,7 +221,7 @@ All `.flag-qualified` images store `data-cx`/`data-cy` (SVG centroid coordinates
 ### i18n
 UI language follows the browser locale (`navigator.languages[0]`). Supported: `fr`, `de`, `it`, `es`, `en` (fallback). Country names are resolved by `countryName()` in `i18n.js` using `Intl.DisplayNames` (backed by the `iso-3166-1` npm package for alpha-2 lookups). A small `_OVERRIDE` map handles non-standard cases (UK home nations use subdivision codes `gb-eng` etc., historical states with no ISO code). `T` is the already-resolved label object for the active language — it is not a nested object keyed by language; the internal `_LANG` variable selects the entry at module load time. Static page elements (`<title>`, `<h1>`, etc.) are patched from JS at load time.
 
-i18n is extracted into **`i18n.js`** (ES module imported by `wc2026_map.js`, `auth-bar.js`, and `wc2026_live_game.html`). It exports `LOCALE`, `_LANG`, `T`, `countryName`, `regionName`, and `wikiUrl`. `T` contains all UI strings: map labels, tooltips, navbar titles (`navHome`, `navLive`, `navSignIn`, etc.), offline modal text (`offlineTitle`, `offlineBody`, etc.), and live-game strings (`liveTitle`, `liveRetrying`, `liveNoBackend`, etc.). Wikipedia links are provided for `en`, `fr`, `de`, `it`, `es`; all other browser locales fall back to the English Wikipedia URL without an `(en)` suffix.
+i18n is extracted into **`i18n.js`** (ES module imported by `wc2026_map.js`, `auth-bar.js`, and `wc2026_live.html`). It exports `LOCALE`, `_LANG`, `T`, `countryName`, `regionName`, and `wikiUrl`. `T` contains all UI strings: map labels, tooltips, navbar titles (`navHome`, `navLive`, `navSignIn`, etc.), offline modal text (`offlineTitle`, `offlineBody`, etc.), and live-game strings (`liveTitle`, `liveRetrying`, `liveNoBackend`, etc.). Wikipedia links are provided for `en`, `fr`, `de`, `it`, `es`; all other browser locales fall back to the English Wikipedia URL without an `(en)` suffix.
 
 **Gotcha — non-breaking spaces in i18n strings:** French typography uses non-breaking spaces in several places — `\xa0` (regular non-breaking space) before `": Wikipedia"` in `pageSub`, and ` ` (narrow no-break space) at the start of `pageHeadingSub` strings. The Edit tool matches bytes literally and will silently fail if the search string uses a regular space instead. **Always use a Python script** (`open(...).read()` / `str.replace()` / `open(...).write()`) when editing i18n strings in `i18n.js`, and verify suspicious characters with `python3 -c "print(repr(line))"` first.
 
@@ -295,7 +295,7 @@ Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via
 - `auth-bar-online` `{ detail: { socket, backend } }` — WebSocket connected (first connect or reconnect after offline)
 - `auth-bar-offline` `{ detail: { reason } }` — backend unreachable (initial failure, or 5s after WebSocket disconnect)
 
-**Consumer pattern** (used by `wc2026_live_game.html`): wait for `auth-bar-online` to get `{ socket, backend }`, subscribe to socket events (`poll_status`, `live_update`), listen for `auth-bar-offline` to update UI. No duplicate health checks, no duplicate Socket.IO client.
+**Consumer pattern** (used by `wc2026_live.html`): wait for `auth-bar-online` to get `{ socket, backend }`, subscribe to socket events (`poll_status`, `live_update`), listen for `auth-bar-offline` to update UI. No duplicate health checks, no duplicate Socket.IO client.
 
 **WebSocket lifecycle:** After successful init, loads `socket.io-client@4` dynamically. On disconnect, waits 5s then switches to offline mode. On reconnect, restores auth section and refreshes user session.
 
@@ -334,7 +334,7 @@ Order matters for SVG z-layering:
 7. Standalone dots + flags (Cape Verde, Curaçao)
 8. UK nation flags
 
-### `wc2026_live_game.html` — live game page architecture
+### `wc2026_live.html` — live game page architecture
 
 The live game page is a self-contained HTML file using plain ES module script (no lit-html — dynamic HTML uses template literals and `innerHTML`). It consumes the auth bar's Socket.IO connection via `auth-bar-online` / `auth-bar-offline` events.
 

@@ -16,10 +16,10 @@ const _WIP_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
 </div></div>`;
 
 const _guideToPage = {
-  home: '/',
+  map: '/',
   countries: 'wc2026_countries.html',
-  france: 'wc2026_france_departments.html',
-  live: 'wc2026_live_game.html',
+  france: 'wc2026_france.html',
+  live: 'wc2026_live.html',
 };
 
 const _ARROW_BLUE = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#3b82f6" stroke-width="2.5"/><path d="M17,2.5 L24,6 L17,9.5Z" fill="#3b82f6"/></svg>';

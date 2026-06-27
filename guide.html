@@ -51,7 +51,7 @@ marked.use({
 const lang = new URLSearchParams(location.search).get('lang') ?? ['fr', 'de', 'it', 'es'].find(l => (navigator.languages?.[0] ?? '').startsWith(l)) ?? 'en';
 const el   = document.getElementById('guide-body');
 
-const urls = [`guide/built/${lang}-home.md`, 'guide/built/en-home.md'];
+const urls = [`guide/built/${lang}-map.md`, 'guide/built/en-map.md'];
 let md = null;
 for (const url of urls) {
   const r = await fetch(url);

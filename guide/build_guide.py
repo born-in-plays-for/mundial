@@ -31,7 +31,7 @@ BASE_URL    = 'http://localhost:4040'
 
 # Section name → source template
 GUIDES = {
-    'home':      GUIDE_DIR / 'guide-home.md',
+    'map':       GUIDE_DIR / 'guide-map.md',
     'countries': GUIDE_DIR / 'guide-countries.md',
     'france':    GUIDE_DIR / 'guide-france.md',
     'live':      GUIDE_DIR / 'guide-live.md',
@@ -79,7 +79,7 @@ def take_screenshots():
             )
             page = context.new_page()
             page.goto(
-                f'{BASE_URL}/wc2026_map_exported.html',
+                f'{BASE_URL}/wc2026_map.html',
                 wait_until='networkidle',
                 timeout=30_000,
             )
