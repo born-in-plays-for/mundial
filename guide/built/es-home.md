@@ -133,7 +133,7 @@ Cada país se muestra como una **pastilla** cuyo estilo CSS codifica su categor�
 
 Each country is shaded by the total number of World Cup players born there —
 the darker the shade, the more players. Countries with no players born there appear in a neutral pale tone.
-Qualified countries display a circular flag marker at their centroid.
+Countries currently included in the filter display a circular flag marker at their centroid.
 
 ### Zoom & Pan
 
