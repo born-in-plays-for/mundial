@@ -1,7 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent } from './wc2026_elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
@@ -531,22 +531,7 @@ const _buildEloItems = () => {
   });
   _eloItemsById.clear();
   raw.forEach(item => _eloItemsById.set(item.id, item));
-  const _sortFns = { elo: (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999), exp: (a, b) => b.expCount - a.expCount, imp: (a, b) => b.impCount - a.impCount, delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount) || (b.expCount + b.impCount) - (a.expCount + a.impCount), pop: (a, b) => (b.pop ?? 0) - (a.pop ?? 0), alpha: (a, b) => a.name.localeCompare(b.name) };
-  raw.sort((a, b) => { for (let i = 0; i < Math.min(sidebar.sortOrder.length, 3); i++) { let d = _sortFns[sidebar.sortOrder[i]](a, b); if (i === 0 && sidebar.sortDir === 'asc') d = -d; if (d !== 0) return d; } return 0; });
-  const primary   = sidebar.sortOrder[0];
-  const secondary = sidebar.sortOrder[1];
-  const _ptsFor = (key, item) =>
-      key === 'exp'   ? item.expCount
-    : key === 'imp'   ? item.impCount
-    : key === 'delta' ? (item.impCount && item.expCount ? `${item.impCount} · ${item.expCount}` : item.impCount || item.expCount || null)
-    : key === 'elo'   ? item.pts
-    : key === 'pop'   ? (item.pop ? fmtPop(item.pop) : null)
-    : null;
-  return raw.map(item => ({
-    ...item,
-    pts:  primary === 'alpha' ? null : primary === 'elo' ? item.pts : _ptsFor(primary, item),
-    pts2: secondary ? _ptsFor(secondary, item) : null,
-  }));
+  return sidebar.sortAndFilter(raw, fmtPop);
 };
 
 let _worldFeatures, _ukFeatures;
@@ -1274,17 +1259,7 @@ OUTLIER_IDS.forEach(id => {
   if (el && app.byId[id]) el.textContent = app.byId[id].totalCount;
 });
 
-DATA.forEach(rec => {
-  rec.players.forEach(p => {
-    const nId = QUALIFIED_BY_NAME[p.nation];
-    if (nId == null) return;
-    if (countryName(rec.id, rec.country) === countryName(nId, QUALIFIED_NAMES[nId])) return;
-    if (!app.importByCountry[nId]) app.importByCountry[nId] = [];
-    const imp = { name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wiki_langs: p.wiki_langs };
-    if (p.role) imp.role = p.role;
-    app.importByCountry[nId].push(imp);
-  });
-});};
+app.importByCountry = buildImportByCountry(rawData, countryName);};
 
 
 // ── Shared tooltip/click helpers (used by both world and UK nation paths) ──────

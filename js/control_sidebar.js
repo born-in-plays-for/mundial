@@ -353,6 +353,43 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
   measureControlSidebar();
 
+  const _sortFns = {
+    elo:   (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999),
+    exp:   (a, b) => b.expCount - a.expCount,
+    imp:   (a, b) => b.impCount - a.impCount,
+    delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount) || (b.expCount + b.impCount) - (a.expCount + a.impCount),
+    pop:   (a, b) => (b.pop ?? 0) - (a.pop ?? 0),
+    alpha: (a, b) => a.name.localeCompare(b.name),
+  };
+
+  const _ptsFor = (key, item, fmtPop) =>
+      key === 'exp'   ? item.expCount
+    : key === 'imp'   ? item.impCount
+    : key === 'delta' ? (item.impCount && item.expCount ? `${item.impCount} · ${item.expCount}` : item.impCount || item.expCount || null)
+    : key === 'elo'   ? item.pts
+    : key === 'pop'   ? (item.pop ? fmtPop(item.pop) : null)
+    : null;
+
+  const sortAndFilter = (allItems, fmtPop) => {
+    const raw = [...allItems].sort((a, b) => {
+      for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) {
+        let d = _sortFns[_sortOrder[i]](a, b);
+        if (i === 0 && _sortDir === 'asc') d = -d;
+        if (d !== 0) return d;
+      }
+      return 0;
+    });
+    const primary   = _sortOrder[0];
+    const secondary = _sortOrder[1];
+    return raw
+      .filter(item => catEloChecked(item.id, item.fifaMember))
+      .map(item => ({
+        ...item,
+        pts:  primary === 'alpha' ? null : _ptsFor(primary, item, fmtPop),
+        pts2: secondary ? _ptsFor(secondary, item, fmtPop) : null,
+      }));
+  };
+
   return {
     get sortOrder() { return _sortOrder; },
     get sortDir() { return _sortDir; },
@@ -362,5 +399,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     applyFlagFilter,
     measureControlSidebar,
     updateVisibleCountryCount,
+    sortAndFilter,
   };
 }

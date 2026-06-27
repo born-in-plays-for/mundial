@@ -18,6 +18,22 @@ export const QUALIFIED_BY_NAME = Object.fromEntries(
   Object.entries(QUALIFIED_NAMES).map(([id, name]) => [name, +id])
 );
 
+export const buildImportByCountry = (mapData, countryNameFn) => {
+  const out = {};
+  for (const rec of (mapData.data ?? [])) {
+    for (const p of (rec.players ?? [])) {
+      const nId = QUALIFIED_BY_NAME[p.nation];
+      if (nId == null) continue;
+      if (countryNameFn(rec.id, rec.country) === countryNameFn(nId, QUALIFIED_NAMES[nId])) continue;
+      if (!out[nId]) out[nId] = [];
+      const imp = { name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wiki_langs: p.wiki_langs };
+      if (p.role) imp.role = p.role;
+      out[nId].push(imp);
+    }
+  }
+  return out;
+};
+
 export const buildEloItems = ({ rankings, byId, importByCountry, fifaMemberIds, countryNameFn, centroids, pop }) =>
   rankings
     .filter(r => !r.weirdo)

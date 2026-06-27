@@ -26,7 +26,7 @@
 </div>
 <script type="module">
 import './js/wc2026_elo_ranking.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildEloItems } from './js/qualified.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildEloItems, buildImportByCountry } from './js/qualified.js';
 import { LOCALE, T, countryName } from './js/i18n.js';
 import { initSidebar } from './js/control_sidebar.js';
 
@@ -43,11 +43,7 @@ const [eloData, mapData] = await Promise.all([
 
 const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
 const fifaMemberIds = new Set(eloData.rankings.filter(r => r.fifaMember).map(r => r.id));
-const importByCountry = {};
-for (const [name, players] of Object.entries(mapData.natives ?? {})) {
-  const id = QUALIFIED_BY_NAME[name];
-  if (id != null) importByCountry[id] = players;
-}
+const importByCountry = buildImportByCountry(mapData, countryName);
 
 const app = { byId, importByCountry };
 const fmtPop = n => new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
@@ -63,45 +59,11 @@ const allItems = buildEloItems({
 
 const el = document.getElementById('list');
 
-const _sortFns = {
-  elo:   (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999),
-  exp:   (a, b) => b.expCount - a.expCount,
-  imp:   (a, b) => b.impCount - a.impCount,
-  delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount) || (b.expCount + b.impCount) - (a.expCount + a.impCount),
-  pop:   (a, b) => (b.pop ?? 0) - (a.pop ?? 0),
-  alpha: (a, b) => a.name.localeCompare(b.name),
-};
-const _ptsFor = (key, item) =>
-    key === 'exp'   ? item.expCount
-  : key === 'imp'   ? item.impCount
-  : key === 'delta' ? (item.impCount && item.expCount ? `${item.impCount} · ${item.expCount}` : item.impCount || item.expCount || null)
-  : key === 'elo'   ? item.pts
-  : key === 'pop'   ? (item.pop ? fmtPop(item.pop) : null)
-  : null;
-
 const sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true });
 
 const renderElo = () => {
-  const raw = [...allItems];
-  raw.sort((a, b) => {
-    for (let i = 0; i < Math.min(sidebar.sortOrder.length, 3); i++) {
-      let d = _sortFns[sidebar.sortOrder[i]](a, b);
-      if (i === 0 && sidebar.sortDir === 'asc') d = -d;
-      if (d !== 0) return d;
-    }
-    return 0;
-  });
-  const primary   = sidebar.sortOrder[0];
-  const secondary = sidebar.sortOrder[1];
-  const visible = raw
-    .filter(item => sidebar.catEloChecked(item.id, item.fifaMember))
-    .map(item => ({
-      ...item,
-      pts:  primary === 'alpha' ? null : _ptsFor(primary, item),
-      pts2: secondary ? _ptsFor(secondary, item) : null,
-    }));
-  el.show(visible);
+  el.show(sidebar.sortAndFilter(allItems, fmtPop));
   _syncPaddingTop();
 };
 sidebarCallbacks.renderElo = renderElo;
