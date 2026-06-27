@@ -26,8 +26,8 @@
   <elo-ranking id="list"></elo-ranking>
 </div>
 <script type="module">
-import './js/wc2026_elo_ranking.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildEloItems, buildImportByCountry } from './js/qualified.js';
+import { initEloRanking } from './js/elo_ranking.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry } from './js/qualified.js';
 import { LOCALE, T, countryName } from './js/i18n.js';
 import { initSidebar } from './js/control_sidebar.js';
 
@@ -49,25 +49,19 @@ const importByCountry = buildImportByCountry(mapData, countryName);
 const app = { byId, importByCountry };
 const fmtPop = n => new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 
-const allItems = buildEloItems({
-  rankings: eloData.rankings,
-  byId,
-  importByCountry,
-  fifaMemberIds,
-  countryNameFn: countryName,
-  pop: mapData.pop,
-});
-
 const el = document.getElementById('list');
 
 const sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true });
 
-const renderElo = () => {
-  el.show(sidebar.sortAndFilter(allItems, fmtPop));
-  _syncPaddingTop();
-};
+const { rawItems, render: renderElo } = initEloRanking({
+  el, sidebar,
+  buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop },
+  fmtPop,
+  onRender: _syncPaddingTop,
+});
 sidebarCallbacks.renderElo = renderElo;
+renderElo();
 
 const metaEl = document.getElementById('elo-meta');
 const parts = [];
@@ -77,10 +71,7 @@ if (eloData.updated) {
   const fmt = isNaN(d) ? eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
   parts.push(`updated ${fmt}`);
 }
-metaEl.innerHTML = `${allItems.length} countries · ${parts.join(' · ')}`;
-
-el.items = allItems;
-renderElo();
+metaEl.innerHTML = `${rawItems.length} countries · ${parts.join(' · ')}`;
 </script>
 </body>
 </html>

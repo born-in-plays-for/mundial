@@ -1,4 +1,5 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { buildEloItems } from './qualified.js';
 
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 
@@ -99,3 +100,13 @@ class EloRanking extends HTMLElement {
 }
 
 customElements.define('elo-ranking', EloRanking);
+
+export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender }) => {
+  const rawItems = buildEloItems(buildArgs);
+  el.items = rawItems;
+  const render = (onAnimationDone) => {
+    el.show(sidebar.sortAndFilter(rawItems, fmtPop), onAnimationDone);
+    onRender?.();
+  };
+  return { rawItems, render };
+};

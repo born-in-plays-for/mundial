@@ -31,11 +31,10 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 **OG tags:** Both `index.html` and `wc2026_map.html` carry identical OG meta tags. Always update **both files** together when any OG tag changes (og:image, og:url, og:title, og:description, etc.).
 | `wc2026_france.html` | France departments choropleth page |
 | `wc2026_live.html` | Live game tracking page (Socket.IO, backend-dependent) |
-| `wc2026_elo_ranking.html` | Standalone Elo ranking page |
 | `guide.html` | User guide page |
 | `js/wc2026_map.js` | ES module — D3 rendering, zoom, tooltips (lit-html), filter sidebar, Elo tab, dim/arc logic |
 | `js/auth-bar.js` | ES module — `<mundial-auth-bar>` Web Component: navbar, auth, offline modal, WebSocket reconnection (lit-html + unsafeHTML) |
-| `js/wc2026_elo_ranking.js` | ES module — `<elo-ranking>` Web Component + pill helpers |
+| `js/elo_ranking.js` | ES module — `<elo-ranking>` Web Component, pill helpers, `initEloRanking` wiring helper |
 | `js/control_sidebar.js` | ES module — filter/sort sidebar logic (imported by `wc2026_map.js`) |
 | `js/i18n.js` | ES module — language detection, `T` strings (map + auth-bar + live-game), `countryName()`, `regionName()`, `wikiUrl()` |
 | `js/qualified.js` | ES module — `QUALIFIED_NAMES`, `QUALIFIED_BY_NAME`, `buildEloItems` |
@@ -320,7 +319,7 @@ Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via
 **Sibling offset:** `_offsetSibling()` sets `top: 32px` (fixed/sticky siblings) or `marginTop: 32px` (static siblings) on the next element to account for the fixed navbar.
 
 ### Elo ranking tab and filter sidebar
-The **Elo ranking** tab (default active) shows all countries as pill badges, rendered by the `<elo-ranking>` Web Component (`js/wc2026_elo_ranking.js`). Countries are filtered by the sidebar cube (`qualified × importer × exporter`); clicking a badge activates dim mode; clicking the active badge clears it.
+The **Elo ranking** tab (default active) shows all countries as pill badges, rendered by the `<elo-ranking>` Web Component (`js/elo_ranking.js`). Countries are filtered by the sidebar cube (`qualified × importer × exporter`); clicking a badge activates dim mode; clicking the active badge clears it.
 
 **Three-tier pill interaction model:**
 - `enablesDim(id)` → `true`: badge is `elo-item--clickable` (dark, `#888` label). Click activates dim + arc mode.

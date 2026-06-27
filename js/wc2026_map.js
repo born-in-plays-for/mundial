@@ -1,6 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
-import { pillClasses, pillContent } from './wc2026_elo_ranking.js';
+import { pillClasses, pillContent, initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
@@ -519,20 +519,7 @@ if (_scrollTopBtn) {
 }
 
 const _eloItemsById = new Map();
-const _buildEloItems = () => {
-  const raw = buildEloItems({
-    rankings: _eloData?.rankings ?? [],
-    byId: app.byId,
-    importByCountry: app.importByCountry,
-    fifaMemberIds: _fifaMemberIds,
-    countryNameFn: countryName,
-    centroids,
-    pop: app.pop,
-  });
-  _eloItemsById.clear();
-  raw.forEach(item => _eloItemsById.set(item.id, item));
-  return sidebar.sortAndFilter(raw, fmtPop);
-};
+let _renderEloBase = null;
 
 let _worldFeatures, _ukFeatures;
 
@@ -618,29 +605,9 @@ const zoomToCentroid = (id, duration = 2000) => {
 };
 
 const _renderElo = (onAnimationDone) => {
-  const allItems = _buildEloItems();
-  const visibleItems = allItems.filter(item => sidebar.catEloChecked(item.id, item.fifaMember));
-  _eloMeta.hidden = sidebar.sortOrder[0] !== 'elo' || visibleItems.length === 0;
-  if (!_eloMeta.innerHTML && (_eloData?.source || _eloData?.updated)) {
-    const parts = [];
-    if (_eloData.source) parts.push(`<a href="https://${_eloData.source}/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
-    if (_eloData.updated) {
-      const d = new Date(_eloData.updated + 'T00:00:00');
-      const fmt = isNaN(d) ? _eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
-      parts.push(`${T.eloUpdated}${fmt}`);
-    }
-    _eloMeta.innerHTML = parts.join(' · ');
-  }
-  if (_eloMain.hasItems) { _eloMain.show(visibleItems, onAnimationDone); return; }
-  _eloMain.onCountryClick = id => {
-    if (dimState.sourceId === id) { clearDim(); return; }
-    activateCountry(id);
-    if (enablesDim(id) && centroids[id]) _zoomToActiveDimFlags();
-    else if (centroids[id]) zoomToCentroid(id);
-  };
-  _eloMain.isClickable = () => true;
-  _eloMain.items = allItems;
-  _eloMain.show(visibleItems, onAnimationDone);
+  if (!_renderEloBase) return;
+  _eloMeta.hidden = sidebar.sortOrder[0] !== 'elo';
+  _renderEloBase(onAnimationDone);
   if (dimState.sourceId) _eloMain.update(dimState.sourceId);
 };
 const _updateEloSelection = () => {
@@ -1664,7 +1631,32 @@ Promise.all([
     fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop,
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations);
-  // Rebuild with centroids now populated, then render the elo list
+  // Init elo ranking component with centroids now populated
+  _eloMain.onCountryClick = id => {
+    if (dimState.sourceId === id) { clearDim(); return; }
+    activateCountry(id);
+    if (enablesDim(id) && centroids[id]) _zoomToActiveDimFlags();
+    else if (centroids[id]) zoomToCentroid(id);
+  };
+  _eloMain.isClickable = () => true;
+  const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
+    el: _eloMain, sidebar,
+    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop },
+    fmtPop,
+  });
+  _renderEloBase = _eloRender;
+  _eloItemsById.clear();
+  _eloRawItems.forEach(item => _eloItemsById.set(item.id, item));
+  if (_eloData?.source || _eloData?.updated) {
+    const parts = [];
+    if (_eloData.source) parts.push(`<a href="https://${_eloData.source}/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
+    if (_eloData.updated) {
+      const d = new Date(_eloData.updated + 'T00:00:00');
+      const fmt = isNaN(d) ? _eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
+      parts.push(`${T.eloUpdated}${fmt}`);
+    }
+    _eloMeta.innerHTML = parts.join(' · ');
+  }
   _renderElo();
   sidebar.applyFlagFilter();
   sidebar.updateVisibleCountryCount();
