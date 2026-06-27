@@ -44,3 +44,7 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-name { font-size: 12px; white-space: nowrap; }
 .elo-pts { font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; }
 .elo-pts-primary { font-size: 10px; color: var(--text-muted); }
+
+/* Wikipedia player links — used on map page (player table) and live game page */
+.pt-wiki { color: inherit; border-bottom: 1px dotted var(--text-muted); }
+.pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }

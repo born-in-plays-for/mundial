@@ -1,3 +1,11 @@
+/* mobile portrait — clearance for fixed bottom tab bar; JS ResizeObserver overrides at runtime */
+body { padding-bottom: 48px; }
+
+/* legend outlier dot (France) */
+.legend-outlier-wrap { height: 10px; }
+.legend-outlier-dot { width: 10px; height: 10px; border-radius: 50%; background: #000; }
+#legend-outlier-count { font-size: 9px; color: var(--color-dim); margin-top: 3px; }
+
 /* arc colors — set as CSS vars by wc2026_map.js at runtime */
 .color-exp { color: var(--arc-export-color); }
 .color-imp { color: var(--arc-import-color); }
@@ -83,8 +91,6 @@
 .pt-player-row { padding: 4px 0 4px 28px; border-bottom: 1px solid #f8f5f2; font-size: 12px; color: #444; }
 .pt-player-row:last-child { border-bottom: none; }
 .pt-caps { color: var(--text-muted); font-size: 11px; }
-.pt-wiki { color: inherit; border-bottom: 1px dotted var(--text-muted); }
-.pt-wiki:hover { border-bottom-color: #7b2d8b; color: #7b2d8b; }
 .coach-badge { font-size: 9px; font-weight: 600; color: #7b6b3a; background: #f5ecd0; border-radius: 3px; padding: 0 4px; margin-left: 4px; vertical-align: middle; white-space: nowrap; }
 
 /* scroll-to-top / zoom controls */

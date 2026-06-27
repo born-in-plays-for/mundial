@@ -1,0 +1,19 @@
+.dept { stroke: #b0a99e; stroke-width: 0.4; cursor: pointer; transition: stroke-width 0.15s; }
+.dept:hover { stroke: #333; stroke-width: 1.5; }
+#tooltip {
+  position: fixed; pointer-events: none; z-index: 1080; display: none; max-width: 320px;
+}
+#tooltip .tt-name { font-weight: 700; }
+#tooltip .tt-count { color: #1d4ed8; font-weight: 700; }
+#tooltip .tt-players { line-height: 1.5; }
+#legend .bar { height: 10px; border-radius: 2px; flex: 1; max-width: 200px; }
+#pc-btn { position: absolute; z-index: 10; transform: translateX(-50%); }
+#pc-tip {
+  position: fixed; z-index: 1090; display: none;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  max-width: 90vw; max-height: 80vh; overflow-y: auto;
+}
+#pc-tip-content {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5rem;
+}
+#pc-tip .pc-dept { border-left: 3px solid #3b82f6; padding-left: 0.75rem; }

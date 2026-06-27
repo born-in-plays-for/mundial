@@ -33,7 +33,6 @@
 <link rel="stylesheet" href="css/taxonomy.css">
 </head>
 <body>
-<style>body { padding-bottom: 48px; } /* fallback; JS ResizeObserver overrides */</style>
 <script type="module" src="js/auth-bar.js"></script>
 <mundial-auth-bar id="auth-bar"></mundial-auth-bar>
 <header id="page-header" class="container-xxl px-0" style="margin-top:0">
@@ -68,10 +67,10 @@
       <div id="legend-born" class="sub mb-auto"></div>
       &nbsp;
       <div class="d-flex flex-column pe-2">
-        <div class="d-flex align-items-center justify-content-center" style="height:10px">
-          <div style="width:10px;height:10px;border-radius:50%;background:#000"></div>
+        <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+          <div class="legend-outlier-dot"></div>
         </div>
-        <div id="legend-outlier-count" class="text-center" style="font-size:9px;color:var(--color-dim);margin-top:3px"></div>
+        <div id="legend-outlier-count" class="text-center"></div>
       </div>
       <div>
         <div id="legend-bar" class="overflow-hidden rounded-2"></div>

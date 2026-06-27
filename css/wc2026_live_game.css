@@ -1,0 +1,45 @@
+.player-num { width: 2em; text-align: right; font-weight: 700; }
+.player-pos { width: 1.5em; text-align: center; color: #888; }
+.team-flag { width: 32px; height: 24px; border-radius: 3px; }
+.lineup-card { min-width: 280px; }
+.lineup-card .table { font-size: 12px; color: #444; }
+.sub { color: #888; }
+.evt { font-size: 12px; padding: 3px 0; border-bottom: 1px solid #eee; }
+.evt:last-child { border-bottom: none; }
+.evt-min { width: 3em; text-align: right; font-weight: 700; color: #888; }
+.evt-icon { width: 1.5em; text-align: center; }
+.evt-goal { color: #198754; }
+.evt-card-yellow { color: #ffc107; }
+.evt-card-red { color: #dc3545; }
+.evt-subst { color: #0d6efd; }
+.evt-var { color: #6f42c1; }
+.stat-row { font-size: 12px; padding: 2px 0; }
+.stat-label { text-align: center; color: #888; flex: 0 0 auto; width: 110px; }
+.stat-val { font-weight: 600; min-width: 2.5em; }
+.stat-bar-wrap { flex: 1; height: 6px; background: #eee; border-radius: 3px; }
+.stat-bar { height: 100%; border-radius: 3px; }
+.stat-bar-home { background: #0d6efd; }
+.stat-bar-away { background: #dc3545; }
+.grp-table { font-size: 12px; margin-bottom: 0; }
+.grp-table th { font-weight: 600; color: #888; padding: 2px 6px !important; white-space: nowrap; }
+.grp-table td { padding: 3px 6px !important; white-space: nowrap; }
+.grp-table .grp-team { text-align: left; min-width: 100px; }
+.grp-table .grp-num { text-align: center; min-width: 24px; }
+.grp-table .grp-gfga { text-align: center; min-width: 24px; }
+@media (max-width: 575.98px) { .grp-gfga { display: none; } }
+.grp-table .grp-pts { font-weight: 700; }
+.grp-qualify { background: rgba(25, 135, 84, 0.06); }
+.grp-maybe { background: rgba(255, 193, 7, 0.08); }
+.grp-playing { background: rgba(13, 110, 253, 0.04); }
+.grp-title { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+.grp-result { font-size: 12px; padding: 4px 0; border-top: 1px solid #eee; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.grp-result-home { text-align: right; flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.grp-result-away { text-align: left; flex: 1; display: flex; align-items: center; gap: 4px; }
+.grp-result-score { font-weight: 700; background: #555; color: #fff; border-radius: 3px; padding: 1px 5px; min-width: 1.3em; text-align: center; flex-shrink: 0; }
+.grp-results-title { font-size: 11px; color: #999; cursor: pointer; }
+.fix-pill { cursor: pointer; border: 1px solid #dee2e6; border-radius: 20px; padding: 4px 12px; font-size: 12px; background: #fff; transition: all .15s; white-space: nowrap; }
+.fix-pill:hover { border-color: #999; }
+.fix-pill.active { background: #1C274C; color: #fff; border-color: #1C274C; }
+.fix-pill-untracked { opacity: 0.5; border-style: dashed; }
+#ws-icon { display: flex; align-items: center; }
+#ws-status { align-self: stretch; display: flex; align-items: center; }
