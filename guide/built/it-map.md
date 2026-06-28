@@ -50,7 +50,7 @@ Per impostazione predefinita il cursore è centrato — vengono mostrati tutti i
 Su schermi touch, scorri verso sinistra o destra per spostare il cursore passo dopo passo.
 
 Il selettore funziona in combinazione con il resto della matrice di filtro — puoi, ad esempio,
-mostrare solo i sopravvissuti esportatori passando a **in** e deselezionando la colonna non-esportatori.
+mostrare solo le squadre alive & kicking che sono anche esportatrici passando a **in** e deselezionando la colonna non-esportatori.
 
 ### Sul riferimento dei paesi
 

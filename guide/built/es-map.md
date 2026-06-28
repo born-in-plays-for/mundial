@@ -50,7 +50,7 @@ Por defecto el cursor está centrado — se muestran los 48 países clasificados
 En pantallas táctiles, desliza hacia la izquierda o derecha para mover el cursor paso a paso.
 
 El interruptor funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,
-mostrar solo supervivientes exportadores cambiando a **in** y desmarcando la columna de no exportadores.
+mostrar solo equipos alive & kicking que también sean exportadores cambiando a **in** y desmarcando la columna de no exportadores.
 
 ### Sobre la referencia de países
 
