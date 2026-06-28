@@ -61,10 +61,13 @@
 }
 #control-sidebar .csb-table td { padding: 2px 6px; background: var(--bg-hover); }
 #control-sidebar .elo-item { font-size: 9px; padding: 1px 4px; gap: 2px; border-radius: 12px; }
-#control-sidebar .elo-name { font-size: 9px; }
+#control-sidebar .elo-name { font-size: 11px; }
+#control-sidebar #btn-ak { font-size: 11px; }
 @media (max-width: 400px) {
   #control-sidebar .csb-table { --sort-extra-pad: 20px; }
   #control-sidebar .csb-table td { padding: 2px 2px; }
+  #control-sidebar .elo-name { font-size: 9px; }
+  #control-sidebar #btn-ak { font-size: 9px; }
 }
 #control-sidebar .csb-table .form-check-input { display: none; }
 
@@ -119,19 +122,6 @@
 #control-sidebar .csb-check { cursor: pointer; color: var(--text-muted); }
 #control-sidebar .csb-check::before { content: '□'; }
 #control-sidebar .csb-check:has(input:checked)::before { content: '▣'; } /* ■ */
-/* ── Alive & kicking toggle button ─────────────────────────────────────── */
-
-#control-sidebar .csb-ak-btn {
-  display: block; margin-top: 5px; padding: 1px 5px;
-  font-size: 0.72rem; white-space: nowrap; cursor: pointer;
-  border: 1px solid #bbb; border-radius: 3px;
-  background: transparent; color: var(--text-muted);
-}
-#control-sidebar .csb-ak-btn:hover { background: var(--bg-hover); }
-#control-sidebar .csb-ak-btn.active {
-  background: #444; color: #fff; border-color: #444;
-  box-shadow: inset 0 2px 3px rgba(0,0,0,.35);
-}
 
 /* ── Clickable cells (cursor / hover) ──────────────────────────────────── */
 
