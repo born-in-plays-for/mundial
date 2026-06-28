@@ -34,13 +34,21 @@ export const buildImportByCountry = (mapData, countryNameFn) => {
   return out;
 };
 
-export const buildEloItems = ({ rankings, byId, importByCountry, fifaMemberIds, countryNameFn, centroids, pop }) =>
+export const buildAliveAndKicking = (r32Data) => {
+  if (!r32Data) return null;
+  const s = new Set(r32Data.teams.map(t => t.iso2));
+  if (s.has('cg')) { s.delete('cg'); s.add('cd'); } // api-football lists Congo DR as 'cg' — correct to 'cd'
+  return s;
+};
+
+export const buildEloItems = ({ rankings, byId, importByCountry, fifaMemberIds, countryNameFn, centroids, pop, aliveAndKicking }) =>
   rankings
     .filter(r => !r.weirdo)
     .map(({ id, rank, pts, iso2, name, fifaMember }) => ({
       id, rank, pts: pts ?? '—', iso2, name: countryNameFn(id, name),
       fifaMember,
       qualified: !!QUALIFIED_NAMES[id],
+      knockedOut: aliveAndKicking ? !aliveAndKicking.has(iso2) : false,
       exp: (byId[id]?.count ?? 0) > 0,
       imp: (importByCountry[id]?.length ?? 0) > 0,
       expCount: byId[id]?.count ?? 0,

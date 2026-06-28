@@ -27,7 +27,7 @@
 </div>
 <script type="module">
 import { initEloRanking } from './js/elo_ranking.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry } from './js/qualified.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildAliveAndKicking } from './js/qualified.js';
 import { LOCALE, T, countryName } from './js/i18n.js';
 import { initSidebar } from './js/control_sidebar.js';
 
@@ -37,16 +37,19 @@ const _syncPaddingTop = () => { _main.style.paddingTop = (_header.getBoundingCli
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 
-const [eloData, mapData] = await Promise.all([
+const [eloData, mapData, r32Data] = await Promise.all([
   fetch('./data/wc2026_elo_rank.json').then(r => r.json()),
   fetch('./data/wc2026_map_data.json').then(r => r.json()),
+  fetch('./data/wc2026_r32_teams.json').then(r => r.json()).catch(() => null),
 ]);
+
+const _aliveAndKicking = buildAliveAndKicking(r32Data);
 
 const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
 const fifaMemberIds = new Set(eloData.rankings.filter(r => r.fifaMember).map(r => r.id));
 const importByCountry = buildImportByCountry(mapData, countryName);
 
-const app = { byId, importByCountry };
+const app = { byId, importByCountry, knockedOutIds: new Set() };
 const fmtPop = n => new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 
 const el = document.getElementById('list');
@@ -54,13 +57,14 @@ const el = document.getElementById('list');
 const sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true });
 
-const { render: renderElo } = initEloRanking({
+const { render: renderElo, rawItems } = initEloRanking({
   el, sidebar,
-  buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop },
+  buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop, aliveAndKicking: _aliveAndKicking },
   fmtPop, eloData,
   popData: { source: mapData.popSource, updated: mapData.popUpdated },
   onRender: _syncPaddingTop,
 });
+app.knockedOutIds = new Set(rawItems.filter(i => i.knockedOut).map(i => i.id));
 sidebarCallbacks.renderElo = renderElo;
 renderElo();
 </script>

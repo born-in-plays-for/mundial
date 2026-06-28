@@ -38,6 +38,17 @@ Die Matrix kreuzt zwei **Spalten** (Exporteur / Nicht-Exporteur) mit vier **Zeil
 
 Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf einen Zeilen- oder Spaltenkopf, um die gesamte Gruppe auf einmal umzuschalten.
 
+### 💪 Überlebende-Filter
+
+Die Schaltfläche **💪 survivors** befindet sich direkt unterhalb des Zeilenkopfs *Qualifiziert*.
+Standardmäßig ist sie inaktiv (nicht gedrückt) — alle 48 qualifizierten Länder werden angezeigt.
+Drücken Sie sie, um die qualifizierte Gruppe auf **noch im Turnier verbliebene Teams** zu beschränken;
+ausgeschiedene Länder werden sowohl aus der Länderliste als auch von den Kartenflaggen ausgeblendet.
+
+Die Schaltfläche hat zwei visuelle Zustände: flach (aus) und dunkel / eingedrückt (ein).
+Sie funktioniert in Kombination mit der restlichen Filtermatrix — Sie können beispielsweise
+nur Überlebende anzeigen, die auch Exporteure sind, indem Sie 💪 survivors drücken und die Nicht-Exporteur-Spalte deaktivieren.
+
 ### Zur Länderreferenz
 
 Karte und Liste verwenden [eloratings.net](https://www.eloratings.net/) als Länderquelle —
@@ -67,8 +78,17 @@ Qualifiziert vs. nicht qualifiziert
     <span class="elo-name" data-id="203">Czech Republic</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_border_yes -->
-Durchgezogener Rand — qualifiziert für die WM 2026.
+Durchgezogener Rand — qualifiziert und noch im Turnier.
 <!-- /i18n:tax_desc_border_yes --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--knocked-out" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" alt="">
+    <span class="elo-name" data-id="364">Iran</span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_dashed -->
+Gestrichelter Rand — qualifiziert, aber ausgeschieden.
+<!-- /i18n:tax_desc_border_dashed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item" style="flex-shrink:0">

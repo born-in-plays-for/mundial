@@ -38,6 +38,17 @@ The matrix crosses two **columns** (exporter / non-exporter) with four **rows** 
 
 Uncheck any cell to hide that category. Click a row or column header to toggle the whole group at once.
 
+### 💪 Survivors filter
+
+The **💪 survivors** button sits just below the *qualified* row header.
+By default it is inactive (not pushed) — all 48 qualified countries are shown.
+Press it to restrict the qualified group to **teams still in the tournament**;
+eliminated countries are hidden from both the country list and the map flags.
+
+The button has two visual states: flat (off) and dark / inset (on).
+It works in combination with the rest of the filter matrix — you can, for example,
+show only survivors that are also exporters by pressing 💪 survivors and unchecking the non-exporter column.
+
 ### About the country reference
 
 The map and the list use [eloratings.net](https://www.eloratings.net/) as the source of countries —
@@ -64,7 +75,14 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cz.svg" alt="">
     <span class="elo-name" data-id="203">Czech Republic</span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_yes -->Solid border — qualified for the 2026 World Cup.<!-- /i18n:tax_desc_border_yes --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_yes -->Solid border — qualified and still in the tournament.<!-- /i18n:tax_desc_border_yes --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--knocked-out" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" alt="">
+    <span class="elo-name" data-id="364">Iran</span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_dashed -->Dashed border — qualified but knocked out.<!-- /i18n:tax_desc_border_dashed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item" style="flex-shrink:0">

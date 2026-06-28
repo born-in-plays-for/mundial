@@ -38,6 +38,17 @@ La matriz cruza dos **columnas** (exportador / no exportador) con cuatro **filas
 
 Desmarca una celda para ocultar esa categoría. Haz clic en un encabezado de fila o columna para alternar todo el grupo a la vez.
 
+### 💪 Filtro supervivientes
+
+El botón **💪 survivors** se encuentra justo debajo del encabezado de fila *clasificados*.
+Por defecto está inactivo (sin pulsar) — se muestran los 48 países clasificados.
+Púlsalo para restringir el grupo de clasificados a los **equipos aún en el torneo**;
+los países eliminados se ocultan tanto de la lista de países como de las banderas en el mapa.
+
+El botón tiene dos estados visuales: plano (desactivado) y oscuro / presionado (activado).
+Funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,
+mostrar solo supervivientes exportadores pulsando 💪 survivors y desmarcando la columna de no exportadores.
+
 ### Sobre la referencia de países
 
 El mapa y la lista usan [eloratings.net](https://www.eloratings.net/) como fuente de países —
@@ -67,8 +78,17 @@ Clasificado vs. no clasificado
     <span class="elo-name" data-id="203">Czech Republic</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_border_yes -->
-Borde sólido — clasificado para el Mundial 2026.
+Borde sólido — clasificado y aún en el torneo.
 <!-- /i18n:tax_desc_border_yes --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--knocked-out" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" alt="">
+    <span class="elo-name" data-id="364">Iran</span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_dashed -->
+Borde discontinuo — clasificado pero eliminado.
+<!-- /i18n:tax_desc_border_dashed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item" style="flex-shrink:0">

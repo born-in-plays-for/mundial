@@ -1,7 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, initEloRanking } from './elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildAliveAndKicking } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
@@ -811,6 +811,7 @@ const app = {
   nativeByCountry: {},
   pop: {},
   eloRank: {},
+  knockedOutIds: new Set(),
 };
 const centroids = {};
 
@@ -1621,8 +1622,10 @@ Promise.all([
   fetch('data/wc2026_map_data.json').then(r => r.json()),
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
   fetch('data/uk-nations.geojson').then(r => r.json()),
-  fetch('data/wc2026_elo_rank.json').then(r => r.json())
-]).then(([rawData, world, ukNations, eloData]) => {
+  fetch('data/wc2026_elo_rank.json').then(r => r.json()),
+  fetch('data/wc2026_r32_teams.json').then(r => r.json()).catch(() => null)
+]).then(([rawData, world, ukNations, eloData, r32Data]) => {
+  const _aliveAndKicking = buildAliveAndKicking(r32Data);
   _eloData = eloData;
   app.eloRank = Object.fromEntries(
     eloData.rankings.flatMap(({id, rank}) => { const n = QUALIFIED_NAMES[id]; return n ? [[n, rank]] : []; })
@@ -1632,7 +1635,7 @@ Promise.all([
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
     rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,
-    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop,
+    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, aliveAndKicking: _aliveAndKicking,
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations);
   // Init elo ranking component with centroids now populated
@@ -1645,13 +1648,14 @@ Promise.all([
   _eloMain.isClickable = () => true;
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
-    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop },
+    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop, aliveAndKicking: _aliveAndKicking },
     fmtPop, eloData,
     popData: { source: rawData.popSource, updated: rawData.popUpdated },
   });
   _renderEloBase = _eloRender;
   _eloItemsById.clear();
   _eloRawItems.forEach(item => _eloItemsById.set(item.id, item));
+  app.knockedOutIds = new Set(_eloRawItems.filter(i => i.knockedOut).map(i => i.id));
   _renderElo();
   _expandPanel(_eloMetaPanel);
   sidebar.applyFlagFilter();

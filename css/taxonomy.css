@@ -14,6 +14,9 @@
 .taxonomy .elo-item--qualified { border: 1px solid #888; }
 .taxonomy .elo-item:not(.elo-item--qualified) { border: none; }
 
+/* Qualified but knocked out: dashed border */
+.taxonomy .elo-item--qualified.elo-item--knocked-out { border-style: dashed; }
+
 /* Non-FIFA: light text */
 .taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
 

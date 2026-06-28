@@ -26,7 +26,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha">${T.sortLabels.alpha}</div>
         </div>
       </td>
-      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.qualified}</span></span></td>
+      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.qualified}</span></span><button class="csb-ak-btn" id="btn-ak">💪 survivors</button></td>
       <td class="csb-row" data-row="qi"><span class="elo-item elo-item--qualified elo-item--imp"><span class="elo-name">${T.filterLabels.importer}</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
@@ -63,6 +63,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _fltOF  = _panel.querySelector('#filter-of');
   const _fltEN  = _panel.querySelector('#filter-en');
   const _fltON  = _panel.querySelector('#filter-on');
+  const _btnAK  = _panel.querySelector('#btn-ak');
+  _btnAK?.addEventListener('click', e => {
+    e.stopPropagation();
+    _btnAK.classList.toggle('active');
+    callbacks.renderElo?.();
+    applyFlagFilter();
+  });
 
   const flagCat = id => {
     const qual = !!QUALIFIED_NAMES[id];
@@ -82,6 +89,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const cat = flagCat(id);
     if (cat === 'e') return fifaMember ? _fltEF.checked : _fltEN.checked;
     if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
+    if (_btnAK?.classList.contains('active') && app.knockedOutIds?.has(id)) return false;
     return _catChecked(cat);
   };
 

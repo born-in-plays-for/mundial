@@ -4,9 +4,10 @@ import { LOCALE, T } from './i18n.js';
 
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 
-export const pillClasses = ({ qualified = false, fifaMember = true, noMap = false, exp = false, imp = false } = {}) =>
+export const pillClasses = ({ qualified = false, fifaMember = true, noMap = false, exp = false, imp = false, knockedOut = false } = {}) =>
   'elo-item'
   + (qualified ? ' elo-item--qualified' : '')
+  + (qualified && knockedOut ? ' elo-item--knocked-out' : '')
   + (!fifaMember ? ' elo-item--nonfifa' : '')
   + (exp ? ' elo-item--exp' : '')
   + (imp ? ' elo-item--imp' : '')

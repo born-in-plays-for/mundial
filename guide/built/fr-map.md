@@ -38,6 +38,17 @@ La matrice croise deux **colonnes** (exportateur / non-exportateur) avec quatre 
 
 Décochez une cellule pour masquer cette catégorie. Cliquez sur un en-tête de ligne ou de colonne pour basculer tout le groupe d'un coup.
 
+### 💪 Filtre survivants
+
+Le bouton **💪 survivors** se trouve juste en dessous de l'en-tête de ligne *qualifié*.
+Par défaut, il est inactif (non enfoncé) — les 48 pays qualifiés sont affichés.
+Appuyez dessus pour restreindre le groupe des qualifiés aux **équipes encore en lice** ;
+les pays éliminés sont masqués à la fois de la liste des pays et des drapeaux sur la carte.
+
+Le bouton a deux états visuels : plat (désactivé) et foncé / enfoncé (activé).
+Il fonctionne en combinaison avec le reste de la matrice de filtre — vous pouvez, par exemple,
+n'afficher que les survivants exportateurs en appuyant sur 💪 survivors et en décochant la colonne non-exportateurs.
+
 ### À propos de la référence des pays
 
 La carte et la liste utilisent [eloratings.net](https://www.eloratings.net/) comme source des pays —
@@ -67,8 +78,17 @@ Qualifié vs. non qualifié
     <span class="elo-name" data-id="203">Czech Republic</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_border_yes -->
-Bordure pleine — qualifié pour la Coupe du Monde 2026.
+Bordure pleine — qualifié et toujours en lice.
 <!-- /i18n:tax_desc_border_yes --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--knocked-out" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" alt="">
+    <span class="elo-name" data-id="364">Iran</span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_dashed -->
+Bordure pointillée — qualifié mais éliminé.
+<!-- /i18n:tax_desc_border_dashed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item" style="flex-shrink:0">
