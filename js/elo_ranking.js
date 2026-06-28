@@ -118,7 +118,7 @@ export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloDa
       sourceParts.push(`${T.eloUpdated}${fmt}`);
     }
     metaEl.innerHTML = sourceParts.length
-      ? `<span id="elo-meta-count"></span> · <span id="elo-meta-source">${sourceParts.join(' · ')}</span>`
+      ? `<span id="elo-meta-count"></span><span id="elo-meta-source"> · ${sourceParts.join(' · ')}</span>`
       : `<span id="elo-meta-count"></span>`;
     metaCountEl  = document.getElementById('elo-meta-count');
     metaSourceEl = document.getElementById('elo-meta-source');
