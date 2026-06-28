@@ -40,14 +40,17 @@ Uncheck any cell to hide that category. Click a row or column header to toggle t
 
 ### 💪 Survivors filter
 
-The **💪 survivors** button sits just below the *qualified* row header.
-By default it is inactive (not pushed) — all 48 qualified countries are shown.
-Press it to restrict the qualified group to **teams still in the tournament**;
-eliminated countries are hidden from both the country list and the map flags.
+The **in · ● · out** toggle sits just below the *qualified* row header.
+By default the knob is centred — all 48 qualified countries are shown.
 
-The button has two visual states: flat (off) and dark / inset (on).
-It works in combination with the rest of the filter matrix — you can, for example,
-show only survivors that are also exporters by pressing 💪 survivors and unchecking the non-exporter column.
+- **in** side: show only teams still in the tournament; eliminated countries are hidden.
+- **out** side: show only eliminated teams.
+- Tap the active side again, or tap the centre, to reset to both.
+
+On touch screens, swipe left or right to step the knob one position at a time.
+
+The toggle works in combination with the rest of the filter matrix — you can, for example,
+show only survivors that are also exporters by switching to **in** and unchecking the non-exporter column.
 
 ### About the country reference
 

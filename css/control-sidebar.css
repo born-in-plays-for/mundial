@@ -123,20 +123,22 @@
   user-select: none; -webkit-user-select: none;
 }
 #control-sidebar .csb-tri-lbl {
-  font-size: 9px; color: #999; transition: color 0.15s, font-weight 0.15s;
+  font-size: 9px; color: #666; transition: color 0.15s, font-weight 0.15s;
   min-width: 10px; text-align: center;
 }
+/* active zone: bold + dark */
 #control-sidebar .csb-tri[data-state="alive"] .csb-tri-lbl:first-child,
-#control-sidebar .csb-tri[data-state="out"]   .csb-tri-lbl:last-child {
-  color: #333; font-weight: 600;
-}
+#control-sidebar .csb-tri[data-state="out"]   .csb-tri-lbl:last-child  { color: #333; font-weight: 600; }
+/* inactive zone: dimmed */
+#control-sidebar .csb-tri[data-state="alive"] .csb-tri-lbl:last-child,
+#control-sidebar .csb-tri[data-state="out"]   .csb-tri-lbl:first-child { color: #bbb; }
 #control-sidebar .csb-tri-track {
   position: relative; width: 30px; height: 12px;
   background: #e8e8e8; border: 1px solid #bbb; border-radius: 6px; flex-shrink: 0;
 }
 #control-sidebar .csb-tri-knob {
   position: absolute; top: 1px; width: 8px; height: 8px;
-  border-radius: 50%; background: #999;
+  border-radius: 50%; background: #666;
   transition: left 0.2s ease, background 0.2s ease;
 }
 #control-sidebar .csb-tri[data-state="both"]  .csb-tri-knob { left: 10px; }
