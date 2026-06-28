@@ -54,7 +54,7 @@ show only alive & kicking teams that are also exporters by switching to **in** a
 
 ### URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`. Add `?explain` to any URL to open a panel describing what the active parameters do. The full reference with all cell codes, group aliases and examples is in the Countries page guide.
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`. Add `?explain` to any URL to open a panel describing what the active parameters do. The full reference with all cell codes, group aliases and examples is in the [Countries page guide](?guide=countries).
 
 ### About the country reference
 

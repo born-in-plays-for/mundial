@@ -73,12 +73,25 @@ export function toggleGuide(authBar) {
   }
 }
 
+const _GUIDE_IDS = new Set(['map', 'countries', 'france', 'live', 'auth']);
+
 function _ensurePanel() {
   if (_panel) { _panel.style.display = ''; return; }
   _injectStyles();
   _panel = document.createElement('div');
   _panel.id = 'mundial-guide-panel';
   _panel.style.cssText = 'position:fixed;top:32px;left:0;right:0;bottom:0;z-index:1049;background:#faf9f6;overflow-y:auto;padding:2rem 1rem 4rem';
+  _panel.addEventListener('click', e => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    const guideParam = new URL(a.href, location.href).searchParams.get('guide');
+    if (guideParam && _GUIDE_IDS.has(guideParam)) {
+      e.preventDefault();
+      _showingId = guideParam;
+      _showSection(guideParam);
+      _highlightNav(guideParam);
+    }
+  });
   document.body.appendChild(_panel);
 }
 
