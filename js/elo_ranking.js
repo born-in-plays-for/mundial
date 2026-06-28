@@ -1,5 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { buildEloItems } from './qualified.js';
+import { LOCALE, T } from './i18n.js';
 
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 
@@ -101,12 +102,23 @@ class EloRanking extends HTMLElement {
 
 customElements.define('elo-ranking', EloRanking);
 
-export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender }) => {
+export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloData }) => {
   const rawItems = buildEloItems(buildArgs);
   el.items = rawItems;
-  const render = (onAnimationDone) => {
+  const renderFn = (onAnimationDone) => {
     el.show(sidebar.sortAndFilter(rawItems, fmtPop), onAnimationDone);
     onRender?.();
   };
-  return { rawItems, render };
+  const metaEl = document.getElementById('elo-meta');
+  if (metaEl && eloData) {
+    const parts = [];
+    if (eloData.source) parts.push(`<a href="https://${eloData.source}/" target="_blank" rel="noopener" class="sub">${eloData.source}</a>`);
+    if (eloData.updated) {
+      const d = new Date(eloData.updated + 'T00:00:00');
+      const fmt = isNaN(d) ? eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
+      parts.push(`${T.eloUpdated}${fmt}`);
+    }
+    metaEl.innerHTML = `${rawItems.length} ${T.navCountries} · ${parts.join(' · ')}`;
+  }
+  return { rawItems, render: renderFn };
 };

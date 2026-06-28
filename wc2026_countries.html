@@ -28,7 +28,7 @@
 <script type="module">
 import { initEloRanking } from './js/elo_ranking.js';
 import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry } from './js/qualified.js';
-import { LOCALE, T, countryName } from './js/i18n.js';
+import { T, countryName } from './js/i18n.js';
 import { initSidebar } from './js/control_sidebar.js';
 
 const _header = document.getElementById('countries-header');
@@ -54,24 +54,14 @@ const el = document.getElementById('list');
 const sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true });
 
-const { rawItems, render: renderElo } = initEloRanking({
+const { render: renderElo } = initEloRanking({
   el, sidebar,
   buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop },
-  fmtPop,
+  fmtPop, eloData,
   onRender: _syncPaddingTop,
 });
 sidebarCallbacks.renderElo = renderElo;
 renderElo();
-
-const metaEl = document.getElementById('elo-meta');
-const parts = [];
-if (eloData.source) parts.push(`<a href="https://${eloData.source}/" target="_blank" rel="noopener" class="sub">${eloData.source}</a>`);
-if (eloData.updated) {
-  const d = new Date(eloData.updated + 'T00:00:00');
-  const fmt = isNaN(d) ? eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
-  parts.push(`updated ${fmt}`);
-}
-metaEl.innerHTML = `${rawItems.length} countries · ${parts.join(' · ')}`;
 </script>
 </body>
 </html>

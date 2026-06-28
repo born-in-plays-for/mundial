@@ -441,7 +441,6 @@ let _eloData   = null;
 const _fifaMemberIds = new Set();
 render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking><div class="sub mt-2" id="elo-meta"></div></div>`, document.getElementById('tab-elo'));
 const _eloMain = document.querySelector('#tab-elo elo-ranking');
-const _eloMeta = document.getElementById('elo-meta');
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
 if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
@@ -606,7 +605,8 @@ const zoomToCentroid = (id, duration = 2000) => {
 
 const _renderElo = (onAnimationDone) => {
   if (!_renderEloBase) return;
-  _eloMeta.hidden = sidebar.sortOrder[0] !== 'elo';
+  const _metaEl = document.getElementById('elo-meta');
+  if (_metaEl) _metaEl.hidden = sidebar.sortOrder[0] !== 'elo';
   _renderEloBase(onAnimationDone);
   if (dimState.sourceId) _eloMain.update(dimState.sourceId);
 };
@@ -1642,21 +1642,11 @@ Promise.all([
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
     buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop },
-    fmtPop,
+    fmtPop, eloData,
   });
   _renderEloBase = _eloRender;
   _eloItemsById.clear();
   _eloRawItems.forEach(item => _eloItemsById.set(item.id, item));
-  if (_eloData?.source || _eloData?.updated) {
-    const parts = [];
-    if (_eloData.source) parts.push(`<a href="https://${_eloData.source}/" target="_blank" rel="noopener" class="sub">${_eloData.source}</a>`);
-    if (_eloData.updated) {
-      const d = new Date(_eloData.updated + 'T00:00:00');
-      const fmt = isNaN(d) ? _eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
-      parts.push(`${T.eloUpdated}${fmt}`);
-    }
-    _eloMeta.innerHTML = parts.join(' · ');
-  }
   _renderElo();
   sidebar.applyFlagFilter();
   sidebar.updateVisibleCountryCount();
