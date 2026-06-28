@@ -40,14 +40,17 @@ Décochez une cellule pour masquer cette catégorie. Cliquez sur un en-tête de 
 
 ### 💪 Filtre survivants
 
-Le bouton **💪 survivors** se trouve juste en dessous de l'en-tête de ligne *qualifié*.
-Par défaut, il est inactif (non enfoncé) — les 48 pays qualifiés sont affichés.
-Appuyez dessus pour restreindre le groupe des qualifiés aux **équipes encore en lice** ;
-les pays éliminés sont masqués à la fois de la liste des pays et des drapeaux sur la carte.
+Le commutateur **in · ● · out** se trouve juste en dessous de l'en-tête de ligne *qualifié*.
+Par défaut, le curseur est centré — les 48 pays qualifiés sont affichés.
 
-Le bouton a deux états visuels : plat (désactivé) et foncé / enfoncé (activé).
-Il fonctionne en combinaison avec le reste de la matrice de filtre — vous pouvez, par exemple,
-n'afficher que les survivants exportateurs en appuyant sur 💪 survivors et en décochant la colonne non-exportateurs.
+- Côté **in** : affiche uniquement les équipes encore en lice ; les pays éliminés sont masqués.
+- Côté **out** : affiche uniquement les équipes éliminées.
+- Touchez à nouveau le côté actif, ou le centre, pour réinitialiser et tout afficher.
+
+Sur écran tactile, faites glisser vers la gauche ou la droite pour déplacer le curseur pas à pas.
+
+Le commutateur fonctionne en combinaison avec le reste de la matrice de filtre — vous pouvez, par exemple,
+n'afficher que les survivants exportateurs en passant à **in** et en décochant la colonne non-exportateurs.
 
 ### À propos de la référence des pays
 

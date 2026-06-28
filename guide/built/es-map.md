@@ -40,14 +40,17 @@ Desmarca una celda para ocultar esa categoría. Haz clic en un encabezado de fil
 
 ### 💪 Filtro supervivientes
 
-El botón **💪 survivors** se encuentra justo debajo del encabezado de fila *clasificados*.
-Por defecto está inactivo (sin pulsar) — se muestran los 48 países clasificados.
-Púlsalo para restringir el grupo de clasificados a los **equipos aún en el torneo**;
-los países eliminados se ocultan tanto de la lista de países como de las banderas en el mapa.
+El interruptor **in · ● · out** se encuentra justo debajo del encabezado de fila *clasificados*.
+Por defecto el cursor está centrado — se muestran los 48 países clasificados.
 
-El botón tiene dos estados visuales: plano (desactivado) y oscuro / presionado (activado).
-Funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,
-mostrar solo supervivientes exportadores pulsando 💪 survivors y desmarcando la columna de no exportadores.
+- Lado **in**: muestra solo los equipos aún en el torneo; los países eliminados se ocultan.
+- Lado **out**: muestra solo los equipos eliminados.
+- Toca de nuevo el lado activo, o el centro, para restablecer y mostrar todo.
+
+En pantallas táctiles, desliza hacia la izquierda o derecha para mover el cursor paso a paso.
+
+El interruptor funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,
+mostrar solo supervivientes exportadores cambiando a **in** y desmarcando la columna de no exportadores.
 
 ### Sobre la referencia de países
 
