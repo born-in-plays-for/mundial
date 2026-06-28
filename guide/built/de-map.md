@@ -38,7 +38,7 @@ Die Matrix kreuzt zwei **Spalten** (Exporteur / Nicht-Exporteur) mit vier **Zeil
 
 Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf einen Zeilen- oder Spaltenkopf, um die gesamte Gruppe auf einmal umzuschalten.
 
-### Alive-&-kicking-Filter
+### Alive & kicking Filter
 
 Der Schalter **in · ● · out** befindet sich direkt unterhalb des Zeilenkopfs *Qualifiziert*.
 Standardmäßig ist der Knopf zentriert — alle 48 qualifizierten Länder werden angezeigt.
@@ -50,7 +50,7 @@ Standardmäßig ist der Knopf zentriert — alle 48 qualifizierten Länder werde
 Auf Touchscreens nach links oder rechts wischen, um den Knopf schrittweise zu bewegen.
 
 Der Schalter funktioniert in Kombination mit der restlichen Filtermatrix — Sie können beispielsweise
-nur Überlebende anzeigen, die auch Exporteure sind, indem Sie auf **in** schalten und die Nicht-Exporteur-Spalte deaktivieren.
+nur alive & kicking Mannschaften anzeigen, die auch Exporteure sind, indem Sie auf **in** schalten und die Nicht-Exporteur-Spalte deaktivieren.
 
 ### Zur Länderreferenz
 
