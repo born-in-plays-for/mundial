@@ -102,23 +102,29 @@ class EloRanking extends HTMLElement {
 
 customElements.define('elo-ranking', EloRanking);
 
-export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloData }) => {
+const _sourceHtml = (data) => {
+  if (!data) return '';
+  const parts = [];
+  if (data.source) parts.push(`<a href="https://${data.source}/" target="_blank" rel="noopener" class="sub">${data.source}</a>`);
+  if (data.updated) {
+    const d = new Date(data.updated + 'T00:00:00');
+    const fmt = isNaN(d) ? data.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
+    parts.push(`${T.eloUpdated}${fmt}`);
+  }
+  return parts.join(' · ');
+};
+
+export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloData, popData }) => {
   const rawItems = buildEloItems(buildArgs);
   el.items = rawItems;
 
-  // Build stable #elo-meta structure once: [count span] · [source span (toggled)]
+  // Build stable #elo-meta structure once: [count span] · [source span (dynamic content, toggled)]
   const metaEl = document.getElementById('elo-meta');
   let metaCountEl = null, metaSourceEl = null;
   if (metaEl) {
-    const sourceParts = [];
-    if (eloData?.source) sourceParts.push(`<a href="https://${eloData.source}/" target="_blank" rel="noopener" class="sub">${eloData.source}</a>`);
-    if (eloData?.updated) {
-      const d = new Date(eloData.updated + 'T00:00:00');
-      const fmt = isNaN(d) ? eloData.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
-      sourceParts.push(`${T.eloUpdated}${fmt}`);
-    }
-    metaEl.innerHTML = sourceParts.length
-      ? `<span id="elo-meta-count"></span><span id="elo-meta-source"> · ${sourceParts.join(' · ')}</span>`
+    const hasSource = !!(eloData || popData);
+    metaEl.innerHTML = hasSource
+      ? `<span id="elo-meta-count"></span><span id="elo-meta-source"></span>`
       : `<span id="elo-meta-count"></span>`;
     metaCountEl  = document.getElementById('elo-meta-count');
     metaSourceEl = document.getElementById('elo-meta-source');
@@ -128,7 +134,14 @@ export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloDa
     const visibleItems = sidebar.sortAndFilter(rawItems, fmtPop);
     el.show(visibleItems, onAnimationDone);
     if (metaCountEl) metaCountEl.textContent = `${visibleItems.length}/${rawItems.length} ${T.navCountries}`;
-    if (metaSourceEl) metaSourceEl.hidden = sidebar.sortOrder[0] !== 'elo';
+    if (metaSourceEl) {
+      const sort = sidebar.sortOrder[0];
+      const html = sort === 'elo' ? _sourceHtml(eloData)
+                 : sort === 'pop' ? _sourceHtml(popData)
+                 : '';
+      metaSourceEl.innerHTML = html ? ` · ${html}` : '';
+      metaSourceEl.hidden = !html;
+    }
     onRender?.();
   };
 

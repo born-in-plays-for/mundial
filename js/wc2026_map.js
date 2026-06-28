@@ -1641,6 +1641,7 @@ Promise.all([
     el: _eloMain, sidebar,
     buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop },
     fmtPop, eloData,
+    popData: { source: 'data.worldbank.org/indicator/SP.POP.TOTL', updated: '2024' },
   });
   _renderEloBase = _eloRender;
   _eloItemsById.clear();

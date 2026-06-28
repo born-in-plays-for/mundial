@@ -58,6 +58,7 @@ const { render: renderElo } = initEloRanking({
   el, sidebar,
   buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop },
   fmtPop, eloData,
+  popData: { source: 'data.worldbank.org/indicator/SP.POP.TOTL', updated: '2024' },
   onRender: _syncPaddingTop,
 });
 sidebarCallbacks.renderElo = renderElo;
