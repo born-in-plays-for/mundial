@@ -435,6 +435,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     nq:    ['ef','en','of','on'],
     exp:   ['qie','qe','ef','en'],
     nexp:  ['qi','q','of','on'],
+    imp:   ['qie','qi'],
     all:   ['qie','qi','qe','q','ef','en','of','on'],
   };
   const _CELL_MAP   = { qie:_fltQIE, qi:_fltQI, qe:_fltQE, q:_fltQ, ef:_fltEF, en:_fltEN, of:_fltOF, on:_fltON };

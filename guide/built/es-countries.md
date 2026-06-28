@@ -103,6 +103,7 @@ Letter mnemonics:
 | `nq`   | `ef,en,of,on`     | All non-qualified rows               |
 | `exp`  | `qie,qe,ef,en`    | Exporter column                      |
 | `nexp` | `qi,q,of,on`      | Non-exporter column                  |
+| `imp`  | `qie,qi`          | Importer rows (with or without exports) |
 | `all`  | all 8 codes        | Every cell (including `of` and `on`) |
 
 Aliases and individual codes may be freely mixed; the result is a union. Unknown tokens are silently ignored — if all tokens are unrecognized the parameter is ignored entirely and defaults are kept.
