@@ -43,7 +43,7 @@ All active parameters are always logged to the browser console, regardless of `?
 
 Applies to the primary sort key only. `?sort=alpha&dir=desc` yields Z–A.
 
-### `?in` / `?out` — survivors filter
+### `?in` / `?out` — alive & kicking filter
 
 Boolean flags — presence alone is the signal; no `=value` needed. These mirror the **in · ● · out** toggle widget in the filter panel.
 
@@ -57,7 +57,7 @@ Boolean flags — presence alone is the signal; no `=value` needed. These mirror
 When `?in` or `?out` is set, non-qualified exporter countries are also filtered:
 
 - `?in` hides exporters whose players all go to knocked-out teams
-- `?out` hides exporters whose players all go to surviving teams
+- `?out` hides exporters whose players all go to alive & kicking teams
 
 ### `?show` — filter whitelist
 
@@ -98,20 +98,20 @@ Aliases and individual codes may be freely mixed; the result is a union. Unknown
 
 #### Combining `?in`/`?out` with `?show`
 
-- `?in&show=qual` → only surviving qualified countries
+- `?in&show=qual` → only alive & kicking qualified countries
 - `?out&show=qual` → only eliminated qualified countries
-- `?in&show=exp` → exporters (qualified or not) linked to surviving teams
+- `?in&show=exp` → exporters (qualified or not) linked to alive & kicking teams
 - `?in`/`?out` have no effect on `of`/`on` cells (they have no tournament connection)
 
 ### Examples
 
 ```
-?in&show=qual                 Only surviving qualified countries.
+?in&show=qual                 Only alive & kicking qualified countries.
 ?out&show=qual                Only eliminated qualified countries.
 ?show=qual                    All 48 qualified countries; non-qualified hidden.
 ?show=qual&sort=pop&dir=asc   Qualified countries sorted by population ascending.
 ?show=qie                     Only countries that both import and export players.
-?in&show=exp                  Exporter column, filtered to surviving teams.
+?in&show=exp                  Exporter column, filtered to alive & kicking teams.
 ?sort=delta&dir=asc&show=qual Qualified countries with fewest plays-for vs. born-in first.
 ?show=all                     All 8 cells including normally-hidden of and on.
 ?show=qual,ef                 Qualified countries + non-qualified FIFA exporters.

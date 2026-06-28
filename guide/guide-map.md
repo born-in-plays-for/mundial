@@ -38,7 +38,7 @@ The matrix crosses two **columns** (exporter / non-exporter) with four **rows** 
 
 Uncheck any cell to hide that category. Click a row or column header to toggle the whole group at once.
 
-### 💪 Survivors filter
+### 💪 Alive & kicking filter
 
 The **in · ● · out** toggle sits just below the *qualified* row header.
 By default the knob is centred — all 48 qualified countries are shown.
@@ -50,7 +50,7 @@ By default the knob is centred — all 48 qualified countries are shown.
 On touch screens, swipe left or right to step the knob one position at a time.
 
 The toggle works in combination with the rest of the filter matrix — you can, for example,
-show only survivors that are also exporters by switching to **in** and unchecking the non-exporter column.
+show only alive & kicking teams that are also exporters by switching to **in** and unchecking the non-exporter column.
 
 ### About the country reference
 

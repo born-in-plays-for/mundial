@@ -454,7 +454,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const hasIn = sp.has('in'), hasOut = sp.has('out');
     if      (hasIn && hasOut) lines.push({ param: '?in&out', desc: 'both flags → empty set' });
     else if (hasIn)           lines.push({ param: '?in',  desc: 'qualified: alive & kicking only · exporters: hidden if all their players go to eliminated teams' });
-    else if (hasOut)          lines.push({ param: '?out', desc: 'qualified: eliminated only · exporters: hidden if all their players go to surviving teams' });
+    else if (hasOut)          lines.push({ param: '?out', desc: 'qualified: eliminated only · exporters: hidden if all their players go to alive & kicking teams' });
     const sortRaw = sp.get('sort');
     if (sortRaw) {
       const keys = sortRaw.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));

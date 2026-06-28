@@ -38,7 +38,7 @@ La matrice croise deux **colonnes** (exportateur / non-exportateur) avec quatre 
 
 Décochez une cellule pour masquer cette catégorie. Cliquez sur un en-tête de ligne ou de colonne pour basculer tout le groupe d'un coup.
 
-### 💪 Filtre survivants
+### 💪 Filtre alive & kicking
 
 Le commutateur **in · ● · out** se trouve juste en dessous de l'en-tête de ligne *qualifié*.
 Par défaut, le curseur est centré — les 48 pays qualifiés sont affichés.
@@ -50,7 +50,7 @@ Par défaut, le curseur est centré — les 48 pays qualifiés sont affichés.
 Sur écran tactile, faites glisser vers la gauche ou la droite pour déplacer le curseur pas à pas.
 
 Le commutateur fonctionne en combinaison avec le reste de la matrice de filtre — vous pouvez, par exemple,
-n'afficher que les survivants exportateurs en passant à **in** et en décochant la colonne non-exportateurs.
+n'afficher que les équipes encore en lice qui sont aussi exportatrices en passant à **in** et en décochant la colonne non-exportateurs.
 
 ### À propos de la référence des pays
 
