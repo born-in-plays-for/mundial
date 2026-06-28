@@ -26,7 +26,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha">${T.sortLabels.alpha}</div>
         </div>
       </td>
-      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.qualified}</span></span><button class="btn btn-sm btn-outline-secondary d-block mt-1 p-1 text-nowrap" id="btn-ak">💪 survivors</button></td>
+      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.qualified}</span></span><div class="csb-tri" id="tri-ak" data-state="both"><span class="csb-tri-lbl">in</span><div class="csb-tri-track"><span class="csb-tri-knob"></span></div><span class="csb-tri-lbl">out</span></div></td>
       <td class="csb-row" data-row="qi"><span class="elo-item elo-item--qualified elo-item--imp"><span class="elo-name">${T.filterLabels.importer}</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
@@ -63,13 +63,34 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _fltOF  = _panel.querySelector('#filter-of');
   const _fltEN  = _panel.querySelector('#filter-en');
   const _fltON  = _panel.querySelector('#filter-on');
-  const _btnAK  = _panel.querySelector('#btn-ak');
-  _btnAK?.addEventListener('click', e => {
-    e.stopPropagation();
-    _btnAK.classList.toggle('active');
+  const _triAK  = _panel.querySelector('#tri-ak');
+  const _triApply = (next) => {
+    _triAK.dataset.state = next === _triAK.dataset.state ? 'both' : next;
     callbacks.renderElo?.();
     applyFlagFilter();
+  };
+  _triAK?.addEventListener('click', e => {
+    e.stopPropagation();
+    const { left, width } = _triAK.getBoundingClientRect();
+    const x = e.clientX - left;
+    _triApply(x < width / 3 ? 'alive' : x > width * 2 / 3 ? 'out' : 'both');
   });
+  const _triNext = { alive: [null, 'both'], both: ['alive', 'out'], out: ['both', null] }; // [left, right]
+  let _triTouchX = null;
+  _triAK?.addEventListener('touchstart', e => { _triTouchX = e.touches[0].clientX; }, { passive: true });
+  _triAK?.addEventListener('touchend', e => {
+    if (_triTouchX === null) return;
+    const dx = e.changedTouches[0].clientX - _triTouchX;
+    _triTouchX = null;
+    if (Math.abs(dx) < 15) return; // small move → let click fire
+    e.stopPropagation();
+    e.preventDefault();
+    const next = _triNext[_triAK.dataset.state]?.[dx > 0 ? 1 : 0];
+    if (!next) return;
+    _triAK.dataset.state = next;
+    callbacks.renderElo?.();
+    applyFlagFilter();
+  }, { passive: false });
 
   const flagCat = id => {
     const qual = !!QUALIFIED_NAMES[id];
@@ -89,7 +110,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const cat = flagCat(id);
     if (cat === 'e') return fifaMember ? _fltEF.checked : _fltEN.checked;
     if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
-    if (_btnAK?.classList.contains('active') && app.knockedOutIds?.has(id)) return false;
+    const st = _triAK?.dataset.state ?? 'both';
+    if (st !== 'both' && app.knockedOutIds?.size > 0) {
+      const ko = app.knockedOutIds.has(id);
+      if (st === 'alive' && ko)  return false;
+      if (st === 'out'   && !ko) return false;
+    }
     return _catChecked(cat);
   };
 
