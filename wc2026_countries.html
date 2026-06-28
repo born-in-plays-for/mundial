@@ -27,7 +27,7 @@
 </div>
 <script type="module">
 import { initEloRanking } from './js/elo_ranking.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildAliveAndKicking } from './js/qualified.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildAliveAndKicking, buildExporterSets } from './js/qualified.js';
 import { LOCALE, T, countryName } from './js/i18n.js';
 import { initSidebar } from './js/control_sidebar.js';
 
@@ -65,8 +65,12 @@ const { render: renderElo, rawItems } = initEloRanking({
   onRender: _syncPaddingTop,
 });
 app.knockedOutIds = new Set(rawItems.filter(i => i.knockedOut).map(i => i.id));
+const { toAlive, toOut } = buildExporterSets(app.importByCountry, app.knockedOutIds);
+app.exporterToAliveIds = toAlive;
+app.exporterToOutIds   = toOut;
 sidebarCallbacks.renderElo = renderElo;
 renderElo();
+sidebar.applyParams(new URLSearchParams(location.search));
 </script>
 </body>
 </html>

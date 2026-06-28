@@ -1,7 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, initEloRanking } from './elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildAliveAndKicking } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildAliveAndKicking, buildExporterSets } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
@@ -1656,7 +1656,11 @@ Promise.all([
   _eloItemsById.clear();
   _eloRawItems.forEach(item => _eloItemsById.set(item.id, item));
   app.knockedOutIds = new Set(_eloRawItems.filter(i => i.knockedOut).map(i => i.id));
+  const { toAlive, toOut } = buildExporterSets(app.importByCountry, app.knockedOutIds);
+  app.exporterToAliveIds = toAlive;
+  app.exporterToOutIds   = toOut;
   _renderElo();
+  sidebar.applyParams(new URLSearchParams(location.search));
   _expandPanel(_eloMetaPanel);
   sidebar.applyFlagFilter();
   sidebar.updateVisibleCountryCount();

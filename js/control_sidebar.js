@@ -10,7 +10,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   <div class="csb-body overflow-hidden"><table class="csb-table table table-sm table-bordered"><tbody>
     <tr>
       <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}${alwaysOpen ? nothing : html`<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span>`}</td>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><em class="elo-item"> ${T.filterLabels.action}</em></td>
+      <td colspan="2" class="csb-header text-center text-muted" data-col="all" style="position:relative"><em class="elo-item"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active">?</button></td>
       <td class="csb-col" data-col="exp"><span class="elo-item elo-item--exp"><span class="elo-name">${T.filterLabels.exporter}</span></span></td>
       <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
     </tr>
@@ -108,13 +108,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const catEloChecked = (id, fifaMember) => {
     const cat = flagCat(id);
-    if (cat === 'e') return fifaMember ? _fltEF.checked : _fltEN.checked;
+    const st  = _triAK?.dataset.state ?? 'both';
+    if (st === 'none') return false;
+    const ko  = st !== 'both' && app.knockedOutIds?.size > 0;
+    if (cat === 'e') {
+      if (ko && st === 'alive' && !app.exporterToAliveIds?.has(id)) return false;
+      if (ko && st === 'out'   && !app.exporterToOutIds?.has(id))   return false;
+      return fifaMember ? _fltEF.checked : _fltEN.checked;
+    }
     if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
-    const st = _triAK?.dataset.state ?? 'both';
-    if (st !== 'both' && app.knockedOutIds?.size > 0) {
-      const ko = app.knockedOutIds.has(id);
-      if (st === 'alive' && ko)  return false;
-      if (st === 'out'   && !ko) return false;
+    if (ko) {
+      if (st === 'alive' && app.knockedOutIds.has(id))  return false;
+      if (st === 'out'   && !app.knockedOutIds.has(id)) return false;
     }
     return _catChecked(cat);
   };
@@ -424,6 +429,132 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       }));
   };
 
+  const _SORT_KEYS  = new Set(['elo', 'alpha', 'pop', 'delta']);
+  const _ALIASES    = {
+    qual:  ['qie','qi','qe','q'],
+    nq:    ['ef','en','of','on'],
+    exp:   ['qie','qe','ef','en'],
+    nexp:  ['qi','q','of','on'],
+    all:   ['qie','qi','qe','q','ef','en','of','on'],
+  };
+  const _CELL_MAP   = { qie:_fltQIE, qi:_fltQI, qe:_fltQE, q:_fltQ, ef:_fltEF, en:_fltEN, of:_fltOF, on:_fltON };
+
+  // ── URL params debug (badge · panel · console) ─────────────────────────
+
+  const _SORT_NAMES  = { elo: 'Elo ranking', alpha: 'A–Z', pop: 'population', delta: 'Elo delta' };
+  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'in', 'out', 'show', 'explain']);
+  const _badge = _el.querySelector('#params-badge');
+  let _lastLines = [], _panelEl = null;
+
+  const _countVisible = () =>
+    [...eloMain.querySelectorAll('.elo-item')].filter(el => el.style.display !== 'none').length;
+
+  const _buildLines = (sp) => {
+    const lines = [];
+    const hasIn = sp.has('in'), hasOut = sp.has('out');
+    if      (hasIn && hasOut) lines.push({ param: '?in&out', desc: 'both flags → empty set' });
+    else if (hasIn)           lines.push({ param: '?in',  desc: 'qualified: alive & kicking only · exporters: hidden if all their players go to eliminated teams' });
+    else if (hasOut)          lines.push({ param: '?out', desc: 'qualified: eliminated only · exporters: hidden if all their players go to surviving teams' });
+    const sortRaw = sp.get('sort');
+    if (sortRaw) {
+      const keys = sortRaw.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
+      if (keys.length) lines.push({ param: `?sort=${sortRaw.trim()}`, desc: `sort: ${keys.map(k => _SORT_NAMES[k]).join(' → ')}` });
+    }
+    const dir = sp.get('dir');
+    if (dir === 'asc')  lines.push({ param: '?dir=asc',  desc: 'ascending ↑' });
+    if (dir === 'desc') lines.push({ param: '?dir=desc', desc: 'descending ↓' });
+    const show = sp.get('show');
+    if (show) {
+      const cells = new Set(), unknown = [];
+      show.split(',').forEach(t => {
+        const k = t.trim();
+        const expanded = (_ALIASES[k] ?? [k]).filter(c => _CELL_MAP[c]);
+        expanded.length ? expanded.forEach(c => cells.add(c)) : unknown.push(k);
+      });
+      const valid = [...cells];
+      const suffix = unknown.length ? ` — unknown: ${unknown.join(', ')}` : '';
+      lines.push(valid.length
+        ? { param: `?show=${show}`, desc: `cells: ${valid.join(' · ')}${suffix}` }
+        : { param: `?show=${show}`, desc: `no valid codes${suffix} — ignored, defaults kept` });
+    }
+    for (const k of sp.keys()) {
+      if (!_KNOWN_PARAMS.has(k)) lines.push({ param: `?${k}`, desc: 'unrecognized — ignored' });
+    }
+    return lines;
+  };
+
+  const _closeExplainPanel = () => { if (_panelEl) _panelEl.hidden = true; _badge?.classList.remove('active'); };
+  const _openExplainPanel  = (lines, visible) => {
+    if (!_panelEl) {
+      _panelEl = document.createElement('div');
+      _panelEl.id = 'params-panel';
+      document.body.appendChild(_panelEl);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') _closeExplainPanel(); });
+    }
+    render(html`
+      <button class="pep-close" @click=${_closeExplainPanel}>×</button>
+      <ul class="pep-list">
+        ${lines.map(l => html`<li><code>${l.param}</code> — ${l.desc}</li>`)}
+      </ul>
+      <p class="pep-result">→ ${visible} ${visible === 1 ? 'country' : 'countries'} visible</p>`, _panelEl);
+    _panelEl.hidden = false;
+    _badge?.classList.add('active');
+  };
+
+  _badge?.addEventListener('click', e => {
+    e.stopPropagation();
+    (_panelEl && !_panelEl.hidden) ? _closeExplainPanel() : (_lastLines.length && _openExplainPanel(_lastLines, _countVisible()));
+  });
+
+  const applyParams = (sp) => {
+    if (!sp) return;
+    let changed = false;
+
+    const sort = sp.get('sort');
+    if (sort) {
+      const keys = sort.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
+      if (keys.length) { _sortOrder = [...new Set([...keys, ..._sortOrder])].slice(0, _sortOrder.length); changed = true; }
+    }
+
+    const dir = sp.get('dir');
+    if (dir === 'asc' || dir === 'desc') { _sortDir = dir; changed = true; }
+
+    if (changed) _updateSortCol();
+
+    if (_triAK) {
+      const hasIn = sp.has('in'), hasOut = sp.has('out');
+      if      (hasIn && hasOut)  _triAK.dataset.state = 'none';
+      else if (hasIn)            _triAK.dataset.state = 'alive';
+      else if (hasOut)           _triAK.dataset.state = 'out';
+    }
+
+    const show = sp.get('show');
+    if (show) {
+      const cells = new Set();
+      show.split(',').forEach(t => {
+        const k = t.trim();
+        (_ALIASES[k] ?? [k]).forEach(c => cells.add(c));
+      });
+      const _valid = [...cells].filter(c => _CELL_MAP[c]);
+      if (_valid.length) Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el) el.checked = cells.has(k); });
+    }
+
+    callbacks.renderElo?.();
+    applyFlagFilter();
+
+    _lastLines = _buildLines(sp);
+    const _visible = _countVisible();
+    if (_lastLines.length) {
+      console.info('[params]\n' + _lastLines.map(l => `  ${l.param} → ${l.desc}`).join('\n') + `\n  → ${_visible} countries visible`);
+      if (!alwaysOpen && _el.classList.contains('collapsed')) {
+        _el.classList.remove('collapsed');
+        if (_toggle) _toggle.textContent = '›';
+      }
+    }
+    if (_badge) _badge.hidden = _lastLines.length === 0;
+    if (sp.has('explain') && _lastLines.length) _openExplainPanel(_lastLines, _visible);
+  };
+
   return {
     get sortOrder() { return _sortOrder; },
     get sortDir() { return _sortDir; },
@@ -434,5 +565,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     measureControlSidebar,
     updateVisibleCountryCount,
     sortAndFilter,
+    applyParams,
   };
 }

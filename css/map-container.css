@@ -39,4 +39,5 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; margin-top: 0 !important; }
   #page-heading-sub { display: none !important; }
   #control-sidebar { pointer-events: auto; }
+  #params-panel { z-index: 610 !important; }
 }

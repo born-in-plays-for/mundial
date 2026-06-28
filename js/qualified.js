@@ -34,6 +34,15 @@ export const buildImportByCountry = (mapData, countryNameFn) => {
   return out;
 };
 
+export const buildExporterSets = (importByCountry, knockedOutIds) => {
+  const toAlive = new Set(), toOut = new Set();
+  for (const [nIdStr, players] of Object.entries(importByCountry)) {
+    const target = knockedOutIds.has(+nIdStr) ? toOut : toAlive;
+    for (const p of players) target.add(p.birthCountryId);
+  }
+  return { toAlive, toOut };
+};
+
 export const buildAliveAndKicking = (r32Data) => {
   if (!r32Data) return null;
   const s = new Set(r32Data.teams.map(t => t.iso2));

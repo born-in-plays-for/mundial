@@ -145,6 +145,49 @@
 #control-sidebar .csb-tri[data-state="alive"] .csb-tri-knob { left: 1px;  background: #333; }
 #control-sidebar .csb-tri[data-state="out"]   .csb-tri-knob { left: 19px; background: #333; }
 
+/* ── URL params badge ──────────────────────────────────────────────────── */
+
+#control-sidebar .csb-params-badge {
+  position: absolute; top: 1px; right: 2px;
+  font-size: 8px; font-family: monospace; font-weight: 700;
+  line-height: 1; padding: 1px 3px;
+  border: 1px solid var(--border); border-radius: 3px;
+  background: transparent; color: var(--text-muted);
+  cursor: pointer; user-select: none; -webkit-user-select: none;
+}
+#control-sidebar .csb-params-badge.active { background: var(--text-muted, #999); color: #fff; }
+#control-sidebar .csb-params-badge:hover:not(.active) { color: #444; border-color: #999; }
+
+/* ── URL params explanation panel ──────────────────────────────────────── */
+
+#params-panel {
+  position: fixed; top: 32px; right: 0;
+  width: 260px; max-height: calc(100vh - 48px); overflow-y: auto;
+  background: var(--fixed-element-bg, #f8f5f0);
+  border: 1px solid var(--border, #ddd); border-top: none; border-right: none;
+  border-radius: 0 0 0 4px;
+  padding: 8px 24px 10px 10px;
+  font-size: 10px; line-height: 1.6;
+  z-index: 210;
+  box-shadow: -2px 4px 10px rgba(0,0,0,.10);
+}
+#params-panel .pep-close {
+  position: absolute; top: 4px; right: 6px;
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: var(--text-muted, #999); line-height: 1; padding: 0;
+}
+#params-panel .pep-close:hover { color: #333; }
+#params-panel .pep-list { list-style: none; padding: 0; margin: 0 0 6px 0; }
+#params-panel .pep-list li { margin-bottom: 2px; }
+#params-panel .pep-list code {
+  font-size: 9px; background: var(--bg-hover, #f0ede8);
+  padding: 1px 3px; border-radius: 2px; color: #555;
+}
+#params-panel .pep-result {
+  margin: 0; color: var(--text-muted, #999);
+  border-top: 1px solid var(--border, #ddd); padding-top: 4px;
+}
+
 /* ── Checkbox ──────────────────────────────────────────────────────────── */
 
 #control-sidebar .csb-check { cursor: pointer; color: var(--text-muted); }
