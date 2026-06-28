@@ -67,7 +67,7 @@ When `?in` or `?out` is set, non-qualified exporter countries are also filtered:
 
 Comma-separated cell codes and/or group aliases. When `show` is present it **replaces** the defaults entirely — every cell not listed is unchecked. When absent, defaults apply.
 
-#### Cell codes
+### Cell codes
 
 The filter matrix mirrors the sidebar layout — two columns (exporter / non-exporter) crossed with four row groups:
 
@@ -95,7 +95,7 @@ Letter mnemonics:
 - "Morocco imports 4 players" = "4 players born outside Morocco play for the Moroccan squad."
 - "A `qie` country both imports and exports" = "a qualified squad that includes players born abroad *and* has players born there representing other nations."
 
-#### Group aliases
+### Group aliases
 
 | Alias  | Expands to         | Meaning                              |
 |--------|--------------------|--------------------------------------|
@@ -107,7 +107,7 @@ Letter mnemonics:
 
 Aliases and individual codes may be freely mixed; the result is a union. Unknown tokens are silently ignored — if all tokens are unrecognized the parameter is ignored entirely and defaults are kept.
 
-#### Combining `?in`/`?out` with `?show`
+### Combining `?in`/`?out` with `?show`
 
 - `?in&show=qual` → only alive & kicking qualified countries
 - `?out&show=qual` → only eliminated qualified countries
