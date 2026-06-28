@@ -69,20 +69,16 @@ Comma-separated cell codes and/or group aliases. When `show` is present it **rep
 
 #### Cell codes
 
-The filter matrix has 8 cells crossing four qualified rows with two columns (exporter / non-exporter):
+The filter matrix mirrors the sidebar layout — two columns (exporter / non-exporter) crossed with four row groups:
 
-| Code  | Qualified | Imports | Exports | FIFA | Default |
-|-------|-----------|---------|---------|------|---------|
-| `qie` | ✓ | ✓ | ✓ | — | on |
-| `qi`  | ✓ | ✓ | — | — | on |
-| `qe`  | ✓ | — | ✓ | — | on |
-| `q`   | ✓ | — | — | — | on |
-| `ef`  | — | — | ✓ | ✓ | on |
-| `en`  | — | — | ✓ | — | on |
-| `of`  | — | — | — | ✓ | off |
-| `on`  | — | — | — | — | off |
+|  | **exporter** | **non-exporter** |
+|---|:---:|:---:|
+| **qualified · imports** | `qie` | `qi` |
+| **qualified · no imports** | `qe` | `q` |
+| **non-qual · FIFA** | `ef` | `of` *(off)* |
+| **non-qual · non-FIFA** | `en` | `on` *(off)* |
 
-`of` and `on` (no connection to any qualified team) are off by default.
+All cells are on by default except `of` and `on` (no connection to any qualified team).
 
 #### Group aliases
 
