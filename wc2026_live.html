@@ -448,6 +448,7 @@ const computeLiveStandings = (fixtures) => {
 
   const liveGroups = new Set();
   const liveTeamIds = new Set();
+  let liveGroupFixtureCount = 0;
   for (const fix of fixtures) {
     if (!LIVE_STATUSES.has(fix.fixture.status.short)) continue;
     const g = teamToGroup.get(fix.teams.home.id) ?? teamToGroup.get(fix.teams.away.id);
@@ -455,9 +456,11 @@ const computeLiveStandings = (fixtures) => {
       liveGroups.add(g);
       liveTeamIds.add(fix.teams.home.id);
       liveTeamIds.add(fix.teams.away.id);
+      liveGroupFixtureCount++;
     }
   }
-  if (liveGroups.size === 0) return [];
+  // Show only when multiple simultaneous group matches all share the same group
+  if (liveGroupFixtureCount <= 1 || liveGroups.size !== 1) return [];
 
   const results = [];
   for (const group of baseStandings) {
