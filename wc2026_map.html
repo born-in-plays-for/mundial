@@ -54,14 +54,10 @@
   </div>
   <div id="sidebar-host" style="grid-row:1;grid-column:1;justify-self:end;align-self:start;z-index:10"></div>
 </header>
-<div id="map-container" class="flex-column container-xxl px-0 pt-2 mt-0 position-relative">
+<div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative">
   <svg id="map" viewBox="0 0 900 480" role="img" aria-label="Choropleth map of players born in one country, playing for another"></svg>
   <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-2">
-    <span class="sub align-self-start d-flex">
-      <span id="visible-country-count" class="font-monospace"></span>
-      &nbsp;
-      <span id="legend-countries" class="sub mb-auto"></span>
-    </span>
+    <div id="elo-meta" class="sub px-2 py-1"></div>
     <span id="zoom-level" hidden></span>
     <div id="legend" class="d-flex align-items-center">
       <div id="legend-born" class="sub mb-auto"></div>
@@ -95,7 +91,7 @@
 
 <footer id="bottom-panel" class="container-xxl ">
   <button id="scroll-top-btn" aria-label="Scroll to top"><svg width="10" height="7" viewBox="-4 -4 18 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6L5 2L9 6"/></svg></button>
-  <div id="elo-meta-panel" class="tab-footer-panel collapsed"><div id="elo-meta" class="sub px-2 py-1"></div></div>
+  <!-- <div id="elo-meta-panel" class="tab-footer-panel collapsed"><div id="elo-meta" class="sub px-2 py-1"></div></div> -->
   <div id="selection-panel" class="tab-footer-panel collapsed"></div>
   <div id="chain-panel" class="tab-footer-panel collapsed"></div>
   <nav id="bottomTabList" class="py-2 d-flex justify-content-between gap-2">

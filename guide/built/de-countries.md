@@ -54,6 +54,8 @@ Boolean flags — presence alone is the signal; no `=value` needed. These mirror
 ?in&out      Schrödinger's team → empty set (no country is simultaneously in and out)
 ```
 
+![Schrödinger's cat](../images/Schrödinger.avif)
+
 When `?in` or `?out` is set, non-qualified exporter countries are also filtered:
 
 - `?in` hides exporters whose players all go to knocked-out teams

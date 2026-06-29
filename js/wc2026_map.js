@@ -6,6 +6,12 @@ import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 
+const FOOTER_PANELS = {
+  eloMeta:   false, // #elo-meta-panel — elo source/date meta
+  selection: true,  // #selection-panel — capital/pop for active dim country
+  chain:     true,  // #chain-panel — chain visualization
+};
+
 const RATIO_MIN = 0;
 const RATIO_MAX = 66; // Netherlands (2nd highest) anchors the top of the scale
 
@@ -62,6 +68,8 @@ const arrowPoints = (sw, ofx, ofy, otx, oty, oqx, oqy, k) => {
 
 const g = svg.append('g');
 const tt = document.getElementById('tooltip');
+let lastTipKey = null;
+const hideTip = () => { tt.style.display = 'none'; tt.classList.remove('tt-non-qualified'); lastTipKey = null; };
 
 const FLAG   = 14;
 const DOT_R  = 2;  // visual radius (px) for standalone island dot markers
@@ -321,7 +329,6 @@ _zoomSpanBtn?.addEventListener('click', e => {
   _zoomToLinkedFlags();
 });
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
-document.getElementById('legend-countries').textContent = T.legendCountries;
 document.getElementById('legend-born').textContent = T.legendBorn;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
 
@@ -441,7 +448,7 @@ let _eloData   = null;
 const _fifaMemberIds = new Set();
 render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking></div>`, document.getElementById('tab-elo'));
 const _eloMain = document.querySelector('#tab-elo elo-ranking');
-const _eloMetaPanel = document.getElementById('elo-meta-panel');
+const _eloMetaPanel = FOOTER_PANELS.eloMeta ? document.getElementById('elo-meta-panel') : null;
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
 if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
@@ -638,15 +645,14 @@ const _switchTab = name => {
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
   });
-  const chainPanel = document.getElementById('chain-panel');
   if (name === 'tab-chain') {
     if (_chainData) {
       _renderChain();
       requestAnimationFrame(() => _chainUpdate?.scrollActive());
     }
-    _expandPanel(chainPanel);
+    _expandPanel(_chainPanelEl);
   } else {
-    _collapsePanel(chainPanel);
+    _collapsePanel(_chainPanelEl);
   }
   if (name === 'tab-elo') {
     _expandPanel(_eloMetaPanel);
@@ -774,10 +780,6 @@ const positionTip = (event, height, wide = false) => {
   tt.style.display = 'block';
 };
 
-let lastTipKey = null;
-
-const hideTip = () => { tt.style.display = 'none'; tt.classList.remove('tt-non-qualified'); lastTipKey = null; };
-
 const showQualifiedTip = (event, name, code) => {
   const nId = QUALIFIED_BY_NAME[name];
   if (lastTipKey !== name) {
@@ -851,7 +853,8 @@ const _collapsePanel = (panel, onDone) => {
   }, { once: true });
 };
 
-const _selectionPanelEl = document.getElementById('selection-panel');
+const _selectionPanelEl = FOOTER_PANELS.selection ? document.getElementById('selection-panel') : null;
+const _chainPanelEl     = FOOTER_PANELS.chain     ? document.getElementById('chain-panel')     : null;
 const _updateSelectionPanel = (onCollapsed) => {
   if (!_selectionPanelEl) return;
   const id = dimState.sourceId;

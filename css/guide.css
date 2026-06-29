@@ -53,6 +53,13 @@ body {
   border-radius: 3px;
   color: var(--color-default, #171715);
 }
+/* inside <pre>, <code> is inline — padding-left only applies on the first line,
+   misaligning it vs subsequent lines; reset to let <pre> handle the box */
+#guide-body pre code:not(.taxonomy *) {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+}
 
 /* image — max-width and display handled by Bootstrap .img-fluid .d-block */
 #guide-body img:not(.taxonomy *) {
