@@ -6,7 +6,8 @@ import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 import { RATIO_MAX, PALETTE, normalize, color, choroFill, OUTLIER_COLOR, OUTLIER_IDS,
-         FLAG, DOT_R, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT } from './map-container.js';
+         FLAG, DOT_R, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT,
+         W, H } from './map-container.js';
 
 const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
@@ -21,6 +22,8 @@ const _wm       = document.querySelector('world-map');
 const svg       = _wm.svg;
 const projection = _wm.projection;
 const path      = _wm.path;
+
+let _worldTopo = null; // set once world-atlas JSON loads
 
 const ARC_EXPORT_COLOR = '#1d4ed8'; // blue
 const ARC_IMPORT_COLOR = '#dc2626'; // red
@@ -256,6 +259,7 @@ const _zoomHintEl = document.getElementById('zoom-hint');
 _zoomHintEl.textContent = T.zoomHint;
 let _initialTransform = d3.zoomIdentity;
 const _zoomResetBtn = document.getElementById('zoom-reset');
+let _zoomConfBtn = null; // assigned after initSidebar() renders it
 const _zoomSpanBtn  = document.getElementById('zoom-span');
 const _syncResetBtn = t => {
   if (!_zoomResetBtn) return;
@@ -267,11 +271,70 @@ _syncResetBtn(_initialTransform);
 document.getElementById('zoom-reset').addEventListener('click', e => {
   e.stopPropagation();
   svg.transition().duration(400).call(zoom.transform, _initialTransform);
+  _highlightConf(null);
 });
 _zoomSpanBtn?.addEventListener('click', e => {
   e.stopPropagation();
   _zoomToLinkedFlags();
 });
+
+const _CONF_BOUNDS = {
+  uefa:     [[-25, 72], [50,  34]],
+  afc:      [[ 24, 56], [155, -48]],
+  caf:      [[-20, 38], [52,  -35]],
+  conmebol: [[-82, 13], [-34, -57]],
+  concacaf: [[-170, 72], [-55, 5]],
+  ofc:      [[155,  -5], [180, -55]],
+};
+
+const _CONF_IDS = {
+  uefa: new Set([
+    8, 20, 40, 51, 31, 56, 70, 100, 112, 191, 196, 203, 208, 233, 234,
+    246, 250, 268, 276, 292, 300, 348, 352, 372, 376, 380, 383, 398,
+    428, 438, 440, 442, 470, 498, 499, 528, 578, 616, 620, 642, 643,
+    674, 688, 703, 705, 724, 752, 756, 792, 804, 807,
+    8260, 8261, 8262, 8263,
+  ]),
+  afc: new Set([
+    4, 36, 48, 50, 64, 96, 104, 116, 144, 156, 158, 275, 316, 344,
+    356, 360, 364, 368, 392, 400, 408, 410, 414, 417, 418, 422, 446,
+    458, 462, 496, 512, 524, 586, 608, 626, 634, 682, 702, 704, 760,
+    762, 764, 784, 795, 860, 887,
+  ]),
+  caf: new Set([
+    12, 24, 72, 108, 120, 132, 140, 148, 174, 178, 180, 204, 226, 231,
+    232, 262, 266, 270, 288, 324, 384, 404, 426, 430, 434, 450, 454,
+    466, 478, 480, 504, 508, 516, 562, 566, 624, 646, 678, 686, 690,
+    694, 706, 710, 716, 728, 729, 748, 768, 788, 800, 818, 834, 854, 894,
+  ]),
+  conmebol: new Set([32, 68, 76, 152, 170, 218, 600, 604, 858, 862]),
+  concacaf: new Set([
+    28, 44, 52, 60, 84, 92, 124, 136, 188, 192, 212, 214, 222, 308,
+    312, 320, 328, 332, 340, 388, 474, 484, 500, 531, 533, 558, 591,
+    630, 659, 660, 662, 670, 740, 780, 796, 840, 850,
+  ]),
+  ofc: new Set([16, 90, 184, 242, 258, 540, 548, 554, 598, 776, 882]),
+};
+
+
+function _highlightConf(ids) {
+  g.selectAll('.conf-boundary').remove();
+  if (!ids || !_worldTopo) return;
+  // Draw only the external boundary: arcs where exactly one side is in the confederation
+  // (a === b) catches coastlines of confederation countries (exterior arcs)
+  g.append('path')
+    .classed('conf-boundary', true)
+    .datum(topojson.mesh(_worldTopo, _worldTopo.objects.countries, (a, b) =>
+      (a === b && ids.has(+a.id)) || (a !== b && ids.has(+a.id) !== ids.has(+b.id))
+    ))
+    .attr('d', path)
+    .attr('fill', 'none')
+    .attr('stroke', '#1C274C')
+    .attr('stroke-width', 1.2)
+    .attr('stroke-opacity', 0.7)
+    .attr('pointer-events', 'none');
+}
+
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
 document.getElementById('legend-born').textContent = T.legendBorn;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
@@ -438,7 +501,9 @@ const _syncMapHeight = () => {
     const mcRect  = _mc.getBoundingClientRect();
     const fromRight  = mcRect.right  - svgRect.right;
     const fromBottom = mcRect.bottom - svgRect.bottom;
-    const totalH = (_zoomResetBtn?.offsetHeight ?? 26) + 4 + (_zoomSpanBtn?.offsetHeight ?? 26);
+    const resetH = _zoomResetBtn?.offsetHeight ?? 26;
+    const spanH  = _zoomSpanBtn?.offsetHeight  ?? 26;
+    const totalH = resetH + 4 + spanH;
     const midTop = Math.round((svgRect.top - mcRect.top) + (svgRect.height - totalH) / 2);
     if (_zoomResetBtn) {
       _zoomResetBtn.style.right = (fromRight + 8) + 'px';
@@ -446,7 +511,7 @@ const _syncMapHeight = () => {
     }
     if (_zoomSpanBtn) {
       _zoomSpanBtn.style.right = (fromRight + 8) + 'px';
-      _zoomSpanBtn.style.top   = (midTop + (_zoomResetBtn?.offsetHeight ?? 26) + 4) + 'px';
+      _zoomSpanBtn.style.top   = (midTop + resetH + 4) + 'px';
     }
     if (_zoomHintEl) {
       _zoomHintEl.style.left      = (svgRect.right - mcRect.left) + 'px';
@@ -765,6 +830,33 @@ const _sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds: _fifaMemberIds, eloMain: _eloMain, callbacks: _sidebarCallbacks });
 _sidebarCallbacks.renderElo = _renderElo;
 _sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
+
+_zoomConfBtn = document.getElementById('zoom-conf-dropdown');
+// Let the dropdown menu escape csb-body's overflow:hidden while open
+const _csbBody = document.querySelector('.csb-body');
+_zoomConfBtn?.addEventListener('show.bs.dropdown',   () => { if (_csbBody) _csbBody.style.overflow = 'visible'; });
+_zoomConfBtn?.addEventListener('hidden.bs.dropdown', () => { if (_csbBody) _csbBody.style.overflow = ''; });
+_zoomConfBtn?.addEventListener('click', e => {
+  const item = e.target.closest('[data-conf]');
+  if (!item) return;
+  e.stopPropagation();
+  const conf = item.dataset.conf;
+  if (!conf) { _highlightConf(null); sidebar.setConfFilter(null); return; }
+  if (!_CONF_BOUNDS[conf]) return;
+  const [[lonW, latN], [lonE, latS]] = _CONF_BOUNDS[conf];
+  const nw = projection([lonW, latN]);
+  const se = projection([lonE, latS]);
+  if (!nw || !se) return;
+  const pad = 20;
+  const bw = (se[0] + pad) - (nw[0] - pad);
+  const bh = (se[1] + pad) - (nw[1] - pad);
+  const k  = Math.max(1, Math.min(8, Math.min(W / bw, H / bh) * 0.9));
+  const tx = W / 2 - k * ((nw[0] - pad) + bw / 2);
+  const ty = H / 2 - k * ((nw[1] - pad) + bh / 2);
+  svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
+  _highlightConf(_CONF_IDS[conf]);
+  sidebar.setConfFilter(_CONF_IDS[conf]);
+});
 
 const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
 const countryPillTemplate = id => {
@@ -1571,6 +1663,7 @@ Promise.all([
   fetch('data/uk-nations.geojson').then(r => r.json()),
   loadEloData(),
 ]).then(([rawData, world, ukNations, { eloData, aliveAndKicking: _aliveAndKicking }]) => {
+  _worldTopo = world;
   _eloData = eloData;
   app.eloRank = Object.fromEntries(
     eloData.rankings.flatMap(({id, rank}) => { const n = QUALIFIED_NAMES[id]; return n ? [[n, rank]] : []; })

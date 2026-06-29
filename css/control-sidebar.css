@@ -49,6 +49,7 @@
 
 #control-sidebar .csb-body {
   max-width: var(--csb-w, 300px); height: var(--csb-h, 8rem);
+  overflow: hidden;
   transition: max-width 0.5s ease;
   background: var(--fixed-element-bg);
 }
@@ -202,3 +203,13 @@
 .csb-table td:has(.csb-check) { vertical-align: middle; padding: 0; cursor: pointer; }
 .csb-table td:has(.csb-check):hover { background-color: var(--bg-hover); }
 .csb-check { display: flex; align-items: center; justify-content: center; height: 100%; cursor: pointer; }
+
+/* ── Confederation dropdown ─────────────────────────────────────────────── */
+
+.csb-table [data-row="nqf"] { display: flex; align-items: center; justify-content: space-between; }
+#zoom-conf-dropdown { display: inline-flex; }
+#zoom-conf-dropdown .dropdown-menu { font-size: inherit; }
+.csb-conf-btn { cursor: pointer; background: none; border: none; padding: 2px; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+.csb-conf-btn:hover { opacity: 1; }
+.csb-conf-btn.dropdown-toggle { flex-direction: row-reverse; }
+.csb-conf-btn.dropdown-toggle::after { margin-left: 0; margin-right: .255em; }

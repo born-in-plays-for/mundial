@@ -7,7 +7,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _sidebarHost = document.getElementById('sidebar-host');
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="Toggle filter">‹</button>`}
-  <div class="csb-body overflow-hidden"><table class="csb-table table table-sm table-bordered"><tbody>
+  <div class="csb-body"><table class="csb-table table table-sm table-bordered"><tbody>
     <tr>
       <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}${alwaysOpen ? nothing : html`<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span>`}</td>
       <td colspan="2" class="csb-header text-center text-muted" data-col="all" style="position:relative"><em class="elo-item"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active">?</button></td>
@@ -38,7 +38,24 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     </tr>
     <tr>
       <td rowspan="2" class="csb-group" data-row="nq"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
-      <td class="csb-row" data-row="nqf"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
+      <td class="csb-row" data-row="nqf" style="white-space:nowrap;">
+        <span class="elo-item"><span class="elo-name">FIFA</span></span>
+        <div class="dropdown" id="zoom-conf-dropdown"  style="z-index:2000;">
+          <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="View by confederation">
+            <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="16" height="16" aria-hidden="true">
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button class="dropdown-item" data-conf="">All FIFA Confederations</button></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item" data-conf="uefa">UEFA — Europe</button></li>
+            <li><button class="dropdown-item" data-conf="afc">AFC — Asia</button></li>
+            <li><button class="dropdown-item" data-conf="caf">CAF — Africa</button></li>
+            <li><button class="dropdown-item" data-conf="conmebol">CONMEBOL — South America</button></li>
+            <li><button class="dropdown-item" data-conf="concacaf">CONCACAF — N. &amp; C. America</button></li>
+            <li><button class="dropdown-item" data-conf="ofc">OFC — Oceania</button></li>
+          </ul>
+        </div>
+      </td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-ef"  checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
@@ -106,7 +123,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const _catChecked = cat => ({qie:_fltQIE,qi:_fltQI,qe:_fltQE,q:_fltQ})[cat]?.checked ?? true;
 
+  let _confIds = null; // set by setConfFilter(); null = no confederation filter
+
   const catEloChecked = (id, fifaMember) => {
+    if (_confIds && fifaMember && !_confIds.has(id)) return false;
     const cat = flagCat(id);
     const st  = _triAK?.dataset.state ?? 'both';
     if (st === 'none') return false;
@@ -168,7 +188,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _panel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
   _panel.querySelector('[data-row="qni"]' ).addEventListener('click', () => _filterToggle([_fltQE,  _fltQ]));
   _panel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));
-  _panel.querySelector('[data-row="nqf"]' ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF]));
+  _panel.querySelector('[data-row="nqf"]' ).addEventListener('click', e => { if (e.target.closest('#zoom-conf-dropdown')) return; _filterToggle([_fltEF, _fltOF]); });
   _panel.querySelector('[data-row="nqn"]' ).addEventListener('click', () => _filterToggle([_fltEN, _fltON]));
   _panel.querySelector('[data-col="exp"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQE, _fltEF, _fltEN]));
   _panel.querySelector('[data-col="nexp"]').addEventListener('click', () => _filterToggle([_fltQI,  _fltQ,  _fltOF, _fltON]));
@@ -559,6 +579,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (sp.has('explain') && _lastLines.length) _openExplainPanel(_lastLines, _visible);
   };
 
+  const setConfFilter = ids => {
+    _confIds = ids ?? null;
+    callbacks.renderElo?.();
+    applyFlagFilter();
+  };
+
   return {
     get sortOrder() { return _sortOrder; },
     get sortDir() { return _sortDir; },
@@ -570,5 +596,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     updateVisibleCountryCount,
     sortAndFilter,
     applyParams,
+    setConfFilter,
   };
 }

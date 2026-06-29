@@ -18,9 +18,7 @@ body { background: #faf9f6; font-family: system-ui, sans-serif; height: 100vh; }
 
 #controls { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
 .switch-label { font-size: .82rem; color: #555; user-select: none; white-space: nowrap; cursor: pointer; }
-/* Indeterminate region switch: muted when no region is selected (world mode) */
-#switch-region-group.indeterminate .form-check-input { opacity: 0.3; pointer-events: none; }
-#switch-region-group.indeterminate .switch-label { color: #aaa; }
+#select-region { font-size: .82rem; }
 
 
 #map-wrap {
@@ -39,13 +37,15 @@ world-map svg { display: block; width: 100%; height: 100%; touch-action: none; }
   <h1 id="title">Group stage performance · World Cup 2026</h1>
   <div id="controls">
     <button id="btn-world" class="btn btn-sm btn-outline-secondary" title="Full world view"><img src="/images/solar_linear/global-svgrepo-com.svg" width="16" height="16" alt="World"></button>
-    <div id="switch-region-group" class="d-flex align-items-center gap-2">
-      <span class="switch-label">Middle East</span>
-      <div class="form-check form-switch mb-0">
-        <input class="form-check-input" type="checkbox" role="switch" id="switch-region">
-      </div>
-      <span class="switch-label">Africa</span>
-    </div>
+    <select id="select-region" class="form-select form-select-sm" style="width:auto">
+      <option value="">Confederation…</option>
+      <option value="uefa">UEFA — Europe</option>
+      <option value="afc">AFC — Asia</option>
+      <option value="caf">CAF — Africa</option>
+      <option value="conmebol">CONMEBOL — South America</option>
+      <option value="concacaf">CONCACAF — N. &amp; C. America</option>
+      <option value="ofc">OFC — Oceania</option>
+    </select>
     <div id="switch-phase-group" class="d-flex align-items-center gap-2">
       <span class="switch-label">Qualified</span>
       <div class="form-check form-switch mb-0">
@@ -66,36 +66,64 @@ world-map svg { display: block; width: 100%; height: 100%; touch-action: none; }
 import { choroFill, FLAG_CDN, FLAG, FLAG_SIZE_ZOOM_EXP, W, H } from '../js/map-container.js';
 import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildAliveAndKicking } from '../js/qualified.js';
 
-// ── Region definitions ────────────────────────────────────────────────────────
+// ── Confederation definitions (FIFA) ─────────────────────────────────────────
 const REGIONS = {
-  me: {
-    label: 'Middle East',
+  uefa: {
+    label: 'UEFA',
     ids: new Set([
-      51, 31, 48, 196, 268,   // Armenia, Azerbaijan, Bahrain, Cyprus, Georgia
-      364, 368, 376, 400, 414, // Iran, Iraq, Israel, Jordan, Kuwait
-      422, 275, 512, 634, 682, // Lebanon, Palestine, Oman, Qatar, Saudi Arabia
-      760, 792, 784, 860, 887, // Syria, Turkey, UAE, Uzbekistan, Yemen
+      8, 20, 40, 51, 31, 56, 70, 100, 112, 191, 196, 203, 208, 233, 234,
+      246, 250, 268, 276, 292, 300, 348, 352, 372, 376, 380, 383, 398,
+      428, 438, 440, 442, 470, 498, 499, 528, 578, 616, 620, 642, 643,
+      674, 688, 703, 705, 724, 752, 756, 792, 804, 807,
+      8260, 8261, 8262, 8263, // England, Scotland, Wales, Northern Ireland
     ]),
-    // Exact transform from console tuning — paste new values here to adjust
-    zoom: [8.2417, -4116.80, -1145.81],
+    bounds: [[-25, 72], [50, 34]],
   },
-  africa: {
-    label: 'Africa',
+  afc: {
+    label: 'AFC',
     ids: new Set([
-      12, 24, 72, 108, 120, 132, 140, 148, 174, 178, 180, 204, 226, 231, 232,
-      262, 266, 270, 288, 324, 384, 404, 426, 430, 434, 450, 454, 466, 478,
-      480, 504, 508, 516, 562, 566, 624, 646, 678, 686, 690, 694, 706, 710,
-      716, 728, 729, 748, 768, 788, 800, 818, 834, 854, 894,
-      // Algeria, Angola, Botswana, Burundi, Cameroon, Cape Verde, CAR, Chad,
-      // Comoros, Congo(Rep.), DR Congo, Benin, Equatorial Guinea, Ethiopia, Eritrea,
-      // Djibouti, Gabon, Gambia, Ghana, Guinea, Ivory Coast, Kenya, Lesotho,
-      // Liberia, Libya, Madagascar, Malawi, Mali, Mauritania, Mauritius,
-      // Morocco, Mozambique, Namibia, Niger, Nigeria, Guinea-Bissau, Rwanda,
-      // São Tomé, Senegal, Seychelles, Sierra Leone, Somalia, South Africa,
-      // Zimbabwe, South Sudan, Sudan, Eswatini, Togo, Tunisia, Uganda,
-      // Egypt, Tanzania, Burkina Faso, Zambia
+      4, 36, 48, 50, 64, 96, 104, 116, 144, 156, 158, 275, 316, 344,
+      356, 360, 364, 368, 392, 400, 408, 410, 414, 417, 418, 422, 446,
+      458, 462, 496, 512, 524, 586, 608, 626, 634, 682, 702, 704, 760,
+      762, 764, 784, 795, 860, 887,
+      // Afghanistan, Australia, Bahrain, Bangladesh, Bhutan, Brunei, Myanmar,
+      // Cambodia, Sri Lanka, China, Chinese Taipei, Palestine, Guam, Hong Kong,
+      // India, Indonesia, Iran, Iraq, Japan, Jordan, North Korea, South Korea,
+      // Kuwait, Kyrgyzstan, Laos, Lebanon, Macao, Malaysia, Maldives, Mongolia,
+      // Oman, Nepal, Pakistan, Philippines, Timor-Leste, Qatar, Saudi Arabia,
+      // Singapore, Vietnam, Syria, Tajikistan, Thailand, UAE, Turkmenistan,
+      // Uzbekistan, Yemen
     ]),
-    zoom: [3.9699, -1449.54, -731.49],
+    bounds: [[24, 56], [155, -48]], // Asia + Australia
+  },
+  caf: {
+    label: 'CAF',
+    ids: new Set([
+      12, 24, 72, 108, 120, 132, 140, 148, 174, 178, 180, 204, 226, 231,
+      232, 262, 266, 270, 288, 324, 384, 404, 426, 430, 434, 450, 454,
+      466, 478, 480, 504, 508, 516, 562, 566, 624, 646, 678, 686, 690,
+      694, 706, 710, 716, 728, 729, 748, 768, 788, 800, 818, 834, 854, 894,
+    ]),
+    zoom: [3.9699, -1449.54, -731.49], // tuned
+  },
+  conmebol: {
+    label: 'CONMEBOL',
+    ids: new Set([32, 68, 76, 152, 170, 218, 600, 604, 858, 862]),
+    bounds: [[-82, 13], [-34, -57]],
+  },
+  concacaf: {
+    label: 'CONCACAF',
+    ids: new Set([
+      28, 44, 52, 60, 84, 92, 124, 136, 188, 192, 212, 214, 222, 308,
+      312, 320, 328, 332, 340, 388, 474, 484, 500, 531, 533, 558, 591,
+      630, 659, 660, 662, 670, 740, 780, 796, 840, 850,
+    ]),
+    bounds: [[-170, 72], [-55, 5]],
+  },
+  ofc: {
+    label: 'OFC',
+    ids: new Set([16, 90, 184, 242, 258, 540, 548, 554, 598, 776, 882]),
+    bounds: [[155, -5], [180, -55]],
   },
 };
 
@@ -334,7 +362,7 @@ function applyRegionOpacity(regionIds) {
 
 // Opacity derived from current region state — never from DOM (animateFlagOut sets it to 0).
 function _regionOpacity(id) {
-  return swRegionGroup.classList.contains('indeterminate') ? 1
+  return selRegion.value === '' ? 1
        : REGIONS[regionKey].ids.has(id) ? 1 : 0.28;
 }
 
@@ -388,7 +416,7 @@ function zoomToRegion(regionKey) {
 }
 
 // ── State & initial render ────────────────────────────────────────────────────
-let regionKey = 'me';
+let regionKey = 'uefa';
 let phase     = 'before';
 
 // Apply region-specific state: dim overlay + flags + regional opacity.
@@ -400,41 +428,42 @@ function applyState() {
   applyRegionOpacity(region.ids);
 }
 
-// ── Toggle handlers ───────────────────────────────────────────────────────────
+// ── Controls ──────────────────────────────────────────────────────────────────
 function syncLabels(switchEl) {
   const [left, right] = switchEl.closest('.d-flex').querySelectorAll('.switch-label');
   left.classList.toggle('fw-bold', !switchEl.checked);
   right.classList.toggle('fw-bold',  switchEl.checked);
 }
 
-const swRegion = document.getElementById('switch-region');
-const swPhase  = document.getElementById('switch-phase');
-const swRegionGroup = document.getElementById('switch-region-group');
-const btnWorld = document.getElementById('btn-world');
+const selRegion = document.getElementById('select-region');
+const swPhase   = document.getElementById('switch-phase');
+const btnWorld  = document.getElementById('btn-world');
 
-// Enter world mode: btn-world active, region switch indeterminate (muted, no bold labels)
 function enterWorldMode() {
   btnWorld.classList.remove('btn-outline-secondary');
   btnWorld.classList.add('btn-secondary');
-  swRegion.checked = false;
-  swRegionGroup.classList.add('indeterminate');
-  const [l, r] = swRegionGroup.querySelectorAll('.switch-label');
-  l.classList.remove('fw-bold'); r.classList.remove('fw-bold');
+  selRegion.value = '';
 }
 
-// Leave world mode: btn-world inactive, region switch normal
 function exitWorldMode() {
   btnWorld.classList.remove('btn-secondary');
   btnWorld.classList.add('btn-outline-secondary');
-  swRegionGroup.classList.remove('indeterminate');
 }
 
-swRegion.addEventListener('change', e => {
-  regionKey = e.target.checked ? 'africa' : 'me';
-  exitWorldMode();
-  syncLabels(e.target);
-  applyState();
-  zoomToRegion(regionKey);
+selRegion.addEventListener('change', e => {
+  const val = e.target.value;
+  if (!val) {
+    enterWorldMode();
+    dimPaths.transition().duration(500).attr('fill', DIM_CLEAR);
+    g.selectAll('path.country-uk-dim').transition().duration(500).attr('fill', DIM_CLEAR);
+    flagsG.selectAll('.flag-qualified').transition().duration(500).attr('opacity', 1);
+    zoomToWorld();
+  } else {
+    regionKey = val;
+    exitWorldMode();
+    applyState();
+    zoomToRegion(regionKey);
+  }
 });
 swPhase.addEventListener('change', e => {
   phase = e.target.checked ? 'after' : 'before';
@@ -442,19 +471,9 @@ swPhase.addEventListener('change', e => {
   updatePhaseVisibility(true);
 });
 
-// Label clicks act like clicking the switch
-swRegionGroup.querySelectorAll('.switch-label').forEach((label, i) => {
-  label.addEventListener('click', () => {
-    const wantChecked = i === 1; // right label = Africa = checked
-    if (swRegion.checked !== wantChecked || swRegionGroup.classList.contains('indeterminate')) {
-      swRegion.checked = wantChecked;
-      swRegion.dispatchEvent(new Event('change'));
-    }
-  });
-});
 document.getElementById('switch-phase-group').querySelectorAll('.switch-label').forEach((label, i) => {
   label.addEventListener('click', () => {
-    const wantChecked = i === 1; // right label = Round of 32 = checked
+    const wantChecked = i === 1;
     if (swPhase.checked !== wantChecked) {
       swPhase.checked = wantChecked;
       swPhase.dispatchEvent(new Event('change'));
@@ -465,10 +484,21 @@ document.getElementById('switch-phase-group').querySelectorAll('.switch-label').
 syncLabels(swPhase);
 
 // Initial state: world mode — must come after const declarations above.
-const VIDEO_MODE = new URLSearchParams(location.search).has('video');
+const _params    = new URLSearchParams(location.search);
+const VIDEO_MODE = _params.has('video');
 enterWorldMode();
 dimPaths.attr('fill', DIM_CLEAR);
 if (!VIDEO_MODE) renderFlags('before', true); // staggered animated reveal
+
+// Pre-select confederation from ?region=<key> (linked from main map dropdown)
+const _regionParam = _params.get('region');
+if (!VIDEO_MODE && _regionParam && REGIONS[_regionParam]) {
+  regionKey = _regionParam;
+  selRegion.value = _regionParam;
+  exitWorldMode();
+  applyState();
+  zoomToRegion(regionKey);
+}
 
 // ── Unzoom button ─────────────────────────────────────────────────────────────
 function zoomToWorld() {
@@ -568,20 +598,29 @@ window._perf = {
   },
 
   zoomToME() {
+    // Video-specific: ME sub-region within AFC, not a confederation
+    const ME_IDS = new Set([
+      51, 31, 48, 196, 268, 364, 368, 376, 400, 414,
+      422, 275, 512, 634, 682, 760, 792, 784, 860, 887,
+    ]);
+    const ME_ZOOM = [8.2417, -4116.80, -1145.81];
     exitWorldMode();
-    regionKey = 'me';
-    updateDimOverlay(REGIONS.me.ids);
-    applyRegionOpacity(REGIONS.me.ids);
-    zoomToRegion('me');
+    regionKey = 'afc'; // closest confederation
+    selRegion.value = 'afc';
+    updateDimOverlay(ME_IDS);
+    applyRegionOpacity(ME_IDS);
+    const [k, tx, ty] = ME_ZOOM;
+    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
   },
 
   zoomToAfrica() {
     exitWorldMode();
-    regionKey = 'africa';
+    regionKey = 'caf';
+    selRegion.value = 'caf';
     // Re-render all flags (restores any vanished ME flags)
-    renderFlags('before', false, REGIONS.africa.ids);
-    updateDimOverlay(REGIONS.africa.ids);
-    zoomToRegion('africa');
+    renderFlags('before', false, REGIONS.caf.ids);
+    updateDimOverlay(REGIONS.caf.ids);
+    zoomToRegion('caf');
   },
 
   showWorldKnockout() {
