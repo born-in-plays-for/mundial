@@ -5,6 +5,8 @@ import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry
 import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
+import { RATIO_MAX, PALETTE, normalize, color, choroFill, OUTLIER_COLOR, OUTLIER_IDS,
+         FLAG, DOT_R, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT } from './map-container.js';
 
 const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
@@ -12,28 +14,13 @@ const FOOTER_PANELS = {
   chain:     true,  // #chain-panel — chain visualization
 };
 
-const RATIO_MIN = 0;
-const RATIO_MAX = 66; // Netherlands (2nd highest) anchors the top of the scale
+const RATIO_MIN = 0; // used by legend only
 
-const PALETTE = d3.interpolateRgbBasis(['#f3e8f7','#ddb8ea','#c285d8','#a354c2','#7b2d8b','#581f65','#361240']);
-const normalize = r => (r / RATIO_MAX) ** 2;
-const color = r => PALETTE(Math.max(0, Math.min(1, normalize(r))));
-
-const OUTLIER_COLOR = '#000'; // France (99) is off-scale — rendered black
-const OUTLIER_IDS  = new Set([250]);
-const choroFill = (id, byId) => {
-  if (OUTLIER_IDS.has(id)) return OUTLIER_COLOR;
-  const r = byId[id];
-  return r ? color(r.ratio) : '#e8e4e0';
-};
-
-const W = 900, H = 480;
-const projection = d3.geoNaturalEarth1().scale(152).translate([W/2, H/2 + 10]);
-const path = d3.geoPath(projection);
-const svg = d3.select('#map');
-
-const [[_bx0, _by0], [_bx1, _by1]] = path.bounds({type: 'Sphere'});
-svg.attr('viewBox', `${Math.floor(_bx0)} ${Math.floor(_by0)} ${Math.ceil(_bx1-_bx0)} ${Math.ceil(_by1-_by0)}`);
+// Map infrastructure from <world-map> web component (defined in map-container.js)
+const _wm       = document.querySelector('world-map');
+const svg       = _wm.svg;
+const projection = _wm.projection;
+const path      = _wm.path;
 
 const ARC_EXPORT_COLOR = '#1d4ed8'; // blue
 const ARC_IMPORT_COLOR = '#dc2626'; // red
@@ -66,17 +53,10 @@ const arrowPoints = (sw, ofx, ofy, otx, oty, oqx, oqy, k) => {
   return `${mx+mux*mah/2},${my+muy*mah/2} ${bx+mnx*maw},${by+mny*maw} ${bx-mnx*maw},${by-mny*maw}`;
 };
 
-const g = svg.append('g');
+const g = _wm.g;
 const tt = document.getElementById('tooltip');
 let lastTipKey = null;
 const hideTip = () => { tt.style.display = 'none'; tt.classList.remove('tt-non-qualified'); lastTipKey = null; };
-
-const FLAG   = 14;
-const DOT_R  = 2;  // visual radius (px) for standalone island dot markers
-// How much flag icons grow with zoom: 0 = fixed size, 1 = fully proportional; visual size = FLAG * k^exp
-const FLAG_SIZE_ZOOM_EXP   = 1/5;
-// How much the leader-line offset grows with zoom: 0 = fixed, 0.5 = sqrt(k), 1 = fully proportional
-const FLAG_OFFSET_ZOOM_EXP = 2/3;
 
 
 // Fixes arc endpoint when path.centroid() lands outside the country polygon.
@@ -102,63 +82,31 @@ const dotCentroid = d => {
 svg.on('click', () => { clearDim(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') clearDim(); });
 
-const zoom = d3.zoom()
-svg.call(zoom
-  .scaleExtent([1, 18])
-  .on('zoom', e => {
-    g.attr('transform', e.transform);
-    const s = FLAG / Math.pow(e.transform.k, 1 - FLAG_SIZE_ZOOM_EXP);
-    g.selectAll('.flag-qualified')
-      .attr('width', s)
-      .attr('height', s)
-      .attr('x', function() { return +this.getAttribute('data-cx') - s/2; })
-      .attr('y', function() { return +this.getAttribute('data-cy') - s/2; });
-    g.selectAll('.standalone-dot')
-      .attr('r', DOT_R / e.transform.k)
-      .attr('stroke-width', 0.5 / e.transform.k);
-    g.selectAll('.offset-flag').each(function() {
-      const cx = +this.getAttribute('data-centroid-cx');
-      const cy = +this.getAttribute('data-centroid-cy');
-      const dx = +this.getAttribute('data-flag-dx');
-      const dy = +this.getAttribute('data-flag-dy');
-      d3.select(this)
-        .attr('x', cx + dx / Math.pow(e.transform.k, FLAG_OFFSET_ZOOM_EXP) - s/2)
-        .attr('y', cy + dy / Math.pow(e.transform.k, FLAG_OFFSET_ZOOM_EXP) - s/2);
-    });
-    g.selectAll('.leader-line').each(function() {
-      const cx = +this.getAttribute('data-centroid-cx');
-      const cy = +this.getAttribute('data-centroid-cy');
-      const dx = +this.getAttribute('data-flag-dx');
-      const dy = +this.getAttribute('data-flag-dy');
-      const k  = e.transform.k;
-      d3.select(this)
-        .attr('x2', cx + dx / Math.pow(k, FLAG_OFFSET_ZOOM_EXP))
-        .attr('y2', cy + dy / Math.pow(k, FLAG_OFFSET_ZOOM_EXP))
-        .attr('stroke-width', 2 / k)
-        .attr('stroke-dasharray', `0,${3/k}`);
-    });
-    dimState.k = e.transform.k;
-    const k = dimState.k;
-    g.selectAll('path.arc-line')
-      .attr('stroke-width', function() { return +this.getAttribute('data-sw') / k; })
-      .attr('d', function() {
-        const sw = +this.getAttribute('data-sw');
-        const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
-        const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
-        const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
-        return `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`;
-      });
-    g.selectAll('polygon.arc-mid').attr('points', function() {
+// Zoom behaviour lives in <world-map>; register page-specific extra work here.
+const zoom = _wm.zoom;
+_wm.onZoom = e => {
+  dimState.k = e.transform.k;
+  const k = dimState.k;
+  g.selectAll('path.arc-line')
+    .attr('stroke-width', function() { return +this.getAttribute('data-sw') / k; })
+    .attr('d', function() {
       const sw = +this.getAttribute('data-sw');
       const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
       const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
       const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
-      return arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k);
+      return `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`;
     });
-    _syncResetBtn(e.transform);
-    const zoomEl = document.getElementById('zoom-level');
-    if (zoomEl) zoomEl.textContent = `k=${e.transform.k.toFixed(2)}`;
-  }));
+  g.selectAll('polygon.arc-mid').attr('points', function() {
+    const sw = +this.getAttribute('data-sw');
+    const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
+    const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
+    const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
+    return arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k);
+  });
+  _syncResetBtn(e.transform);
+  const zoomEl = document.getElementById('zoom-level');
+  if (zoomEl) zoomEl.textContent = `k=${e.transform.k.toFixed(2)}`;
+};
 
 g.append('path').datum({type:'Sphere'})
   .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5)
@@ -166,10 +114,6 @@ g.append('path').datum({type:'Sphere'})
   .on('mousemove', () => { hideTip(); });
 g.append('path').datum(d3.geoGraticule()())
   .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
-
-// ── Flag CDN helpers ──────────────────────────────────────────────────────────
-const FLAG_CDN      = code => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${code}.svg`;
-const FLAG_CDN_RECT = code => `https://cdn.jsdelivr.net/npm/flag-icons@7/flags/4x3/${code}.svg`;
 
 // QUALIFIED_NAMES, QUALIFIED_BY_NAME imported from qualified.js
 

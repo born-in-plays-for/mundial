@@ -1,3 +1,5 @@
+world-map { display: contents; } /* transparent wrapper — layout sees the inner <svg> directly */
+
 #map-container { position: fixed !important; top: var(--page-header-h, var(--csb-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: var(--vert-gutter) !important; padding-right: var(--vert-gutter) !important; display: flex; justify-content: center; align-items: flex-start; background: var(--fixed-element-bg)  }
 
 /* map */

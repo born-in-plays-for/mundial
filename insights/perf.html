@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Middle East · World Cup 2026</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #faf9f6; font-family: system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+
+#header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px; background: #faf9f6;
+  border-bottom: 1px solid #e4e0d8; flex-shrink: 0;
+}
+#header h1 { font-size: .95rem; font-weight: 600; color: #333; }
+
+#toggle {
+  display: flex; gap: 0; border: 1px solid #c8c4be; border-radius: 6px; overflow: hidden;
+}
+#toggle button {
+  padding: 5px 14px; font-size: .82rem; background: transparent;
+  border: none; cursor: pointer; color: #666; transition: background .15s, color .15s;
+}
+#toggle button.active { background: #7b2d8b; color: #fff; }
+#toggle button:not(.active):hover { background: #f0ede8; }
+
+#map-wrap { flex: 1; position: relative; overflow: hidden; }
+world-map { display: block; width: 100%; height: 100%; }
+world-map svg { width: 100%; height: 100%; touch-action: none; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Middle East performance at the World Cup 2026</h1>
+  <div id="toggle">
+    <button id="btn-before" class="active">Qualified</button>
+    <button id="btn-after">Alive &amp; kicking</button>
+  </div>
+</div>
+<div id="map-wrap">
+  <world-map></world-map>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script type="module">
+import { choroFill, FLAG_CDN, FLAG, FLAG_SIZE_ZOOM_EXP } from '../js/map-container.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES } from '../js/qualified.js';
+
+// ── Middle East country IDs (ISO 3166-1 numeric) ─────────────────────────────
+const ME_IDS = new Set([
+  51,   // Armenia
+  31,   // Azerbaijan
+  48,   // Bahrain
+  196,  // Cyprus
+  268,  // Georgia
+  364,  // Iran
+  368,  // Iraq
+  376,  // Israel
+  400,  // Jordan
+  414,  // Kuwait
+  422,  // Lebanon
+  275,  // Palestine
+  512,  // Oman
+  634,  // Qatar
+  682,  // Saudi Arabia
+  760,  // Syria
+  792,  // Turkey
+  784,  // UAE
+  860,  // Uzbekistan
+  887,  // Yemen
+]);
+
+// ── Get map infrastructure from the component ─────────────────────────────────
+const _wm = document.querySelector('world-map');
+const { svg, g, projection, path, zoom } = _wm;
+
+// ── Register extra zoom work (dim overlay stays at fixed opacity) ─────────────
+_wm.onZoom = e => {
+  const { x, y, k } = e.transform;
+  console.log(`zoom  k=${k.toFixed(4)}  tx=${x.toFixed(2)}  ty=${y.toFixed(2)}`);
+};
+
+// ── Data ─────────────────────────────────────────────────────────────────────
+const [mapData, eloData, r32Data, world, ukNations] = await Promise.all([
+  fetch('../data/wc2026_map_data.json').then(r => r.json()),
+  fetch('../data/wc2026_elo_rank.json').then(r => r.json()),
+  fetch('../wc2026_alive_and_kicking.json').then(r => r.json()).catch(() => null),
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
+  fetch('../data/uk-nations.geojson').then(r => r.json()),
+]);
+
+// ── Lookups ──────────────────────────────────────────────────────────────────
+// Replicate buildIndices: ratio = count + nativeCount (identical to main map coloring)
+const nativeByCountry = {};
+if (mapData.natives) {
+  Object.entries(mapData.natives).forEach(([name, players]) => {
+    const nId = QUALIFIED_BY_NAME[name];
+    if (nId != null) nativeByCountry[nId] = players;
+  });
+}
+const byId = {};
+(mapData.data ?? []).forEach(d => {
+  d.ratio = d.count + (nativeByCountry[d.id]?.length ?? 0);
+  byId[d.id] = d;
+});
+// Qualified countries with only natives (no exports) — same as buildIndices
+Object.entries(nativeByCountry).forEach(([nId, players]) => {
+  const id = +nId;
+  if (byId[id]) return;
+  byId[id] = { id, ratio: players.length };
+});
+const iso2Of = Object.fromEntries(eloData.rankings.map(r => [r.id, r.iso2?.toLowerCase()]));
+
+// Alive & kicking set (iso2 codes)
+const _alive = r32Data ? new Set(r32Data.teams.map(t => t.iso2?.toLowerCase())) : null;
+
+// All qualified countries with their iso2 codes
+const ALL_QUALIFIED = eloData.rankings
+  .filter(r => QUALIFIED_NAMES[r.id] && r.iso2)
+  .map(r => ({ id: r.id, iso2: r.iso2.toLowerCase(), me: ME_IDS.has(r.id) }));
+
+// ── Patch Kosovo ─────────────────────────────────────────────────────────────
+world.objects.countries.geometries.forEach(geo => {
+  if (!geo.id && geo.properties?.name === 'Kosovo') geo.id = 383;
+});
+
+// ── Render choropleth ─────────────────────────────────────────────────────────
+// Ocean already rendered by world atlas; add graticule
+g.append('path').datum({ type: 'Sphere' })
+  .attr('d', path).attr('fill', '#b8d8ea').attr('stroke', 'none');
+g.append('path').datum(d3.geoGraticule()())
+  .attr('d', path).attr('fill', 'none').attr('stroke', '#ccc4dc').attr('stroke-width', .25);
+
+const countries = topojson.feature(world, world.objects.countries);
+
+const UK_IDS = { ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263 };
+
+// All countries at full opacity (correct choropleth colors, no ocean bleed)
+g.selectAll('path.country')
+  .data(countries.features.filter(d => +d.id !== 826))
+  .join('path')
+    .attr('class', 'country')
+    .attr('d', path)
+    .attr('data-id', d => +d.id)
+    .attr('fill', d => choroFill(+d.id, byId))
+    .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
+
+g.selectAll('path.country-uk')
+  .data(ukNations.features)
+  .join('path')
+    .attr('class', 'country country-uk')
+    .attr('d', path)
+    .attr('fill', d => choroFill(UK_IDS[d.properties.GU_A3], byId))
+    .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
+
+g.append('path')
+  .datum(topojson.mesh(world, world.objects.countries, (a, b) => a !== b))
+  .attr('fill', 'none').attr('stroke', '#b8b0a8').attr('stroke-width', .3).attr('d', path);
+
+// Dim overlay — page-background wash over non-ME countries, no ocean bleed
+const DIM_FILL = 'rgba(250,249,246,0.72)';
+g.selectAll('path.country-dim')
+  .data(countries.features.filter(d => +d.id !== 826 && !ME_IDS.has(+d.id)))
+  .join('path')
+    .attr('class', 'country-dim')
+    .attr('d', path)
+    .attr('fill', DIM_FILL)
+    .attr('stroke', 'none')
+    .attr('pointer-events', 'none');
+
+g.selectAll('path.country-uk-dim')
+  .data(ukNations.features)
+  .join('path')
+    .attr('class', 'country-uk-dim')
+    .attr('d', path)
+    .attr('fill', DIM_FILL)
+    .attr('stroke', 'none')
+    .attr('pointer-events', 'none');
+
+// ── Centroids ─────────────────────────────────────────────────────────────────
+const CENTROID_OVERRIDE = { 250: [2.5, 46.5], 840: [-98, 38], 8261: [-4.2, 56.8], 191: [16.8, 45.8] };
+const centroids = {};
+countries.features.forEach(f => {
+  if (!f.id) return;
+  const ov = CENTROID_OVERRIDE[+f.id];
+  centroids[+f.id] = ov ? projection(ov) : path.centroid(f);
+});
+// UK home nations
+const UK_CENTROID_IDS = { ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263 };
+ukNations.features.forEach(f => {
+  const id = UK_CENTROID_IDS[f.properties.GU_A3];
+  if (!id) return;
+  const ov = CENTROID_OVERRIDE[id];
+  centroids[id] = ov ? projection(ov) : path.centroid(f);
+});
+
+// ── Flags ─────────────────────────────────────────────────────────────────────
+const flagsG = g.append('g').attr('class', 'me-flags');
+
+function renderFlags(mode) {
+  flagsG.selectAll('*').remove();
+  const k = d3.zoomTransform(svg.node()).k;
+  const s = FLAG / Math.pow(k, 1 - FLAG_SIZE_ZOOM_EXP);
+  for (const { id, iso2, me } of ALL_QUALIFIED) {
+    const isAlive = _alive ? _alive.has(iso2) : true;
+    if (mode === 'after' && !isAlive) continue;
+    const c = centroids[id];
+    if (!c || !isFinite(c[0])) continue;
+    const [cx, cy] = c;
+    flagsG.append('image')
+      .classed('flag-qualified', true)
+      .attr('data-cx', cx).attr('data-cy', cy)
+      .attr('href', FLAG_CDN(iso2))
+      .attr('x', cx - s/2).attr('y', cy - s/2)
+      .attr('width', s).attr('height', s)
+      .attr('clip-path', 'inset(0% round 50%)')
+      .attr('opacity', me ? 1 : 0.28);
+  }
+}
+
+// ── Initial zoom to Middle East (projection-based, no DOM layout needed) ──────
+function zoomToMiddleEast() {
+  svg.call(zoom.transform, d3.zoomIdentity.translate(-4116.80, -1145.81).scale(8.2417));
+}
+
+// ── Toggle ────────────────────────────────────────────────────────────────────
+let mode = 'before';
+renderFlags(mode);
+zoomToMiddleEast();
+
+document.getElementById('btn-before').addEventListener('click', () => {
+  mode = 'before';
+  document.getElementById('btn-before').classList.add('active');
+  document.getElementById('btn-after').classList.remove('active');
+  renderFlags(mode);
+});
+document.getElementById('btn-after').addEventListener('click', () => {
+  mode = 'after';
+  document.getElementById('btn-after').classList.add('active');
+  document.getElementById('btn-before').classList.remove('active');
+  renderFlags(mode);
+});
+</script>
+</body>
+</html>
