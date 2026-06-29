@@ -52,6 +52,12 @@ Auf Touchscreens nach links oder rechts wischen, um den Knopf schrittweise zu be
 Der Schalter funktioniert in Kombination mit der restlichen Filtermatrix — Sie können beispielsweise
 nur alive & kicking Mannschaften anzeigen, die auch Exporteure sind, indem Sie auf **in** schalten und die Nicht-Exporteur-Spalte deaktivieren.
 
+### FIFA-Konföderationsfilter
+
+Die Schaltfläche <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="Konföderation"> neben der **FIFA**-Zeile öffnet ein Dropdown-Menü, um die Liste auf eine einzelne Konföderation zu filtern. Nicht-FIFA-Länder sind nicht betroffen — sie bleiben entsprechend dem Rest der Filtermatrix sichtbar oder ausgeblendet.
+
+Die Auswahl einer Konföderation hebt zudem ihre Außengrenze auf der Karte hervor und zoomt darauf ein. Wählen Sie **Alle FIFA-Konföderationen**, um den Filter aufzuheben.
+
 ### Zur Länderreferenz
 
 Karte und Liste verwenden [eloratings.net](https://www.eloratings.net/) als Länderquelle —

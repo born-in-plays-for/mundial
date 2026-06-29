@@ -52,9 +52,15 @@ On touch screens, swipe left or right to step the knob one position at a time.
 The toggle works in combination with the rest of the filter matrix — you can, for example,
 show only alive & kicking teams that are also exporters by switching to **in** and unchecking the non-exporter column.
 
+### FIFA confederation filter
+
+The <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederation"> button next to the **FIFA** row opens a dropdown to filter the list to a single confederation. Non-FIFA countries are unaffected — they remain visible or hidden according to the rest of the filter matrix.
+
+Selecting a confederation also highlights its external boundary on the map and zooms to fit it in view. Select **All FIFA Confederations** to clear the filter.
+
 ### URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`. Add `?explain` to any URL to open a panel describing what the active parameters do. The full reference with all cell codes, group aliases and examples is in the [Countries page guide](?guide=countries).
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`, `?fifa=`. Add `?explain` to any URL to open a panel describing what the active parameters do. The full reference with all cell codes, group aliases and examples is in the [Countries page guide](?guide=countries).
 
 ### About the country reference
 

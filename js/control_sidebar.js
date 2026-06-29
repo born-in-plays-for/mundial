@@ -476,7 +476,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // ── URL params debug (badge · panel · console) ─────────────────────────
 
   const _SORT_NAMES  = { elo: 'Elo ranking', alpha: 'A–Z', pop: 'population', delta: 'plays-for minus born-in' };
-  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'in', 'out', 'show', 'explain']);
+  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'in', 'out', 'show', 'fifa', 'explain']);
+  const _CONF_NAMES = { uefa:'UEFA — Europe', afc:'AFC — Asia', caf:'CAF — Africa', conmebol:'CONMEBOL — South America', concacaf:'CONCACAF — N. & C. America', ofc:'OFC — Oceania' };
   const _badge = _el.querySelector('#params-badge');
   let _lastLines = [], _panelEl = null;
 
@@ -513,6 +514,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       lines.push(valid.length
         ? { param: `?show=${show}`, desc: `cells: ${valid.join(' · ')}${suffix}` }
         : { param: `?show=${show}`, desc: `no valid codes${suffix} — ignored, defaults kept` });
+    }
+    const conf = sp.get('fifa');
+    if (conf) {
+      lines.push(_CONF_NAMES[conf]
+        ? { param: `?fifa=${conf}`, desc: `confederation: ${_CONF_NAMES[conf]}` }
+        : { param: `?fifa=${conf}`, desc: `unknown confederation — ignored (valid: ${Object.keys(_CONF_NAMES).join(' ')})` });
     }
     for (const k of sp.keys()) {
       if (!_KNOWN_PARAMS.has(k)) lines.push({ param: `?${k}`, desc: 'unrecognized — ignored' });
@@ -576,8 +583,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       if (_valid.length) Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el) el.checked = cells.has(k); });
     }
 
+    const conf = sp.get('fifa');
+    if (conf !== null) _confIds = CONF_IDS[conf] ?? null;
+
     callbacks.renderElo?.();
     applyFlagFilter();
+
+    if (conf && CONF_IDS[conf]) {
+      document.dispatchEvent(new CustomEvent('mundial-conf-changed', { detail: { conf, ids: CONF_IDS[conf] } }));
+    }
 
     _lastLines = _buildLines(sp);
     const _visible = _countVisible();

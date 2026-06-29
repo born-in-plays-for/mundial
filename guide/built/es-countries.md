@@ -61,6 +61,21 @@ When `?in` or `?out` is set, non-qualified exporter countries are also filtered:
 - `?in` hides exporters whose players all go to knocked-out teams
 - `?out` hides exporters whose players all go to alive & kicking teams
 
+### `?fifa` — FIFA confederation filter
+
+```
+?fifa=uefa       UEFA — Europe
+?fifa=afc        AFC — Asia
+?fifa=caf        CAF — Africa
+?fifa=conmebol   CONMEBOL — South America
+?fifa=concacaf   CONCACAF — N. & C. America
+?fifa=ofc        OFC — Oceania
+```
+
+Filters the list to FIFA members of the named confederation only. Non-FIFA countries are unaffected — they remain visible or hidden according to the `?show` and `?in`/`?out` settings. On the Map page, also highlights the confederation boundary and pans/zooms to it.
+
+Unknown values are silently ignored and defaults are kept.
+
 ### `?show` — filter whitelist
 
 ```
@@ -131,5 +146,7 @@ Aliases and individual codes may be freely mixed; the result is a union. Unknown
 ?sort=delta&dir=asc&show=qual Qualified countries with fewest plays-for vs. born-in first.
 ?show=all                     All 8 cells including normally-hidden of and on.
 ?show=qual,ef                 Qualified countries + non-qualified FIFA exporters.
+?fifa=uefa                    UEFA members only (FIFA filter; non-FIFA unaffected).
+?fifa=caf&show=exp            African exporters only.
 ```
 <!-- /i18n:countries_url_params -->
