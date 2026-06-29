@@ -465,9 +465,10 @@ document.getElementById('switch-phase-group').querySelectorAll('.switch-label').
 syncLabels(swPhase);
 
 // Initial state: world mode — must come after const declarations above.
+const VIDEO_MODE = new URLSearchParams(location.search).has('video');
 enterWorldMode();
 dimPaths.attr('fill', DIM_CLEAR);
-renderFlags('before', true); // staggered animated reveal
+if (!VIDEO_MODE) renderFlags('before', true); // staggered animated reveal
 
 // ── Unzoom button ─────────────────────────────────────────────────────────────
 function zoomToWorld() {
@@ -560,6 +561,50 @@ window._perf = {
   zoomToWorld,
   applyState,
   zoomToRegion,
+
+  // ── Video API ────────────────────────────────────────────────────────────────
+  showFlags(animate = true) {
+    renderFlags('before', animate);
+  },
+
+  zoomToME() {
+    exitWorldMode();
+    regionKey = 'me';
+    updateDimOverlay(REGIONS.me.ids);
+    applyRegionOpacity(REGIONS.me.ids);
+    zoomToRegion('me');
+  },
+
+  zoomToAfrica() {
+    exitWorldMode();
+    regionKey = 'africa';
+    // Re-render all flags (restores any vanished ME flags)
+    renderFlags('before', false, REGIONS.africa.ids);
+    updateDimOverlay(REGIONS.africa.ids);
+    zoomToRegion('africa');
+  },
+
+  showWorldKnockout() {
+    enterWorldMode();
+    showR32Closing();
+  },
+
+  pulseFlag(iso2) {
+    const flag = flagsG.select(`.flag-qualified[data-iso2="${iso2}"]`);
+    if (flag.empty() || flag.style('display') === 'none') return;
+    if (+flag.attr('opacity') < 1) return;
+    const k = d3.zoomTransform(svg.node()).k;
+    const s = FLAG / Math.pow(k, 1 - FLAG_SIZE_ZOOM_EXP);
+    animateFlagPulse(flag.node(), s, +flag.attr('data-cx'), +flag.attr('data-cy'));
+  },
+
+  vanishFlagByIso2(iso2, delay = 0) {
+    const flag = flagsG.select(`.flag-qualified[data-iso2="${iso2}"]`);
+    if (flag.empty()) return;
+    const k = d3.zoomTransform(svg.node()).k;
+    const s = FLAG / Math.pow(k, 1 - FLAG_SIZE_ZOOM_EXP);
+    animateFlagOut(flag.node(), s, +flag.attr('data-cx'), +flag.attr('data-cy'), delay);
+  },
 };
 </script>
 </body>
