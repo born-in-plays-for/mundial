@@ -123,6 +123,8 @@ function _injectStyles() {
 #mundial-guide-panel .gp-body h3{font-size:.9rem;font-weight:600;margin-top:1.4rem;margin-bottom:.4rem;color:#555}
 #mundial-guide-panel .gp-body p:not(.taxonomy *){font-size:.925rem;line-height:1.7;color:#333}
 #mundial-guide-panel .gp-body code:not(.taxonomy *){font-size:.82em;background:var(--bg-hover,#f0ede8);padding:.1em .38em;border-radius:3px;color:var(--color-default,#171715)}
+#mundial-guide-panel .gp-body pre:not(.taxonomy *){background:var(--bg-hover,#f0ede8);border-radius:3px;overflow-x:auto}
+#mundial-guide-panel .gp-body pre code:not(.taxonomy *){padding:0;background:transparent;border-radius:0;font-size:inherit}
 #mundial-guide-panel .gp-body img:not(.taxonomy *):not(.gp-icon){border:1px solid var(--border,#e4e0d8);border-radius:6px;margin:.75rem auto .2rem}
 #mundial-guide-panel .gp-icon{display:inline;vertical-align:middle;width:1.1em;height:1.1em;opacity:.7}
 #mundial-guide-panel .gp-body blockquote{border-left:3px solid var(--border-strong,#c8c4be);background:var(--bg-hover,#f0ede8);padding:.55rem 1rem;border-radius:0 4px 4px 0;margin:1.25rem 0}

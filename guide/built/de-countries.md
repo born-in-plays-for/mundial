@@ -69,16 +69,16 @@ When `?in` or `?out` is set, non-qualified exporter countries are also filtered:
 
 Comma-separated cell codes and/or group aliases. When `show` is present it **replaces** the defaults entirely — every cell not listed is unchecked. When absent, defaults apply.
 
-### Cell codes
+##  Cell codes
 
 The filter matrix mirrors the sidebar layout — two columns (exporter / non-exporter) crossed with four row groups:
 
 |  | **exporter** | **non-exporter** |
 |---|:---:|:---:|
-| **qualified · imports** | ✓ `qie` | ✓ `qi` |
-| **qualified · no imports** | ✓ `qe` | ✓ `q` |
-| **non-qual · FIFA** | ✓ `ef` | ○ `of` |
-| **non-qual · non-FIFA** | ✓ `en` | ○ `on` |
+| **qualified · imports**        | `qie`&nbsp;&nbsp;✓  | `qi`&nbsp;&nbsp;✓ |
+| **qualified · no imports**     |  `qe` &nbsp;&nbsp;✓ |  `q` &nbsp;&nbsp;✓ |
+| **non-qualified · FIFA**       |  `ef` &nbsp;&nbsp;✓ | `of`&nbsp;&nbsp;○ |
+| **non-qualified · non-FIFA**   |  `en` &nbsp;&nbsp;✓ | `on`&nbsp;&nbsp;○ |
 
 ✓ on by default · ○ off by default
 
@@ -91,13 +91,15 @@ Letter mnemonics:
 - `n` — non-FIFA
 - `o` — other (non-qualified, non-exporter)
 
-**A note on terminology.** The official framing of this project is **Born In / Plays For**: a player is *born in* one country and *plays for* another. In the filter matrix the same relationship is expressed from the country's point of view as **imports / exports**: a country *exports* a player when someone born there plays for a different squad; it *imports* a player when someone born abroad plays for its squad. The two framings are interchangeable:
+### A note on terminology
+
+The official framing of this project is **Born In / Plays For**: a player is *born in* one country and *plays for* another. In the filter matrix the same relationship is expressed from the country's point of view as **imports / exports**: a country *exports* a player when someone born there plays for a different squad; it *imports* a player when someone born abroad plays for its squad. The two framings are interchangeable:
 
 - "France exports 17 players" = "17 players born in France play for another country's squad."
 - "Morocco imports 4 players" = "4 players born outside Morocco play for the Moroccan squad."
 - "A `qie` country both imports and exports" = "a qualified squad that includes players born abroad *and* has players born there representing other nations."
 
-### Group aliases
+## Group aliases
 
 | Alias  | Expands to         | Meaning                              |
 |--------|--------------------|--------------------------------------|
@@ -110,14 +112,14 @@ Letter mnemonics:
 
 Aliases and individual codes may be freely mixed; the result is a union. Unknown tokens are silently ignored — if all tokens are unrecognized the parameter is ignored entirely and defaults are kept.
 
-### Combining `?in`/`?out` with `?show`
+## Combining `?in`/`?out` with `?show`
 
 - `?in&show=qual` → only alive & kicking qualified countries
 - `?out&show=qual` → only eliminated qualified countries
 - `?in&show=exp` → exporters (qualified or not) linked to alive & kicking teams
 - `?in`/`?out` have no effect on `of`/`on` cells (they have no tournament connection)
 
-### Examples
+## Examples
 
 ```
 ?in&show=qual                 Only alive & kicking qualified countries.
