@@ -38,6 +38,9 @@ jobs:
           path: data
           key: data-${{ steps.data-sha.outputs.sha }}
 
+      - name: Log cache result
+        run: echo "cache-hit=${{ steps.submodule-cache.outputs.cache-hit }} sha=${{ steps.data-sha.outputs.sha }}"
+
       - name: Update submodule
         if: steps.submodule-cache.outputs.cache-hit != 'true'
         run: git submodule update --init --depth 1 data
