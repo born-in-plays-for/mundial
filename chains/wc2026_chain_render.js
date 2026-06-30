@@ -102,7 +102,7 @@ export function renderChain(chain, container, opts = {}) {
 
   // ── SVG ──────────────────────────────────────────────────────────────────────
   const svg = _svgEl('svg', { width:PW, height:H, viewBox:`0 0 ${PW} ${H}`,
-    style:`font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:block;overflow:visible` });
+    style:`font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:block;overflow:visible;max-width:100%;height:auto` });
 
   const defs = _svgEl('defs');
   [['blu','#3b82f6'],['red','#ef4444']].forEach(([id,col]) => {
