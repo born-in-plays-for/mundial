@@ -53,7 +53,7 @@ Data is updated daily by the [mundial-build](https://github.com/born-in-plays-fo
 
 ## Deploy
 
-GitHub Actions deploys to Pages on every push. The `data/` submodule is cached by its commit SHA so code-only pushes are fast — the heavy submodule fetch only runs when the data actually changes.
+GitHub Actions deploys to Pages on every push. The `data/` submodule is cached by its commit SHA — the workflow itself finishes in ~5s on a cache hit; the remaining ~3m is artifact upload + GitHub Pages CDN queue.
 
 ```mermaid
 flowchart TD
@@ -65,11 +65,11 @@ flowchart TD
 
     cache{"cache hit? key: data-SHA"}
 
-    hit["use cached data/"]
-    miss["git submodule update + save cache"]
+    hit["use cached data/ (~1s)"]
+    miss["git submodule update + save cache (~30s)"]
 
-    fast["~20s deploy"]
-    slow["~1m 40s deploy"]
+    upload["upload artifact (~42s)"]
+    cdn["Pages CDN queue (~1m 40s)"]
 
     pages["GitHub Pages live"]
 
@@ -77,11 +77,12 @@ flowchart TD
     dispatch --> sha
     manual --> sha
     sha --> cache
-    cache -- yes --> hit --> fast --> pages
-    cache -- no --> miss --> slow --> pages
+    cache -- yes --> hit --> upload
+    cache -- no --> miss --> upload
+    upload --> cdn --> pages
 ```
 
-A cache miss happens only on the first deploy after a data submodule bump — the fresh fetch saves the cache, so the next code push hits it immediately.
+A cache miss happens only on the first deploy after a data submodule bump — the fresh fetch saves the cache, so the next push hits it immediately.
 
 ## Tech stack
 
