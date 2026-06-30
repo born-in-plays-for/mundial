@@ -111,19 +111,16 @@ The data pipeline lives in the **[born-in-plays-for/mundial-build](https://githu
 
 ### Deploy strategy and cache optimization
 
-The `deploy-pages.yml` workflow is smart about when to use caching to balance speed vs. freshness:
+The `deploy-pages.yml` workflow caches the `data/` submodule by its commit SHA. All event types participate in both cache restore and cache save:
 
 | Trigger | Cache behavior | Deploy time | When |
 |---------|---|---|---|
-| **Push to main** (code-only) | Use cache | ~17-21s ⚡ | Frontend code changes, docs, config updates |
-| **repository_dispatch** (from update-data-submodule) | Skip cache, fetch fresh | ~1m 40s | Daily Elo data updates (once per day) |
-| **workflow_dispatch** (manual trigger) | Skip cache, fetch fresh | ~1m 40s | Manual refreshes when needed |
+| **Push to main** (same data SHA) | Cache hit → skip fetch | ~20s ⚡ | Frontend code changes, docs, config updates |
+| **repository_dispatch** (new data SHA) | Cache miss → fetch fresh → save cache | ~1m 40s | Daily Elo data updates (once per day) |
+| **Push to main** (first push after data update) | Cache hit (warmed by dispatch run) | ~20s ⚡ | Code changes immediately after a data update |
+| **workflow_dispatch** | Cache hit or miss depending on SHA | ~20s or ~1m 40s | Manual refreshes |
 
-**How it works:** The workflow checks `github.event_name` at runtime:
-- `push` events use the data submodule cache (fast, for code-only deploys)
-- `repository_dispatch` and `workflow_dispatch` skip cache and fetch fresh submodule (ensures data is always current)
-
-This means code changes deploy quickly (~20s) while data updates are always thorough (~1m 40s, only daily).
+**How it works:** The cache key is `data-<SHA>` where SHA = `git rev-parse HEAD:data`. A new data SHA always produces a cache miss → fresh fetch → cache saved. Subsequent runs with the same SHA hit the cache immediately, regardless of what triggered the deploy. No event-type branching: freshness is guaranteed by the SHA key itself.
 
 All frontend `fetch()` calls reference `data/` paths (e.g. `fetch('data/map_data.json')`). Pages in `insights/` use `../data/` since they are one level deeper.
 
