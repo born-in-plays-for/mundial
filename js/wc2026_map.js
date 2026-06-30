@@ -434,7 +434,8 @@ const _scrollToActiveElo = () => {
 
 // padding-top = bottom edge of fixed map container (exact, no formula needed)
 const _mc = document.getElementById('map-container');
-const _isLandscapeMobile = () => window.innerHeight <= 500 && window.innerWidth > window.innerHeight;
+const _landscapeMQ = window.matchMedia('(max-height: 500px) and (orientation: landscape)');
+const _isLandscapeMobile = () => _landscapeMQ.matches;
 const _syncPaddingTop = () => {
   if (_isLandscapeMobile()) {
     document.body.style.paddingTop    = '0';
@@ -444,14 +445,17 @@ const _syncPaddingTop = () => {
     return;
   }
   if (_mc) {
-    const mapBottom = _mc.getBoundingClientRect().bottom;
+    const mapBottom = _mc.getBoundingClientRect().bottom + (parseFloat(getComputedStyle(_mc).marginBottom) || 0);
     document.body.style.paddingTop = mapBottom + 'px';
     document.documentElement.style.scrollPaddingTop    = mapBottom + 'px';
     document.documentElement.style.scrollPaddingBottom = (_bottomPanel ? _bottomPanel.offsetHeight : 0) + 'px';
   }
 };
 requestAnimationFrame(_syncPaddingTop);
-window.addEventListener('resize', _syncPaddingTop);
+window.addEventListener('resize', () => {
+  if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
+  _syncMapHeight();
+});
 const _bottomPanel  = document.getElementById('bottom-panel');
 const _bottomTabNav = document.getElementById('bottomTabList');
 const _syncMapHeight = () => {
@@ -656,6 +660,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
   };
   let _swipeX0 = null, _swipeCurIdx = -1, _swipeAvail = [], _swipeOrigin = null;
   _tabContent.addEventListener('touchstart', e => {
+    if (!_isLandscapeMobile()) return;
     _swipeX0 = e.touches[0].clientX;
     _swipeAvail = _availableTabs();
     const activeTab = _tabNav.querySelector('.nav-link.active')?.dataset.tab;
@@ -663,6 +668,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
     _swipeOrigin = _swipeCurIdx >= 0 ? _btnRect(_swipeAvail[_swipeCurIdx]) : null;
   }, { passive: true });
   _tabContent.addEventListener('touchmove', e => {
+    if (!_isLandscapeMobile()) return;
     if (_swipeX0 == null || _swipeCurIdx < 0 || !_swipeOrigin) return;
     const dx = e.touches[0].clientX - _swipeX0;
     const dir = dx < 0 ? 1 : -1;
@@ -679,6 +685,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
     _tabIndicator.style.width = (fromW + (toW - fromW) * t) + 'px';
   }, { passive: true });
   _tabContent.addEventListener('touchend', e => {
+    if (!_isLandscapeMobile()) return;
     if (_swipeX0 == null) return;
     const dx = e.changedTouches[0].clientX - _swipeX0;
     _swipeX0 = null;

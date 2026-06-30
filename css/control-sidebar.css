@@ -21,7 +21,7 @@
 #control-sidebar {
   display: flex; flex-direction: row-reverse; align-items: flex-start;
   position: relative;
-  margin-top: 0.4rem;
+  /* margin-top: 0.4rem; */
 }
 
 #control-sidebar.collapsed .csb-body { max-width: 0; pointer-events: none; }

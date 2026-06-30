@@ -1,6 +1,10 @@
 world-map { display: contents; } /* transparent wrapper — layout sees the inner <svg> directly */
 
 #map-container { position: fixed !important; top: var(--page-header-h, var(--csb-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: var(--vert-gutter) !important; padding-right: var(--vert-gutter) !important; display: flex; justify-content: center; align-items: flex-start; background: var(--fixed-element-bg)  }
+@media (max-width: 500px) {
+  #map-container { padding: 0 !important; margin: 0 !important;}
+  #legend {display:none !important;}
+}
 
 /* map */
 #map { display: block; width: 100%; height: auto; touch-action: none; background-color: var(--fixed-element-bg); overflow: hidden; padding-bottom: 0.5px; }
@@ -37,7 +41,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   }
   #map { width: 100% !important; height: 100% !important; }
   #legend-parent { display: none !important; }
-  #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; margin-top: 0 !important; }
+  #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; margin-top: 0 !important; top: 0 !important;}
   #page-heading-sub { display: none !important; }
   #control-sidebar { pointer-events: auto; }
   #params-panel { z-index: 610 !important; }
