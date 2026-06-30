@@ -89,11 +89,6 @@
       "iso2": "gh"
     },
     {
-      "id": 1501,
-      "name": "Ivory Coast",
-      "iso2": "ci"
-    },
-    {
       "id": 16,
       "name": "Mexico",
       "iso2": "mx"
@@ -127,11 +122,6 @@
       "id": 9,
       "name": "Spain",
       "iso2": "es"
-    },
-    {
-      "id": 5,
-      "name": "Sweden",
-      "iso2": "se"
     },
     {
       "id": 15,
