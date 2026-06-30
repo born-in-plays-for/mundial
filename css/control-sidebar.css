@@ -24,7 +24,7 @@
   /* margin-top: 0.4rem; */
 }
 
-#control-sidebar.collapsed .csb-body { max-width: 0; pointer-events: none; }
+#control-sidebar.collapsed .csb-body { max-width: 0; pointer-events: none; border: 1px dashed rgb(187, 187, 187);}
 
 /* Always-open variant (countries page) — no toggle, transparent bg, natural height */
 #control-sidebar.csb-always-open { margin-top: 0; }
