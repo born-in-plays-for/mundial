@@ -51,6 +51,38 @@ All data files live in the `data/` directory, which is a git submodule pointing 
 
 Data is updated daily by the [mundial-build](https://github.com/born-in-plays-for/mundial-build) pipeline and automatically deployed via GitHub Actions.
 
+## Deploy
+
+GitHub Actions deploys to Pages on every push. The `data/` submodule is cached by its commit SHA so code-only pushes are fast — the heavy submodule fetch only runs when the data actually changes.
+
+```mermaid
+flowchart TD
+    push["📦 push to main\n(code change)"]
+    dispatch["🔄 repository_dispatch\n(daily Elo update)"]
+    manual["🛠 workflow_dispatch\n(manual)"]
+
+    sha["resolve HEAD:data SHA\ngit rev-parse HEAD:data"]
+
+    cache{"cache hit?\nkey: data-SHA"}
+
+    hit["use cached data/"]
+    miss["git submodule update\n+ save cache"]
+
+    fast["⚡ ~20s"]
+    slow["🐢 ~1m 40s"]
+
+    pages["GitHub Pages live"]
+
+    push --> sha
+    dispatch --> sha
+    manual --> sha
+    sha --> cache
+    cache -- yes --> hit --> fast --> pages
+    cache -- no --> miss --> slow --> pages
+```
+
+A cache miss happens only on the first deploy after a data submodule bump — the fresh fetch saves the cache, so the next code push hits it immediately.
+
 ## Tech stack
 
 All dependencies from jsDelivr CDN — no build step:
