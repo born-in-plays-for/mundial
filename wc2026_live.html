@@ -183,6 +183,11 @@ for (const [country, players] of Object.entries(mapData.natives ?? {})) {
   }
 }
 
+// API-Football team-name variants that don't match map_data.json's naming convention —
+// without this, per-team wiki/birth-country indexes miss entirely (built under 'DR Congo').
+const _TEAM_ALIASES = { 'Congo DR': 'DR Congo' };
+const canonicalTeam = name => _TEAM_ALIASES[name] ?? name;
+
 const getBirthCountry = (apiName, teamName) => {
   const tb = _teamBC[teamName];
   if (!tb) return null;
@@ -208,10 +213,14 @@ const wikiLink = (name, teamName) => {
   return name;
 };
 
-// Structural overrides: subdivision codes (UK home nations) and non-ISO entries (Kosovo, Curaçao)
+// Structural overrides: subdivision codes (UK home nations), non-ISO entries (Kosovo, Curaçao),
+// and API-Football name variants that don't match elo_rank.json's naming (e.g. 'Congo DR' vs
+// 'Congo, The Democratic Republic of the') — without this, the 2-char fallback gives 'co'
+// (Colombia) instead of 'cd'.
 const _FLAG_OVERRIDES = {
   'England':'gb-eng','Scotland':'gb-sct','Wales':'gb-wls','Northern Ireland':'gb-nir',
   'Kosovo':'xk','Curaçao':'cw','Curacao':'cw',
+  'Congo DR':'cd','DR Congo':'cd',
 };
 // Build name→iso2 from elo rankings once; iso-3166-1 resolves numeric id → alpha-2
 const _flagCodeMap = (() => {
@@ -231,18 +240,19 @@ const posLabel = pos => ({G:'GK', D:'DF', M:'MF', F:'FW'}[pos] ?? pos ?? '');
 
 const renderTeam = (lineup, side) => {
   const team = lineup.team;
+  const teamKey = canonicalTeam(team.name);
   const formation = lineup.formation ?? '?';
   const iso = flagCode(team.name);
 
   const playerRow = (p, isSub) => {
-    const born = getBirthCountry(p.name, team.name);
-    const isForeign = born && born !== team.name;
+    const born = getBirthCountry(p.name, teamKey);
+    const isForeign = born && born !== teamKey;
     const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(localName(born))}"></span>` : '';
     return `
     <tr class="${isSub ? 'sub' : ''}">
       <td class="player-num">${p.number}</td>
       <td class="player-pos"><small>${posLabel(p.pos)}</small></td>
-      <td>${wikiLink(p.name, team.name)}${bornTag}</td>
+      <td>${wikiLink(p.name, teamKey)}${bornTag}</td>
     </tr>`;
   };
 
@@ -256,12 +266,12 @@ const renderTeam = (lineup, side) => {
       <div class="card-body p-0">
         ${lineup.coach ? (() => {
           const c = lineup.coach;
-          const born = getBirthCountry(c.name, team.name);
-          const isForeign = born && born !== team.name;
+          const born = getBirthCountry(c.name, teamKey);
+          const isForeign = born && born !== teamKey;
           const bornTag = isForeign ? ` <span class="fi fi-${flagCode(born)}" style="font-size:10px" title="${T.liveBornIn(localName(born))}"></span>` : '';
           return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
             ${c.photo ? `<img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">` : ''}
-            <span class="small">${wikiLink(c.name, team.name)}${bornTag}</span>
+            <span class="small">${wikiLink(c.name, teamKey)}${bornTag}</span>
             <span class="text-muted small ms-auto">${T.liveCoach}</span>
           </div>`;
         })() : ''}
