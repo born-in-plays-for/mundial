@@ -213,3 +213,8 @@
 .csb-conf-btn:hover { opacity: 1; }
 .csb-conf-btn.dropdown-toggle { flex-direction: row-reverse; }
 .csb-conf-btn.dropdown-toggle::after { margin-left: 0; margin-right: .255em; }
+
+/* Native radio is hidden by the .form-check-input rule above; show a □/▣-style glyph instead */
+#zoom-conf-dropdown .dropdown-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+#zoom-conf-dropdown .dropdown-item::before { content: '○'; }
+#zoom-conf-dropdown .dropdown-item:has(input:checked)::before { content: '●'; }

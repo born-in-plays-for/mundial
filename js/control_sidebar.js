@@ -1,6 +1,8 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { CONF_IDS } from './conf.js';
 
+const _STORAGE_KEY = 'mundial-control-sidebar-state';
+
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
@@ -46,14 +48,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
             <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="16" height="16" aria-hidden="true">
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><button class="dropdown-item" data-conf="">All FIFA Confederations</button></li>
+            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> All FIFA Confederations</label></li>
             <li><hr class="dropdown-divider"></li>
-            <li><button class="dropdown-item" data-conf="uefa">UEFA — Europe</button></li>
-            <li><button class="dropdown-item" data-conf="afc">AFC — Asia</button></li>
-            <li><button class="dropdown-item" data-conf="caf">CAF — Africa</button></li>
-            <li><button class="dropdown-item" data-conf="conmebol">CONMEBOL — South America</button></li>
-            <li><button class="dropdown-item" data-conf="concacaf">CONCACAF — N. &amp; C. America</button></li>
-            <li><button class="dropdown-item" data-conf="ofc">OFC — Oceania</button></li>
+            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="uefa"> UEFA — Europe</label></li>
+            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="afc"> AFC — Asia</label></li>
+            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="caf"> CAF — Africa</label></li>
+            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="conmebol"> CONMEBOL — South America</label></li>
+            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="concacaf"> CONCACAF — N. &amp; C. America</label></li>
+            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> OFC — Oceania</label></li>
           </ul>
         </div>
       </td>
@@ -86,6 +88,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _triAK.dataset.state = next === _triAK.dataset.state ? 'both' : next;
     callbacks.renderElo?.();
     applyFlagFilter();
+    _saveState();
   };
   _triAK?.addEventListener('click', e => {
     e.stopPropagation();
@@ -108,6 +111,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _triAK.dataset.state = next;
     callbacks.renderElo?.();
     applyFlagFilter();
+    _saveState();
   }, { passive: false });
 
   const flagCat = id => {
@@ -125,6 +129,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _catChecked = cat => ({qie:_fltQIE,qi:_fltQI,qe:_fltQE,q:_fltQ})[cat]?.checked ?? true;
 
   let _confIds = null; // set by setConfFilter(); null = no confederation filter
+  let _confKey = null; // confederation key ('uefa' etc.) matching _confIds, for persistence/explain
 
   const catEloChecked = (id, fifaMember) => {
     if (_confIds && fifaMember && !_confIds.has(id)) return false;
@@ -183,6 +188,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     chks.forEach(c => c.checked = !on);
     callbacks.renderElo?.();
     applyFlagFilter();
+    _saveState();
   };
 
   _panel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
@@ -191,6 +197,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _panel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));
   _panel.querySelector('[data-row="nqf"]' ).addEventListener('click', e => { if (e.target.closest('#zoom-conf-dropdown')) return; _filterToggle([_fltEF, _fltOF]); });
   const _confDropdown = _panel.querySelector('#zoom-conf-dropdown');
+  const _confRadios = _confDropdown?.querySelectorAll('input[data-conf]');
+  const _syncConfRadio = () => { _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); }); };
   _confDropdown?.addEventListener('show.bs.dropdown',   () => { _body.style.overflow = 'visible'; });
   _confDropdown?.addEventListener('hidden.bs.dropdown', () => { _body.style.overflow = ''; });
   _confDropdown?.addEventListener('click', e => {
@@ -199,14 +207,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     e.stopPropagation();
     const conf = item.dataset.conf;
     const ids = conf ? (CONF_IDS[conf] ?? null) : null;
-    setConfFilter(ids);
+    setConfFilter(ids, conf || null);
     document.dispatchEvent(new CustomEvent('mundial-conf-changed', { detail: { conf, ids } }));
   });
   _panel.querySelector('[data-row="nqn"]' ).addEventListener('click', () => _filterToggle([_fltEN, _fltON]));
   _panel.querySelector('[data-col="exp"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQE, _fltEF, _fltEN]));
   _panel.querySelector('[data-col="nexp"]').addEventListener('click', () => _filterToggle([_fltQI,  _fltQ,  _fltOF, _fltON]));
   _panel.querySelector('[data-col="all"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ, _fltEF, _fltOF, _fltEN, _fltON]));
-  _panel.addEventListener('change', () => { callbacks.renderElo?.(); applyFlagFilter(); });
+  _panel.addEventListener('change', () => { callbacks.renderElo?.(); applyFlagFilter(); _saveState(); });
 
   _panel.querySelector('.csb-close')?.addEventListener('click', e => {
     e.stopPropagation();
@@ -249,6 +257,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _sortDirBtn.dataset.dir = _sortDir;
       _updateAlphaLabel();
       callbacks.renderElo?.(callbacks.scrollToActiveElo);
+      _saveState();
       return;
     }
     const item = e.target.closest('.csb-sort-item');
@@ -257,6 +266,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _sortOrder = [key, ..._sortOrder.filter(k => k !== key)];
       _updateSortCol();
       callbacks.renderElo?.(callbacks.scrollToActiveElo);
+      _saveState();
     }
   });
 
@@ -552,8 +562,95 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     (_panelEl && !_panelEl.hidden) ? _closeExplainPanel() : (_lastLines.length && _openExplainPanel(_lastLines, _countVisible()));
   });
 
+  // ── Persistence (localStorage) ──────────────────────────────────────────
+
+  const _CS_PARAM_KEYS = ['sort', 'dir', 'in', 'out', 'show', 'fifa'];
+
+  const _saveState = () => {
+    try {
+      localStorage.setItem(_STORAGE_KEY, JSON.stringify({
+        sortOrder: _sortOrder,
+        sortDir: _sortDir,
+        tri: _triAK?.dataset.state ?? 'both',
+        checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
+        conf: _confKey,
+      }));
+    } catch { /* storage unavailable (private mode, quota, etc.) — ignore */ }
+  };
+
+  const _restoreState = () => {
+    let saved;
+    try { saved = JSON.parse(localStorage.getItem(_STORAGE_KEY)); } catch { saved = null; }
+    if (!saved) return false;
+
+    if (Array.isArray(saved.sortOrder) && saved.sortOrder.length === _sortOrder.length && saved.sortOrder.every(k => _SORT_KEYS.has(k))) {
+      _sortOrder = [...new Set(saved.sortOrder)];
+      _updateSortCol();
+    }
+    if (saved.sortDir === 'asc' || saved.sortDir === 'desc') {
+      _sortDir = saved.sortDir;
+      _sortDirBtn.dataset.dir = _sortDir;
+      _updateAlphaLabel();
+    }
+    if (_triAK && ['alive', 'out', 'both', 'none'].includes(saved.tri)) {
+      _triAK.dataset.state = saved.tri;
+    }
+    if (saved.checks) {
+      Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el && k in saved.checks) el.checked = !!saved.checks[k]; });
+    }
+    if (saved.conf && CONF_IDS[saved.conf]) {
+      _confKey = saved.conf;
+      _confIds = CONF_IDS[saved.conf];
+    }
+    _syncConfRadio();
+
+    callbacks.renderElo?.();
+    applyFlagFilter();
+
+    if (_confKey) {
+      document.dispatchEvent(new CustomEvent('mundial-conf-changed', { detail: { conf: _confKey, ids: _confIds } }));
+    }
+    return true;
+  };
+
+  const _buildActiveStateLines = () => {
+    const lines = [];
+    const st = _triAK?.dataset.state ?? 'both';
+    if      (st === 'none')  lines.push({ param: 'in & out', desc: 'both flags → empty set' });
+    else if (st === 'alive') lines.push({ param: 'in',  desc: 'qualified: alive & kicking only · exporters: hidden if all their players go to eliminated teams' });
+    else if (st === 'out')   lines.push({ param: 'out', desc: 'qualified: eliminated only · exporters: hidden if all their players go to alive & kicking teams' });
+    lines.push({ param: `sort=${_sortOrder.join(',')}`, desc: `sort: ${_sortOrder.map(k => _SORT_NAMES[k]).join(' → ')}` });
+    lines.push({ param: `dir=${_sortDir}`, desc: _sortDir === 'asc' ? 'ascending ↑' : 'descending ↓' });
+    const cells = Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k);
+    lines.push(cells.length
+      ? { param: `show=${cells.join(',')}`, desc: `cells: ${cells.join(' · ')}` }
+      : { param: 'show=', desc: 'no cells shown' });
+    if (_confKey) lines.push({ param: `fifa=${_confKey}`, desc: `confederation: ${_CONF_NAMES[_confKey] ?? _confKey}` });
+    return lines;
+  };
+
   const applyParams = (sp) => {
     if (!sp) return;
+
+    if (!_CS_PARAM_KEYS.some(k => sp.has(k))) {
+      // No control-sidebar params in the URL — restore the persisted state instead.
+      const restored = _restoreState();
+      if (sp.has('explain')) {
+        const lines = _buildActiveStateLines();
+        _lastLines = restored ? [{ param: '(restored)', desc: 'settings restored from your last visit' }, ...lines] : lines;
+        const _visible = _countVisible();
+        if (_badge) _badge.hidden = _lastLines.length === 0;
+        if (_lastLines.length) {
+          if (!alwaysOpen && _el.classList.contains('collapsed')) {
+            _el.classList.remove('collapsed');
+            if (_toggle) _toggle.textContent = '›';
+          }
+          _openExplainPanel(_lastLines, _visible);
+        }
+      }
+      return;
+    }
+
     let changed = false;
 
     const sort = sp.get('sort');
@@ -586,7 +683,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }
 
     const conf = sp.get('fifa');
-    if (conf !== null) _confIds = CONF_IDS[conf] ?? null;
+    if (conf !== null) { _confIds = CONF_IDS[conf] ?? null; _confKey = conf || null; _syncConfRadio(); }
 
     callbacks.renderElo?.();
     applyFlagFilter();
@@ -606,12 +703,17 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }
     if (_badge) _badge.hidden = _lastLines.length === 0;
     if (sp.has('explain') && _lastLines.length) _openExplainPanel(_lastLines, _visible);
+
+    _saveState();
   };
 
-  const setConfFilter = ids => {
+  const setConfFilter = (ids, key = null) => {
     _confIds = ids ?? null;
+    _confKey = key;
+    _syncConfRadio();
     callbacks.renderElo?.();
     applyFlagFilter();
+    _saveState();
   };
 
   return {
