@@ -39,12 +39,12 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `js/elo_ranking.js` | ES module — `<elo-ranking>` Web Component, pill helpers, `initEloRanking` wiring helper |
 | `js/control_sidebar.js` | ES module — filter/sort sidebar logic (imported by `wc2026_map.js`) |
 | `js/i18n.js` | ES module — language detection, `T` strings (map + auth-bar + live-game), `countryName()`, `regionName()`, `wikiUrl()` |
-| `js/qualified.js` | ES module — `QUALIFIED_NAMES`, `QUALIFIED_BY_NAME`, `buildEloItems` |
+| `js/qualified.js` | ES module — `QUALIFIED_NAMES`, `QUALIFIED_BY_NAME`, `buildEloItems`, tournament-stage helpers (`ELIM_ROUNDS`, `CAROUSEL_STAGES`, `reachesStage`, `buildExporterStageIndex`, `buildBracketState`) |
 | `css/wc2026_map.css` | All custom styles (map, header, legend, tooltips, Elo list, filter table) |
 | `css/taxonomy.css` | Canonical pill styling (borders, text colors, dots via CSS) |
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
-| `data/` | Git submodule → `mundial-data` repo. Contains all pipeline-generated data: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5), `elo_rank.json`, `r32_teams.json`, `uk-nations.geojson`. Legacy `map_data.json` / `player_wiki.json` / top-level `wiki_<lang>.json` are pipeline inputs only — the frontend no longer reads them |
+| `data/` | Git submodule → `mundial-data` repo. Contains all pipeline-generated data: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5, `status.json` — tournament elimination status), `elo_rank.json`, `r32_teams.json`, `uk-nations.geojson`. Legacy `map_data.json` / `player_wiki.json` / top-level `wiki_<lang>.json` are pipeline inputs only — the frontend no longer reads them |
 | `wc2026_og_v5.jpg` | 2880×1620 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=2) |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
@@ -318,7 +318,7 @@ Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via
 **Sibling offset:** `_offsetSibling()` sets `top: 32px` (fixed/sticky siblings) or `marginTop: 32px` (static siblings) on the next element to account for the fixed navbar.
 
 ### Elo ranking tab and filter sidebar
-The **Elo ranking** tab (default active) shows all countries as pill badges, rendered by the `<elo-ranking>` Web Component (`js/elo_ranking.js`). Countries are filtered by the sidebar cube (`qualified × importer × exporter`); clicking a badge activates dim mode; clicking the active badge clears it.
+The **Elo ranking** tab (default active) shows all countries as pill badges, rendered by the `<elo-ranking>` Web Component (`js/elo_ranking.js`). Countries are filtered by the sidebar cube (`qualified × importer × exporter`) plus the tournament-stage carousel described below; clicking a badge activates dim mode; clicking the active badge clears it.
 
 **Three-tier pill interaction model:**
 - `enablesDim(id)` → `true`: badge is `elo-item--clickable` (dark, `#888` label). Click activates dim + arc mode.
@@ -330,6 +330,27 @@ The **Elo ranking** tab (default active) shows all countries as pill badges, ren
 **Critical ordering**: `_renderElo()` must be called **after** `buildIndices(rawData)` in the `Promise.all` callback. If called before (e.g. when the Elo JSON loads first), `app.byId` is empty, non-qualified exporters get wrongly bucketed as category `'o'` (filtered out by default), and `enablesDim()` returns false for all items (nothing clickable).
 
 The filter sidebar's natural height is measured before its first collapse (`classList.remove('collapsed') → scrollHeight → classList.add('collapsed')`), stored in `--csb-h`, which drives the toggle button's `min-height`. The actual header height (`--page-header-h`) is measured separately via `offsetHeight`.
+
+### Tournament stage carousel
+
+The `q` cell of the filter sidebar (next to the "importer"/"non-imp." rows) holds a Bootstrap carousel — `#csb-stage-carousel` in `js/control_sidebar.js` — cycling through `CAROUSEL_STAGES` (`js/qualified.js`): `qualified → r32 → r16 → qf → sf → final → winner`. Each position filters both qualified countries and their exporters down to those that "reached" that stage. This replaced an earlier three-state alive/knocked-out toggle (`?in`/`?out` params, `wc2026_alive_and_kicking.json`) — both are gone; **`?stage=<key>`** (e.g. `?stage=r16`) is the only URL param now, persisted the same way in `localStorage` (`stage: CAROUSEL_STAGES[_stage]`).
+
+**Data source**: `data/v2/status.json`, shape `{ "<iso2>": { round, date?, lostTo? } }`. Lists **eliminated teams only** — an iso2 key absent from the file means that team is still alive; there is no positive "still in it" list. `round` is one of `ELIM_ROUNDS` (`Group Stage`, `Round of 32`, `Round of 16`, `Quarter-finals`, `Semi-finals`, `Final`), matched verbatim. `date`/`lostTo` are both present for knockout exits and both absent for Group Stage exits (round-robin — no single fixture decided it).
+
+**Per-team stage math** (`buildEloItems` in `js/qualified.js`):
+- `eliminatedAtIndex` — `ELIM_ROUNDS.indexOf(round)`, or `null` if alive. Note this can legitimately be `0` (Group Stage) — comparisons must use `!= null`, never truthiness.
+- `pendingFrom` — the carousel stage index from which this team's fate is undecided (fixture not yet played), derived from `wonUpTo` (the furthest knockout round a team is confirmed to have *won*, proven by appearing as someone else's `lostTo`). `null` once eliminated or once the team has actually won the Final.
+- `visibleThroughIndex` = `eliminatedAtIndex ?? pendingFrom ?? Infinity` — the last carousel stage a team appears at, period. This is what's stored in `app.stageIndexById` and checked via `reachesStage(index, stagePos)`. A team's blurred ("pending") appearance is its **last** — it does not carry forward into stages beyond it while still undecided, so e.g. a team that just won Round of 32 shows solid at the `r32` stage, blurred at `r16` (its next undecided fixture), and is absent from `qf` onward until that fixture resolves.
+
+**Visual convention** (`css/taxonomy.css`): solid border = confirmed passed; **dashed** border = eliminated (`.elo-item--knocked-out`); **blurred** border + `--light-text` name color = pending/undecided (`.elo-item--pending`) — "Schrödinger's team." The blur is applied only to a duplicated `::before` border (`filter: blur(1.3px)`), not the whole pill, so names stay legible.
+
+**Aggregate counts**: `buildBracketState(statusByIso2, all48Iso2)` (`js/qualified.js`) returns, per knockout round, `{ eliminated, passed, playing }` — how many of the 48 qualifiers were knocked out in that round, won through it, or are still contesting it. Powers the carousel's native `title` tooltip (`_updateCarouselTitle` in `control_sidebar.js`). Group Stage exits are tracked separately (`outInGroupStage`) so they aren't conflated with "still alive" — both would otherwise read as `eliminatedAt === null`.
+
+**Navigation is capped at the furthest non-empty stage** — `_refreshCarouselBounds()` walks `CAROUSEL_STAGES` counting visible teams per position (counts are monotonically non-increasing) and disables (`.csb-stage-disabled` / `.csb-stage-locked`, `pointer-events: none`) the next-arrow and indicator dots beyond it. The `slide.bs.carousel` event itself is also guarded (`e.preventDefault()`) so this can't be bypassed via swipe, keyboard, or a stale `?stage=` link — it just unlocks on its own as the tournament progresses and `app.stageIndexById`/`app.bracketState` are refreshed.
+
+**Click handling**: the visible `.elo-item.elo-item--qualified` pill inside the active carousel slide has its own click listener (toggles the `qie/qi/qe/q` show/hide checkboxes, same as `?show=qual` — independent of carousel position); the carousel's own click handler `stopPropagation()`s for clicks on `.carousel-control-prev/-next/.carousel-indicators` so paging never triggers that toggle.
+
+**Elimination tooltip**: knocked-out pills get a `title` (`_eliminationTitle` in `js/elo_ranking.js`) reading e.g. "Eliminated — Round of 32 (Jul 2) · lost to Morocco", built from `eliminatedRound`/`eliminatedDate`/`eliminatedLostTo` (all resolved once in `buildEloItems`, not recomputed per render).
 
 ### Dim / arc mode
 - Left-click any country on the map or in the Elo list where `enablesDim()` returns true → dims all qualified country flags except relevant ones; draws curved arcs with √count-scaled width; shows player table below map
