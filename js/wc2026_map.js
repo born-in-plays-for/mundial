@@ -2,7 +2,7 @@ import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/l
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildExporterSets, loadEloData } from './qualified.js';
-import { LOCALE, _LANG, T, countryName, wikiUrl } from './i18n.js';
+import { LOCALE, _LANG, T, countryName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { CONF_BOUNDS } from './conf.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
@@ -352,9 +352,9 @@ const _chainWikiUrl = name => {
   for (const rec of Object.values(app.byId)) {
     const p = (rec.players ?? []).find(q => q.name === name);
     if (!p) continue;
-    const url = wikiUrl(p);
+    const url = wikiUrl(p.wikiTitle);
     if (url) return { href: url, fallback: false };
-    const en = p.wiki_langs?.en ?? null;
+    const en = wikiUrlEn(p.wikiTitle);
     if (en) return { href: en, fallback: true };
   }
   return null;
@@ -869,8 +869,8 @@ const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span cla
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : nothing;
 const ptWikiRow = p => {
-  const url    = wikiUrl(p);
-  const wikiEn = p.wiki_langs?.en ?? null;
+  const url    = wikiUrl(p.wikiTitle);
+  const wikiEn = wikiUrlEn(p.wikiTitle);
   const badge  = coachBadge(p);
   return url    ? html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${p.name}</a>${badge}`
        : wikiEn ? html`${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)${badge}`
@@ -1619,6 +1619,7 @@ Promise.all([
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
   fetch('data/uk-nations.geojson').then(r => r.json()),
   loadEloData(),
+  loadWikiData(),
 ]).then(([rawData, world, ukNations, { eloData, aliveAndKicking: _aliveAndKicking }]) => {
   _worldTopo = world;
   _eloData = eloData;

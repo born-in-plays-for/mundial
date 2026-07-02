@@ -40,7 +40,7 @@
 </div>
 
 <script type="module">
-import { T, wikiUrl, regionName } from './js/i18n.js';
+import { T, wikiUrl, wikiUrlEn, loadWikiData, regionName } from './js/i18n.js';
 
 document.getElementById('live-title').textContent = T.liveTitle(0);
 document.getElementById('live-subtitle').textContent = T.liveSubtitle;
@@ -146,6 +146,7 @@ const [eloData, r32Data, playerWiki] = await Promise.all([
   fetch('./data/elo_rank.json').then(r => r.json()),
   fetch('./data/r32_teams.json').then(r => r.json()),
   fetch('./data/player_wiki.json').then(r => r.json()),
+  loadWikiData(),
 ]);
 
 // Canonical country name -> iso2 (elo_rank.json).
@@ -174,11 +175,10 @@ const bornTagFor = (iso, info) => {
   return ` <span class="fi fi-${bornIso}" style="font-size:10px" title="${T.liveBornIn(localName(bornIso, born))}"></span>`;
 };
 
-const wikiLink = (name, wiki) => {
-  if (!wiki) return name;
-  const url = wikiUrl({ wiki_langs: wiki });
-  const en = wiki.en ?? null;
+const wikiLink = (name, wikiTitle) => {
+  const url = wikiUrl(wikiTitle);
   if (url) return `<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${name}</a>`;
+  const en = wikiUrlEn(wikiTitle);
   if (en) return `${name} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)`;
   return name;
 };
@@ -196,7 +196,7 @@ const renderTeam = (lineup, side) => {
     <tr class="${isSub ? 'sub' : ''}">
       <td class="player-num">${p.number}</td>
       <td class="player-pos"><small>${posLabel(p.pos)}</small></td>
-      <td>${wikiLink(p.name, info?.wiki)}${bornTagFor(iso, info)}</td>
+      <td>${wikiLink(p.name, info?.wikiTitle)}${bornTagFor(iso, info)}</td>
     </tr>`;
   };
 
@@ -213,7 +213,7 @@ const renderTeam = (lineup, side) => {
           const info = getPlayerWiki(iso, c.id);
           return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
             ${c.photo ? `<img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">` : ''}
-            <span class="small">${wikiLink(c.name, info?.wiki)}${bornTagFor(iso, info)}</span>
+            <span class="small">${wikiLink(c.name, info?.wikiTitle)}${bornTagFor(iso, info)}</span>
             <span class="text-muted small ms-auto">${T.liveCoach}</span>
           </div>`;
         })() : ''}

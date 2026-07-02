@@ -263,7 +263,7 @@ Every tooltip header shows `[flag] Country name` left-aligned and `pop. xM` righ
 `app.importByCountry` (property of the module-level `app` object, populated on data load) maps each qualified country ID to the list of imported players. Self-import is excluded by comparing `countryName()` output for birth country and squad country — this catches name-mismatch cases like DR Congo (`id=null`, name="Democratic Republic of the Congo") vs. qualified country 180 ("DR Congo").
 
 ### Wikipedia links in player table
-Players in the dim-mode table link to their Wikipedia page in the UI language when available, with `(en)` fallback link otherwise. `wiki_langs: {en, fr?, de?, it?, es?}` is stored per player in the JSON and populated by `add_wiki_urls.py`.
+Players in the dim-mode table link to their Wikipedia page in the UI language when available, with `(en)` fallback link otherwise. Each player/coach record carries a single `wikiTitle` string (the EN Wikipedia title, e.g. `"Lionel Mpasi"` — not a URL). The actual URL is resolved via `i18n.js`'s `loadWikiData()` / `wikiUrl()` / `wikiUrlEn()`: `loadWikiData()` fetches `data/wiki_<lang>.json` for the active UI language (plus `wiki_en.json` as a fallback tier when the UI language isn't English) — each file is `{ urlTemplate, titles }`, keyed by `wikiTitle`, values pre-escaped and ready to substitute into `urlTemplate`. Only one or two of the five per-language files are ever fetched, never all five.
 
 ### Fixed header + map architecture
 The page uses two fixed elements:
@@ -292,7 +292,7 @@ Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via
 - Export section (bordered top): count heading + grouped player rows by destination nation
 - Natives section (conditional): players born there playing for that same country (`app.nativeByCountry`)
 - Import section (bordered top, conditional): count heading + grouped player rows by birth country
-- Player names link to Wikipedia in the UI language when `wiki_langs` data is available
+- Player names link to Wikipedia in the UI language when `wikiTitle` resolves in the loaded `data/wiki_<lang>.json` (see "Wikipedia links in player table" above)
 
 ### Auth bar (`<mundial-auth-bar>`)
 `js/auth-bar.js` defines a custom element loaded as `<script type="module">` on every page. It renders a fixed 32px navbar with navigation icons (home, france, live game) and an auth section (sign-in/sign-out/admin). All HTML generation uses lit-html `render()` + `html` templates; SVG icons use the `unsafeHTML` directive.
@@ -377,29 +377,20 @@ Each fixture in `live_update` carries a `_tracked: bool` flag set by the server.
 - Events and statistics accordion items hidden via `d-none` (not removed — gentler, more robust)
 - Compositions accordion always shown (stable data even without live tracking)
 
-**Curaçao flag**
+**Country and player identity — joined by id, never by name**
 
-`flagCode()` has an explicit `'Curaçao': 'cw'` mapping to prevent the generic 2-char fallback from returning `'cu'` (Cuba).
+`wc2026_live.html` does not fetch `map_data.json` at all. It resolves every identity join through numeric ids shared with `mundial-data`'s build-time resolvers, never by matching name strings — this replaced a recurring bug class where API-Football's own spelling of a country or player name (e.g. `"Congo DR"` vs. this project's canonical `"DR Congo"`, or lineup name `"Lionel Mpasi Nzau"` vs. squad-list name `"Lionel Mpasi"`) silently produced the wrong flag or dropped enrichment.
 
-**Player lookup — team-scoped only**
+- **Team/country flags**: `flagForTeam(team)` looks up API-Football's own numeric `team.id` in `data/r32_teams.json` (`{id, name, iso2}`) to get an iso2 code. `flagForCountry(name)` looks up a canonical country name in `data/elo_rank.json`'s `rankings` (also carries `iso2`) for birth-country flags. Curaçao, Kosovo, the UK home nations, etc. all resolve correctly here with no per-country override — that resolution now happens once, upstream, through `mundial-data`'s shared alias table.
+- **Player/coach identity**: `getPlayerWiki(iso, id)` looks up `data/player_wiki.json` (shape: `{ "<iso2>": { "<api_football_player_or_coach_id>": { wikiTitle, birthCountry } } }`) using `lineup.startXI[].player.id` / `lineup.coach.id` — API-Football's own numeric id, the same id space the file is keyed by. A miss (id not yet resolved upstream) renders the plain name with no wiki link or birth-country tag — a visible, honest gap, not a name-matching fallback.
 
-At load time, `map_data.json` is fetched and two per-team indexes are built:
-- `_teamWiki[teamName]` → `{ exact, norm, lastName }` — maps player names to `wiki_langs`
-- `_teamBC[teamName]` → `{ lastName → birthCountry }` — maps last names to birth country
+**`mapData.natives` structure** (`map_data.json`, used by `wc2026_map.js` and `wc2026_players.html`, not by the live-game page)
 
-Export players (`mapData.data[].players`) are indexed under `p.nation` (the squad country). Native players (`mapData.natives[country]` — players born AND playing for the same country) are indexed under `country`.
-
-`getBirthCountry(apiName, teamName)` and `getWikiLangs(apiName, teamName)` search **only within `_teamBC[teamName]` / `_teamWiki[teamName]`** — there is no global fallback. When team is known, a "Smith" on Sweden's team will only match Swedish players named Smith, never a different Smith from another team. Both functions try exact name → normalized name → last name within the team's index, in that order.
-
-Global `_exactBC` / `_normBC` maps are also built (for exact/normalized full-name matches within `getBirthCountry`) but the last-name fallback is strictly team-scoped.
-
-**`mapData.natives` structure**
-
-Top-level key in `map_data.json` alongside `data`, `pop`, `capital`. Shape:
+Top-level key alongside `data`, `pop`, `capital`. Shape:
 ```json
-{ "Sweden": [{ "name": "Eric Smith", "caps": 1, "wiki_langs": { "en": "...", "fr": "..." } }] }
+{ "Sweden": [{ "name": "Eric Smith", "caps": 1, "wikiTitle": "Eric Smith" }] }
 ```
-Keys are country names (matching `p.nation` in export records). These players have no "born in" flag since birth country = squad country, but they do get Wikipedia links.
+Keys are country names (matching `p.nation` in export records). These players have no "born in" flag since birth country = squad country, but they do get Wikipedia links via `wikiTitle` (see "Wikipedia links in player table" above).
 
 **Accordion and UI behaviour**
 - Events and stats accordion items are always rendered for tracked fixtures, even when the API hasn't sent data yet — they just appear empty. Only untracked fixtures hide these sections.

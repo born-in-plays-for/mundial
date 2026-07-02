@@ -26,7 +26,7 @@
 </div>
 <script type="module">
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { wikiUrl, T } from './js/i18n.js';
+import { wikiUrl, wikiUrlEn, loadWikiData, T } from './js/i18n.js';
 
 const _header = document.getElementById('players-header');
 const _main   = document.getElementById('main-content');
@@ -34,7 +34,10 @@ const _syncPaddingTop = () => { _main.style.paddingTop = (_header.getBoundingCli
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 
-const mapData = await fetch('./data/map_data.json').then(r => r.json());
+const [mapData] = await Promise.all([
+  fetch('./data/map_data.json').then(r => r.json()),
+  loadWikiData(),
+]);
 
 // Every player and coach across the 48 qualified squads: exported entries (data[].players,
 // already tagged with the country they represent) plus natives (born and serving the same
@@ -56,8 +59,8 @@ _syncPaddingTop();
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : '';
 
 const wikiLink = p => {
-  const url = wikiUrl(p);
-  const en = p.wiki_langs?.en ?? null;
+  const url = wikiUrl(p.wikiTitle);
+  const en = wikiUrlEn(p.wikiTitle);
   if (url) return html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${p.name}</a>${coachBadge(p)}`;
   if (en) return html`${p.name} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)${coachBadge(p)}`;
   return html`${p.name}${coachBadge(p)}`;
