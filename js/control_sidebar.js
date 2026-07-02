@@ -1,5 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { CONF_IDS } from './conf.js';
+import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage } from './qualified.js';
 
 const _STORAGE_KEY = 'mundial-control-sidebar-state';
 
@@ -29,7 +30,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha">${T.sortLabels.alpha}</div>
         </div>
       </td>
-      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item elo-item--qualified"><span class="elo-name">${T.filterLabels.qualified}</span></span><div class="csb-tri" id="tri-ak" data-state="both"><span class="csb-tri-lbl">in</span><div class="csb-tri-track"><span class="csb-tri-knob"></span></div><span class="csb-tri-lbl">out</span></div></td>
+      <td rowspan="2" class="csb-group" data-row="q"><div id="csb-stage-carousel" class="carousel slide csb-stage-carousel">
+        <div class="carousel-inner">
+          ${CAROUSEL_STAGES.map((key, i) => html`
+          <div class="carousel-item ${i === 0 ? 'active' : ''}" data-stage="${i}">
+            <span class="elo-item elo-item--qualified"><span class="elo-name">${T.stageLabels[i].toLowerCase()}</span></span>
+          </div>`)}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#csb-stage-carousel" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span></button>
+        <button class="carousel-control-next" type="button" data-bs-target="#csb-stage-carousel" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span></button>
+        <div class="carousel-indicators">
+          ${CAROUSEL_STAGES.map((key, i) => html`<button type="button" data-bs-target="#csb-stage-carousel" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-label="${T.stageLabels[i]}"></button>`)}
+        </div>
+      </div></td>
       <td class="csb-row" data-row="qi"><span class="elo-item elo-item--qualified elo-item--imp"><span class="elo-name">${T.filterLabels.importer}</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
@@ -83,36 +96,56 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _fltOF  = _panel.querySelector('#filter-of');
   const _fltEN  = _panel.querySelector('#filter-en');
   const _fltON  = _panel.querySelector('#filter-on');
-  const _triAK  = _panel.querySelector('#tri-ak');
-  const _triApply = (next) => {
-    _triAK.dataset.state = next === _triAK.dataset.state ? 'both' : next;
-    callbacks.renderElo?.();
-    applyFlagFilter();
-    _saveState();
-  };
-  _triAK?.addEventListener('click', e => {
-    e.stopPropagation();
-    const { left, width } = _triAK.getBoundingClientRect();
-    const x = e.clientX - left;
-    _triApply(x < width / 3 ? 'alive' : x > width * 2 / 3 ? 'out' : 'both');
+  // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
+  const _carouselEl = _panel.querySelector('#csb-stage-carousel');
+  let _stage = 0; // index into CAROUSEL_STAGES — 0 ('qualified') shows every qualified team
+  const _bsCarousel = (_carouselEl && typeof bootstrap !== 'undefined')
+    ? new bootstrap.Carousel(_carouselEl, { interval: false, wrap: false })
+    : null;
+  _carouselEl?.addEventListener('click', e => {
+    if (e.target.closest('.carousel-control-prev, .carousel-control-next, .carousel-indicators')) e.stopPropagation();
   });
-  const _triNext = { alive: [null, 'both'], both: ['alive', 'out'], out: ['both', null] }; // [left, right]
-  let _triTouchX = null;
-  _triAK?.addEventListener('touchstart', e => { _triTouchX = e.touches[0].clientX; }, { passive: true });
-  _triAK?.addEventListener('touchend', e => {
-    if (_triTouchX === null) return;
-    const dx = e.changedTouches[0].clientX - _triTouchX;
-    _triTouchX = null;
-    if (Math.abs(dx) < 15) return; // small move → let click fire
-    e.stopPropagation();
-    e.preventDefault();
-    const next = _triNext[_triAK.dataset.state]?.[dx > 0 ? 1 : 0];
-    if (!next) return;
-    _triAK.dataset.state = next;
+  // Native title tooltip: team count at this stage, plus the eliminated/through/to-play
+  // breakdown from app.bracketState when the stage falls on a real knockout round.
+  const _updateCarouselTitle = () => {
+    if (!_carouselEl) return;
+    const qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
+    const total = qualifiedIds.filter(id => reachesStage(app.stageIndexById?.get(id), _stage)).length;
+    const bs = app.bracketState?.[ELIM_ROUNDS[_stage]];
+    _carouselEl.title = bs
+      ? `${total} · ${bs.eliminated} ${T.bracketEliminated} · ${bs.playing} ${T.bracketToPlay}`
+      : `${total}`;
+    _refreshCarouselBounds();
+  };
+
+  // The tournament hasn't reached every stage yet — cap navigation at the furthest stage that
+  // currently has at least one team in it (counts are monotonically non-increasing by stage,
+  // so the first empty one marks the boundary; everything past it stays locked until it fills).
+  let _maxStage = CAROUSEL_STAGES.length - 1;
+  const _nextBtn = _carouselEl?.querySelector('.carousel-control-next') ?? null;
+  const _indicatorBtns = _carouselEl ? [..._carouselEl.querySelectorAll('.carousel-indicators button')] : [];
+  const _refreshCarouselBounds = () => {
+    const qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
+    let max = 0;
+    for (let p = 0; p < CAROUSEL_STAGES.length; p++) {
+      const count = qualifiedIds.filter(id => reachesStage(app.stageIndexById?.get(id), p)).length;
+      if (count > 0) max = p; else break;
+    }
+    _maxStage = max;
+    _nextBtn?.classList.toggle('csb-stage-disabled', _stage >= _maxStage);
+    _indicatorBtns.forEach((btn, i) => btn.classList.toggle('csb-stage-locked', i > _maxStage));
+  };
+
+  _carouselEl?.addEventListener('slide.bs.carousel', e => {
+    if (e.to > _maxStage) { e.preventDefault(); return; }
+    _stage = e.to;
+    _updateCarouselTitle();
+    _refreshCarouselBounds();
     callbacks.renderElo?.();
     applyFlagFilter();
     _saveState();
-  }, { passive: false });
+  });
+  const _setStage = idx => { if (idx !== _stage) _bsCarousel?.to(idx); };
 
   const flagCat = id => {
     const qual = !!QUALIFIED_NAMES[id];
@@ -134,19 +167,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const catEloChecked = (id, fifaMember) => {
     if (_confIds && fifaMember && !_confIds.has(id)) return false;
     const cat = flagCat(id);
-    const st  = _triAK?.dataset.state ?? 'both';
-    if (st === 'none') return false;
-    const ko  = st !== 'both' && app.knockedOutIds?.size > 0;
     if (cat === 'e') {
-      if (ko && st === 'alive' && !app.exporterToAliveIds?.has(id)) return false;
-      if (ko && st === 'out'   && !app.exporterToOutIds?.has(id))   return false;
+      if (!reachesStage(app.exporterStageIndex?.get(id), _stage)) return false;
       return fifaMember ? _fltEF.checked : _fltEN.checked;
     }
     if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
-    if (ko) {
-      if (st === 'alive' && app.knockedOutIds.has(id))  return false;
-      if (st === 'out'   && !app.knockedOutIds.has(id)) return false;
-    }
+    if (!reachesStage(app.stageIndexById?.get(id), _stage)) return false;
     return _catChecked(cat);
   };
 
@@ -191,7 +217,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _saveState();
   };
 
-  _panel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
+  _panel.querySelectorAll('[data-row="q"] .elo-item.elo-item--qualified').forEach(el => el.addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ])));
   _panel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
   _panel.querySelector('[data-row="qni"]' ).addEventListener('click', () => _filterToggle([_fltQE,  _fltQ]));
   _panel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));
@@ -471,6 +497,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         ...item,
         pts:  primary === 'alpha' ? null : _ptsFor(primary, item, fmtPop),
         pts2: secondary ? _ptsFor(secondary, item, fmtPop) : null,
+        // Undecided at the currently-viewed stage — fixture not yet played, could still go
+        // either way. Recomputed on every call since it depends on the live carousel position.
+        pending: item.pendingFrom != null && _stage >= item.pendingFrom,
       }));
   };
 
@@ -488,7 +517,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // ── URL params debug (badge · panel · console) ─────────────────────────
 
   const _SORT_NAMES  = { elo: 'Elo ranking', alpha: 'A–Z', pop: 'population', delta: 'plays-for minus born-in' };
-  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'in', 'out', 'show', 'fifa', 'explain']);
+  const _STAGE_NAMES = ['Qualified', 'Round of 32', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final', 'Winner'];
+  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'stage', 'show', 'fifa', 'explain']);
   const _CONF_NAMES = { uefa:'UEFA — Europe', afc:'AFC — Asia', caf:'CAF — Africa', conmebol:'CONMEBOL — South America', concacaf:'CONCACAF — N. & C. America', ofc:'OFC — Oceania' };
   const _badge = _el.querySelector('#params-badge');
   let _lastLines = [], _panelEl = null;
@@ -498,10 +528,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const _buildLines = (sp) => {
     const lines = [];
-    const hasIn = sp.has('in'), hasOut = sp.has('out');
-    if      (hasIn && hasOut) lines.push({ param: '?in&out', desc: 'both flags → empty set' });
-    else if (hasIn)           lines.push({ param: '?in',  desc: 'qualified: alive & kicking only · exporters: hidden if all their players go to eliminated teams' });
-    else if (hasOut)          lines.push({ param: '?out', desc: 'qualified: eliminated only · exporters: hidden if all their players go to alive & kicking teams' });
+    const stageParam = sp.get('stage');
+    if (stageParam) {
+      const idx = CAROUSEL_STAGES.indexOf(stageParam);
+      lines.push(idx >= 0
+        ? { param: `?stage=${stageParam}`, desc: `stage: ${_STAGE_NAMES[idx]} — qualified & exporters filtered to teams that reached it` }
+        : { param: `?stage=${stageParam}`, desc: `unknown stage — ignored (valid: ${CAROUSEL_STAGES.join(' ')})` });
+    }
     const sortRaw = sp.get('sort');
     if (sortRaw) {
       const keys = sortRaw.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
@@ -564,14 +597,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   // ── Persistence (localStorage) ──────────────────────────────────────────
 
-  const _CS_PARAM_KEYS = ['sort', 'dir', 'in', 'out', 'show', 'fifa'];
+  const _CS_PARAM_KEYS = ['sort', 'dir', 'stage', 'show', 'fifa'];
 
   const _saveState = () => {
     try {
       localStorage.setItem(_STORAGE_KEY, JSON.stringify({
         sortOrder: _sortOrder,
         sortDir: _sortDir,
-        tri: _triAK?.dataset.state ?? 'both',
+        stage: CAROUSEL_STAGES[_stage],
         checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
         conf: _confKey,
       }));
@@ -592,9 +625,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _sortDirBtn.dataset.dir = _sortDir;
       _updateAlphaLabel();
     }
-    if (_triAK && ['alive', 'out', 'both', 'none'].includes(saved.tri)) {
-      _triAK.dataset.state = saved.tri;
-    }
     if (saved.checks) {
       Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el && k in saved.checks) el.checked = !!saved.checks[k]; });
     }
@@ -603,6 +633,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _confIds = CONF_IDS[saved.conf];
     }
     _syncConfRadio();
+
+    // Stage restore last: it fires 'slide.bs.carousel' synchronously, which itself calls
+    // _saveState() — everything else above must already be in place for that snapshot to be correct.
+    if (typeof saved.stage === 'string') {
+      const idx = CAROUSEL_STAGES.indexOf(saved.stage);
+      if (idx >= 0) _setStage(idx);
+    }
 
     callbacks.renderElo?.();
     applyFlagFilter();
@@ -615,10 +652,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const _buildActiveStateLines = () => {
     const lines = [];
-    const st = _triAK?.dataset.state ?? 'both';
-    if      (st === 'none')  lines.push({ param: 'in & out', desc: 'both flags → empty set' });
-    else if (st === 'alive') lines.push({ param: 'in',  desc: 'qualified: alive & kicking only · exporters: hidden if all their players go to eliminated teams' });
-    else if (st === 'out')   lines.push({ param: 'out', desc: 'qualified: eliminated only · exporters: hidden if all their players go to alive & kicking teams' });
+    if (_stage > 0) lines.push({ param: `stage=${CAROUSEL_STAGES[_stage]}`, desc: `stage: ${_STAGE_NAMES[_stage]} — qualified & exporters filtered to teams that reached it` });
     lines.push({ param: `sort=${_sortOrder.join(',')}`, desc: `sort: ${_sortOrder.map(k => _SORT_NAMES[k]).join(' → ')}` });
     lines.push({ param: `dir=${_sortDir}`, desc: _sortDir === 'asc' ? 'ascending ↑' : 'descending ↓' });
     const cells = Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k);
@@ -664,11 +698,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
     if (changed) _updateSortCol();
 
-    if (_triAK) {
-      const hasIn = sp.has('in'), hasOut = sp.has('out');
-      if      (hasIn && hasOut)  _triAK.dataset.state = 'none';
-      else if (hasIn)            _triAK.dataset.state = 'alive';
-      else if (hasOut)           _triAK.dataset.state = 'out';
+    const stage = sp.get('stage');
+    if (stage) {
+      const idx = CAROUSEL_STAGES.indexOf(stage);
+      if (idx >= 0) _setStage(idx);
     }
 
     const show = sp.get('show');
@@ -728,5 +761,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     sortAndFilter,
     applyParams,
     setConfFilter,
+    updateStageTitle: _updateCarouselTitle,
   };
 }

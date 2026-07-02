@@ -64,7 +64,7 @@ world-map svg { display: block; width: 100%; height: 100%; touch-action: none; }
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script type="module">
 import { choroFill, FLAG_CDN, FLAG, FLAG_SIZE_ZOOM_EXP, W, H } from '../js/map-container.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildAliveAndKicking } from '../js/qualified.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES } from '../js/qualified.js';
 
 // ── Confederation definitions (FIFA) ─────────────────────────────────────────
 const REGIONS = {
@@ -143,10 +143,10 @@ _wm.onZoom = e => {
 };
 
 // ── Data ─────────────────────────────────────────────────────────────────────
-const [mapData, eloData, r32Data, world, ukNations] = await Promise.all([
+const [mapData, eloData, statusByIso2, world, ukNations] = await Promise.all([
   fetch('../data/v2/map.json').then(r => r.json()),
   fetch('../data/elo_rank.json').then(r => r.json()),
-  fetch('../data/r32_teams.json').then(r => r.json()).catch(() => null),
+  fetch('../data/v2/status.json').then(r => r.json()).catch(() => ({})),
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
   fetch('../data/uk-nations.geojson').then(r => r.json()),
 ]);
@@ -170,7 +170,11 @@ Object.entries(nativeByCountry).forEach(([nId, players]) => {
   byId[id] = { id, ratio: players.length };
 });
 
-const _alive = buildAliveAndKicking(r32Data);
+const _alive = new Set(
+  eloData.rankings
+    .filter(r => QUALIFIED_NAMES[r.id] && r.iso2 && !statusByIso2[r.iso2.toLowerCase()])
+    .map(r => r.iso2.toLowerCase())
+);
 
 const ALL_QUALIFIED = eloData.rankings
   .filter(r => QUALIFIED_NAMES[r.id] && r.iso2)

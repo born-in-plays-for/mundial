@@ -11,14 +11,35 @@
 .taxonomy .elo-name { color: var(--darkest-text); }
 
 /* Qualified vs. non qualified: solid 1px border vs. no border */
-.taxonomy .elo-item--qualified { border: 1px solid #888; }
+.taxonomy .elo-item--qualified { --elo-border: 1px solid #888; border: var(--elo-border); }
 .taxonomy .elo-item:not(.elo-item--qualified) { border: none; }
 
 /* Qualified but knocked out: dashed border */
 .taxonomy .elo-item--qualified.elo-item--knocked-out { border-style: dashed; }
 
+/* Schrödinger's team: fixture for the currently-viewed stage hasn't been played yet — could
+   still go either way. Only the border is blurred (via a duplicate on ::before) — blurring the
+   whole pill made names hard to read, and the point is the team's status is fuzzy, not its name. */
+.taxonomy .elo-item--pending {
+  position: relative;
+  border-color: transparent;
+}
+.taxonomy .elo-item--pending::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: var(--elo-border);
+  border-radius: inherit;
+  filter: blur(1.3px);
+  pointer-events: none;
+}
+.taxonomy .elo-item--pending .elo-name { color: var(--light-text); }
+
 /* Non-FIFA: light text */
 .taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
+
+/* Exporter, not qualified: light blue tint */
+.taxonomy .elo-item--exp:not(.elo-item--qualified) { background-color: #f6faff; }
 
 /* No map centroid: italic name + dimmed flag */
 .taxonomy .elo-item--no-map .elo-name { font-style: italic; }

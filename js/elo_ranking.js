@@ -1,8 +1,19 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { buildEloItems } from './qualified.js';
+import { buildEloItems, ELIM_ROUNDS } from './qualified.js';
 import { LOCALE, T } from './i18n.js';
 
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
+
+const _eliminationTitle = ({ knockedOut, eliminatedRound, eliminatedDate, eliminatedLostTo } = {}) => {
+  if (!knockedOut) return '';
+  const idx = ELIM_ROUNDS.indexOf(eliminatedRound);
+  const roundLabel = idx >= 0 ? T.eliminationRounds[idx] : eliminatedRound;
+  const dateSuffix = eliminatedDate
+    ? ` (${new Date(`${eliminatedDate}T00:00:00`).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' })})`
+    : '';
+  const lostToSuffix = eliminatedLostTo ? ` · ${T.lostToLabel(eliminatedLostTo)}` : '';
+  return `${T.eliminatedLabel} — ${roundLabel}${dateSuffix}${lostToSuffix}`;
+};
 
 export const pillClasses = ({ qualified = false, fifaMember = true, noMap = false, exp = false, imp = false, knockedOut = false } = {}) =>
   'elo-item'
@@ -39,6 +50,7 @@ class EloRanking extends HTMLElement {
       const { id } = item;
       const li = document.createElement('li');
       li.className = pillClasses(item);
+      li.title = _eliminationTitle(item);
       render(pillContent(item), li);
       li.addEventListener('click', () => this.#handleClick(id));
       this.#itemById.set(id, li);
@@ -69,13 +81,14 @@ class EloRanking extends HTMLElement {
     for (const [id, li] of this.#itemById)
       if (li.style.display !== 'none') before.set(id, li.getBoundingClientRect().top);
     for (const li of this.#itemById.values()) li.style.display = 'none';
-    for (const { id, pts } of visibleItems) {
+    for (const { id, pts, pending } of visibleItems) {
       const li = this.#itemById.get(id);
       const data = this.#itemDataById.get(id);
       if (!li || !data) continue;
       li.style.display = '';
       li.classList.toggle('elo-item--clickable', this.#onCountryClick != null && (this.#isClickable == null || this.#isClickable(id)));
       li.classList.toggle('elo-item--zoomable', this.#onCountryClick != null && this.#isZoomable != null && this.#isZoomable(id) && !(this.#isClickable == null || this.#isClickable(id)));
+      li.classList.toggle('elo-item--pending', !!pending);
       this.#ul.appendChild(li);
       data.pts = pts;
       render(pillContent(data), li);

@@ -11,6 +11,7 @@
  * .csb-sort-dir         — bouton ↑/↓ direction
  * .csb-col              — en-tête de colonne cliquable (exp / non-exp)
  * .csb-group            — en-tête de groupe de lignes (qualifié / non-qual.)
+ * .csb-stage-carousel   — carrousel Bootstrap (Qualifiés → … → Vainqueur)
  * .csb-row              — sous-ligne de groupe
  * .csb-check            — label checkbox □/▣
  * .csb-close            — bouton × fermeture
@@ -78,6 +79,7 @@
 #control-sidebar .csb-col,
 #control-sidebar .csb-group,
 #control-sidebar .csb-row { cursor: pointer; white-space: nowrap; }
+#control-sidebar .csb-group { text-align: center; vertical-align: middle; }
 #control-sidebar .csb-col:hover,
 #control-sidebar .csb-group:hover,
 #control-sidebar .csb-row:hover {
@@ -117,35 +119,37 @@
 #control-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
 #control-sidebar .csb-sort-dir:hover { opacity: 1; }
 
-/* ── Three-state toggle switch ─────────────────────────────────────────── */
+/* ── Stage carousel (Qualified → Round of 32 → … → Winner) ─────────────── */
 
-#control-sidebar .csb-tri {
-  display: flex; align-items: center; gap: 3px;
-  margin-top: 5px; cursor: pointer;
-  user-select: none; -webkit-user-select: none;
+#control-sidebar .csb-stage-carousel {
+  width: 86px; margin-top: 3px;
 }
-#control-sidebar .csb-tri-lbl {
-  font-size: 9px; color: #666; transition: color 0.15s, font-weight 0.15s;
-  min-width: 10px; text-align: center;
+#control-sidebar .csb-stage-carousel .carousel-inner { min-height: 14px; }
+#control-sidebar .csb-stage-carousel .carousel-item { text-align: center; }
+#control-sidebar .csb-stage-carousel .carousel-control-prev,
+#control-sidebar .csb-stage-carousel .carousel-control-next {
+  width: 12px; opacity: 0.35;
 }
-/* active zone: bold + dark */
-#control-sidebar .csb-tri[data-state="alive"] .csb-tri-lbl:first-child,
-#control-sidebar .csb-tri[data-state="out"]   .csb-tri-lbl:last-child  { color: #333; font-weight: 600; }
-/* inactive zone: dimmed */
-#control-sidebar .csb-tri[data-state="alive"] .csb-tri-lbl:last-child,
-#control-sidebar .csb-tri[data-state="out"]   .csb-tri-lbl:first-child { color: #bbb; }
-#control-sidebar .csb-tri-track {
-  position: relative; width: 30px; height: 12px;
-  background: #e8e8e8; border: 1px solid #bbb; border-radius: 6px; flex-shrink: 0;
+#control-sidebar .csb-stage-carousel .carousel-control-prev:hover,
+#control-sidebar .csb-stage-carousel .carousel-control-next:hover { opacity: 0.9; }
+#control-sidebar .csb-stage-carousel .carousel-control-prev-icon,
+#control-sidebar .csb-stage-carousel .carousel-control-next-icon {
+  width: 10px; height: 10px;
+  filter: invert(40%); /* bootstrap's default icon is white; darken for our light bg */
 }
-#control-sidebar .csb-tri-knob {
-  position: absolute; top: 1px; width: 8px; height: 8px;
-  border-radius: 50%; background: #666;
-  transition: left 0.2s ease, background 0.2s ease;
+#control-sidebar .csb-stage-carousel .carousel-indicators {
+  position: static; margin: 3px 0 0; gap: 2px;
 }
-#control-sidebar .csb-tri[data-state="both"]  .csb-tri-knob { left: 10px; }
-#control-sidebar .csb-tri[data-state="alive"] .csb-tri-knob { left: 1px;  background: #333; }
-#control-sidebar .csb-tri[data-state="out"]   .csb-tri-knob { left: 19px; background: #333; }
+#control-sidebar .csb-stage-carousel .carousel-indicators [data-bs-target] {
+  width: 4px; height: 4px; border-radius: 50%;
+  background-color: #ccc; opacity: 1; border: none;
+  margin: 0 1px; padding: 0;
+}
+#control-sidebar .csb-stage-carousel .carousel-indicators .active { background-color: #666; }
+
+/* Stages the tournament hasn't reached yet (nobody's there to show) — locked, not just empty */
+#control-sidebar .csb-stage-carousel .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
+#control-sidebar .csb-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
 
 /* ── URL params badge ──────────────────────────────────────────────────── */
 

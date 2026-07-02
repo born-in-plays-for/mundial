@@ -28,7 +28,7 @@
 </div>
 <script type="module">
 import { initEloRanking } from './js/elo_ranking.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildExporterSets, loadEloData } from './js/qualified.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildExporterStageIndex, buildBracketState, loadEloData } from './js/qualified.js';
 import { LOCALE, T, countryName } from './js/i18n.js';
 import { initSidebar } from './js/control_sidebar.js';
 
@@ -38,7 +38,7 @@ const _syncPaddingTop = () => { _main.style.paddingTop = (_header.getBoundingCli
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 
-const [{ eloData, aliveAndKicking: _aliveAndKicking }, mapData] = await Promise.all([
+const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
   loadEloData(),
   fetch('./data/v2/map.json').then(r => r.json()),
 ]);
@@ -47,7 +47,7 @@ const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
 const fifaMemberIds = new Set(eloData.rankings.filter(r => r.fifaMember).map(r => r.id));
 const importByCountry = buildImportByCountry(mapData, countryName);
 
-const app = { byId, importByCountry, knockedOutIds: new Set() };
+const app = { byId, importByCountry };
 const fmtPop = n => new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 
 const el = document.getElementById('list');
@@ -57,15 +57,15 @@ const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: e
 
 const { render: renderElo, rawItems } = initEloRanking({
   el, sidebar,
-  buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop, aliveAndKicking: _aliveAndKicking },
+  buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop, statusByIso2 },
   fmtPop, eloData,
   popData: { source: mapData.popSource, updated: mapData.popUpdated },
   onRender: _syncPaddingTop,
 });
-app.knockedOutIds = new Set(rawItems.filter(i => i.knockedOut).map(i => i.id));
-const { toAlive, toOut } = buildExporterSets(app.importByCountry, app.knockedOutIds);
-app.exporterToAliveIds = toAlive;
-app.exporterToOutIds   = toOut;
+app.stageIndexById = new Map(rawItems.map(item => [item.id, item.visibleThroughIndex]));
+app.exporterStageIndex = buildExporterStageIndex(app.importByCountry, app.stageIndexById);
+app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
+sidebar.updateStageTitle();
 sidebarCallbacks.renderElo = renderElo;
 renderElo();
 sidebar.applyParams(new URLSearchParams(location.search));

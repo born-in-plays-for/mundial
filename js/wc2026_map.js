@@ -1,7 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, initEloRanking } from './elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildExporterSets, loadEloData } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildExporterStageIndex, buildBracketState, loadEloData } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { CONF_BOUNDS } from './conf.js';
@@ -790,7 +790,6 @@ const app = {
   nativeByCountry: {},
   pop: {},
   eloRank: {},
-  knockedOutIds: new Set(),
 };
 const centroids = {};
 
@@ -1620,7 +1619,7 @@ Promise.all([
   fetch('data/uk-nations.geojson').then(r => r.json()),
   loadEloData(),
   loadWikiData(),
-]).then(([rawData, world, ukNations, { eloData, aliveAndKicking: _aliveAndKicking }]) => {
+]).then(([rawData, world, ukNations, { eloData, statusByIso2 }]) => {
   _worldTopo = world;
   _eloData = eloData;
   app.eloRank = Object.fromEntries(
@@ -1631,7 +1630,7 @@ Promise.all([
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
     rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,
-    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, aliveAndKicking: _aliveAndKicking,
+    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2,
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations);
   // Init elo ranking component with centroids now populated
@@ -1644,17 +1643,17 @@ Promise.all([
   _eloMain.isClickable = () => true;
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
-    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop, aliveAndKicking: _aliveAndKicking },
+    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },
     fmtPop, eloData,
     popData: { source: rawData.popSource, updated: rawData.popUpdated },
   });
   _renderEloBase = _eloRender;
   _eloItemsById.clear();
   _eloRawItems.forEach(item => _eloItemsById.set(item.id, item));
-  app.knockedOutIds = new Set(_eloRawItems.filter(i => i.knockedOut).map(i => i.id));
-  const { toAlive, toOut } = buildExporterSets(app.importByCountry, app.knockedOutIds);
-  app.exporterToAliveIds = toAlive;
-  app.exporterToOutIds   = toOut;
+  app.stageIndexById = new Map(_eloRawItems.map(item => [item.id, item.visibleThroughIndex]));
+  app.exporterStageIndex = buildExporterStageIndex(app.importByCountry, app.stageIndexById);
+  app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
+  sidebar.updateStageTitle();
   _renderElo();
   sidebar.applyParams(new URLSearchParams(location.search));
   _expandPanel(_eloMetaPanel);
