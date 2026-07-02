@@ -140,17 +140,15 @@ retryBtn.addEventListener('click', () => {
 const { backend, socket: sock } = await _waitForBackend();
 PROXY = backend;
 
-// Build per-team player indexes from map data; fetch elo rankings + WC2026 team list for
-// iso2 lookups (both already resolved through mundial-data's shared alias table)
-const [mapData, eloData, r32Data] = await Promise.all([
-  fetch('./data/map_data.json').then(r => r.json()),
+// Fetch elo rankings + WC2026 team list + player/coach wiki-birthCountry data for iso2 and
+// player-identity lookups (all resolved once upstream through mundial-data's shared resolvers)
+const [eloData, r32Data, playerWiki] = await Promise.all([
   fetch('./data/elo_rank.json').then(r => r.json()),
   fetch('./data/r32_teams.json').then(r => r.json()),
+  fetch('./data/player_wiki.json').then(r => r.json()),
 ]);
-const _norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
-// Canonical country name -> iso2 (elo_rank.json). Birth countries arrive from map_data.json
-// as plain canonical name strings, so this is a straight name join.
+// Canonical country name -> iso2 (elo_rank.json).
 const _isoByCountryName = Object.fromEntries(eloData.rankings.map(r => [r.name, r.iso2]));
 const flagForCountry = name => _isoByCountryName[name] ?? (console.error('flagForCountry: unknown country', name), '');
 
@@ -162,61 +160,24 @@ const flagForTeam = team => _isoByTeamId[team.id] ?? (console.error('flagForTeam
 
 const localName = (iso, fallback) => regionName(iso, fallback);
 
-// Global exact/norm BC maps (full-name matches are unambiguous regardless of team)
-const _exactBC = {};
-const _normBC  = {};
+// player_wiki.json is keyed by API-Football's own numeric player/coach id, the same id space
+// lineup.startXI[].player.id and lineup.coach.id come from — no name matching at either end.
+// A miss (id not yet in the file) renders the plain name with no wiki link / birth-country tag;
+// that's an honest "not enriched yet" state, not something to paper over with name heuristics.
+const getPlayerWiki = (iso, id) => playerWiki[iso]?.[String(id)] ?? null;
 
-// Per-team indexes keyed by iso2 (not name — sidesteps API-Football/map_data spelling variants)
-const _teamWiki = {};
-const _teamBC   = {};
-const _tw = iso => _teamWiki[iso] ?? (_teamWiki[iso] = { exact:{}, norm:{}, lastName:{} });
-const _tb = iso => _teamBC[iso]   ?? (_teamBC[iso]   = {});
-
-const _indexPlayer = (name, wiki_langs, birthCountry, teamIso) => {
-  _exactBC[name]       = birthCountry;
-  _normBC[_norm(name)] = birthCountry;
-  if (!teamIso) return;
-  const last = _norm(name.split(' ').pop());
-  _tb(teamIso)[last] = birthCountry;
-  if (wiki_langs) {
-    const tw = _tw(teamIso);
-    tw.exact[name]        = wiki_langs;
-    tw.norm[_norm(name)]  = wiki_langs;
-    tw.lastName[last]     = wiki_langs;
-  }
+const bornTagFor = (iso, info) => {
+  const born = info?.birthCountry;
+  if (!born) return '';
+  const bornIso = flagForCountry(born);
+  if (bornIso === iso) return '';
+  return ` <span class="fi fi-${bornIso}" style="font-size:10px" title="${T.liveBornIn(localName(bornIso, born))}"></span>`;
 };
 
-for (const rec of mapData.data) {
-  for (const p of rec.players) {
-    _indexPlayer(p.name, p.wiki_langs, rec.country, _isoByCountryName[p.nation]);
-  }
-}
-for (const [country, players] of Object.entries(mapData.natives ?? {})) {
-  for (const p of players) {
-    _indexPlayer(p.name, p.wiki_langs, country, _isoByCountryName[country]);
-  }
-}
-
-const getBirthCountry = (apiName, teamIso) => {
-  const tb = _teamBC[teamIso];
-  if (!tb) return null;
-  if (_exactBC[apiName] !== undefined) return _exactBC[apiName];
-  const n = _norm(apiName);
-  if (_normBC[n] !== undefined) return _normBC[n];
-  return tb[_norm(apiName.split(' ').pop())] ?? null;
-};
-
-const getWikiLangs = (apiName, teamIso) => {
-  const tw = _teamWiki[teamIso];
-  if (!tw) return null;
-  return tw.exact[apiName] ?? tw.norm[_norm(apiName)] ?? tw.lastName[_norm(apiName.split(' ').pop())] ?? null;
-};
-
-const wikiLink = (name, teamIso) => {
-  const wl = getWikiLangs(name, teamIso);
-  if (!wl) return name;
-  const url = wikiUrl({ wiki_langs: wl });
-  const en = wl.en ?? null;
+const wikiLink = (name, wiki) => {
+  if (!wiki) return name;
+  const url = wikiUrl({ wiki_langs: wiki });
+  const en = wiki.en ?? null;
   if (url) return `<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${name}</a>`;
   if (en) return `${name} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)`;
   return name;
@@ -230,15 +191,12 @@ const renderTeam = (lineup, side) => {
   const formation = lineup.formation ?? '?';
 
   const playerRow = (p, isSub) => {
-    const born = getBirthCountry(p.name, iso);
-    const bornIso = born ? flagForCountry(born) : null;
-    const isForeign = born && bornIso !== iso;
-    const bornTag = isForeign ? ` <span class="fi fi-${bornIso}" style="font-size:10px" title="${T.liveBornIn(localName(bornIso, born))}"></span>` : '';
+    const info = getPlayerWiki(iso, p.id);
     return `
     <tr class="${isSub ? 'sub' : ''}">
       <td class="player-num">${p.number}</td>
       <td class="player-pos"><small>${posLabel(p.pos)}</small></td>
-      <td>${wikiLink(p.name, iso)}${bornTag}</td>
+      <td>${wikiLink(p.name, info?.wiki)}${bornTagFor(iso, info)}</td>
     </tr>`;
   };
 
@@ -252,13 +210,10 @@ const renderTeam = (lineup, side) => {
       <div class="card-body p-0">
         ${lineup.coach ? (() => {
           const c = lineup.coach;
-          const born = getBirthCountry(c.name, iso);
-          const bornIso = born ? flagForCountry(born) : null;
-          const isForeign = born && bornIso !== iso;
-          const bornTag = isForeign ? ` <span class="fi fi-${bornIso}" style="font-size:10px" title="${T.liveBornIn(localName(bornIso, born))}"></span>` : '';
+          const info = getPlayerWiki(iso, c.id);
           return `<div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom" style="background:#fafaf7">
             ${c.photo ? `<img src="${c.photo}" class="rounded-circle" width="28" height="28" referrerpolicy="no-referrer" alt="">` : ''}
-            <span class="small">${wikiLink(c.name, iso)}${bornTag}</span>
+            <span class="small">${wikiLink(c.name, info?.wiki)}${bornTagFor(iso, info)}</span>
             <span class="text-muted small ms-auto">${T.liveCoach}</span>
           </div>`;
         })() : ''}
