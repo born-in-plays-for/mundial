@@ -1643,7 +1643,7 @@ Promise.all([
   _eloMain.isClickable = () => true;
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
-    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },
+    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },
     fmtPop, eloData,
     popData: { source: rawData.popSource, updated: rawData.popUpdated },
   });

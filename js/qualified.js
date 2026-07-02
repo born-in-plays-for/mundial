@@ -89,7 +89,7 @@ const computeWonUpTo = (statusByIso2) => {
   return wonUpTo;
 };
 
-export const buildEloItems = ({ rankings, byId, importByCountry, fifaMemberIds, countryNameFn, centroids, pop, statusByIso2 }) => {
+export const buildEloItems = ({ rankings, byId, importByCountry, countryNameFn, centroids, pop, statusByIso2 }) => {
   const nameByIso2 = Object.fromEntries(rankings.filter(r => r.iso2).map(r => [r.iso2, countryNameFn(r.id, r.name)]));
   const wonUpTo = computeWonUpTo(statusByIso2);
   return rankings

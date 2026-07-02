@@ -57,7 +57,7 @@ const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: e
 
 const { render: renderElo, rawItems } = initEloRanking({
   el, sidebar,
-  buildArgs: { rankings: eloData.rankings, byId, importByCountry, fifaMemberIds, countryNameFn: countryName, pop: mapData.pop, statusByIso2 },
+  buildArgs: { rankings: eloData.rankings, byId, importByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2 },
   fmtPop, eloData,
   popData: { source: mapData.popSource, updated: mapData.popUpdated },
   onRender: _syncPaddingTop,
