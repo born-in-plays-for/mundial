@@ -26,7 +26,7 @@ export const buildImportByCountry = (mapData, countryNameFn) => {
       if (nId == null) continue;
       if (countryNameFn(rec.id, rec.country) === countryNameFn(nId, QUALIFIED_NAMES[nId])) continue;
       if (!out[nId]) out[nId] = [];
-      const imp = { name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, wikiTitle: p.wikiTitle };
+      const imp = { name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, pid: p.pid };
       if (p.role) imp.role = p.role;
       out[nId].push(imp);
     }

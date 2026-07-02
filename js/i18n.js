@@ -27,27 +27,29 @@ const _OVERRIDE = {
 // For id=null entries that do have a standard alpha-2 code
 const _NULL_CODE = { 'Democratic Republic of the Congo':'cd', 'U.S.':'us', 'Isle of Man':'im' };
 
-// Wikipedia link resolution — data/wiki_<lang>.json holds { urlTemplate, titles } for one
-// language only (titles keyed by the wikiTitle string every player/coach record carries).
-// Fetched once for the active UI language, plus data/wiki_en.json as a fallback tier when
-// the UI language isn't English (not every article has a translated edition) — never all 5.
+// Wikipedia link resolution — data/v2/wiki_<lang>.json holds { urlTemplate, titles } for one
+// language only (titles is an array indexed by the integer pid every player/coach record
+// carries; null = no article in that language). Fetched once for the active UI language,
+// plus data/v2/wiki_en.json as a fallback tier when the UI language isn't English (not
+// every article has a translated edition) — never all 5.
 let _wikiPrimary = null;
 let _wikiEn = null;
 export const loadWikiData = async (basePath = '') => {
   if (_wikiPrimary) return;
   const [primary, en] = await Promise.all([
-    fetch(`${basePath}data/wiki_${_LANG}.json`).then(r => r.json()),
-    _LANG === 'en' ? null : fetch(`${basePath}data/wiki_en.json`).then(r => r.json()),
+    fetch(`${basePath}data/v2/wiki_${_LANG}.json`).then(r => r.json()),
+    _LANG === 'en' ? null : fetch(`${basePath}data/v2/wiki_en.json`).then(r => r.json()),
   ]);
   _wikiPrimary = primary;
   _wikiEn = en;
 };
-const _resolveWiki = (data, wikiTitle) => {
-  const path = wikiTitle ? data?.titles[wikiTitle] : null;
+const _resolveWiki = (data, pid) => {
+  // pid 0 is valid — guard on null/undefined, never truthiness
+  const path = pid != null ? data?.titles[pid] : null;
   return path ? data.urlTemplate.replace('{title}', path) : null;
 };
-export const wikiUrl   = wikiTitle => _resolveWiki(_wikiPrimary, wikiTitle);
-export const wikiUrlEn = wikiTitle => _resolveWiki(_wikiEn ?? _wikiPrimary, wikiTitle);
+export const wikiUrl   = pid => _resolveWiki(_wikiPrimary, pid);
+export const wikiUrlEn = pid => _resolveWiki(_wikiEn ?? _wikiPrimary, pid);
 
 // Resolve a name from an ISO alpha-2 (or subdivision) code, e.g. 'fr', 'gb-eng'.
 // Used by pages that have a code but no numeric id (chain render, standalone FIFA page).

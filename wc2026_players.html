@@ -35,7 +35,7 @@ requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', _syncPaddingTop);
 
 const [mapData] = await Promise.all([
-  fetch('./data/map_data.json').then(r => r.json()),
+  fetch('./data/v2/map.json').then(r => r.json()),
   loadWikiData(),
 ]);
 
@@ -59,8 +59,8 @@ _syncPaddingTop();
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : '';
 
 const wikiLink = p => {
-  const url = wikiUrl(p.wikiTitle);
-  const en = wikiUrlEn(p.wikiTitle);
+  const url = wikiUrl(p.pid);
+  const en = wikiUrlEn(p.pid);
   if (url) return html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${p.name}</a>${coachBadge(p)}`;
   if (en) return html`${p.name} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)${coachBadge(p)}`;
   return html`${p.name}${coachBadge(p)}`;

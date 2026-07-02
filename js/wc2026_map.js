@@ -352,9 +352,9 @@ const _chainWikiUrl = name => {
   for (const rec of Object.values(app.byId)) {
     const p = (rec.players ?? []).find(q => q.name === name);
     if (!p) continue;
-    const url = wikiUrl(p.wikiTitle);
+    const url = wikiUrl(p.pid);
     if (url) return { href: url, fallback: false };
-    const en = wikiUrlEn(p.wikiTitle);
+    const en = wikiUrlEn(p.pid);
     if (en) return { href: en, fallback: true };
   }
   return null;
@@ -869,8 +869,8 @@ const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span cla
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : nothing;
 const ptWikiRow = p => {
-  const url    = wikiUrl(p.wikiTitle);
-  const wikiEn = wikiUrlEn(p.wikiTitle);
+  const url    = wikiUrl(p.pid);
+  const wikiEn = wikiUrlEn(p.pid);
   const badge  = coachBadge(p);
   return url    ? html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${p.name}</a>${badge}`
        : wikiEn ? html`${p.name} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)${badge}`
@@ -1615,7 +1615,7 @@ STANDALONE_FLAGS.forEach(({ id, lon, lat }) => { centroids[id] = projection([lon
 };
 
 Promise.all([
-  fetch('data/map_data.json').then(r => r.json()),
+  fetch('data/v2/map.json').then(r => r.json()),
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
   fetch('data/uk-nations.geojson').then(r => r.json()),
   loadEloData(),

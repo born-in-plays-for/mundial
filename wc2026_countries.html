@@ -40,7 +40,7 @@ window.addEventListener('resize', _syncPaddingTop);
 
 const [{ eloData, aliveAndKicking: _aliveAndKicking }, mapData] = await Promise.all([
   loadEloData(),
-  fetch('./data/map_data.json').then(r => r.json()),
+  fetch('./data/v2/map.json').then(r => r.json()),
 ]);
 
 const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
