@@ -32,82 +32,101 @@
   }
   #debugControls button:hover { background: #f0f0ee; }
 
+  /* Unified layout — same structure on desktop and mobile: [count][bar][name][flag],
+     all left-aligned, read in that order. The count is the only fixed-width column;
+     everything else (bar + name + flag) lives inside .anim-track so the bar's own
+     width stays proportional to a consistent reference width across every row
+     (crucial for bar-length comparability) while name+flag simply render in the
+     leftover space right after wherever the bar ends. */
   .anim-row {
-    min-height: 18px;
-    display: grid;
-    grid-template-columns: 168px 1fr 34px;
-    align-items: center;
-    gap: 8px;
-    /* Collapsed to display:none once a whole cascade of eliminations settles (see
-       collapseRow()/expandRow()) — overflow:hidden clips content during the
-       height shrink/grow; height/opacity duration+values are always set inline
-       from JS, nothing declared here to duplicate/drift. */
-    overflow: hidden;
-  }
-  .anim-label {
+    min-height: 16px;
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    /* Elimination is the whole row (count, bar, flag, name together) sliding left
+       until it's clipped by .anim-stage's own overflow:hidden below — the row
+       itself keeps its layout position/height (a blank slot), only its paint moves.
+       Duration is always set inline from JS (animateRow), nothing declared here to
+       duplicate/drift. */
+    transition-property: transform;
+  }
+  /* Wraps every .anim-row — clips a row's translated-away paint once it's pushed
+     past this container's own left edge (both share the same rendered width, so
+     translateX(-100%) — 100% of the ROW's own width — lands it exactly there). */
+  .anim-stage {
     overflow: hidden;
   }
-  /* Shrunk from the pill's normal size (used at full size everywhere else) to fit
-     48 rows without the chart becoming unreasonably tall. */
-  /* No border, flag on the right (row-reverse swaps the flag/name order that
-     pillContent renders — flag-first — without needing a page-specific variant). */
-  #statusViz .elo-item { padding: 1px 6px 1px 4px; gap: 3px; margin: 1px 0; border: none; flex-direction: row-reverse; }
-  #statusViz .elo-flag { width: 14px; height: 14px; }
-  #statusViz .elo-name { max-width: 118px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
+  .anim-value {
+    flex: 0 0 auto;
+    min-width: 2ch;
+    text-align: left;
+    font-size: 10px;
+    color: #898781;
+    font-variant-numeric: tabular-nums;
+  }
 
   .anim-track {
     position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
     align-self: stretch;
   }
-  /* ◀ is this app's fixed glyph for "imported players" (css/taxonomy.css's
-     --imp-accent / .elo-item--imp::after) — the bar itself echoes it: a triangular
-     notch at the start (near the flag) merging into the rectangular fill. */
+  /* ▶ is this app's fixed glyph for "imported players" mirrored (css/taxonomy.css's
+     --imp-accent / .elo-item--imp::after uses ◀ — pointing at a flag on the left of
+     a value; here the value sits to the LEFT of the bar instead, so the arrow points
+     right, toward the name+flag that follow) — the bar echoes it: the tip merges
+     into the rectangle at its trailing (right) edge instead of its leading edge. */
   .anim-fill {
     position: absolute; left: 0; top: 50%;
     height: 10px;
     transform: translateY(-50%);
     min-width: 2px;
-    border-radius: 0 4px 4px 0;
-    clip-path: polygon(5px 0, 100% 0, 100% 100%, 5px 100%, 0 50%);
+    border-radius: 4px 0 0 4px;
+    clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 50%, calc(100% - 5px) 100%, 0 100%);
     background: var(--fill-light, #c3c2b7);
-    /* Elimination fades to black while shrinking to width 0, both together —
-       .anim-elim-label below takes over visually once that's done. No duration
-       declared here: animateRow() sets transition-duration explicitly right
-       before each change and awaits its real 'transitionend', so BAR_MS is the
-       single source of truth for timing instead of a value duplicated in CSS. */
-    transition-property: background-color, width;
+    /* Static — color/width are set once at row-build time from the team's own
+       impCount and never touched again. Elimination is purely the enclosing row
+       sliding away (see .anim-row), not anything the bar itself does. */
   }
 
-  /* Replaces the bar once a row's elimination animation fully completes — flag and
-     name stay visible throughout (only the bar disappears), so identity is never in
-     question. Hidden on mobile: .anim-tail already shows the name there regardless
-     of alive/eliminated status, and this label's fixed `left:0` position risks
-     overlapping .anim-tail for low-count teams (whose bar, and hence .anim-tail's
-     own position, sits close to the flag already). Opacity is driven the same way
-     as .anim-fill above — no duration here, animateRow() sets it per phase. */
-  .anim-elim-label {
-    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-    display: flex; align-items: center; gap: 3px;
-    font-size: 10px; color: #898781; white-space: nowrap;
-    opacity: 0;
-    transition-property: opacity;
-    pointer-events: none;
+  /* Flag + name (pillClasses/pillContent's .elo-item — DOM order is already
+     flag-then-name, used as-is here), positioned right after the bar's own end
+     (--pct, set once at row-build time from the row's fixed impCount, drives both
+     `left` and `max-width` via calc so it never overflows the track — it ellipsizes
+     instead if a long name has no room). For rows near the bottom of the list,
+     where the bar eats most of the track and leaves too little room after it,
+     refreshTailOverflowMode() below switches this to .anim-tail--overflow instead:
+     right-aligned to the track's own right edge, spilling left over the bar (fully
+     transparent — text sits directly on the bar, no backdrop) rather than being
+     squeezed into near-nothing. */
+  .anim-tail {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; gap: 4px;
+    left: calc(var(--pct) + 6px);
+    max-width: calc(100% - var(--pct) - 6px);
+    overflow: hidden;
   }
-  .anim-elim-icon { width: 10px; height: 10px; opacity: 0.6; }
+  .anim-tail.anim-tail--overflow {
+    left: auto; right: 0;
+    max-width: 100%;
+  }
+  /* Fully transparent all the way down — .anim-tail sits directly over the bar in
+     overflow mode, and any background here (even translucent) reads as a boxy
+     bubble rather than text overlapping the bar. */
+  .anim-tail, #statusViz .anim-tail .elo-item, #statusViz .anim-tail .elo-name { background: transparent; }
+  #statusViz .anim-tail .elo-item { padding: 1px 6px 1px 4px; gap: 3px; margin: 0; border: none; min-width: 0; }
+  #statusViz .anim-tail .elo-flag { width: 14px; height: 14px; flex: 0 0 auto; }
+  #statusViz .anim-tail .elo-name { min-width: 0; max-width: 140px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .stage-wrap { position: relative; margin-top: 10px; }
   .mean-overlay {
     position: absolute; inset: 0;
-    display: grid;
-    grid-template-columns: 168px 1fr 34px;
-    grid-template-rows: 100%;
+    display: flex;
     align-items: stretch;
-    gap: 8px;
+    gap: 6px;
     pointer-events: none;
   }
-  .mean-col { position: relative; height: 100%; }
+  .mean-col { position: relative; height: 100%; flex: 1 1 auto; }
   .mean-line {
     position: absolute;
     top: 0; bottom: 0;
@@ -143,24 +162,6 @@
     white-space: nowrap;
     transition: left calc(0.9s * var(--speed, 1)) cubic-bezier(0.4, 0, 0.2, 1), opacity calc(0.3s * var(--speed, 1)) ease;
   }
-
-  .anim-value {
-    font-size: 10px;
-    color: #898781;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Mobile-only alternative to .anim-value/.elo-name — see the mobile media query. */
-  .anim-tail {
-    display: none;
-    position: absolute; top: 50%; transform: translateY(-50%);
-    left: calc(var(--pct) + 6px);
-    max-width: calc(100% - var(--pct) - 6px);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    align-items: baseline; gap: 4px;
-    font-size: 10px; color: #3a3a38;
-  }
-  .anim-tail-value { color: #898781; font-variant-numeric: tabular-nums; }
 
   /* Real Bootstrap carousel (bootstrap.Carousel instance + data-bs-* controls/
      indicators — native swipe/keyboard/a11y). Its carousel-items only carry the
@@ -203,19 +204,10 @@
   }
   #statusViz .carousel-indicators button.active { background-color: #666; }
 
-  /* Mobile: the fixed 168px label column + card padding + container gutter together
-     eat a disproportionate share of a narrow viewport, squeezing the actual bars into
-     a sliver in the middle and leaving the rest looking like dead margin on both
-     sides. Trim all of it — including Bootstrap's own py-4 — and drop the country
-     name from the label pill entirely (flag only), reclaiming its 168px into the bar
-     track; the name reappears as .anim-tail, positioned just after the bar's own end
-     (see .anim-tail above) instead of a fixed trailing column, so the freed real
-     estate goes to whichever is more useful per row: a longer bar, or the name.
-     Rows also pack tighter than the flag's own height: the label column is exactly
-     two flag-widths wide, and every other row's flag shifts left by one flag-width
-     (translateX), so overlapping circles from adjacent rows interleave side by side
-     instead of stacking on top of each other — both positions stay fully inside the
-     column, nothing is clipped. */
+  /* Mobile: card padding + container gutter together eat a disproportionate share
+     of a narrow viewport — trim both, including Bootstrap's own py-4. The row
+     layout itself (.anim-row etc. above) is already the same structure on both
+     breakpoints, so nothing row-specific is needed here. */
   @media (max-width: 767.98px) {
     #main-content { padding: 0.5rem 0.25rem; }
     /* Bottom padding needs enough clearance for .sd-label, which sits 14px below
@@ -227,15 +219,6 @@
     .stage-subtitle { font-size: 10px; }
     .stage-wrap { margin-top: 4px; }
     #statusViz .carousel-indicators { margin: 8px 0 0; }
-
-    #statusViz .elo-name { display: none; }
-    #statusViz .elo-item { padding: 0; margin: 0; gap: 0; }
-    .anim-row, .mean-overlay { grid-template-columns: 28px 1fr; gap: 3px; }
-    .anim-row { min-height: 10px; }
-    .anim-row:nth-child(even) .elo-flag { transform: translateX(-14px); }
-    .anim-value { display: none; }
-    .anim-tail { display: flex; }
-    .anim-elim-label { display: none; }
   }
 </style>
 </head>
@@ -264,7 +247,7 @@
     </div>
     <div id="debugControls">
       <button type="button" id="stepBack">←</button>
-      <input type="range" id="speedSlider" min="0.1" max="4" step="0.05" value="0.33">
+      <input type="range" id="speedSlider" min="0.1" max="4" step="0.05" value="0.8">
       <button type="button" id="stepForward">→</button>
     </div>
   </div>
@@ -274,7 +257,7 @@
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { loadEloData, buildImportByCountry, buildEloItems } from '../js/qualified.js';
 import { pillClasses, pillContent } from '../js/elo_ranking.js';
-import { countryName, LOCALE } from '../js/i18n.js';
+import { countryName } from '../js/i18n.js';
 
 const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
   loadEloData('../'),
@@ -330,11 +313,11 @@ const GROUP_STAGE_ORDER = [
 
 // Best known elimination date for a team — real (Round of 32+) or, failing that,
 // the manually researched Group Stage approximation above. null for teams this
-// chart never eliminates (survive past Round of 32 in all 3 states).
+// chart never eliminates (survive past Round of 32 in all 3 states). Not currently
+// called anywhere — the elimination animation no longer displays a date (see
+// animateRow) — kept as the resolver for GROUP_STAGE_ELIMINATION's data in case a
+// future date display comes back.
 const eliminationDateFor = item => item.eliminatedDate ?? GROUP_STAGE_ELIMINATION[item.iso2]?.date ?? null;
-// T00:00:00 forces local-midnight parsing — a bare "2026-06-20" parses as UTC
-// midnight, which reads as the *previous* day in negative-UTC-offset timezones.
-const formatElimDate = dateStr => new Date(`${dateStr}T00:00:00`).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' });
 
 // Fixed row order — never changes between states, only each row's alive/eliminated
 // status does. (An earlier version removed eliminated rows and re-flowed the rest;
@@ -373,6 +356,12 @@ const afterRoundOf32 = aliveAfter(2);
 const outAtGroupStage = allNames.size - afterGroupStage.size;
 const outAtRoundOf32 = afterGroupStage.size - afterRoundOf32.size;
 
+// liveSubtitle, where present, re-renders the subtitle from a live running count as
+// applyState()'s row cascade proceeds (one step per team vanishing or reappearing),
+// converging on the exact same text as the static `subtitle` once the cascade
+// finishes — so "48 teams remain" counts down to "47", "46"... in step with each
+// row's own animation instead of jumping straight to the final number the instant
+// the carousel slide starts. State 0's subtitle carries no count, so no template.
 const STATES = [
   {
     alive: allNames,
@@ -383,11 +372,13 @@ const STATES = [
     alive: afterGroupStage,
     title: `${outAtGroupStage} eliminated in the Group Stage`,
     subtitle: `${afterGroupStage.size} teams remain — the Round of 32 field.`,
+    liveSubtitle: count => `${count} teams remain — the Round of 32 field.`,
   },
   {
     alive: afterRoundOf32,
     title: `${outAtRoundOf32} more eliminated in the Round of 32`,
     subtitle: `${afterRoundOf32.size} teams still in it after the Round of 32.`,
+    liveSubtitle: count => `${count} teams still in it after the Round of 32.`,
   },
 ];
 
@@ -400,7 +391,7 @@ const stageWrap = document.getElementById('stageWrap');
 // transition from, so they'd just teleport into position instead of sliding.
 const sdOverlay = document.createElement('div');
 sdOverlay.className = 'mean-overlay';
-sdOverlay.innerHTML = '<div></div><div class="mean-col"></div><div></div>';
+sdOverlay.innerHTML = '<div class="anim-value"></div><div class="mean-col"></div>';
 const sdCol = sdOverlay.querySelector('.mean-col');
 stageWrap.appendChild(sdOverlay);
 
@@ -410,14 +401,14 @@ const sdEls = new Map(SD_MULTIPLES.map(k => {
   line.className = 'sd-line';
   const label = document.createElement('div');
   label.className = 'sd-label';
-  label.textContent = (k > 0 ? '+' : '−') + 'std ' + Math.abs(k);
+  label.textContent = (k > 0 ? '+' : '−') + (Math.abs(k) === 1 ? 'std' : Math.abs(k) + ' std');
   sdCol.append(line, label);
   return [k, { line, label }];
 }));
 
 const meanOverlay = document.createElement('div');
 meanOverlay.className = 'mean-overlay';
-meanOverlay.innerHTML = '<div></div><div class="mean-col"><div class="mean-line"></div><div class="mean-label"></div></div><div></div>';
+meanOverlay.innerHTML = '<div class="anim-value"></div><div class="mean-col"><div class="mean-line"></div><div class="mean-label"></div></div>';
 const meanLineEl = meanOverlay.querySelector('.mean-line');
 const meanLabelEl = meanOverlay.querySelector('.mean-label');
 stageWrap.appendChild(meanOverlay);
@@ -427,20 +418,22 @@ stageWrap.appendChild(meanOverlay);
 // count-gradient background) since this chart's bar color already encodes import
 // count and elimination status; a second count-driven encoding on the pill itself
 // would just repeat the same signal in a different color.
+const MIN_GAP_PX = 6; // must match .anim-tail's `+ 6px` in CSS
 const stage = document.createElement('div');
+stage.className = 'anim-stage';
 const rowEls = new Map();
 sorted.forEach((item, index) => {
   const { name, impCount } = item;
   const row = document.createElement('div');
   row.className = 'anim-row';
 
-  const labelCell = document.createElement('span');
-  labelCell.className = 'anim-label';
-  const pill = document.createElement('span');
-  pill.className = pillClasses({ qualified: true, fifaMember: item.fifaMember, knockedOut: item.knockedOut, noMap: item.noMap });
-  render(pillContent({ iso2: item.iso2, name: item.name, pts: null }), pill);
-  labelCell.appendChild(pill);
-  row.appendChild(labelCell);
+  // Leftmost, fixed-width column — the only part of the row that's NOT inside
+  // .anim-track, so the track's own rendered width (and hence what "pct" is
+  // relative to) stays identical across every row regardless of digit count.
+  const val = document.createElement('span');
+  val.className = 'anim-value';
+  val.textContent = impCount;
+  row.appendChild(val);
 
   // A row's own color/width never change between states (impCount is fixed per
   // team) — only alive/eliminated does. Set once here rather than recomputed on
@@ -455,62 +448,70 @@ sorted.forEach((item, index) => {
   fill.style.setProperty('--fill-light', gradientFor(impCount));
   track.appendChild(fill);
 
-  // Mobile-only: name + count placed just after the bar's own end (--pct drives
-  // both `left` and `max-width` via calc, so it never overflows the track — it
-  // ellipsizes instead if a long name has no room after a long bar). Hidden on
-  // desktop, where the pill in the label column already shows the name.
+  // Name + flag, positioned just after the bar's own end (--pct drives both `left`
+  // and `max-width` via calc, so it never overflows the track — see refreshTail
+  // OverflowMode() below for the bottom-of-list case where there isn't room).
   const tail = document.createElement('span');
   tail.className = 'anim-tail';
   tail.style.setProperty('--pct', pct + '%');
-  const tailName = document.createElement('span');
-  tailName.className = 'anim-tail-name';
-  tailName.textContent = name;
-  const tailValue = document.createElement('span');
-  tailValue.className = 'anim-tail-value';
-  tailValue.textContent = impCount;
-  tail.append(tailName, tailValue);
-  track.appendChild(tail);
+  tail.dataset.pct = pct;
 
-  // Replaces the bar once elimination fully completes (see .anim-elim-label).
-  const elimLabel = document.createElement('span');
-  elimLabel.className = 'anim-elim-label';
-  const elimDate = eliminationDateFor(item);
-  if (elimDate) {
-    const elimIcon = document.createElement('img');
-    elimIcon.className = 'anim-elim-icon';
-    elimIcon.src = '../images/tombstone-svgrepo-com.svg';
-    elimIcon.alt = '';
-    elimLabel.append(elimIcon, document.createTextNode(formatElimDate(elimDate)));
-  }
-  track.appendChild(elimLabel);
+  const pill = document.createElement('span');
+  pill.className = pillClasses({ qualified: true, fifaMember: item.fifaMember, knockedOut: item.knockedOut, noMap: item.noMap });
+  render(pillContent({ iso2: item.iso2, name: item.name, pts: null }), pill);
+  tail.appendChild(pill);
+  track.appendChild(tail);
   row.appendChild(track);
 
-  const val = document.createElement('span');
-  val.className = 'anim-value';
-  val.textContent = impCount;
-  row.appendChild(val);
-
   stage.appendChild(row);
-  rowEls.set(name, { row, fill, elimLabel, index });
+  rowEls.set(name, { row, tail, pill, index });
 });
 stageWrap.appendChild(stage);
 
-// Rows change one at a time, strictly chained — a row's own animation only starts
-// once the previous row's has fully finished. A row's own elimination is one 0.5s
-// beat: color and width change together (.anim-fill fades to black while shrinking
-// to 0), then the tombstone+date label fades in (.anim-elim-label opacity).
-// Reappearing isn't the exact mirror: the bar snaps to white instantly first (it's
-// materializing from nothing, not un-fading from black), then grows back to its
-// normal width while coloring in to its usual gradient red — again both together,
-// same 0.5s beat — after the label fades out. These are the single source of
-// truth for each phase's duration — animateRow() below sets transition-duration
-// from these directly, so there's nothing duplicated in CSS to drift out of sync.
-const BAR_MS = 500;
-const ROW_LABEL_MS = 100;
+// Decides, per row, whether .anim-tail (name+flag) fits in the space left after the
+// bar (default mode) or needs to flip to .anim-tail--overflow (right-aligned,
+// spilling left over the bar) instead — see the .anim-tail CSS comment above.
+// Re-run on resize since it depends on the track's live rendered width, not just data.
+function refreshTailOverflowMode() {
+  rowEls.forEach(({ tail, pill }) => {
+    const track = tail.parentElement;
+    const trackWidth = track.getBoundingClientRect().width;
+    if (trackWidth === 0) return;
 
-// Debug-only speed multiplier (#speedSlider, no label by design) — scales every
-// phase duration in animateRow() below, and (via the --speed custom property)
-// the mean/std lines' own CSS transition-duration.
+    // Reset to default mode and momentarily lift .anim-tail's own max-width
+    // constraint before measuring: with the constraint still applied, flexbox has
+    // already shrunk/ellipsized the pill down to fit whatever space default mode
+    // allows, so its rendered width would tautologically never exceed that same
+    // space — comparing a value against the constraint that produced it can never
+    // trip the check. getBoundingClientRect() forces the reflow needed to read the
+    // *true* unconstrained width; restoring maxWidth right after means this never
+    // actually paints.
+    tail.classList.remove('anim-tail--overflow');
+    const prevMaxWidth = tail.style.maxWidth;
+    tail.style.maxWidth = 'none';
+    const neededPx = pill.getBoundingClientRect().width;
+    tail.style.maxWidth = prevMaxWidth;
+
+    const pct = parseFloat(tail.dataset.pct) || 0;
+    const availablePx = trackWidth * (1 - pct / 100) - MIN_GAP_PX;
+    tail.classList.toggle('anim-tail--overflow', neededPx > availablePx);
+  });
+}
+requestAnimationFrame(refreshTailOverflowMode);
+window.addEventListener('resize', refreshTailOverflowMode);
+
+// Rows change one at a time, strictly chained — a row's own animation only starts
+// once the previous row's has fully finished. Elimination is nothing but the whole
+// row (count, bar, flag, name together) sliding left until .anim-stage's own
+// overflow:hidden clips it away, leaving an empty slot in the list — no color
+// change, no collapsing, always exactly 48 rows in flow. Reappearing is the exact
+// reverse (same transform, same duration, browser interpolates back from wherever
+// the row currently sits) — no asymmetric handling needed.
+const ROW_SLIDE_MS = 500;
+
+// Debug-only speed multiplier (#speedSlider, no label by design) — scales
+// ROW_SLIDE_MS in animateRow() below, and (via the --speed custom property) the
+// mean/std lines' own CSS transition-duration.
 const speedSlider = document.getElementById('speedSlider');
 let SPEED = parseFloat(speedSlider.value);
 document.documentElement.style.setProperty('--speed', SPEED);
@@ -532,108 +533,16 @@ function transitionEnd(el, cssProp) {
   });
 }
 
-// A display:none element (e.g. .anim-elim-label on mobile — see its media query)
-// never fires transitionend for any property change, since nothing is actually
-// being painted/transitioned. Awaiting one on a hidden element would stall the
-// chain forever; callers should check this before awaiting instead.
-function isRendered(el) {
-  return getComputedStyle(el).display !== 'none';
-}
-
-// Runs one row's elimination (or, reversed, reappearance): the bar beat, then the
-// tombstone+date label, each awaiting the previous one's real transitionend before
-// starting the next. Returns the total elapsed ms (at the live SPEED value used),
-// so callers can size the mean/std line's own transition to match without a
-// second copy of these numbers.
+// Slides one row fully out to the left (or back in, reversed) — see .anim-row and
+// .anim-stage above. Returns the elapsed ms (at the live SPEED value used), so
+// callers can size the mean/std line's own transition to match.
 async function animateRow(name, isOut) {
-  const { fill, elimLabel } = rowEls.get(name);
-  const item = itemByName.get(name);
-  const pct = item.impCount === 0 ? 0 : item.impCount / DOMAIN_MAX * 100;
-  // A team with impCount 0 already has width 0 while alive, so its width
-  // transition is a no-op in either direction (no transitionend would ever fire)
-  // — await the color change instead, which always genuinely changes either way.
-  const barProp = pct === 0 ? 'background-color' : 'width';
-  let totalMs = 0;
-
-  if (isOut) {
-    const barMs = BAR_MS * SPEED;
-    totalMs += barMs;
-    fill.style.transitionDuration = barMs + 'ms';
-    fill.style.backgroundColor = '#000';
-    fill.style.width = '0';
-    await transitionEnd(fill, barProp);
-
-    const labelMs = ROW_LABEL_MS * SPEED;
-    totalMs += labelMs;
-    elimLabel.style.transitionDuration = labelMs + 'ms';
-    elimLabel.style.opacity = '1';
-    if (isRendered(elimLabel)) await transitionEnd(elimLabel, 'opacity');
-  } else {
-    const labelMs = ROW_LABEL_MS * SPEED;
-    totalMs += labelMs;
-    elimLabel.style.transitionDuration = labelMs + 'ms';
-    elimLabel.style.opacity = '0';
-    if (isRendered(elimLabel)) await transitionEnd(elimLabel, 'opacity');
-
-    // Materializing from nothing, not un-fading from black — snap to white
-    // instantly (no transition), forcing a reflow so the snap registers before
-    // the real transition-duration below applies to the actual animated change.
-    fill.style.transition = 'none';
-    fill.style.backgroundColor = '#fff';
-    void fill.offsetWidth;
-    fill.style.transition = '';
-
-    const barMs = BAR_MS * SPEED;
-    totalMs += barMs;
-    fill.style.transitionDuration = barMs + 'ms';
-    fill.style.width = pct + '%';
-    fill.style.backgroundColor = gradientFor(item.impCount);
-    await transitionEnd(fill, barProp);
-  }
-  return totalMs;
-}
-
-const ROW_COLLAPSE_MS = 1000;
-
-// Once a row's own bar has fully zeroed out, it's just dead weight in the list —
-// collapse it out of flow entirely (display:none) so the list stays compact around
-// whoever's still alive. A no-op (resolves immediately) if already collapsed, so
-// callers can safely call this on every currently-eliminated row without worrying
-// about which ones were already collapsed by an earlier pass.
-async function collapseRow(row) {
-  if (row.style.display === 'none') return;
-  const h = row.getBoundingClientRect().height;
-  row.style.height = h + 'px';
-  void row.offsetHeight; // force the explicit height to register before animating away from it
-  const ms = ROW_COLLAPSE_MS * SPEED;
+  const { row } = rowEls.get(name);
+  const ms = ROW_SLIDE_MS * SPEED;
   row.style.transitionDuration = ms + 'ms';
-  row.style.transitionProperty = 'height, opacity';
-  row.style.height = '0';
-  row.style.opacity = '0';
-  await transitionEnd(row, 'height');
-  row.style.display = 'none';
-}
-
-// Reverses collapseRow() — restores the row to flow and grows it back to its
-// natural height before any bar animation on it would make sense to watch. A
-// no-op if not currently collapsed.
-async function expandRow(row) {
-  if (row.style.display !== 'none') return;
-  row.style.display = '';
-  row.style.height = 'auto';
-  const h = row.getBoundingClientRect().height;
-  row.style.height = '0';
-  row.style.opacity = '0';
-  void row.offsetHeight; // force the collapsed starting point to register before animating
-  const ms = ROW_COLLAPSE_MS * SPEED;
-  row.style.transitionDuration = ms + 'ms';
-  row.style.transitionProperty = 'height, opacity';
-  row.style.height = h + 'px';
-  row.style.opacity = '1';
-  await transitionEnd(row, 'height');
-  // Release back to natural (min-height-driven) sizing now that it's settled, so
-  // it isn't pinned to a stale pixel height if anything about its content changes.
-  row.style.height = '';
+  row.style.transform = isOut ? 'translateX(-100%)' : 'translateX(0)';
+  await transitionEnd(row, 'transform');
+  return ms;
 }
 
 // ── ±1/2/3 std + mean line position for a given alive-set, no DOM writes ──
@@ -723,6 +632,7 @@ function applyState(idx, instant) {
       allEls.forEach(el => { el.style.transition = 'none'; });
       requestAnimationFrame(() => { allEls.forEach(el => { el.style.transition = ''; }); });
     }
+    setNavDisabled(false);
     return;
   }
 
@@ -735,37 +645,24 @@ function applyState(idx, instant) {
   // row's has fully resolved (awaited real transitionend events, not a precomputed
   // delay). The mean/std line update per row is fire-and-forget — it doesn't block
   // the next row from starting, only reads the just-finished row's own duration so
-  // its own transition is sized to match instead of a hardcoded guess.
-  //
-  // Collapsing (display:none) is a separate, single beat around the whole cascade
-  // rather than another per-team stagger: reappearing rows all expand back into
-  // flow together *before* the reveal cascade starts (so each one's own bar
-  // animation is actually visible), and eliminated rows all collapse together
-  // *after* the whole cascade settles (so the list tidies up once, not once per
-  // team). collapseRow()/expandRow() are no-ops on rows already in the target
-  // state, so re-running the collapse pass over every is-out row (not just this
-  // transition's changed set) is safe and keeps the list correct even after a
-  // multi-step carousel jump.
-  const isEliminating = changed[0].isOut;
+  // its own transition is sized to match instead of a hardcoded guess. The
+  // destination slide's subtitle count (where a liveSubtitle template exists — see
+  // STATES above) updates on the same per-row cadence, converging on the exact
+  // static text once the cascade settles.
+  animating = true;
+  setNavDisabled(true);
   (async () => {
-    if (!isEliminating) {
-      await Promise.all(changed.map(({ name }) => expandRow(rowEls.get(name).row)));
-    }
-
     const runningAlive = new Set(currentAlive);
     for (const { name, isOut } of changed) {
       rowEls.get(name).row.classList.toggle('is-out', isOut);
       const durationMs = await animateRow(name, isOut);
       if (isOut) runningAlive.delete(name); else runningAlive.add(name);
       paintLines(computeStats(runningAlive), durationMs);
+      if (state.liveSubtitle) subtitleEls[idx].textContent = state.liveSubtitle(runningAlive.size);
     }
-
-    if (isEliminating) {
-      const eliminatedRows = sorted
-        .filter(i => rowEls.get(i.name).row.classList.contains('is-out'))
-        .map(i => rowEls.get(i.name).row);
-      await Promise.all(eliminatedRows.map(collapseRow));
-    }
+    subtitleEls[idx].textContent = state.subtitle;
+    animating = false;
+    setNavDisabled(false);
   })();
 }
 
@@ -784,13 +681,10 @@ function stepTeam(forward) {
   const { row } = rowEls.get(target.name);
   row.classList.toggle('is-out', forward);
 
-  (async () => {
-    if (!forward) await expandRow(row);
-    await animateRow(target.name, forward);
-    if (forward) await collapseRow(row);
+  animateRow(target.name, forward).then(() => {
     const alive = new Set(sorted.filter(i => !isOutNow(i.name)).map(i => i.name));
     paintLines(computeStats(alive));
-  })();
+  });
 }
 document.getElementById('stepBack').addEventListener('click', () => stepTeam(false));
 document.getElementById('stepForward').addEventListener('click', () => stepTeam(true));
@@ -804,12 +698,19 @@ const carouselEl = document.getElementById('statusCarousel');
 const carouselInner = document.getElementById('statusCarouselInner');
 const indicatorsEl = document.getElementById('statusCarouselIndicators');
 
+// Referenced by applyState()'s cascade to (a) live-update the destination slide's
+// subtitle count in step with each row (subtitleEls) and (b) lock out navigation
+// entirely while a cascade is running (indicatorDots, alongside prevBtn/nextBtn).
+const subtitleEls = [];
+const indicatorDots = [];
 STATES.forEach((state, i) => {
   const item = document.createElement('div');
   item.className = 'carousel-item' + (i === 0 ? ' active' : '');
   item.innerHTML = '<div class="stage-caption"><div class="stage-title"></div><div class="stage-subtitle"></div></div>';
   item.querySelector('.stage-title').textContent = state.title;
-  item.querySelector('.stage-subtitle').textContent = state.subtitle;
+  const subtitleEl = item.querySelector('.stage-subtitle');
+  subtitleEl.textContent = state.subtitle;
+  subtitleEls.push(subtitleEl);
   carouselInner.appendChild(item);
 
   const dot = document.createElement('button');
@@ -818,6 +719,7 @@ STATES.forEach((state, i) => {
   dot.setAttribute('data-bs-slide-to', String(i));
   dot.setAttribute('aria-label', state.title);
   if (i === 0) { dot.classList.add('active'); dot.setAttribute('aria-current', 'true'); }
+  indicatorDots.push(dot);
   indicatorsEl.appendChild(dot);
 });
 
@@ -825,14 +727,28 @@ const prevBtn = carouselEl.querySelector('.carousel-control-prev');
 const nextBtn = carouselEl.querySelector('.carousel-control-next');
 new bootstrap.Carousel(carouselEl, { interval: false, wrap: false });
 
+// Locked out entirely while a row cascade is running (see applyState()) — not
+// just visually disabled: the slide.bs.carousel guard below rejects the slide
+// outright regardless of what triggered it (click, keyboard, swipe), the same
+// preventDefault idiom js/control_sidebar.js uses for the main map's own stage
+// carousel. Buttons/dots are ALSO disabled as a visual affordance, but that guard
+// is the actual enforcement.
+let animating = false;
+let currentIdx = 0;
+function setNavDisabled(disabled) {
+  prevBtn.disabled = disabled || currentIdx === 0;
+  nextBtn.disabled = disabled || currentIdx === STATES.length - 1;
+  indicatorDots.forEach(dot => { dot.disabled = disabled; });
+}
+
 carouselEl.addEventListener('slide.bs.carousel', e => {
-  prevBtn.disabled = e.to === 0;
-  nextBtn.disabled = e.to === STATES.length - 1;
+  if (animating) { e.preventDefault(); return; }
+  currentIdx = e.to;
   applyState(e.to);
 });
 
 applyState(0, true);
-prevBtn.disabled = true;
+setNavDisabled(false);
 </script>
 </body>
 </html>
