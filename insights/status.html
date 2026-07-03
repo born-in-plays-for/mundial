@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imported players — elimination status · Mundial 2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/taxonomy.css">
+<style>
+  .chart-card {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fcfcfb;
+    border: 1px solid rgba(11,11,11,0.10);
+    border-radius: 12px;
+    padding: 22px 28px 20px;
+  }
+  .chart-card * { box-sizing: border-box; }
+
+  .anim-row {
+    min-height: 18px;
+    display: grid;
+    grid-template-columns: 168px 1fr 34px;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.15s ease;
+  }
+  /* Eliminated rows fade to red first (see .anim-fill/.elo-name transitions), then
+     — quicker, and only once that color fade has finished — fade out entirely. The
+     stagger + sequencing is driven from JS (transitionDelay set per row/direction). */
+  .anim-row.is-out { opacity: 0; }
+  .anim-label {
+    display: flex;
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+  /* Shrunk from the pill's normal size (used at full size everywhere else) to fit
+     48 rows without the chart becoming unreasonably tall. */
+  #statusViz .elo-item { padding: 1px 6px 1px 4px; gap: 3px; margin: 1px 0; }
+  #statusViz .elo-flag { width: 14px; height: 14px; }
+  #statusViz .elo-name { max-width: 118px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; transition: color 0.4s ease, font-weight 0.4s ease; }
+  .anim-row.is-out .elo-name { color: #d03b3b; font-weight: 600; }
+
+  .anim-track {
+    position: relative;
+    align-self: stretch;
+  }
+  .anim-fill {
+    position: absolute; left: 0; top: 50%;
+    height: 10px;
+    transform: translateY(-50%);
+    min-width: 2px;
+    border-radius: 0 4px 4px 0;
+    background: var(--fill-light, #c3c2b7);
+    transition: background-color 0.4s ease;
+  }
+  .anim-row.is-out .anim-fill { background: #d03b3b !important; }
+
+  .stage-wrap { position: relative; margin-top: 10px; }
+  .mean-overlay {
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-columns: 168px 1fr 34px;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .mean-col { position: relative; }
+  .mean-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 2px dashed #0b0b0b;
+    opacity: 0.55;
+    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .mean-label {
+    position: absolute;
+    top: -17px;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: #0b0b0b;
+    white-space: nowrap;
+    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sd-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 1px dashed #b5b4ab;
+    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  }
+  .sd-label {
+    position: absolute;
+    bottom: -14px;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: #98978f;
+    white-space: nowrap;
+    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  }
+
+  .anim-value {
+    font-size: 10px;
+    color: #898781;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Controls — compact, matches the site's understated controls ─────────── */
+  #statusViz .viz-control-prev,
+  #statusViz .viz-control-next {
+    position: absolute; top: 0; bottom: 0;
+    display: flex; align-items: center;
+    width: 32px; border: 0; background: transparent; opacity: 0.35;
+    z-index: 5; cursor: pointer;
+  }
+  #statusViz .viz-control-prev { left: 0; justify-content: flex-start; }
+  #statusViz .viz-control-next { right: 0; justify-content: flex-end; }
+  #statusViz .viz-control-prev:hover,
+  #statusViz .viz-control-next:hover { opacity: 0.9; }
+  #statusViz .viz-control-prev:disabled,
+  #statusViz .viz-control-next:disabled { opacity: 0.1; pointer-events: none; }
+  #statusViz .viz-control-prev-icon,
+  #statusViz .viz-control-next-icon {
+    width: 16px; height: 16px;
+    filter: invert(40%);
+  }
+  #statusViz { position: relative; }
+  #statusViz .viz-indicators {
+    display: flex; justify-content: center; margin: 12px 0 0; gap: 4px;
+  }
+  #statusViz .viz-indicators button {
+    width: 6px; height: 6px; border-radius: 50%;
+    background-color: #ccc; opacity: 1; border: none;
+    margin: 0 2px; padding: 0; cursor: pointer;
+  }
+  #statusViz .viz-indicators button.active { background-color: #666; }
+</style>
+</head>
+<body>
+<script type="module" src="../js/auth-bar.js"></script>
+<mundial-auth-bar></mundial-auth-bar>
+
+<div id="main-content" class="container-xxl py-4">
+  <div class="chart-card taxonomy">
+    <div id="statusViz">
+      <button type="button" class="viz-control-prev" aria-label="Previous">
+        <svg class="viz-control-prev-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 13.5L5.5 8L11 2.5" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button type="button" class="viz-control-next" aria-label="Next">
+        <svg class="viz-control-next-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 2.5L10.5 8L5 13.5" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="stage-wrap" id="stageWrap"></div>
+    </div>
+    <div class="viz-indicators" id="vizIndicators"></div>
+  </div>
+</div>
+
+<script type="module">
+import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { loadEloData, buildImportByCountry, buildEloItems } from '../js/qualified.js';
+import { pillClasses, pillContent } from '../js/elo_ranking.js';
+import { countryName } from '../js/i18n.js';
+
+const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
+  loadEloData('../'),
+  fetch('../data/v2/map.json').then(r => r.json()),
+]);
+
+const importByCountry = buildImportByCountry(mapData, countryName);
+const items = buildEloItems({
+  rankings: eloData.rankings, byId: {}, importByCountry, countryNameFn: countryName, statusByIso2,
+}).filter(item => item.qualified);
+
+// Fixed row order — never changes between states, only each row's alive/eliminated
+// status does. (An earlier version removed eliminated rows and re-flowed the rest;
+// fixed rows + a status color is clearer since the total team count stays visible.)
+const sorted = [...items].sort((a, b) => a.impCount - b.impCount || a.name.localeCompare(b.name));
+
+const maxImp = Math.max(0, ...sorted.map(i => i.impCount));
+const DOMAIN_MAX = Math.max(5, Math.ceil(maxImp / 5) * 5);
+
+// Sequential gradient, darker/richer as imported-player count rises — blue only
+// (still in it). Eliminated teams get a single flat red instead — the gradient
+// reads as a magnitude cue, which would be misleading once a bar's message is
+// "out", not "how many".
+const BLUE_LIGHT_LO = [0x86, 0xb6, 0xef], BLUE_LIGHT_HI = [0x0d, 0x36, 0x6b];
+function lerpColor(lo, hi, t) {
+  const c = lo.map((v, i) => Math.round(v + (hi[i] - v) * t));
+  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+}
+function gradientFor(value) {
+  const t = Math.max(0, Math.min(1, value / DOMAIN_MAX));
+  return lerpColor(BLUE_LIGHT_LO, BLUE_LIGHT_HI, t);
+}
+
+// Three real boundaries, no invented scenario: everyone qualified, then whoever
+// hasn't been eliminated as of the Group Stage cutoff, then as of the Round of
+// 32 cutoff. A team not (yet) eliminated always counts as "in it" — including
+// one currently mid-fixture — rather than guessing how an undecided match ends.
+const aliveAfter = roundIdx =>
+  new Set(sorted.filter(i => i.eliminatedAtIndex == null || i.eliminatedAtIndex >= roundIdx).map(i => i.name));
+
+const allNames = new Set(sorted.map(i => i.name));
+const afterGroupStage = aliveAfter(1);
+const afterRoundOf32 = aliveAfter(2);
+
+const outAtGroupStage = allNames.size - afterGroupStage.size;
+const outAtRoundOf32 = afterGroupStage.size - afterRoundOf32.size;
+
+const STATES = [
+  {
+    alive: allNames,
+    title: `${allNames.size} qualified teams`,
+    subtitle: 'Every WC2026 squad, ranked by imported-player count.',
+  },
+  {
+    alive: afterGroupStage,
+    title: `${outAtGroupStage} eliminated in the Group Stage`,
+    subtitle: `${afterGroupStage.size} teams remain — the Round of 32 field.`,
+  },
+  {
+    alive: afterRoundOf32,
+    title: `${outAtRoundOf32} more eliminated in the Round of 32`,
+    subtitle: `${afterRoundOf32.size} teams still in it after the Round of 32.`,
+  },
+];
+
+// ── build the row list once — only colors/positions change between states ──
+const stageWrap = document.getElementById('stageWrap');
+
+// Std lines are created once and reused — like the mean line, they need to stay the
+// *same* element across states for their `left` transition to animate. Recreating them
+// fresh each time (as an innerHTML rebuild would) leaves nothing for the browser to
+// transition from, so they'd just teleport into position instead of sliding.
+const sdOverlay = document.createElement('div');
+sdOverlay.className = 'mean-overlay';
+sdOverlay.innerHTML = '<div></div><div class="mean-col"></div><div></div>';
+const sdCol = sdOverlay.querySelector('.mean-col');
+stageWrap.appendChild(sdOverlay);
+
+const SD_MULTIPLES = [-3, -2, -1, 1, 2, 3];
+const sdEls = new Map(SD_MULTIPLES.map(k => {
+  const line = document.createElement('div');
+  line.className = 'sd-line';
+  const label = document.createElement('div');
+  label.className = 'sd-label';
+  label.textContent = (k > 0 ? '+' : '−') + 'std ' + Math.abs(k);
+  sdCol.append(line, label);
+  return [k, { line, label }];
+}));
+
+const meanOverlay = document.createElement('div');
+meanOverlay.className = 'mean-overlay';
+meanOverlay.innerHTML = '<div></div><div class="mean-col"><div class="mean-line"></div><div class="mean-label"></div></div><div></div>';
+const meanLineEl = meanOverlay.querySelector('.mean-line');
+const meanLabelEl = meanOverlay.querySelector('.mean-label');
+stageWrap.appendChild(meanOverlay);
+
+// Country pills — same component used across the app (elo_ranking.js's pillClasses/
+// pillContent): real flag + qualified border. exp/imp are left off (no arrows, no
+// count-gradient background) since this chart's bar color already encodes import
+// count and elimination status; a second count-driven encoding on the pill itself
+// would just repeat the same signal in a different color.
+const stage = document.createElement('div');
+const rowEls = new Map();
+sorted.forEach((item, index) => {
+  const { name, impCount } = item;
+  const row = document.createElement('div');
+  row.className = 'anim-row';
+
+  const labelCell = document.createElement('span');
+  labelCell.className = 'anim-label';
+  const pill = document.createElement('span');
+  pill.className = pillClasses({ qualified: true, fifaMember: item.fifaMember, knockedOut: item.knockedOut, noMap: item.noMap });
+  render(pillContent({ iso2: item.iso2, name: item.name, pts: null }), pill);
+  labelCell.appendChild(pill);
+  row.appendChild(labelCell);
+  const nameEl = pill.querySelector('.elo-name');
+
+  const track = document.createElement('span');
+  track.className = 'anim-track';
+  const fill = document.createElement('span');
+  fill.className = 'anim-fill';
+  fill.style.width = (impCount / DOMAIN_MAX * 100) + '%';
+  track.appendChild(fill);
+  row.appendChild(track);
+
+  const val = document.createElement('span');
+  val.className = 'anim-value';
+  val.textContent = impCount;
+  row.appendChild(val);
+
+  stage.appendChild(row);
+  rowEls.set(name, { row, fill, nameEl, index });
+});
+stageWrap.appendChild(stage);
+
+// Rows change one at a time rather than all at once — each row's color transition is
+// delayed by its position in the (currently fixed) row order. Order isn't meaningful
+// yet — this is step 1, just proving out the per-row cascade.
+const ROW_STEP_MS = 50;
+// Must match .anim-fill/.elo-name's own transition-duration in CSS — the row's fade
+// to hidden is scheduled to start right as its color fade finishes.
+const COLOR_DURATION_MS = 400;
+
+// ── apply one state's alive/eliminated status + mean/std lines in place ────
+function applyState(idx, instant) {
+  const state = STATES[idx];
+
+  rowEls.forEach(({ row, fill, nameEl, index }, name) => {
+    const delay = instant ? '0ms' : (index * ROW_STEP_MS) + 'ms';
+    fill.style.transitionDelay = delay;
+    if (nameEl) nameEl.style.transitionDelay = delay;
+
+    const wasOut = row.classList.contains('is-out');
+    const isOut = !state.alive.has(name);
+    // Becoming eliminated: hold visible through the color fade, then fade out.
+    // Becoming alive again: reappear immediately (in step with the color fade back).
+    row.style.transitionDelay = instant ? '0ms'
+      : isOut && !wasOut ? (index * ROW_STEP_MS + COLOR_DURATION_MS) + 'ms'
+      : '0ms';
+    row.classList.toggle('is-out', isOut);
+    if (!isOut) fill.style.setProperty('--fill-light', gradientFor(sorted.find(i => i.name === name).impCount));
+  });
+
+  const aliveValues = sorted.filter(i => state.alive.has(i.name)).map(i => i.impCount);
+  const mean = aliveValues.length ? aliveValues.reduce((a, b) => a + b, 0) / aliveValues.length : 0;
+  const variance = aliveValues.length ? aliveValues.reduce((a, b) => a + (b - mean) ** 2, 0) / aliveValues.length : 0;
+  const sd = Math.sqrt(variance);
+  const pct = Math.max(0, Math.min(100, mean / DOMAIN_MAX * 100));
+
+  // ±1/2/3 std reference lines — only visible when they fall within the chart's domain
+  // (a count can't go negative, so -2/-3 std are routinely off the left edge). Position
+  // is still updated even while hidden, so a line that re-enters the domain later slides
+  // in from where it conceptually sits rather than popping in at a random spot.
+  const allEls = [meanLineEl, meanLabelEl];
+  sdEls.forEach(({ line, label }, k) => {
+    const v = mean + k * sd;
+    const p = sd > 0 ? v / DOMAIN_MAX * 100 : (k < 0 ? 0 : 100);
+    const visible = sd > 0 && v >= 0 && v <= DOMAIN_MAX;
+    line.style.left = p + '%';
+    label.style.left = p + '%';
+    line.style.opacity = visible ? '1' : '0';
+    label.style.opacity = visible ? '1' : '0';
+    allEls.push(line, label);
+  });
+
+  if (instant) allEls.forEach(el => { el.style.transition = 'none'; });
+  meanLineEl.style.left = pct + '%';
+  meanLabelEl.style.left = pct + '%';
+  meanLabelEl.textContent = 'mean ' + mean.toFixed(2) + (sd > 0 ? ` (std=${sd.toFixed(2)})` : '');
+  if (instant) {
+    requestAnimationFrame(() => { allEls.forEach(el => { el.style.transition = ''; }); });
+  }
+}
+
+// ── navigation: prev/next buttons, dots, keyboard — all drive the same state ──
+const prevBtn = document.querySelector('.viz-control-prev');
+const nextBtn = document.querySelector('.viz-control-next');
+const indicatorsEl = document.getElementById('vizIndicators');
+const dots = STATES.map((state, i) => {
+  const dot = document.createElement('button');
+  dot.type = 'button';
+  dot.setAttribute('aria-label', state.title);
+  if (i === 0) dot.classList.add('active');
+  dot.addEventListener('click', () => goTo(i));
+  indicatorsEl.appendChild(dot);
+  return dot;
+});
+
+let current = 0;
+function goTo(idx) {
+  idx = Math.max(0, Math.min(STATES.length - 1, idx));
+  if (idx === current) return;
+  current = idx;
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  prevBtn.disabled = current === 0;
+  nextBtn.disabled = current === STATES.length - 1;
+  applyState(current);
+}
+
+prevBtn.addEventListener('click', () => goTo(current - 1));
+nextBtn.addEventListener('click', () => goTo(current + 1));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft') goTo(current - 1);
+  else if (e.key === 'ArrowRight') goTo(current + 1);
+});
+
+applyState(0, true);
+prevBtn.disabled = true;
+</script>
+</body>
+</html>
