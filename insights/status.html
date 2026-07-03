@@ -19,18 +19,26 @@
   }
   .chart-card * { box-sizing: border-box; }
 
+  /* Debug-only controls — hidden from the public page, but left fully wired up
+     (speed slider default 1/3, stepper buttons) for later re-enabling; just flip
+     this display back to flex to bring them back. No labels on the slider by
+     design; the stepper buttons need *some* marking to be usable, so they get
+     plain arrow glyphs. */
+  #debugControls { display: none; align-items: center; gap: 8px; margin-top: 14px; }
+  #speedSlider { flex: 1 1 auto; }
+  #debugControls button {
+    flex: 0 0 auto; width: 26px; height: 22px; border: 1px solid rgba(11,11,11,0.2);
+    border-radius: 4px; background: #fff; cursor: pointer; font-size: 13px; line-height: 1;
+  }
+  #debugControls button:hover { background: #f0f0ee; }
+
   .anim-row {
     min-height: 18px;
     display: grid;
     grid-template-columns: 168px 1fr 34px;
     align-items: center;
     gap: 8px;
-    transition: opacity 0.15s ease;
   }
-  /* Eliminated rows fade to red first (see .anim-fill/.elo-name transitions), then
-     — quicker, and only once that color fade has finished — fade out entirely. The
-     stagger + sequencing is driven from JS (transitionDelay set per row/direction). */
-  .anim-row.is-out { opacity: 0; }
   .anim-label {
     display: flex;
     justify-content: flex-end;
@@ -42,40 +50,66 @@
      pillContent renders — flag-first — without needing a page-specific variant). */
   #statusViz .elo-item { padding: 1px 6px 1px 4px; gap: 3px; margin: 1px 0; border: none; flex-direction: row-reverse; }
   #statusViz .elo-flag { width: 14px; height: 14px; }
-  #statusViz .elo-name { max-width: 118px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; transition: color 0.4s ease, font-weight 0.4s ease; }
-  .anim-row.is-out .elo-name { color: #d03b3b; font-weight: 600; }
+  #statusViz .elo-name { max-width: 118px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
 
   .anim-track {
     position: relative;
     align-self: stretch;
   }
+  /* ◀ is this app's fixed glyph for "imported players" (css/taxonomy.css's
+     --imp-accent / .elo-item--imp::after) — the bar itself echoes it: a triangular
+     notch at the start (near the flag) merging into the rectangular fill. */
   .anim-fill {
     position: absolute; left: 0; top: 50%;
     height: 10px;
     transform: translateY(-50%);
     min-width: 2px;
     border-radius: 0 4px 4px 0;
+    clip-path: polygon(5px 0, 100% 0, 100% 100%, 5px 100%, 0 50%);
     background: var(--fill-light, #c3c2b7);
-    transition: background-color 0.4s ease;
+    /* Elimination fades to black while shrinking to width 0, both together —
+       .anim-elim-label below takes over visually once that's done. No duration
+       declared here: animateRow() sets transition-duration explicitly right
+       before each change and awaits its real 'transitionend', so BAR_MS is the
+       single source of truth for timing instead of a value duplicated in CSS. */
+    transition-property: background-color, width;
   }
-  .anim-row.is-out .anim-fill { background: #d03b3b !important; }
+
+  /* Replaces the bar once a row's elimination animation fully completes — flag and
+     name stay visible throughout (only the bar disappears), so identity is never in
+     question. Hidden on mobile: .anim-tail already shows the name there regardless
+     of alive/eliminated status, and this label's fixed `left:0` position risks
+     overlapping .anim-tail for low-count teams (whose bar, and hence .anim-tail's
+     own position, sits close to the flag already). Opacity is driven the same way
+     as .anim-fill above — no duration here, animateRow() sets it per phase. */
+  .anim-elim-label {
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    display: flex; align-items: center; gap: 3px;
+    font-size: 10px; color: #898781; white-space: nowrap;
+    opacity: 0;
+    transition-property: opacity;
+    pointer-events: none;
+  }
+  .anim-elim-icon { width: 10px; height: 10px; opacity: 0.6; }
 
   .stage-wrap { position: relative; margin-top: 10px; }
   .mean-overlay {
     position: absolute; inset: 0;
     display: grid;
     grid-template-columns: 168px 1fr 34px;
+    grid-template-rows: 100%;
+    align-items: stretch;
     gap: 8px;
     pointer-events: none;
   }
-  .mean-col { position: relative; }
+  .mean-col { position: relative; height: 100%; }
   .mean-line {
     position: absolute;
     top: 0; bottom: 0;
     width: 0;
     border-left: 2px dashed #0b0b0b;
     opacity: 0.55;
-    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: left calc(0.9s * var(--speed, 1)) cubic-bezier(0.4, 0, 0.2, 1);
   }
   .mean-label {
     position: absolute;
@@ -85,7 +119,7 @@
     font-weight: 600;
     color: #0b0b0b;
     white-space: nowrap;
-    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: left calc(0.9s * var(--speed, 1)) cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .sd-line {
@@ -93,7 +127,7 @@
     top: 0; bottom: 0;
     width: 0;
     border-left: 1px dashed #b5b4ab;
-    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    transition: left calc(0.9s * var(--speed, 1)) cubic-bezier(0.4, 0, 0.2, 1), opacity calc(0.3s * var(--speed, 1)) ease;
   }
   .sd-label {
     position: absolute;
@@ -102,7 +136,7 @@
     font-size: 9px;
     color: #98978f;
     white-space: nowrap;
-    transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    transition: left calc(0.9s * var(--speed, 1)) cubic-bezier(0.4, 0, 0.2, 1), opacity calc(0.3s * var(--speed, 1)) ease;
   }
 
   .anim-value {
@@ -111,45 +145,92 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* ── Controls — compact, matches the site's understated controls ─────────── */
-  #statusViz .viz-control-prev,
-  #statusViz .viz-control-next {
+  /* Mobile-only alternative to .anim-value/.elo-name — see the mobile media query. */
+  .anim-tail {
+    display: none;
+    position: absolute; top: 50%; transform: translateY(-50%);
+    left: calc(var(--pct) + 6px);
+    max-width: calc(100% - var(--pct) - 6px);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    align-items: baseline; gap: 4px;
+    font-size: 10px; color: #3a3a38;
+  }
+  .anim-tail-value { color: #898781; font-variant-numeric: tabular-nums; }
+
+  /* Real Bootstrap carousel (bootstrap.Carousel instance + data-bs-* controls/
+     indicators — native swipe/keyboard/a11y). Its carousel-items only carry the
+     lightweight .stage-caption text; the actual visualization is the persistent
+     #stageWrap sibling, which morphs in place via applyState() on 'slide.bs.carousel'.
+     Overrides below undo Bootstrap's full-bleed-image-carousel defaults (wide dark
+     gradient buttons, large rectangular indicators) for this compact, understated look. */
+  .stage-caption { text-align: center; padding: 2px 8px 10px; }
+  .stage-title { font-size: 13px; font-weight: 600; color: #0b0b0b; }
+  .stage-subtitle { font-size: 11px; color: #898781; margin-top: 2px; }
+
+  #statusViz .carousel-control-prev,
+  #statusViz .carousel-control-next {
     position: absolute; top: 0; bottom: 0;
     display: flex; align-items: center;
     width: 32px; border: 0; background: transparent; opacity: 0.35;
     z-index: 5; cursor: pointer;
   }
-  #statusViz .viz-control-prev { left: 0; justify-content: flex-start; }
-  #statusViz .viz-control-next { right: 0; justify-content: flex-end; }
-  #statusViz .viz-control-prev:hover,
-  #statusViz .viz-control-next:hover { opacity: 0.9; }
-  #statusViz .viz-control-prev:disabled,
-  #statusViz .viz-control-next:disabled { opacity: 0.1; pointer-events: none; }
+  #statusViz .carousel-control-prev { left: 0; justify-content: flex-start; }
+  #statusViz .carousel-control-next { right: 0; justify-content: flex-end; }
+  #statusViz .carousel-control-prev:hover,
+  #statusViz .carousel-control-next:hover { opacity: 0.9; }
+  #statusViz .carousel-control-prev:disabled,
+  #statusViz .carousel-control-next:disabled { opacity: 0.1; pointer-events: none; }
   #statusViz .viz-control-prev-icon,
   #statusViz .viz-control-next-icon {
     width: 16px; height: 16px;
     filter: invert(40%);
   }
   #statusViz { position: relative; }
-  #statusViz .viz-indicators {
+  #statusViz .carousel-indicators {
+    position: static;
     display: flex; justify-content: center; margin: 12px 0 0; gap: 4px;
   }
-  #statusViz .viz-indicators button {
+  #statusViz .carousel-indicators button {
     width: 6px; height: 6px; border-radius: 50%;
     background-color: #ccc; opacity: 1; border: none;
     margin: 0 2px; padding: 0; cursor: pointer;
+    text-indent: 0;
   }
-  #statusViz .viz-indicators button.active { background-color: #666; }
+  #statusViz .carousel-indicators button.active { background-color: #666; }
 
   /* Mobile: the fixed 168px label column + card padding + container gutter together
      eat a disproportionate share of a narrow viewport, squeezing the actual bars into
      a sliver in the middle and leaving the rest looking like dead margin on both
-     sides. Trim all three so the track (the actual data) gets the room back. */
+     sides. Trim all of it — including Bootstrap's own py-4 — and drop the country
+     name from the label pill entirely (flag only), reclaiming its 168px into the bar
+     track; the name reappears as .anim-tail, positioned just after the bar's own end
+     (see .anim-tail above) instead of a fixed trailing column, so the freed real
+     estate goes to whichever is more useful per row: a longer bar, or the name.
+     Rows also pack tighter than the flag's own height: the label column is exactly
+     two flag-widths wide, and every other row's flag shifts left by one flag-width
+     (translateX), so overlapping circles from adjacent rows interleave side by side
+     instead of stacking on top of each other — both positions stay fully inside the
+     column, nothing is clipped. */
   @media (max-width: 767.98px) {
-    #main-content { padding-left: 0.5rem; padding-right: 0.5rem; }
-    .chart-card { padding: 16px 10px 14px; }
-    .anim-row, .mean-overlay { grid-template-columns: 108px 1fr 26px; gap: 5px; }
-    #statusViz .elo-name { max-width: 68px; }
+    #main-content { padding: 0.5rem 0.25rem; }
+    /* Bottom padding needs enough clearance for .sd-label, which sits 14px below
+       the row list's own bottom edge (see .sd-label) — 10px isn't enough room and
+       the label overflows past the card. */
+    .chart-card { padding: 10px 6px 28px; }
+    .stage-caption { padding: 0 4px 6px; }
+    .stage-title { font-size: 12px; }
+    .stage-subtitle { font-size: 10px; }
+    .stage-wrap { margin-top: 4px; }
+    #statusViz .carousel-indicators { margin: 8px 0 0; }
+
+    #statusViz .elo-name { display: none; }
+    #statusViz .elo-item { padding: 0; margin: 0; gap: 0; }
+    .anim-row, .mean-overlay { grid-template-columns: 28px 1fr; gap: 3px; }
+    .anim-row { min-height: 10px; }
+    .anim-row:nth-child(even) .elo-flag { transform: translateX(-14px); }
+    .anim-value { display: none; }
+    .anim-tail { display: flex; }
+    .anim-elim-label { display: none; }
   }
 </style>
 </head>
@@ -157,22 +238,30 @@
 <script type="module" src="../js/auth-bar.js"></script>
 <mundial-auth-bar></mundial-auth-bar>
 
-<div id="main-content" class="container-xxl py-4">
+<div id="main-content" class="container-xxl">
   <div class="chart-card taxonomy">
     <div id="statusViz">
-      <button type="button" class="viz-control-prev" aria-label="Previous">
-        <svg class="viz-control-prev-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M11 13.5L5.5 8L11 2.5" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button type="button" class="viz-control-next" aria-label="Next">
-        <svg class="viz-control-next-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5 2.5L10.5 8L5 13.5" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
+      <div id="statusCarousel" class="carousel slide">
+        <div class="carousel-inner" id="statusCarouselInner"></div>
+        <button type="button" class="carousel-control-prev" data-bs-target="#statusCarousel" data-bs-slide="prev" aria-label="Previous">
+          <svg class="viz-control-prev-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 13.5L5.5 8L11 2.5" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button type="button" class="carousel-control-next" data-bs-target="#statusCarousel" data-bs-slide="next" aria-label="Next">
+          <svg class="viz-control-next-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 2.5L10.5 8L5 13.5" stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="carousel-indicators" id="statusCarouselIndicators"></div>
+      </div>
       <div class="stage-wrap" id="stageWrap"></div>
     </div>
-    <div class="viz-indicators" id="vizIndicators"></div>
+    <div id="debugControls">
+      <button type="button" id="stepBack">←</button>
+      <input type="range" id="speedSlider" min="0.1" max="4" step="0.05" value="0.33">
+      <button type="button" id="stepForward">→</button>
+    </div>
   </div>
 </div>
 
@@ -180,7 +269,7 @@
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { loadEloData, buildImportByCountry, buildEloItems } from '../js/qualified.js';
 import { pillClasses, pillContent } from '../js/elo_ranking.js';
-import { countryName } from '../js/i18n.js';
+import { countryName, LOCALE } from '../js/i18n.js';
 
 const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
   loadEloData('../'),
@@ -192,26 +281,77 @@ const items = buildEloItems({
   rankings: eloData.rankings, byId: {}, importByCountry, countryNameFn: countryName, statusByIso2,
 }).filter(item => item.qualified);
 
+// Approximate Group Stage elimination dates + notes — status.json has no exact date
+// for these (round-robin, no single fixture decides them), so this is manually
+// researched rather than pipeline data. Kept as structured data (not just an order)
+// so the dates/notes are available if this chart ever wants to display them, e.g. in
+// a tooltip. The four 3rd-in-group dates are the fuzziest (depended on other groups'
+// late results — see caveats in the research this was drawn from); Uruguay's
+// "2026-06-26–27" range uses the effective date (final whistle of the deciding
+// group), not the later formal confirmation once the third-place table closed.
+// Sources: sports.yahoo.com/articles/teams-world-cup-2026-updated-153950826.html,
+// blog.wego.com/world-cup-eliminated-team, espn.com/soccer (2026 WC elimination
+// story), en.wikipedia.org/wiki/2026_FIFA_World_Cup.
+const GROUP_STAGE_ELIMINATION = {
+  ht:       { date: '2026-06-20', note: 'after MD2 loss to Brazil' },
+  tr:       { date: '2026-06-20', note: 'after MD2 loss to Paraguay, ~2.5h after Haiti' },
+  tn:       { date: '2026-06-21', note: 'after MD2 loss to Japan' },
+  jo:       { date: '2026-06-22', note: 'after MD2 loss to Algeria' },
+  cz:       { date: '2026-06-24', note: '4th in A, final whistle MD3' },
+  qa:       { date: '2026-06-24', note: '4th in B, final whistle MD3' },
+  cw:       { date: '2026-06-25', note: '4th in E' },
+  nz:       { date: '2026-06-26', note: '4th in G' },
+  sa:       { date: '2026-06-26', note: '4th in H' },
+  iq:       { date: '2026-06-26', note: '4th in I' },
+  uz:       { date: '2026-06-27', note: '4th in K' },
+  pa:       { date: '2026-06-27', note: '4th in L' },
+  uy:       { date: '2026-06-26', note: '3rd in H, 2 pts — effectively out at final whistle Jun 26, formally when third-place table closed' },
+  kr:       { date: '2026-06-27', note: "3rd in A, 3 pts — depended on other groups' thirds" },
+  'gb-sct': { date: '2026-06-27', note: '3rd in C, 3 pts — same situation' },
+  ir:       { date: '2026-06-27', note: '3rd in G, 3 pts — out once Algeria–Austria drew' },
+};
+
+// Vanish order for the animation, earliest first: the four MD2 losers that were out
+// early, then the eight 4th-in-group teams mathematically dead by MD3's final
+// whistle, then the four 3rd-in-group teams (order here follows the research above,
+// not a strict date sort — Uruguay's effective Jun 26 would otherwise place it
+// before Uzbekistan/Panama, but it's grouped with its fellow 3rd-placed teams since
+// all four's exact ordering among themselves is the fuzziest part of this data).
+// Consumed as a fallback tier in applyState()'s vanish-order sort, below.
+const GROUP_STAGE_ORDER = [
+  'ht', 'tr', 'tn', 'jo', 'cz', 'qa', 'cw', 'nz',
+  'sa', 'iq', 'uz', 'pa', 'uy', 'kr', 'gb-sct', 'ir',
+];
+
+// Best known elimination date for a team — real (Round of 32+) or, failing that,
+// the manually researched Group Stage approximation above. null for teams this
+// chart never eliminates (survive past Round of 32 in all 3 states).
+const eliminationDateFor = item => item.eliminatedDate ?? GROUP_STAGE_ELIMINATION[item.iso2]?.date ?? null;
+// T00:00:00 forces local-midnight parsing — a bare "2026-06-20" parses as UTC
+// midnight, which reads as the *previous* day in negative-UTC-offset timezones.
+const formatElimDate = dateStr => new Date(`${dateStr}T00:00:00`).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' });
+
 // Fixed row order — never changes between states, only each row's alive/eliminated
 // status does. (An earlier version removed eliminated rows and re-flowed the rest;
 // fixed rows + a status color is clearer since the total team count stays visible.)
 const sorted = [...items].sort((a, b) => a.impCount - b.impCount || a.name.localeCompare(b.name));
+const itemByName = new Map(sorted.map(i => [i.name, i]));
 
 const maxImp = Math.max(0, ...sorted.map(i => i.impCount));
 const DOMAIN_MAX = Math.max(5, Math.ceil(maxImp / 5) * 5);
 
-// Sequential gradient, darker/richer as imported-player count rises — blue only
-// (still in it). Eliminated teams get a single flat red instead — the gradient
-// reads as a magnitude cue, which would be misleading once a bar's message is
-// "out", not "how many".
-const BLUE_LIGHT_LO = [0x86, 0xb6, 0xef], BLUE_LIGHT_HI = [0x0d, 0x36, 0x6b];
+// Sequential gradient, darker/richer as imported-player count rises. Same red used
+// everywhere else in the app for "imported" (js/qualified.js's _IMP_LIGHT/_IMP_DARK,
+// css/taxonomy.css's --imp-accent: #ef4444) — this chart is exclusively about
+// imported-player counts, so there's no export/import duality to color-code here.
+const IMP_LIGHT = [0xfb, 0xc9, 0xc9], IMP_DARK = [0xef, 0x44, 0x44];
 function lerpColor(lo, hi, t) {
   const c = lo.map((v, i) => Math.round(v + (hi[i] - v) * t));
   return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
 }
 function gradientFor(value) {
   const t = Math.max(0, Math.min(1, value / DOMAIN_MAX));
-  return lerpColor(BLUE_LIGHT_LO, BLUE_LIGHT_HI, t);
+  return lerpColor(IMP_LIGHT, IMP_DARK, t);
 }
 
 // Three real boundaries, no invented scenario: everyone qualified, then whoever
@@ -296,14 +436,48 @@ sorted.forEach((item, index) => {
   render(pillContent({ iso2: item.iso2, name: item.name, pts: null }), pill);
   labelCell.appendChild(pill);
   row.appendChild(labelCell);
-  const nameEl = pill.querySelector('.elo-name');
 
+  // A row's own color/width never change between states (impCount is fixed per
+  // team) — only alive/eliminated does. Set once here rather than recomputed on
+  // every applyState() call.
+  const pct = impCount === 0 ? 0 : impCount / DOMAIN_MAX * 100;
   const track = document.createElement('span');
   track.className = 'anim-track';
   const fill = document.createElement('span');
   fill.className = 'anim-fill';
-  fill.style.width = (impCount / DOMAIN_MAX * 100) + '%';
+  fill.style.width = pct === 0 ? '0' : pct + '%';
+  if (pct === 0) fill.style.minWidth = '0';
+  fill.style.setProperty('--fill-light', gradientFor(impCount));
   track.appendChild(fill);
+
+  // Mobile-only: name + count placed just after the bar's own end (--pct drives
+  // both `left` and `max-width` via calc, so it never overflows the track — it
+  // ellipsizes instead if a long name has no room after a long bar). Hidden on
+  // desktop, where the pill in the label column already shows the name.
+  const tail = document.createElement('span');
+  tail.className = 'anim-tail';
+  tail.style.setProperty('--pct', pct + '%');
+  const tailName = document.createElement('span');
+  tailName.className = 'anim-tail-name';
+  tailName.textContent = name;
+  const tailValue = document.createElement('span');
+  tailValue.className = 'anim-tail-value';
+  tailValue.textContent = impCount;
+  tail.append(tailName, tailValue);
+  track.appendChild(tail);
+
+  // Replaces the bar once elimination fully completes (see .anim-elim-label).
+  const elimLabel = document.createElement('span');
+  elimLabel.className = 'anim-elim-label';
+  const elimDate = eliminationDateFor(item);
+  if (elimDate) {
+    const elimIcon = document.createElement('img');
+    elimIcon.className = 'anim-elim-icon';
+    elimIcon.src = '../images/tombstone-svgrepo-com.svg';
+    elimIcon.alt = '';
+    elimLabel.append(elimIcon, document.createTextNode(formatElimDate(elimDate)));
+  }
+  track.appendChild(elimLabel);
   row.appendChild(track);
 
   const val = document.createElement('span');
@@ -312,49 +486,124 @@ sorted.forEach((item, index) => {
   row.appendChild(val);
 
   stage.appendChild(row);
-  rowEls.set(name, { row, fill, nameEl, index });
+  rowEls.set(name, { row, fill, elimLabel, index });
 });
 stageWrap.appendChild(stage);
 
-// Rows change one at a time rather than all at once — each row's color transition is
-// delayed by its position in the (currently fixed) row order. Order isn't meaningful
-// yet — this is step 1, just proving out the per-row cascade.
-const ROW_STEP_MS = 50;
-// Must match .anim-fill/.elo-name's own transition-duration in CSS — the row's fade
-// to hidden is scheduled to start right as its color fade finishes.
-const COLOR_DURATION_MS = 400;
+// Rows change one at a time, strictly chained — a row's own animation only starts
+// once the previous row's has fully finished. A row's own elimination is one 0.5s
+// beat: color and width change together (.anim-fill fades to black while shrinking
+// to 0), then the tombstone+date label fades in (.anim-elim-label opacity).
+// Reappearing isn't the exact mirror: the bar snaps to white instantly first (it's
+// materializing from nothing, not un-fading from black), then grows back to its
+// normal width while coloring in to its usual gradient red — again both together,
+// same 0.5s beat — after the label fades out. These are the single source of
+// truth for each phase's duration — animateRow() below sets transition-duration
+// from these directly, so there's nothing duplicated in CSS to drift out of sync.
+const BAR_MS = 500;
+const ROW_LABEL_MS = 100;
 
-// ── apply one state's alive/eliminated status + mean/std lines in place ────
-function applyState(idx, instant) {
-  const state = STATES[idx];
+// Debug-only speed multiplier (#speedSlider, no label by design) — scales every
+// phase duration in animateRow() below, and (via the --speed custom property)
+// the mean/std lines' own CSS transition-duration.
+const speedSlider = document.getElementById('speedSlider');
+let SPEED = parseFloat(speedSlider.value);
+document.documentElement.style.setProperty('--speed', SPEED);
+speedSlider.addEventListener('input', () => {
+  SPEED = parseFloat(speedSlider.value);
+  document.documentElement.style.setProperty('--speed', SPEED);
+});
 
-  rowEls.forEach(({ row, fill, nameEl, index }, name) => {
-    const delay = instant ? '0ms' : (index * ROW_STEP_MS) + 'ms';
-    fill.style.transitionDelay = delay;
-    if (nameEl) nameEl.style.transitionDelay = delay;
-
-    const wasOut = row.classList.contains('is-out');
-    const isOut = !state.alive.has(name);
-    // Becoming eliminated: hold visible through the color fade, then fade out.
-    // Becoming alive again: reappear immediately (in step with the color fade back).
-    row.style.transitionDelay = instant ? '0ms'
-      : isOut && !wasOut ? (index * ROW_STEP_MS + COLOR_DURATION_MS) + 'ms'
-      : '0ms';
-    row.classList.toggle('is-out', isOut);
-    if (!isOut) fill.style.setProperty('--fill-light', gradientFor(sorted.find(i => i.name === name).impCount));
+// Resolves once `el`'s `cssProp` transition genuinely ends — chaining on the real
+// event instead of a precomputed setTimeout means nothing can drift out of sync
+// with however long the browser actually took.
+function transitionEnd(el, cssProp) {
+  return new Promise(resolve => {
+    el.addEventListener('transitionend', function handler(e) {
+      if (e.propertyName !== cssProp) return;
+      el.removeEventListener('transitionend', handler);
+      resolve();
+    });
   });
+}
 
-  const aliveValues = sorted.filter(i => state.alive.has(i.name)).map(i => i.impCount);
+// Runs one row's elimination (or, reversed, reappearance): the bar beat, then the
+// tombstone+date label, each awaiting the previous one's real transitionend before
+// starting the next. Returns the total elapsed ms (at the live SPEED value used),
+// so callers can size the mean/std line's own transition to match without a
+// second copy of these numbers.
+async function animateRow(name, isOut) {
+  const { fill, elimLabel } = rowEls.get(name);
+  const item = itemByName.get(name);
+  const pct = item.impCount === 0 ? 0 : item.impCount / DOMAIN_MAX * 100;
+  // A team with impCount 0 already has width 0 while alive, so its width
+  // transition is a no-op in either direction (no transitionend would ever fire)
+  // — await the color change instead, which always genuinely changes either way.
+  const barProp = pct === 0 ? 'background-color' : 'width';
+  let totalMs = 0;
+
+  if (isOut) {
+    const barMs = BAR_MS * SPEED;
+    totalMs += barMs;
+    fill.style.transitionDuration = barMs + 'ms';
+    fill.style.backgroundColor = '#000';
+    fill.style.width = '0';
+    await transitionEnd(fill, barProp);
+
+    const labelMs = ROW_LABEL_MS * SPEED;
+    totalMs += labelMs;
+    elimLabel.style.transitionDuration = labelMs + 'ms';
+    elimLabel.style.opacity = '1';
+    await transitionEnd(elimLabel, 'opacity');
+  } else {
+    const labelMs = ROW_LABEL_MS * SPEED;
+    totalMs += labelMs;
+    elimLabel.style.transitionDuration = labelMs + 'ms';
+    elimLabel.style.opacity = '0';
+    await transitionEnd(elimLabel, 'opacity');
+
+    // Materializing from nothing, not un-fading from black — snap to white
+    // instantly (no transition), forcing a reflow so the snap registers before
+    // the real transition-duration below applies to the actual animated change.
+    fill.style.transition = 'none';
+    fill.style.backgroundColor = '#fff';
+    void fill.offsetWidth;
+    fill.style.transition = '';
+
+    const barMs = BAR_MS * SPEED;
+    totalMs += barMs;
+    fill.style.transitionDuration = barMs + 'ms';
+    fill.style.width = pct + '%';
+    fill.style.backgroundColor = gradientFor(item.impCount);
+    await transitionEnd(fill, barProp);
+  }
+  return totalMs;
+}
+
+// ── ±1/2/3 std + mean line position for a given alive-set, no DOM writes ──
+function computeStats(aliveSet) {
+  const aliveValues = sorted.filter(i => aliveSet.has(i.name)).map(i => i.impCount);
   const mean = aliveValues.length ? aliveValues.reduce((a, b) => a + b, 0) / aliveValues.length : 0;
   const variance = aliveValues.length ? aliveValues.reduce((a, b) => a + (b - mean) ** 2, 0) / aliveValues.length : 0;
-  const sd = Math.sqrt(variance);
+  return { mean, sd: Math.sqrt(variance) };
+}
+
+const overlayEls = [meanLineEl, meanLabelEl, ...[...sdEls.values()].flatMap(({ line, label }) => [line, label])];
+
+// ── paint the mean/std lines for a given stats snapshot ──
+// durationMs overrides the CSS default (0.9s * --speed): applyState()'s chain
+// retargets `left` once per row, right as that row's animateRow() resolves, and
+// passes its actual elapsed duration here — keeping the line's own transition in
+// step with the retargets instead of being interrupted mid-flight by a longer,
+// mismatched default duration.
+function paintLines({ mean, sd }, durationMs = null) {
   const pct = Math.max(0, Math.min(100, mean / DOMAIN_MAX * 100));
+  overlayEls.forEach(el => { el.style.transitionDuration = durationMs == null ? '' : durationMs + 'ms'; });
 
   // ±1/2/3 std reference lines — only visible when they fall within the chart's domain
   // (a count can't go negative, so -2/-3 std are routinely off the left edge). Position
   // is still updated even while hidden, so a line that re-enters the domain later slides
   // in from where it conceptually sits rather than popping in at a random spot.
-  const allEls = [meanLineEl, meanLabelEl];
   sdEls.forEach(({ line, label }, k) => {
     const v = mean + k * sd;
     const p = sd > 0 ? v / DOMAIN_MAX * 100 : (k < 0 ? 0 : 100);
@@ -363,48 +612,140 @@ function applyState(idx, instant) {
     label.style.left = p + '%';
     line.style.opacity = visible ? '1' : '0';
     label.style.opacity = visible ? '1' : '0';
-    allEls.push(line, label);
   });
-
-  if (instant) allEls.forEach(el => { el.style.transition = 'none'; });
   meanLineEl.style.left = pct + '%';
   meanLabelEl.style.left = pct + '%';
-  meanLabelEl.textContent = 'mean ' + mean.toFixed(2) + (sd > 0 ? ` (std=${sd.toFixed(2)})` : '');
-  if (instant) {
-    requestAnimationFrame(() => { allEls.forEach(el => { el.style.transition = ''; }); });
-  }
+  meanLabelEl.textContent = 'mean';
+  return overlayEls;
 }
 
-// ── navigation: prev/next buttons, dots, keyboard — all drive the same state ──
-const prevBtn = document.querySelector('.viz-control-prev');
-const nextBtn = document.querySelector('.viz-control-next');
-const indicatorsEl = document.getElementById('vizIndicators');
-const dots = STATES.map((state, i) => {
+// Vanishing order follows real elimination chronology where we have it: Round of 32
+// onward is a single deciding fixture per team, dated in status.json. Group Stage
+// exits have no such date (round-robin — no single fixture decided them) —
+// GROUP_STAGE_ORDER is a manually researched approximation of the same idea
+// (mathematical-elimination date, or presentation order for the fuzzier
+// third-placed-team cases) rather than pipeline data, so it's checked after real
+// dates and before the chart's fixed row order (the last-resort fallback for anyone
+// in neither). Round always outranks date/manual order (earlier rounds vanish first
+// regardless). Shared by applyState() (only the rows changing this transition) and
+// GLOBAL_VANISH_ORDER below (every team this chart ever eliminates, in one sequence).
+function vanishOrderCompare(ia, ib) {
+  const roundA = ia.eliminatedAtIndex ?? Infinity, roundB = ib.eliminatedAtIndex ?? Infinity;
+  if (roundA !== roundB) return roundA - roundB;
+  const dateA = ia.eliminatedDate ? Date.parse(ia.eliminatedDate) : null;
+  const dateB = ib.eliminatedDate ? Date.parse(ib.eliminatedDate) : null;
+  if (dateA != null && dateB != null && dateA !== dateB) return dateA - dateB;
+  const gsA = GROUP_STAGE_ORDER.indexOf(ia.iso2), gsB = GROUP_STAGE_ORDER.indexOf(ib.iso2);
+  if (gsA !== -1 && gsB !== -1) return gsA - gsB;
+  return rowEls.get(ia.name).index - rowEls.get(ib.name).index;
+}
+
+// Every team this chart ever eliminates (Group Stage + Round of 32), in vanish
+// order — the full timeline #stepBack/#stepForward below scrub through, one team
+// per click, independent of the carousel's own (coarser, per-stage) navigation.
+const GLOBAL_VANISH_ORDER = sorted.filter(i => i.eliminatedAtIndex != null).sort(vanishOrderCompare);
+
+// ── apply one state's alive/eliminated status + mean/std lines in place ────
+function applyState(idx, instant) {
+  const state = STATES[idx];
+
+  // Snapshot the alive-ness the DOM currently shows, before any row gets toggled
+  // below — this is the starting point for the stepwise walk further down.
+  const currentAlive = new Set();
+  rowEls.forEach(({ row }, name) => { if (!row.classList.contains('is-out')) currentAlive.add(name); });
+
+  const changed = [];
+  rowEls.forEach(({ row }, name) => {
+    const isOut = !state.alive.has(name);
+    if (row.classList.contains('is-out') !== isOut) changed.push({ name, isOut });
+  });
+
+  if (instant || changed.length === 0) {
+    rowEls.forEach(({ row }, name) => { row.classList.toggle('is-out', !state.alive.has(name)); });
+    const allEls = paintLines(computeStats(state.alive));
+    if (instant) {
+      allEls.forEach(el => { el.style.transition = 'none'; });
+      requestAnimationFrame(() => { allEls.forEach(el => { el.style.transition = ''; }); });
+    }
+    return;
+  }
+
+  // Reappearing (moving backward) undoes in the exact reverse of whatever order the
+  // teams vanished in.
+  changed.sort((a, b) => vanishOrderCompare(itemByName.get(a.name), itemByName.get(b.name)));
+  if (!changed[0].isOut) changed.reverse();
+
+  // Strictly chained: each row's animateRow() call only starts once the previous
+  // row's has fully resolved (awaited real transitionend events, not a precomputed
+  // delay). The mean/std line update per row is fire-and-forget — it doesn't block
+  // the next row from starting, only reads the just-finished row's own duration so
+  // its own transition is sized to match instead of a hardcoded guess.
+  (async () => {
+    const runningAlive = new Set(currentAlive);
+    for (const { name, isOut } of changed) {
+      rowEls.get(name).row.classList.toggle('is-out', isOut);
+      const durationMs = await animateRow(name, isOut);
+      if (isOut) runningAlive.delete(name); else runningAlive.add(name);
+      paintLines(computeStats(runningAlive), durationMs);
+    }
+  })();
+}
+
+// ── debug: manual team-by-team stepper, independent of the carousel — lets the eye
+// verify the vanish order one deliberate step at a time instead of racing a timer,
+// however slow. Always derives "what's next" from the DOM's current state (not a
+// persisted cursor), so it stays correct even if the carousel changed things since
+// the last click. ──
+function stepTeam(forward) {
+  const isOutNow = name => rowEls.get(name).row.classList.contains('is-out');
+  const target = forward
+    ? GLOBAL_VANISH_ORDER.find(item => !isOutNow(item.name))
+    : [...GLOBAL_VANISH_ORDER].reverse().find(item => isOutNow(item.name));
+  if (!target) return;
+
+  rowEls.get(target.name).row.classList.toggle('is-out', forward);
+  animateRow(target.name, forward).then(() => {
+    const alive = new Set(sorted.filter(i => !isOutNow(i.name)).map(i => i.name));
+    paintLines(computeStats(alive));
+  });
+}
+document.getElementById('stepBack').addEventListener('click', () => stepTeam(false));
+document.getElementById('stepForward').addEventListener('click', () => stepTeam(true));
+
+// ── navigation: a real Bootstrap carousel owns the index (controls, indicators,
+// swipe, keyboard — all native). Its carousel-items only carry each state's caption
+// text; the actual visualization is the single persistent #stageWrap built above,
+// which keeps morphing in place via applyState() exactly as before — just triggered
+// by the carousel's own 'slide.bs.carousel' event instead of a custom click handler. ──
+const carouselEl = document.getElementById('statusCarousel');
+const carouselInner = document.getElementById('statusCarouselInner');
+const indicatorsEl = document.getElementById('statusCarouselIndicators');
+
+STATES.forEach((state, i) => {
+  const item = document.createElement('div');
+  item.className = 'carousel-item' + (i === 0 ? ' active' : '');
+  item.innerHTML = '<div class="stage-caption"><div class="stage-title"></div><div class="stage-subtitle"></div></div>';
+  item.querySelector('.stage-title').textContent = state.title;
+  item.querySelector('.stage-subtitle').textContent = state.subtitle;
+  carouselInner.appendChild(item);
+
   const dot = document.createElement('button');
   dot.type = 'button';
+  dot.setAttribute('data-bs-target', '#statusCarousel');
+  dot.setAttribute('data-bs-slide-to', String(i));
   dot.setAttribute('aria-label', state.title);
-  if (i === 0) dot.classList.add('active');
-  dot.addEventListener('click', () => goTo(i));
+  if (i === 0) { dot.classList.add('active'); dot.setAttribute('aria-current', 'true'); }
   indicatorsEl.appendChild(dot);
-  return dot;
 });
 
-let current = 0;
-function goTo(idx) {
-  idx = Math.max(0, Math.min(STATES.length - 1, idx));
-  if (idx === current) return;
-  current = idx;
-  dots.forEach((d, i) => d.classList.toggle('active', i === current));
-  prevBtn.disabled = current === 0;
-  nextBtn.disabled = current === STATES.length - 1;
-  applyState(current);
-}
+const prevBtn = carouselEl.querySelector('.carousel-control-prev');
+const nextBtn = carouselEl.querySelector('.carousel-control-next');
+new bootstrap.Carousel(carouselEl, { interval: false, wrap: false });
 
-prevBtn.addEventListener('click', () => goTo(current - 1));
-nextBtn.addEventListener('click', () => goTo(current + 1));
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft') goTo(current - 1);
-  else if (e.key === 'ArrowRight') goTo(current + 1);
+carouselEl.addEventListener('slide.bs.carousel', e => {
+  prevBtn.disabled = e.to === 0;
+  nextBtn.disabled = e.to === STATES.length - 1;
+  applyState(e.to);
 });
 
 applyState(0, true);
