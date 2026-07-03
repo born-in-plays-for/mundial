@@ -38,7 +38,9 @@
   }
   /* Shrunk from the pill's normal size (used at full size everywhere else) to fit
      48 rows without the chart becoming unreasonably tall. */
-  #statusViz .elo-item { padding: 1px 6px 1px 4px; gap: 3px; margin: 1px 0; }
+  /* No border, flag on the right (row-reverse swaps the flag/name order that
+     pillContent renders — flag-first — without needing a page-specific variant). */
+  #statusViz .elo-item { padding: 1px 6px 1px 4px; gap: 3px; margin: 1px 0; border: none; flex-direction: row-reverse; }
   #statusViz .elo-flag { width: 14px; height: 14px; }
   #statusViz .elo-name { max-width: 118px; font-size: 10px; overflow: hidden; text-overflow: ellipsis; transition: color 0.4s ease, font-weight 0.4s ease; }
   .anim-row.is-out .elo-name { color: #d03b3b; font-weight: 600; }
@@ -138,6 +140,17 @@
     margin: 0 2px; padding: 0; cursor: pointer;
   }
   #statusViz .viz-indicators button.active { background-color: #666; }
+
+  /* Mobile: the fixed 168px label column + card padding + container gutter together
+     eat a disproportionate share of a narrow viewport, squeezing the actual bars into
+     a sliver in the middle and leaving the rest looking like dead margin on both
+     sides. Trim all three so the track (the actual data) gets the room back. */
+  @media (max-width: 767.98px) {
+    #main-content { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .chart-card { padding: 16px 10px 14px; }
+    .anim-row, .mean-overlay { grid-template-columns: 108px 1fr 26px; gap: 5px; }
+    #statusViz .elo-name { max-width: 68px; }
+  }
 </style>
 </head>
 <body>
