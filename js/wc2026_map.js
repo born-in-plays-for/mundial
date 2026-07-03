@@ -1,6 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
-import { pillClasses, pillContent, initEloRanking } from './elo_ranking.js';
+import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildExporterStageIndex, buildBracketState, loadEloData } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
@@ -818,7 +818,7 @@ const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
 const countryPillTemplate = id => {
   const item = _eloItemsById.get(id);
   if (!item) return nothing;
-  return html`<span class="${pillClasses(item)}">${pillContent({ ...item, pts: null })}</span>`;
+  return html`<span class="${pillClasses(item)}" style="${pillStyle(item)}">${pillContent({ ...item, pts: null })}</span>`;
 };
 
 const fmtPop = pop => parseFloat(pop.toFixed(2))
@@ -1630,6 +1630,7 @@ Promise.all([
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
     rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,
+    nativeByCountry: app.nativeByCountry,
     fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2,
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations);
@@ -1643,7 +1644,7 @@ Promise.all([
   _eloMain.isClickable = () => true;
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
-    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },
+    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, nativeByCountry: app.nativeByCountry, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },
     fmtPop, eloData,
     popData: { source: rawData.popSource, updated: rawData.popUpdated },
   });

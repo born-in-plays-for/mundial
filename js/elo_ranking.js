@@ -24,6 +24,16 @@ export const pillClasses = ({ qualified = false, fifaMember = true, noMap = fals
   + (imp ? ' elo-item--imp' : '')
   + (noMap ? ' elo-item--no-map' : '');
 
+// Set on the pill container itself (li / span) — inherits down into .elo-name and its ::after
+// (triangle color) and is also read directly by taxonomy.css for the pill's gradient background.
+export const pillStyle = ({ expColor = null, impColor = null, impPivot = null, nativePivot = null } = {}) =>
+  [
+    expColor && `--exp-color:${expColor}`,
+    impColor && `--imp-color:${impColor}`,
+    impPivot && `--imp-pivot:${impPivot}`,
+    nativePivot && `--native-pivot:${nativePivot}`,
+  ].filter(Boolean).join(';');
+
 export const pillContent = ({ iso2, name, pts = null } = {}) => html`
   ${iso2 ? html`<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : nothing}
   <span class="elo-name">${name}</span>
@@ -51,6 +61,7 @@ class EloRanking extends HTMLElement {
       const li = document.createElement('li');
       li.className = pillClasses(item);
       li.title = _eliminationTitle(item);
+      li.style.cssText = pillStyle(item);
       render(pillContent(item), li);
       li.addEventListener('click', () => this.#handleClick(id));
       this.#itemById.set(id, li);

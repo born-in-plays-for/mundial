@@ -5,10 +5,19 @@
   --darkest-text:  #333;
   --medium-text:   #555;
   --light-text:    #999;
+  /* Fixed arrow accent colors — deliberately not count-scaled (unlike the pill's gradient
+     background): scaling both channels by the same count was redundant. These are the
+     original flat colors the arrows always had, kept fixed now instead of scaled. */
+  --exp-accent: #3b82f6;
+  --imp-accent: #ef4444;
 }
 
 /* Default: darkest text */
 .taxonomy .elo-name { color: var(--darkest-text); }
+
+/* Readability trial: black instead of the muted gray default, now that pills carry a
+   colored gradient background — applies to every sort column (elo pts, pop, exp/imp counts). */
+.taxonomy .elo-pts, .taxonomy .elo-pts-primary { color: #000; }
 
 /* Qualified vs. non qualified: solid 1px border vs. no border */
 .taxonomy .elo-item--qualified { --elo-border: 1px solid #888; border: var(--elo-border); }
@@ -38,23 +47,34 @@
 /* Non-FIFA: light text */
 .taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
 
-/* Exporter, not qualified: light blue tint */
-.taxonomy .elo-item--exp:not(.elo-item--qualified) { background-color: #f6faff; }
+/* Three-band gradient background — red (imports) | white (players born & selected by the same
+   country) | blue (exports). Colors and band-boundary positions (--imp-pivot / --native-pivot)
+   are set inline per pill by pillStyle in elo_ranking.js, proportional to each group's share of
+   the country's total player pool. Excludes :hover/--active so those states' own background
+   still shows through. */
+.taxonomy .elo-item:not(.elo-item--active):not(:hover) {
+  background: linear-gradient(to right,
+    var(--imp-color, #fff) 0%,
+    #fff var(--imp-pivot, 0%),
+    #fff var(--native-pivot, 0%),
+    var(--exp-color, #fff) 100%);
+}
 
 /* No map centroid: italic name + dimmed flag */
 .taxonomy .elo-item--no-map .elo-name { font-style: italic; }
 .taxonomy .elo-item--no-map .elo-flag { opacity: 0.35; }
 
-/* Dots via pseudo-elements — both on the right of the name */
+/* Dots via pseudo-elements — both on the right of the name. Fixed accent colors (not
+   count-scaled — the pill's gradient background already carries that signal). */
 .taxonomy .elo-item--exp:not(.elo-item--imp) .elo-name::after {
-  content: '▶'; color: #3b82f6; font-size: 14px; margin-left: 2px; /* vertical-align: super;  ● */
+  content: '▶'; color: var(--exp-accent); font-size: 14px; margin-left: 2px; /* vertical-align: super;  ● */
 }
 .taxonomy .elo-item--imp:not(.elo-item--exp) .elo-name::after {
-  content: '◀'; color: #ef4444; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
+  content: '◀'; color: var(--imp-accent); font-size: 14px; margin-left: 2px; /* vertical-align: super; */
 }
 .taxonomy .elo-item--exp.elo-item--imp .elo-name::after {
   content: '◀▶'; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
-  background: linear-gradient(90deg, #ef4444 45%, #3b82f6 55%);
+  background: linear-gradient(90deg, var(--imp-accent) 45%, var(--exp-accent) 55%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
