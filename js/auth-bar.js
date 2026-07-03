@@ -84,9 +84,9 @@ class MundialAuthBar extends HTMLElement {
         style="position:fixed;top:0;left:0;right:0;z-index:1050;height:32px">
         <div class="container-xxl d-flex align-items-center gap-3 px-1">
           ${_navLink('/', _t.navMap, ICON_HOME, '', 'map')}
-          ${_navLink('wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', 'countries')}
-          ${_navLink('wc2026_players.html', _t.navPlayers, ICON_PLAYERS, '', 'players')}
-          ${_navLink('wc2026_live.html', _t.navLive, ICON_LIVE, '', 'live')}
+          ${_navLink('/wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', 'countries')}
+          ${_navLink('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, '', 'players')}
+          ${_navLink('/wc2026_live.html', _t.navLive, ICON_LIVE, '', 'live')}
           <div class="dropdown">
             <a class="nav-link dropdown-toggle d-flex align-items-center lh-1 p-0"
               href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
@@ -128,12 +128,12 @@ class MundialAuthBar extends HTMLElement {
     const page = location.pathname.split('/').pop() || 'index.html';
     const navLinks = {
       '/': ['index.html', 'wc2026_map.html', ''],
-      'wc2026_countries.html': ['wc2026_countries.html'],
-      'wc2026_players.html': ['wc2026_players.html'],
+      '/wc2026_countries.html': ['wc2026_countries.html'],
+      '/wc2026_players.html': ['wc2026_players.html'],
       '/insights/france.html': ['france.html'],
       '/insights/perf.html': ['perf.html'],
       '/insights/status.html': ['status.html'],
-      'wc2026_live.html': ['wc2026_live.html'],
+      '/wc2026_live.html': ['wc2026_live.html'],
       'guide.html': ['guide.html'],
     };
     this.querySelectorAll('nav a[href]').forEach(a => {
@@ -274,7 +274,7 @@ class MundialAuthBar extends HTMLElement {
       if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
         this.BACKEND = 'http://localhost:5002';
       } else {
-        const cfg = await fetch('./backend_config.json').then(r => r.json());
+        const cfg = await fetch('/backend_config.json').then(r => r.json());
         this.BACKEND = cfg.backend_url;
       }
       if (!this.BACKEND) {
