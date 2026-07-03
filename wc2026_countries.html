@@ -34,9 +34,23 @@ import { initSidebar } from './js/control_sidebar.js';
 
 const _header = document.getElementById('countries-header');
 const _main   = document.getElementById('main-content');
-const _syncPaddingTop = () => { _main.style.paddingTop = (_header.getBoundingClientRect().bottom + 6) + 'px'; };
-requestAnimationFrame(_syncPaddingTop);
-window.addEventListener('resize', _syncPaddingTop);
+const _titleBlock = _header.querySelector('.d-flex > div:first-child');
+const _sidebarHost = document.getElementById('sidebar-host');
+// #sidebar-host wraps onto its own line once it no longer fits beside the title —
+// detected directly from layout (offsetTop diverging) rather than guessed via a
+// media query breakpoint, since the wrap point shifts with title text length
+// (locale-dependent) and the sidebar table's own width (filter-state-dependent).
+const _syncHeaderLayout = () => {
+  _main.style.paddingTop = (_header.getBoundingClientRect().bottom + 6) + 'px';
+  // .stacked forces #sidebar-host to width:100%, which by itself guarantees it no
+  // longer fits beside the title — checking offsetTop while that's still applied
+  // would always read "wrapped" and could never un-stack on a resize back to wide.
+  // Clear it first so the measurement reflects the natural (unforced) layout.
+  _header.classList.remove('stacked');
+  _header.classList.toggle('stacked', _sidebarHost.offsetTop > _titleBlock.offsetTop);
+};
+requestAnimationFrame(_syncHeaderLayout);
+window.addEventListener('resize', _syncHeaderLayout);
 
 const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
   loadEloData(),
@@ -65,7 +79,7 @@ const { render: renderElo, rawItems } = initEloRanking({
   buildArgs: { rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2 },
   fmtPop, eloData,
   popData: { source: mapData.popSource, updated: mapData.popUpdated },
-  onRender: _syncPaddingTop,
+  onRender: _syncHeaderLayout,
 });
 app.stageIndexById = new Map(rawItems.map(item => [item.id, item.visibleThroughIndex]));
 app.exporterStageIndex = buildExporterStageIndex(app.importByCountry, app.stageIndexById);
