@@ -38,6 +38,11 @@
     grid-template-columns: 168px 1fr 34px;
     align-items: center;
     gap: 8px;
+    /* Collapsed to display:none once a whole cascade of eliminations settles (see
+       collapseRow()/expandRow()) — overflow:hidden clips content during the
+       height shrink/grow; height/opacity duration+values are always set inline
+       from JS, nothing declared here to duplicate/drift. */
+    overflow: hidden;
   }
   .anim-label {
     display: flex;
@@ -527,6 +532,14 @@ function transitionEnd(el, cssProp) {
   });
 }
 
+// A display:none element (e.g. .anim-elim-label on mobile — see its media query)
+// never fires transitionend for any property change, since nothing is actually
+// being painted/transitioned. Awaiting one on a hidden element would stall the
+// chain forever; callers should check this before awaiting instead.
+function isRendered(el) {
+  return getComputedStyle(el).display !== 'none';
+}
+
 // Runs one row's elimination (or, reversed, reappearance): the bar beat, then the
 // tombstone+date label, each awaiting the previous one's real transitionend before
 // starting the next. Returns the total elapsed ms (at the live SPEED value used),
@@ -554,13 +567,13 @@ async function animateRow(name, isOut) {
     totalMs += labelMs;
     elimLabel.style.transitionDuration = labelMs + 'ms';
     elimLabel.style.opacity = '1';
-    await transitionEnd(elimLabel, 'opacity');
+    if (isRendered(elimLabel)) await transitionEnd(elimLabel, 'opacity');
   } else {
     const labelMs = ROW_LABEL_MS * SPEED;
     totalMs += labelMs;
     elimLabel.style.transitionDuration = labelMs + 'ms';
     elimLabel.style.opacity = '0';
-    await transitionEnd(elimLabel, 'opacity');
+    if (isRendered(elimLabel)) await transitionEnd(elimLabel, 'opacity');
 
     // Materializing from nothing, not un-fading from black — snap to white
     // instantly (no transition), forcing a reflow so the snap registers before
@@ -578,6 +591,49 @@ async function animateRow(name, isOut) {
     await transitionEnd(fill, barProp);
   }
   return totalMs;
+}
+
+const ROW_COLLAPSE_MS = 1000;
+
+// Once a row's own bar has fully zeroed out, it's just dead weight in the list —
+// collapse it out of flow entirely (display:none) so the list stays compact around
+// whoever's still alive. A no-op (resolves immediately) if already collapsed, so
+// callers can safely call this on every currently-eliminated row without worrying
+// about which ones were already collapsed by an earlier pass.
+async function collapseRow(row) {
+  if (row.style.display === 'none') return;
+  const h = row.getBoundingClientRect().height;
+  row.style.height = h + 'px';
+  void row.offsetHeight; // force the explicit height to register before animating away from it
+  const ms = ROW_COLLAPSE_MS * SPEED;
+  row.style.transitionDuration = ms + 'ms';
+  row.style.transitionProperty = 'height, opacity';
+  row.style.height = '0';
+  row.style.opacity = '0';
+  await transitionEnd(row, 'height');
+  row.style.display = 'none';
+}
+
+// Reverses collapseRow() — restores the row to flow and grows it back to its
+// natural height before any bar animation on it would make sense to watch. A
+// no-op if not currently collapsed.
+async function expandRow(row) {
+  if (row.style.display !== 'none') return;
+  row.style.display = '';
+  row.style.height = 'auto';
+  const h = row.getBoundingClientRect().height;
+  row.style.height = '0';
+  row.style.opacity = '0';
+  void row.offsetHeight; // force the collapsed starting point to register before animating
+  const ms = ROW_COLLAPSE_MS * SPEED;
+  row.style.transitionDuration = ms + 'ms';
+  row.style.transitionProperty = 'height, opacity';
+  row.style.height = h + 'px';
+  row.style.opacity = '1';
+  await transitionEnd(row, 'height');
+  // Release back to natural (min-height-driven) sizing now that it's settled, so
+  // it isn't pinned to a stale pixel height if anything about its content changes.
+  row.style.height = '';
 }
 
 // ── ±1/2/3 std + mean line position for a given alive-set, no DOM writes ──
@@ -680,13 +736,35 @@ function applyState(idx, instant) {
   // delay). The mean/std line update per row is fire-and-forget — it doesn't block
   // the next row from starting, only reads the just-finished row's own duration so
   // its own transition is sized to match instead of a hardcoded guess.
+  //
+  // Collapsing (display:none) is a separate, single beat around the whole cascade
+  // rather than another per-team stagger: reappearing rows all expand back into
+  // flow together *before* the reveal cascade starts (so each one's own bar
+  // animation is actually visible), and eliminated rows all collapse together
+  // *after* the whole cascade settles (so the list tidies up once, not once per
+  // team). collapseRow()/expandRow() are no-ops on rows already in the target
+  // state, so re-running the collapse pass over every is-out row (not just this
+  // transition's changed set) is safe and keeps the list correct even after a
+  // multi-step carousel jump.
+  const isEliminating = changed[0].isOut;
   (async () => {
+    if (!isEliminating) {
+      await Promise.all(changed.map(({ name }) => expandRow(rowEls.get(name).row)));
+    }
+
     const runningAlive = new Set(currentAlive);
     for (const { name, isOut } of changed) {
       rowEls.get(name).row.classList.toggle('is-out', isOut);
       const durationMs = await animateRow(name, isOut);
       if (isOut) runningAlive.delete(name); else runningAlive.add(name);
       paintLines(computeStats(runningAlive), durationMs);
+    }
+
+    if (isEliminating) {
+      const eliminatedRows = sorted
+        .filter(i => rowEls.get(i.name).row.classList.contains('is-out'))
+        .map(i => rowEls.get(i.name).row);
+      await Promise.all(eliminatedRows.map(collapseRow));
     }
   })();
 }
@@ -703,11 +781,16 @@ function stepTeam(forward) {
     : [...GLOBAL_VANISH_ORDER].reverse().find(item => isOutNow(item.name));
   if (!target) return;
 
-  rowEls.get(target.name).row.classList.toggle('is-out', forward);
-  animateRow(target.name, forward).then(() => {
+  const { row } = rowEls.get(target.name);
+  row.classList.toggle('is-out', forward);
+
+  (async () => {
+    if (!forward) await expandRow(row);
+    await animateRow(target.name, forward);
+    if (forward) await collapseRow(row);
     const alive = new Set(sorted.filter(i => !isOutNow(i.name)).map(i => i.name));
     paintLines(computeStats(alive));
-  });
+  })();
 }
 document.getElementById('stepBack').addEventListener('click', () => stepTeam(false));
 document.getElementById('stepForward').addEventListener('click', () => stepTeam(true));
