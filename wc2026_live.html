@@ -142,9 +142,8 @@ PROXY = backend;
 
 // Fetch elo rankings + WC2026 team list + player/coach wiki-birthCountry data for iso2 and
 // player-identity lookups (all resolved once upstream through mundial-data's shared resolvers)
-const [eloData, r32Data, playerWiki] = await Promise.all([
+const [eloData, playerWiki] = await Promise.all([
   fetch('./data/elo_rank.json').then(r => r.json()),
-  fetch('./data/r32_teams.json').then(r => r.json()),
   fetch('./data/v2/live.json').then(r => r.json()),
   loadWikiData(),
 ]);
@@ -153,10 +152,10 @@ const [eloData, r32Data, playerWiki] = await Promise.all([
 const _isoByCountryName = Object.fromEntries(eloData.rankings.map(r => [r.name, r.iso2]));
 const flagForCountry = name => _isoByCountryName[name] ?? (console.error('flagForCountry: unknown country', name), '');
 
-// API-Football team id -> iso2 (r32_teams.json). Fixture/lineup team objects always carry
-// API-Football's own numeric id, so joining on id sidesteps API-Football's name spelling
+// API-Football team id -> iso2 (v2/live.json's "teams" key). Fixture/lineup team objects always
+// carry API-Football's own numeric id, so joining on id sidesteps API-Football's name spelling
 // entirely (e.g. 'Congo DR' vs our canonical 'DR Congo') instead of matching name strings.
-const _isoByTeamId = Object.fromEntries(r32Data.teams.map(t => [t.id, t.iso2]));
+const _isoByTeamId = playerWiki.teams;
 const flagForTeam = team => _isoByTeamId[team.id] ?? (console.error('flagForTeam: unknown team id', team.id, team.name), '');
 
 const localName = (iso, fallback) => regionName(iso, fallback);
