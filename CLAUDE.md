@@ -44,7 +44,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `css/taxonomy.css` | Canonical pill styling (borders, text colors, dots via CSS) |
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
-| `data/` | Git submodule → `mundial-data` repo. Contains all pipeline-generated data: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5, `status.json` — tournament elimination status), `elo_rank.json`, `r32_teams.json`, `uk-nations.geojson`. Legacy `map_data.json` / `player_wiki.json` / top-level `wiki_<lang>.json` are pipeline inputs only — the frontend no longer reads them |
+| `data/` | Git submodule → `mundial-data` repo. Contains only frontend-consumed data, nothing pipeline-internal: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5, `status.json` — tournament elimination status), `elo_rank.json`, `uk-nations.geojson`. (`r32_teams.json` was removed — superseded by `v2/live.json`'s `teams` key. `countries.json` moved out to `mundial-build/pipeline/countries.json` — a pipeline build input, never a frontend asset.) |
 | `wc2026_og_v5.jpg` | 2880×1620 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=2) |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
@@ -211,7 +211,7 @@ The four home nations (England, Scotland, Wales, Northern Ireland) are handled a
 - All 4 UK nations render their flag on the map — the UK nation filter covers all four: `f._id === 8260 || f._id === 8261 || f._id === 8262 || f._id === 8263`
 - Scotland centroid manually overridden to `[-4.2, 56.8]` (island bias in auto-centroid)
 - All flags (qualified + non-qualified) placed in a single `forEach` loop filtered by Elo membership
-- Population + capital patched via `pipeline/patch_uk_nations.py` (Wikidata SPARQL for capitals, 2021/22 census populations); stored in `data/countries.json` under keys `"8260"`–`"8263"` with alpha2 as the lookup key
+- Population + capital patched via `pipeline/patch_uk_nations.py` (Wikidata SPARQL for capitals, 2021/22 census populations); stored in `mundial-build/pipeline/countries.json` under keys `"8260"`–`"8263"` with alpha2 as the lookup key (this file is a pipeline build input — it never ships in this repo's `data/` submodule; the pipeline bakes its pop/capital values into `data/v2/map.json`, which is what the frontend actually reads)
 
 ### Kosovo (id=383)
 Kosovo is absent from the `iso-3166-1` npm package's numeric table and may be absent from `Intl.DisplayNames`. Special handling:
@@ -402,7 +402,7 @@ Each fixture in `live_update` carries a `_tracked: bool` flag set by the server.
 
 `wc2026_live.html` does not fetch `data/v2/map.json` at all. It resolves every identity join through numeric ids shared with `mundial-data`'s build-time resolvers, never by matching name strings — this replaced a recurring bug class where API-Football's own spelling of a country or player name (e.g. `"Congo DR"` vs. this project's canonical `"DR Congo"`, or lineup name `"Lionel Mpasi Nzau"` vs. squad-list name `"Lionel Mpasi"`) silently produced the wrong flag or dropped enrichment.
 
-- **Team/country flags**: `flagForTeam(team)` looks up API-Football's own numeric `team.id` in `data/r32_teams.json` (`{id, name, iso2}`) to get an iso2 code. `flagForCountry(name)` looks up a canonical country name in `data/elo_rank.json`'s `rankings` (also carries `iso2`) for birth-country flags. Curaçao, Kosovo, the UK home nations, etc. all resolve correctly here with no per-country override — that resolution now happens once, upstream, through `mundial-data`'s shared alias table.
+- **Team/country flags**: `flagForTeam(team)` looks up API-Football's own numeric `team.id` in `data/v2/live.json`'s `teams` key (`{ "<team_id>": "<iso2>" }`, replacing the now-removed `data/r32_teams.json`) to get an iso2 code. `flagForCountry(name)` looks up a canonical country name in `data/elo_rank.json`'s `rankings` (also carries `iso2`) for birth-country flags. Curaçao, Kosovo, the UK home nations, etc. all resolve correctly here with no per-country override — that resolution now happens once, upstream, through `mundial-data`'s shared alias table.
 - **Player/coach identity**: `getPlayerWiki(iso, id)` looks up `data/v2/live.json` (shape: `{ "<iso2>": { "<api_football_player_or_coach_id>": { pid, birthCountry } } }`) using `lineup.startXI[].player.id` / `lineup.coach.id` — API-Football's own numeric id, the same id space the file is keyed by. A miss (id not yet resolved upstream) renders the plain name with no wiki link or birth-country tag — a visible, honest gap, not a name-matching fallback.
 
 **`mapData.natives` structure** (`data/v2/map.json`, used by `wc2026_map.js` and `wc2026_players.html`, not by the live-game page)
@@ -419,16 +419,16 @@ Keys are country names (matching `p.nation` in export records). These players ha
 - `renderGroupResults` only renders finished matches (`FT`, `AET`, `PEN`) — future and live fixtures are excluded to avoid showing placeholder scores.
 - `poll_status` socket event shape: `{ discovering, fixtures: {} }` where `fixtures` is an object keyed by fixture id (not an array). `tracking` is intentionally absent — see `../mundial-server/CLAUDE.md` for the rationale.
 
-### `data/countries.json` — population + capital lookup
-`data/countries.json` (in the `mundial-data` submodule) is the canonical source for population and multilingual capital city names. Shape:
+### `countries.json` — population + capital lookup (mundial-build pipeline input, not in this repo's `data/`)
+`countries.json` is a **mundial-build**-only file (`mundial-build/pipeline/countries.json`) — a pipeline build input, never published into this repo's `data/` submodule. It's the canonical source for population and multilingual capital city names. Shape:
 ```json
 { "250": { "id": 250, "alpha2": "fr", "alpha3": "fra", "name": "France",
            "capital": {"en":"Paris","fr":"Paris","de":"Paris","it":"Parigi","es":"París"},
            "population": 68374591 } }
 ```
-Keys are ISO numeric ids (strings). Special entries: `"8260"`–`"8263"` (UK home nations, alpha2 = `gb-eng` etc.) and `"383"` (Kosovo, alpha2 = `xk`). The pipeline reads this file in `build_json.py` to populate `pop` and `capital` in `data/map_data.json` (looked up by lowercase alpha2).
+Keys are ISO numeric ids (strings). Special entries: `"8260"`–`"8263"` (UK home nations, alpha2 = `gb-eng` etc.) and `"383"` (Kosovo, alpha2 = `xk`). The pipeline reads this file in `build_json.py` to populate `pop` and `capital` in `data/v2/map.json` (looked up by lowercase alpha2) — that baked-in result is what this frontend actually fetches.
 
-Generated by: `pipeline/fetch_countries.py` (mledoze + World Bank + Wikidata). Post-patched by `pipeline/patch_uk_nations.py` and `pipeline/patch_kosovo.py`.
+Generated by: `pipeline/fetch_countries.py` (mledoze + World Bank + Wikidata). Post-patched by `pipeline/patch_uk_nations.py` and `pipeline/patch_kosovo.py`. All three scripts live in `mundial-build`.
 
 ---
 
