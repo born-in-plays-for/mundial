@@ -9,6 +9,7 @@
  * .csb-sort-list        — flex column des options de tri
  * .csb-sort-item        — option de tri individuelle
  * .csb-sort-dir         — bouton ↑/↓ direction
+ * .csb-display-toggle   — switch équipes/match (bas de la colonne tri)
  * .csb-col              — en-tête de colonne cliquable (exp / non-exp)
  * .csb-group            — en-tête de groupe de lignes (qualifié / non-qual.)
  * .csb-stage-carousel   — carrousel Bootstrap (Qualifiés → … → Vainqueur)
@@ -121,6 +122,17 @@
 #control-sidebar .csb-sort-item:first-of-type { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
 #control-sidebar .csb-sort-item:nth-child(n+3 of .csb-sort-item) { color: #999; }
 #control-sidebar .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
+#control-sidebar .csb-sort-item--disabled { opacity: 0.3; pointer-events: none; }
+
+/* ── Team/match display switch (bottom of the sort column) ───────────────
+   Not a sort criterion (see control_sidebar.js's _displayMode) — a persistent two-state
+   switch, always visible, that decides whether rows are one team each or grouped fixture
+   couples. Bootstrap's btn-check pattern (hidden radio + label, see
+   getbootstrap.com/docs/5.3/forms/checks-radios) — raw Bootstrap .btn-check/.btn look and
+   behavior otherwise untouched; only margin/padding/font-size/color below, to match the
+   rest of the sort column (.csb-sort-item) instead of Bootstrap's full-size default. */
+#control-sidebar .csb-display-toggle { white-space: nowrap; }
+#control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0; font-size: 11px; color: #999; }
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
 

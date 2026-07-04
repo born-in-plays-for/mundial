@@ -29,6 +29,24 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-title { font-size: 14px; font-weight: 500; }
 .elo-meta { font-size: 10px; color: var(--text-muted); }
 .elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+/* Row wrapper — the <ul>'s actual flex-wrap children (see js/elo_ranking.js's EloRanking.show()).
+   Each <li> holds one pill (.elo-row) or, in match-display mode, two fixture opponents
+   (.elo-pair) — being ONE flex item, a pair can never be split across a wrap line break.
+   The underline is the pair's only visual cue; the pills themselves render unchanged. */
+.elo-list > li { display: inline-flex; align-items: center; white-space: nowrap; }
+/* border-radius on the two bottom corners lets the lone border-bottom sweep upward at both
+   ends — with no left/right border to fight it, it reads as the underline curving in to hug
+   the outer pill's own rounded corner instead of stopping in a hard right angle. */
+.elo-list > li.elo-pair {
+  gap: 4px;
+  border-bottom: 1.5px solid darkslategray;
+  border-radius: 0 0 10px 10px;
+  padding-bottom: 2px;
+}
+.elo-pair-sep { font-size: 10px; color: var(--border-strong); }
+/* Decided fixture — the actual score instead of a plain dash, so it reads as real information
+   (final result) rather than just the same pairing cue as an undecided one. */
+.elo-pair-sep--score { font-weight: 600; color: #555; font-variant-numeric: tabular-nums; }
 .elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 20px; background: #fff; }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: var(--bg-hover); border-color: var(--border-strong); }

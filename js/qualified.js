@@ -133,8 +133,14 @@ const computeWonUpTo = (statusByIso2) => {
   return wonUpTo;
 };
 
+// iso2 -> display name, resolved once from the Elo rankings. Shared by buildEloItems
+// (opponent names in its own eliminatedLostTo field) and buildMatchInfo (opponent
+// names for the control sidebar's team/match display switch).
+export const buildNameByIso2 = (rankings, countryNameFn) =>
+  Object.fromEntries(rankings.filter(r => r.iso2).map(r => [r.iso2, countryNameFn(r.id, r.name)]));
+
 export const buildEloItems = ({ rankings, byId, importByCountry, nativeByCountry = {}, countryNameFn, centroids, pop, statusByIso2 }) => {
-  const nameByIso2 = Object.fromEntries(rankings.filter(r => r.iso2).map(r => [r.iso2, countryNameFn(r.id, r.name)]));
+  const nameByIso2 = buildNameByIso2(rankings, countryNameFn);
   const wonUpTo = computeWonUpTo(statusByIso2);
   const maxExpCount = Math.max(0, ...rankings.map(r => byId[r.id]?.count ?? 0));
   const maxImpCount = Math.max(0, ...rankings.map(r => importByCountry[r.id]?.length ?? 0));
@@ -202,4 +208,73 @@ export const buildBracketState = (statusByIso2, all48Iso2) => {
     }
   }
   return counts;
+};
+
+// iso2 -> { [ELIM_ROUNDS index]: { opponentIso2, opponentName, date, won, myGoals, oppGoals,
+// penalties } } — one entry per knockout fixture a team is (or was) part of, both sides. `won`
+// is `true`/`false` once decided, `null` for a real, already-paired fixture that hasn't been
+// played yet — `myGoals`/`oppGoals`/`penalties` are `null` alongside it in that case. Keyed by
+// ELIM_ROUNDS index (not BRACKET_ROUNDS-local) so it lines up 1:1 with the control-sidebar
+// carousel's own `_stage` (CAROUSEL_STAGES[p] === ELIM_ROUNDS[p] for p 1..5 — see
+// CAROUSEL_STAGES above).
+//
+// Two sources, layered:
+//  1. status.json's per-loser `round`/`date`/`lostTo` — authoritative for decided fixtures.
+//     Each has exactly one loser (an explicit entry) and one winner (only provable by appearing
+//     as some entry's `lostTo`), so recording both sides from that single entry recovers the
+//     full pairing. This is the ONLY reliable winner signal for penalty-shootout results —
+//     data/fixtures.json's `goals` is tied for a PEN/AET decision and doesn't reveal one on its
+//     own; it's cross-referenced (by round + unordered iso2 pair) purely for the goal tally and
+//     to flag `penalties` (fixturesData's `status === 'PEN'`) — fixtures.json has no separate
+//     shootout score field, so a penalty-decided fixture's `myGoals`/`oppGoals` is the tied
+//     score at the end of extra time, not the shootout tally.
+//  2. data/fixtures.json (mundial-build, added to cover exactly this gap) — every WC2026
+//     fixture, played or scheduled, home/away as iso2. Used to fill in real pairings status.json
+//     hasn't decided yet (`status` "NS" etc., `goals` both null) — without it, a still-undecided
+//     team would have no opponent info at all until after the match — and to cross-reference
+//     goals for the decided fixtures above.
+// A team can still end up with neither (e.g. Quarter-finals before that bracket slot exists in
+// fixtures.json yet) — `app.matchInfoByIso2[iso2]?.[stage]` is simply absent then, and the
+// control sidebar's match-display mode (js/control_sidebar.js's _buildGroups) renders it as a
+// lone row instead of a couple.
+export const buildMatchInfo = (statusByIso2, fixturesData, nameByIso2) => {
+  const out = {};
+  const record = (iso2, roundIdx, opponentIso2, date, won, myGoals = null, oppGoals = null, penalties = false, myPenGoals = null, oppPenGoals = null) => {
+    (out[iso2] ??= {})[roundIdx] = { opponentIso2, opponentName: nameByIso2[opponentIso2] ?? opponentIso2, date, won, myGoals, oppGoals, penalties, myPenGoals, oppPenGoals };
+  };
+
+  // round index + unordered iso2 pair -> fixtures.json entry, so a decided (status.json) fixture
+  // can look up its actual goal tally below.
+  const fixtureByRoundPair = new Map();
+  for (const f of fixturesData?.fixtures ?? []) {
+    const roundIdx = ELIM_ROUNDS.indexOf(f.round); // "Group Stage - N" never matches — excluded
+    if (roundIdx < 1) continue;
+    fixtureByRoundPair.set(`${roundIdx}_${[f.home, f.away].sort().join('|')}`, f);
+  }
+
+  for (const [iso2, info] of Object.entries(statusByIso2 ?? {})) {
+    if (!info.lostTo) continue; // Group Stage exits: round-robin, no single deciding fixture
+    const roundIdx = ELIM_ROUNDS.indexOf(info.round);
+    if (roundIdx < 0) continue;
+    const f = fixtureByRoundPair.get(`${roundIdx}_${[iso2, info.lostTo].sort().join('|')}`);
+    const penalties = f?.status === 'PEN';
+    const loserGoals = f ? (f.home === iso2 ? f.goals.home : f.goals.away) : null;
+    const winnerGoals = f ? (f.home === iso2 ? f.goals.away : f.goals.home) : null;
+    // Not published by mundial-build yet (data/fixtures.json has no shootout tally, only the
+    // tied extra-time `goals` — see this function's own comment) — reads `f.score.penalty` on
+    // the chance it lands later, so this starts working the moment that field exists, with no
+    // other code needing to change.
+    const loserPen = f?.score?.penalty ? (f.home === iso2 ? f.score.penalty.home : f.score.penalty.away) : null;
+    const winnerPen = f?.score?.penalty ? (f.home === iso2 ? f.score.penalty.away : f.score.penalty.home) : null;
+    record(iso2, roundIdx, info.lostTo, info.date, false, loserGoals, winnerGoals, penalties, loserPen, winnerPen);
+    record(info.lostTo, roundIdx, iso2, info.date, true, winnerGoals, loserGoals, penalties, winnerPen, loserPen);
+  }
+  for (const f of fixturesData?.fixtures ?? []) {
+    const roundIdx = ELIM_ROUNDS.indexOf(f.round);
+    if (roundIdx < 1) continue;
+    if (out[f.home]?.[roundIdx] || out[f.away]?.[roundIdx]) continue; // status.json already decided this one
+    record(f.home, roundIdx, f.away, f.date, null);
+    record(f.away, roundIdx, f.home, f.date, null);
+  }
+  return out;
 };

@@ -40,6 +40,10 @@ export const pillContent = ({ iso2, name, pts = null } = {}) => html`
   ${pts != null ? html`<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : nothing}`;
 
 class EloRanking extends HTMLElement {
+  // #itemById holds the reusable pill <span> per country — stable identity across renders,
+  // so FLIP position animation and click listeners survive re-sorting/re-grouping. The <ul>'s
+  // direct children are instead per-render <li> "row" wrappers (.elo-row / .elo-pair, see
+  // show() below): cheap, rebuilt every call, never reused — only the pills inside them persist.
   #ul; #itemById = new Map(); #itemDataById = new Map(); #activeId = null;
   #onCountryClick = null; #isClickable = null; #isZoomable = null;
 
@@ -58,15 +62,16 @@ class EloRanking extends HTMLElement {
     this.#ul.innerHTML = '';
     for (const item of list) {
       const { id } = item;
-      const li = document.createElement('li');
-      li.className = pillClasses(item);
-      li.title = _eliminationTitle(item);
-      li.style.cssText = pillStyle(item);
-      render(pillContent(item), li);
-      li.addEventListener('click', () => this.#handleClick(id));
-      this.#itemById.set(id, li);
+      const pill = document.createElement('span');
+      pill.className = pillClasses(item);
+      pill.title = _eliminationTitle(item);
+      pill.style.cssText = pillStyle(item);
+      render(pillContent(item), pill);
+      pill.addEventListener('click', () => this.#handleClick(id));
+      this.#itemById.set(id, pill);
       this.#itemDataById.set(id, { ...item });
-      this.#ul.appendChild(li);
+      // Not appended anywhere yet — show() below owns all DOM placement (rows are built fresh
+      // per call), so a pill only ever enters the document once show() first runs.
     }
   }
 
@@ -87,37 +92,75 @@ class EloRanking extends HTMLElement {
     this.#itemById.get(this.#activeId)?.classList.add('elo-item--active');
   }
 
+  // visibleItems is a flat, already-ordered array (control_sidebar.js's sortAndFilter) — a
+  // country not present here is simply not rendered at all (fully detached, not just hidden;
+  // nothing in this app currently counts hidden-vs-visible pills in the DOM, so this is safe).
+  // Adjacent items sharing the same `_pairId` (match-display mode's fixture couples — see
+  // sortAndFilter) are placed into ONE <li class="elo-pair"> row instead of two separate rows,
+  // so they can never be split across a flex-wrap line break (css/global.css's .elo-pair).
   show(visibleItems, onAnimationDone) {
     const before = new Map();
-    for (const [id, li] of this.#itemById)
-      if (li.style.display !== 'none') before.set(id, li.getBoundingClientRect().top);
-    for (const li of this.#itemById.values()) li.style.display = 'none';
-    for (const { id, pts, pending } of visibleItems) {
-      const li = this.#itemById.get(id);
+    for (const [id, pill] of this.#itemById)
+      if (pill.isConnected) before.set(id, pill.getBoundingClientRect().top);
+
+    this.#ul.innerHTML = ''; // clears old row wrappers only — pills persist via #itemById
+
+    const place = (row, { id, pts, pending }) => {
+      const pill = this.#itemById.get(id);
       const data = this.#itemDataById.get(id);
-      if (!li || !data) continue;
-      li.style.display = '';
-      li.classList.toggle('elo-item--clickable', this.#onCountryClick != null && (this.#isClickable == null || this.#isClickable(id)));
-      li.classList.toggle('elo-item--zoomable', this.#onCountryClick != null && this.#isZoomable != null && this.#isZoomable(id) && !(this.#isClickable == null || this.#isClickable(id)));
-      li.classList.toggle('elo-item--pending', !!pending);
-      this.#ul.appendChild(li);
+      if (!pill || !data) return;
+      pill.classList.toggle('elo-item--clickable', this.#onCountryClick != null && (this.#isClickable == null || this.#isClickable(id)));
+      pill.classList.toggle('elo-item--zoomable', this.#onCountryClick != null && this.#isZoomable != null && this.#isZoomable(id) && !(this.#isClickable == null || this.#isClickable(id)));
+      pill.classList.toggle('elo-item--pending', !!pending);
+      row.appendChild(pill);
       data.pts = pts;
-      render(pillContent(data), li);
+      render(pillContent(data), pill);
+    };
+
+    for (let i = 0; i < visibleItems.length; i++) {
+      const cur = visibleItems[i], next = visibleItems[i + 1];
+      const paired = cur._pairId != null && next?._pairId === cur._pairId;
+      const row = document.createElement('li');
+      row.className = paired ? 'elo-pair' : 'elo-row';
+      place(row, cur);
+      if (paired) {
+        const sep = document.createElement('span');
+        const score = cur._pairScore; // { home, away, penalties, penaltyHome, penaltyAway } — see sortAndFilter's _pairScore
+        if (score) {
+          sep.className = 'elo-pair-sep elo-pair-sep--score';
+          // penaltyHome/Away (the actual shootout tally, e.g. "4-3") isn't published by
+          // mundial-build yet — data/fixtures.json's `goals` is only the tied extra-time score
+          // for a PEN decision. Falls back to a bare "(pen.)" until that lands; see the prompt
+          // in CLAUDE.md's buildMatchInfo section / the mundial-build ask for the follow-up.
+          const penSuffix = score.penalties
+            ? (score.penaltyHome != null ? ` (${score.penaltyHome}-${score.penaltyAway} pen.)` : ' (pen.)')
+            : '';
+          sep.textContent = `${score.home}–${score.away}${penSuffix}`;
+        } else {
+          sep.className = 'elo-pair-sep';
+          sep.textContent = '–'; // en dash — reads cleaner than "vs" at this pill size
+        }
+        row.appendChild(sep);
+        place(row, next);
+        i++;
+      }
+      this.#ul.appendChild(row);
     }
+
     let animating = 0;
     for (const { id } of visibleItems) {
-      const li = this.#itemById.get(id);
-      if (!li || !before.has(id)) continue;
-      const delta = before.get(id) - li.getBoundingClientRect().top;
+      const pill = this.#itemById.get(id);
+      if (!pill || !before.has(id)) continue;
+      const delta = before.get(id) - pill.getBoundingClientRect().top;
       if (delta === 0) continue;
       animating++;
-      li.style.transition = 'none';
-      li.style.transform = `translateY(${delta}px)`;
-      li.getBoundingClientRect();
-      li.style.transition = 'transform 0.2s ease';
-      li.style.transform = '';
-      li.addEventListener('transitionend', () => {
-        li.style.transition = '';
+      pill.style.transition = 'none';
+      pill.style.transform = `translateY(${delta}px)`;
+      pill.getBoundingClientRect();
+      pill.style.transition = 'transform 0.2s ease';
+      pill.style.transform = '';
+      pill.addEventListener('transitionend', () => {
+        pill.style.transition = '';
         if (--animating === 0 && onAnimationDone) onAnimationDone();
       }, { once: true });
     }

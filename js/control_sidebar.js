@@ -7,6 +7,19 @@ const _STORAGE_KEY = 'mundial-control-sidebar-state';
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
+  // 'team' (default) — flat list, unchanged. 'match' — teams grouped fixture-by-fixture
+  // (one row per couple, non-breakable — see .elo-pair in css/global.css), and the active
+  // sort criteria compare couples by the SUM of both members' values instead of one team's
+  // own. Not itself a sort criterion — a display-mode switch alongside the sort column,
+  // gated the same way the old "match" sort-item was: no fixtures to group by at the
+  // 'qualified' stage, so switching to 'match' there is a no-op (forced back to 'team').
+  let _displayMode = 'team';
+  // Set only when _updateCarouselTitle auto-forces 'match' back to 'team' because the carousel
+  // dropped to stage 0 (see below) — remembers that this was NOT the user's own choice, so
+  // 'match' comes back on its own once a valid stage is reached again, instead of staying stuck
+  // on 'team' until the user re-picks it by hand. A user-driven switch to 'team' at a valid
+  // stage never sets this (nothing to restore), and it's consumed (cleared) the moment it fires.
+  let _autoSwitchedFromMatch = false;
 
   const _sidebarHost = document.getElementById('sidebar-host');
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
@@ -19,7 +32,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
     </tr>
     <tr>
-      <td rowspan="4" class="csb-sort-col csb-border-right text-muted">
+      <td rowspan="3" class="csb-sort-col csb-border-right text-muted">
         <div class="csb-sort-list d-flex flex-column h-100 position-relative">
           <button class="csb-sort-dir"></button>
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo">${T.sortLabels.elo}</div>
@@ -76,6 +89,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
     <tr>
+      <td class="csb-sort-col csb-border-right text-muted">
+        <div class="csb-display-toggle" title="${T.sortLabels.matchHint}">
+          <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
+          <label class="btn" for="csb-display-team">${T.sortLabels.teamDisplay}</label>
+          <input type="radio" class="btn-check" name="csb-display" id="csb-display-match" data-display="match">
+          <label class="btn" for="csb-display-match">${T.sortLabels.match}</label>
+        </div>
+      </td>
       <td class="csb-row" data-row="nqn"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-en"  checked></label></td>
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
@@ -116,6 +137,22 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       ? `${total} · ${bs.eliminated} ${T.bracketEliminated} · ${bs.playing} ${T.bracketToPlay}`
       : `${total}`;
     _refreshCarouselBounds();
+    // "match" display only means anything once the carousel has moved off 'qualified' (stage
+    // 0) — there's no fixture to group by until a knockout round is being viewed. Disabled
+    // (native `disabled` on the radio — Bootstrap's own .btn-check:disabled+.btn CSS dims the
+    // label, and a disabled radio's label click is a no-op natively) rather than removed, so
+    // the switch's layout stays stable; forced back to 'team' if the carousel is navigated
+    // back down to stage 0 while it was active — but remembered (_autoSwitchedFromMatch) and
+    // silently restored the next time a valid stage is reached, since that switch was never
+    // the user's own choice.
+    if (_matchDisplayRadio) _matchDisplayRadio.disabled = _stage === 0;
+    if (_stage === 0) {
+      if (_displayMode === 'match') _autoSwitchedFromMatch = true;
+      _setDisplayMode('team'); // no-op if already 'team'
+    } else if (_autoSwitchedFromMatch) {
+      _autoSwitchedFromMatch = false;
+      _setDisplayMode('match');
+    }
   };
 
   // The tournament hasn't reached every stage yet — cap navigation at the furthest stage that
@@ -252,6 +289,28 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _sortListEl = _panel.querySelector('.csb-sort-list');
   const _sortDirBtn = _sortListEl.querySelector('.csb-sort-dir');
   const _alphaEl = _sortListEl.querySelector('[data-sort="alpha"]');
+  // Own table cell (freed up by the sort column's rowspan="3", one row short of the full
+  // filter grid) — not inside .csb-sort-list, so it needs its own element lookup + listener
+  // below rather than piggybacking on _sortListEl's. Bootstrap's btn-check pattern (radio +
+  // label, see getbootstrap.com/docs/5.3/forms/checks-radios) — the checked/disabled visual
+  // states are Bootstrap's own CSS (:checked+.btn, :disabled+.btn), nothing custom to maintain.
+  const _displayToggleEl = _panel.querySelector('.csb-display-toggle');
+  const _teamDisplayRadio = _displayToggleEl.querySelector('[data-display="team"]');
+  const _matchDisplayRadio = _displayToggleEl.querySelector('[data-display="match"]');
+
+  // team/match display switch — see _displayMode's own comment above for what it does.
+  // Not part of _sortOrder/_updateSortCol's reordering: it's a mode switch, not a
+  // reorderable priority. Self-guards against 'match' at stage 0 (no fixtures to group by
+  // there) rather than relying on callers to check first or on a stage-change event firing —
+  // _setStage(0) is a no-op when already at stage 0, so nothing would otherwise catch a
+  // restored/URL-forced 'match' at the default stage.
+  const _setDisplayMode = mode => {
+    if (mode === 'match' && _stage === 0) mode = 'team';
+    if (mode === _displayMode) return;
+    _displayMode = mode;
+    _teamDisplayRadio.checked = mode === 'team';
+    _matchDisplayRadio.checked = mode === 'match';
+  };
 
   const _updateAlphaLabel = () => {
     _alphaEl.textContent = _sortOrder[0] === 'alpha' && _sortDir === 'asc' ? 'Z–A' : 'A–Z';
@@ -294,6 +353,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       callbacks.renderElo?.(callbacks.scrollToActiveElo);
       _saveState();
     }
+  });
+
+  // 'change' (not 'click') — btn-check is a real radio input; clicking its <label> is what
+  // fires the native change event once the browser has already flipped `checked` for us.
+  _displayToggleEl.addEventListener('change', e => {
+    const radio = e.target.closest('input[name="csb-display"]');
+    if (!radio) return;
+    _setDisplayMode(radio.dataset.display);
+    callbacks.renderElo?.(callbacks.scrollToActiveElo);
+    _saveState();
   });
 
   if (!alwaysOpen) {
@@ -463,6 +532,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
   measureControlSidebar();
 
+  // Fixture pairing for match-display mode — only meaningful once the carousel is off
+  // 'qualified' (stage 0), since there's no single fixture per team at the qualified stage.
+  // Data comes from app.matchInfoByIso2 (qualified.js's buildMatchInfo), layering two sources:
+  // status.json's lostTo (authoritative winner/loser, including penalty shootouts) for decided
+  // fixtures, and data/fixtures.json (mundial-build) for real pairing — home/away, date,
+  // `won: null` — on fixtures that haven't been played yet. A team can still end up with no
+  // pairing at all (e.g. a bracket slot too far out to be scheduled yet) — see _buildGroups.
+  const _matchInfo = item => _stage > 0 ? app.matchInfoByIso2?.[item.iso2]?.[_stage] : undefined;
+
   const _sortFns = {
     elo:   (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999),
     exp:   (a, b) => b.expCount - a.expCount,
@@ -480,27 +558,98 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     : key === 'pop'   ? (item.pop ? fmtPop(item.pop) : null)
     : null;
 
+  // Per-team numeric value used to SUM a fixture couple's combined standing in match-display
+  // mode — deliberately different from _sortFns.elo's own comparator, which sorts single teams
+  // by `rank` (an ordinal position, meaningless to add across two teams). `pts` is the actual
+  // Elo rating (e.g. France 2134, Paraguay 1823) — a cardinal quantity that combines sensibly
+  // into "this fixture's combined rating", matching pop/delta's already-additive nature. `alpha`
+  // has no numeric aggregate at all — handled separately in _groupCompare via a representative
+  // name instead of a sum.
+  const _aggregateValue = (key, item) =>
+      key === 'elo'   ? Number(item.pts) || 0
+    : key === 'pop'   ? (item.pop ?? 0)
+    : key === 'delta' ? (item.expCount - item.impCount)
+    : 0;
+
+  // Groups filtered items into fixture couples for match-display mode: each team pairs with
+  // its app.matchInfoByIso2 opponent if that opponent is itself present (visible) in `items` —
+  // an opponent hidden by the category filters means no couple, just a lone row. Teams with no
+  // pairing data at all (see _matchInfo's comment) are also lone rows.
+  const _buildGroups = items => {
+    const byIso2 = new Map(items.map(i => [i.iso2, i]));
+    const seen = new Set();
+    const groups = [];
+    for (const item of items) {
+      if (seen.has(item.id)) continue;
+      seen.add(item.id);
+      const partnerIso2 = _matchInfo(item)?.opponentIso2;
+      const partner = partnerIso2 ? byIso2.get(partnerIso2) : null;
+      if (partner && !seen.has(partner.id)) { seen.add(partner.id); groups.push([item, partner]); }
+      else groups.push([item]);
+    }
+    return groups;
+  };
+
+  // Compares two groups (each 1 or 2 items) by a single sort key — sum of _aggregateValue for
+  // numeric keys, or the alphabetically-first member's name for 'alpha'. Higher/earlier sorts
+  // first, matching the existing pop/delta comparators' (b - a) convention; sign-flipped by the
+  // caller for the primary key when _sortDir is 'asc', same as team-display mode.
+  const _groupCompare = (key, ga, gb) => key === 'alpha'
+    ? [...ga].map(m => m.name).sort()[0].localeCompare([...gb].map(m => m.name).sort()[0])
+    : gb.reduce((s, m) => s + _aggregateValue(key, m), 0) - ga.reduce((s, m) => s + _aggregateValue(key, m), 0);
+
   const sortAndFilter = (allItems, fmtPop) => {
-    const raw = [...allItems].sort((a, b) => {
-      for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) {
-        let d = _sortFns[_sortOrder[i]](a, b);
-        if (i === 0 && _sortDir === 'asc') d = -d;
-        if (d !== 0) return d;
-      }
-      return 0;
-    });
+    const filtered = allItems.filter(item => catEloChecked(item.id, item.fifaMember));
     const primary   = _sortOrder[0];
     const secondary = _sortOrder[1];
-    return raw
-      .filter(item => catEloChecked(item.id, item.fifaMember))
-      .map(item => ({
-        ...item,
-        pts:  primary === 'alpha' ? null : _ptsFor(primary, item, fmtPop),
-        pts2: secondary ? _ptsFor(secondary, item, fmtPop) : null,
-        // Undecided at the currently-viewed stage — fixture not yet played, could still go
-        // either way. Recomputed on every call since it depends on the live carousel position.
-        pending: item.pendingFrom != null && _stage >= item.pendingFrom,
-      }));
+
+    let ordered;
+    if (_displayMode === 'match') {
+      const groups = _buildGroups(filtered);
+      groups.sort((ga, gb) => {
+        for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) {
+          let d = _groupCompare(_sortOrder[i], ga, gb);
+          if (i === 0 && _sortDir === 'asc') d = -d;
+          if (d !== 0) return d;
+        }
+        return 0;
+      });
+      // Within a couple: stronger-by-primary-criterion member first (or alphabetical for
+      // 'alpha') — an arbitrary but stable, deterministic choice; nothing downstream depends
+      // on which member leads. _pairId ties both rows together for elo_ranking.js's row
+      // grouping (see EloRanking.show()) — absent (undefined) for lone rows. _pairScore is the
+      // "a – b" goal tally (from a's own matchInfo, so it already reads in [a, b] display
+      // order), null for a fixture that hasn't been played yet — elo_ranking.js falls back to
+      // a plain separator in that case.
+      ordered = groups.flatMap(g => {
+        if (g.length === 1) return g;
+        const [a, b] = primary === 'alpha' ? [...g].sort((x, y) => x.name.localeCompare(y.name)) : [...g].sort((x, y) => _aggregateValue(primary, y) - _aggregateValue(primary, x));
+        const pairId = [a.id, b.id].sort().join('-');
+        const infoA = _matchInfo(a);
+        const pairScore = infoA?.myGoals != null
+          ? { home: infoA.myGoals, away: infoA.oppGoals, penalties: infoA.penalties, penaltyHome: infoA.myPenGoals, penaltyAway: infoA.oppPenGoals }
+          : null;
+        return [{ ...a, _pairId: pairId, _pairScore: pairScore }, { ...b, _pairId: pairId, _pairScore: pairScore }];
+      });
+    } else {
+      ordered = [...filtered].sort((a, b) => {
+        for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) {
+          let d = _sortFns[_sortOrder[i]](a, b);
+          if (i === 0 && _sortDir === 'asc') d = -d;
+          if (d !== 0) return d;
+        }
+        return 0;
+      });
+    }
+
+    return ordered.map(item => ({
+      ...item,
+      pts:  primary === 'alpha' ? null : _ptsFor(primary, item, fmtPop),
+      pts2: secondary ? _ptsFor(secondary, item, fmtPop) : null,
+      // Undecided at the currently-viewed stage — fixture not yet played, could still go
+      // either way. Recomputed on every call since it depends on the live carousel position.
+      pending: item.pendingFrom != null && _stage >= item.pendingFrom,
+    }));
   };
 
   const _SORT_KEYS  = new Set(['elo', 'alpha', 'pop', 'delta']);
@@ -518,7 +667,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const _SORT_NAMES  = { elo: 'Elo ranking', alpha: 'A–Z', pop: 'population', delta: 'plays-for minus born-in' };
   const _STAGE_NAMES = ['Qualified', 'Round of 32', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final', 'Winner'];
-  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'stage', 'show', 'fifa', 'explain']);
+  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'stage', 'show', 'fifa', 'display', 'explain']);
+  const _DISPLAY_NAMES = { team: 'teams (flat list)', match: 'grouped by fixture — sort criteria sum both teams\' values' };
   const _CONF_NAMES = { uefa:'UEFA — Europe', afc:'AFC — Asia', caf:'CAF — Africa', conmebol:'CONMEBOL — South America', concacaf:'CONCACAF — N. & C. America', ofc:'OFC — Oceania' };
   const _badge = _el.querySelector('#params-badge');
   let _lastLines = [], _panelEl = null;
@@ -566,6 +716,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         ? { param: `?fifa=${conf}`, desc: `confederation: ${_CONF_NAMES[conf]}` }
         : { param: `?fifa=${conf}`, desc: `unknown confederation — ignored (valid: ${Object.keys(_CONF_NAMES).join(' ')})` });
     }
+    const display = sp.get('display');
+    if (display) {
+      lines.push(_DISPLAY_NAMES[display]
+        ? { param: `?display=${display}`, desc: `display: ${_DISPLAY_NAMES[display]}` }
+        : { param: `?display=${display}`, desc: `unknown display mode — ignored (valid: team, match)` });
+    }
     for (const k of sp.keys()) {
       if (!_KNOWN_PARAMS.has(k)) lines.push({ param: `?${k}`, desc: 'unrecognized — ignored' });
     }
@@ -597,9 +753,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   // ── Persistence (localStorage) ──────────────────────────────────────────
 
-  const _CS_PARAM_KEYS = ['sort', 'dir', 'stage', 'show', 'fifa'];
+  const _CS_PARAM_KEYS = ['sort', 'dir', 'stage', 'show', 'fifa', 'display'];
+
+  // Set only while _restoreState is applying a saved stage — _setStage below fires
+  // 'slide.bs.carousel' synchronously, and that handler calls _saveState() itself (the normal
+  // path for a user-driven carousel click). During restore that fires BEFORE _restoreState has
+  // gone on to set _displayMode from the saved snapshot, so it would otherwise re-persist the
+  // stale pre-restore display value and quietly undo what's about to be restored. Nothing needs
+  // saving mid-restore anyway — everything being applied already came from localStorage.
+  let _restoringState = false;
 
   const _saveState = () => {
+    if (_restoringState) return;
     try {
       localStorage.setItem(_STORAGE_KEY, JSON.stringify({
         sortOrder: _sortOrder,
@@ -607,6 +772,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         stage: CAROUSEL_STAGES[_stage],
         checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
         conf: _confKey,
+        display: _displayMode,
       }));
     } catch { /* storage unavailable (private mode, quota, etc.) — ignore */ }
   };
@@ -634,12 +800,21 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }
     _syncConfRadio();
 
-    // Stage restore last: it fires 'slide.bs.carousel' synchronously, which itself calls
-    // _saveState() — everything else above must already be in place for that snapshot to be correct.
+    // Stage restore before display — _setDisplayMode('match') self-guards against _stage === 0,
+    // and _stage is still its initial 0 until _setStage runs; a saved 'match' would otherwise
+    // get silently downgraded to 'team', even when the saved stage itself is a valid one.
+    // _restoringState suppresses _saveState() for the duration: _setStage fires
+    // 'slide.bs.carousel' synchronously, whose handler calls _saveState() itself (the normal
+    // user-driven-click path) — left unsuppressed, that would fire before _displayMode is set
+    // below and re-persist the stale pre-restore value, undoing the very thing being restored.
+    _restoringState = true;
     if (typeof saved.stage === 'string') {
       const idx = CAROUSEL_STAGES.indexOf(saved.stage);
       if (idx >= 0) _setStage(idx);
     }
+    _restoringState = false;
+
+    if (saved.display === 'team' || saved.display === 'match') _setDisplayMode(saved.display);
 
     callbacks.renderElo?.();
     applyFlagFilter();
@@ -660,6 +835,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       ? { param: `show=${cells.join(',')}`, desc: `cells: ${cells.join(' · ')}` }
       : { param: 'show=', desc: 'no cells shown' });
     if (_confKey) lines.push({ param: `fifa=${_confKey}`, desc: `confederation: ${_CONF_NAMES[_confKey] ?? _confKey}` });
+    if (_displayMode === 'match') lines.push({ param: 'display=match', desc: `display: ${_DISPLAY_NAMES.match}` });
     return lines;
   };
 
@@ -698,11 +874,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
     if (changed) _updateSortCol();
 
+    // stage before display — _setDisplayMode('match') self-guards against _stage === 0, and
+    // _stage is still its initial 0 until _setStage runs (see _restoreState's own note above).
     const stage = sp.get('stage');
     if (stage) {
       const idx = CAROUSEL_STAGES.indexOf(stage);
       if (idx >= 0) _setStage(idx);
     }
+
+    const display = sp.get('display');
+    if (display === 'team' || display === 'match') _setDisplayMode(display);
 
     const show = sp.get('show');
     if (show) {
