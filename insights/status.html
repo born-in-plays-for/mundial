@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="pageTitle">Imported players — elimination status · Mundial 2026</title>
+<title id="pageTitle">Plays for another country — elimination status · Mundial 2026</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="../css/global.css">
@@ -33,6 +33,11 @@
     white-space: nowrap;
   }
   #debugControls button:hover { background: #f0f0ee; }
+  #debugControls .form-check {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 4px; margin: 0;
+  }
+  #debugControls .form-check-label { font-size: 11px; color: #898781; }
+  #debugControls .form-check-input { margin-top: 0; cursor: pointer; }
 
   /* Imports/exports flavor switch — reloads the page with ?metric= toggled (the
      sort key, bar color and all metric-flavored text are only ever computed at
@@ -248,8 +253,8 @@
 <div id="main-content" class="container-xxl">
   <div class="chart-card taxonomy">
     <div id="metricToggle" class="metric-toggle">
-      <button type="button" data-metric="imp">Imports</button>
-      <button type="button" data-metric="exp">Exports</button>
+      <button type="button" data-metric="imp">Plays for</button>
+      <button type="button" data-metric="exp">Born in</button>
     </div>
     <div id="statusViz">
       <div id="statusCarousel" class="carousel slide">
@@ -269,17 +274,21 @@
       <div class="stage-wrap" id="stageWrap"></div>
     </div>
     <div id="debugControls">
-      <button type="button" id="stepBack">← Prev team</button>
       <label class="debug-label" for="speedSlider">Speed</label>
       <input type="range" id="speedSlider" min="0.1" max="4" step="0.05" value="0.8">
+      <button type="button" id="stepBack">← Prev team</button>
       <button type="button" id="stepForward">Next team →</button>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="squeezeSwitch">
+        <label class="form-check-label" for="squeezeSwitch">Squeeze</label>
+      </div>
     </div>
   </div>
 </div>
 
 <script type="module">
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { loadEloData, buildImportByCountry, buildEloItems } from '../js/qualified.js';
+import { loadEloData, buildImportByCountry, buildEloItems, QUALIFIED_BY_NAME } from '../js/qualified.js';
 import { pillClasses, pillContent } from '../js/elo_ranking.js';
 import { countryName } from '../js/i18n.js';
 
@@ -302,12 +311,12 @@ const METRIC_CONFIGS = {
   imp: {
     countKey: 'impCount',
     light: [0xfb, 0xc9, 0xc9], dark: [0xef, 0x44, 0x44],
-    noun: 'imported', pageTitle: 'Imported players',
+    rankedBy: 'players born in another country', pageTitle: 'Plays for another country',
   },
   exp: {
-    countKey: 'expCount',
+    countKey: 'bornCount',
     light: [0xbc, 0xd7, 0xfb], dark: [0x3b, 0x82, 0xf6],
-    noun: 'exported', pageTitle: 'Exported players',
+    rankedBy: 'players born in this country', pageTitle: 'Born in this country',
   },
 };
 let METRIC = new URLSearchParams(location.search).get('metric') === 'exp' ? 'exp' : 'imp';
@@ -328,9 +337,24 @@ const importByCountry = buildImportByCountry(mapData, countryName);
 // touch byId at all (importByCountry alone drives impCount), but the exports flavor
 // depends on this being populated rather than {}.
 const byId = Object.fromEntries(mapData.data.map(d => [d.id, d]));
+// name -> id, for mapData.natives below (keyed by country name, same as wc2026_map.js's
+// buildIndices()). Players born in a country who play for that same country — buildEloItems'
+// own expCount (byId[id]?.count) counts strictly true exports (born-here-play-elsewhere),
+// which is what drives dim-mode/tooltip logic on the map page, so it's left untouched here.
+const nativeByCountry = {};
+Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
+  const nId = QUALIFIED_BY_NAME[name];
+  if (nId != null) nativeByCountry[nId] = players;
+});
 const items = buildEloItems({
-  rankings: eloData.rankings, byId, importByCountry, countryNameFn: countryName, statusByIso2,
+  rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, statusByIso2,
 }).filter(item => item.qualified);
+// This chart's "exports" flavor means every player born in a country, whatever country
+// they represent at the tournament — not just the ones who left. bornCount = true exports
+// + native-born players still playing for their birth country.
+items.forEach(item => {
+  item.bornCount = item.expCount + (nativeByCountry[item.id]?.length ?? 0);
+});
 
 // Approximate Group Stage elimination dates + notes — status.json has no exact date
 // for these (round-robin, no single fixture decides them), so this is manually
@@ -432,7 +456,7 @@ const STATES = [
   {
     alive: allNames,
     title: `Group stage: ${allNames.size} qualified countries`,
-    subtitle: `ranked by ${METRIC_CONFIG.noun}-player count.`,
+    subtitle: `ranked by ${METRIC_CONFIG.rankedBy}.`,
   },
   {
     alive: afterGroupStage,
@@ -590,6 +614,29 @@ speedSlider.addEventListener('input', () => {
   document.documentElement.style.setProperty('--speed', SPEED);
 });
 
+// Debug-only "Squeeze" switch (#squeezeSwitch) — when on, eliminated (.is-out) rows
+// collapse (display:none) instead of just sliding off-screen and leaving a blank
+// slot. setRowSqueezed is called at animation boundaries, not mid-slide: display is
+// only cleared right before a reappearing row starts sliding back in (a display:none
+// row has nothing to animate), and only set to none once a vanishing row's slide-out
+// transition has fully resolved. Toggling the switch itself re-syncs every row
+// immediately, no animation involved.
+const squeezeSwitch = document.getElementById('squeezeSwitch');
+let SQUEEZE = squeezeSwitch.checked;
+function setRowSqueezed(row, squeezed) {
+  row.style.display = squeezed ? 'none' : '';
+  // Reveal only: force a reflow so the browser locks in this "still translated out"
+  // frame before animateRow's very next synchronous line changes `transform` — without
+  // it, display:none→'' and the transform change land in the same style recalculation,
+  // the transition never actually runs, and transitionend (which animateRow awaits)
+  // never fires, hanging the whole cascade forever.
+  if (!squeezed) void row.offsetHeight;
+}
+squeezeSwitch.addEventListener('change', () => {
+  SQUEEZE = squeezeSwitch.checked;
+  rowEls.forEach(({ row }) => setRowSqueezed(row, SQUEEZE && row.classList.contains('is-out')));
+});
+
 // Resolves once `el`'s `cssProp` transition genuinely ends — chaining on the real
 // event instead of a precomputed setTimeout means nothing can drift out of sync
 // with however long the browser actually took.
@@ -714,7 +761,7 @@ function applyMetric(newMetric) {
 
   GLOBAL_VANISH_ORDER = sorted.filter(i => i.eliminatedAtIndex != null).sort(vanishOrderCompare);
 
-  STATES[0].subtitle = `ranked by ${METRIC_CONFIG.noun}-player count.`;
+  STATES[0].subtitle = `ranked by ${METRIC_CONFIG.rankedBy}.`;
   subtitleEls[0].textContent = STATES[0].subtitle;
   document.title = `${METRIC_CONFIG.pageTitle} — elimination status · Mundial 2026`;
 
@@ -750,7 +797,11 @@ function applyState(idx, instant) {
   });
 
   if (instant || changed.length === 0) {
-    rowEls.forEach(({ row }, name) => { row.classList.toggle('is-out', !state.alive.has(name)); });
+    rowEls.forEach(({ row }, name) => {
+      const isOut = !state.alive.has(name);
+      row.classList.toggle('is-out', isOut);
+      setRowSqueezed(row, SQUEEZE && isOut);
+    });
     const allEls = paintLines(computeStats(state.alive));
     if (instant) {
       allEls.forEach(el => { el.style.transition = 'none'; });
@@ -778,8 +829,11 @@ function applyState(idx, instant) {
   (async () => {
     const runningAlive = new Set(currentAlive);
     for (const { name, isOut } of changed) {
-      rowEls.get(name).row.classList.toggle('is-out', isOut);
+      const { row } = rowEls.get(name);
+      row.classList.toggle('is-out', isOut);
+      if (!isOut) setRowSqueezed(row, false); // reveal before sliding back in
       const durationMs = await animateRow(name, isOut);
+      if (isOut) setRowSqueezed(row, SQUEEZE); // hide once fully vanished
       if (isOut) runningAlive.delete(name); else runningAlive.add(name);
       paintLines(computeStats(runningAlive), durationMs);
       if (state.liveSubtitle) subtitleEls[idx].textContent = state.liveSubtitle(runningAlive.size);
@@ -804,8 +858,10 @@ function stepTeam(forward) {
 
   const { row } = rowEls.get(target.name);
   row.classList.toggle('is-out', forward);
+  if (!forward) setRowSqueezed(row, false); // reveal before sliding back in
 
   animateRow(target.name, forward).then(() => {
+    if (forward) setRowSqueezed(row, SQUEEZE); // hide once fully vanished
     const alive = new Set(sorted.filter(i => !isOutNow(i.name)).map(i => i.name));
     paintLines(computeStats(alive));
   });
