@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Imported players — elimination status · Mundial 2026</title>
+<title id="pageTitle">Imported players — elimination status · Mundial 2026</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="../css/global.css">
@@ -19,18 +19,33 @@
   }
   .chart-card * { box-sizing: border-box; }
 
-  /* Debug-only controls — hidden from the public page, but left fully wired up
-     (speed slider default 1/3, stepper buttons) for later re-enabling; just flip
-     this display back to flex to bring them back. No labels on the slider by
-     design; the stepper buttons need *some* marking to be usable, so they get
-     plain arrow glyphs. */
-  #debugControls { display: none; align-items: center; gap: 8px; margin-top: 14px; }
+  /* Debug controls — team-by-team stepper + animation speed, surfaced below the
+     chart. Labeled explicitly (unlike the earlier arrows-only iteration) so the
+     purpose of each control reads without guessing. */
+  #debugControls { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  #debugControls .debug-label {
+    flex: 0 0 auto; font-size: 11px; color: #898781;
+  }
   #speedSlider { flex: 1 1 auto; }
   #debugControls button {
-    flex: 0 0 auto; width: 26px; height: 22px; border: 1px solid rgba(11,11,11,0.2);
-    border-radius: 4px; background: #fff; cursor: pointer; font-size: 13px; line-height: 1;
+    flex: 0 0 auto; height: 22px; padding: 0 8px; border: 1px solid rgba(11,11,11,0.2);
+    border-radius: 4px; background: #fff; cursor: pointer; font-size: 11px; line-height: 1;
+    white-space: nowrap;
   }
   #debugControls button:hover { background: #f0f0ee; }
+
+  /* Imports/exports flavor switch — reloads the page with ?metric= toggled (the
+     sort key, bar color and all metric-flavored text are only ever computed at
+     load time from that param, so switching flavors in place isn't an option). */
+  .metric-toggle { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; }
+  .metric-toggle button {
+    font-size: 11px; padding: 4px 12px; border: 1px solid rgba(11,11,11,0.15);
+    border-radius: 999px; background: #fff; cursor: pointer; color: #898781;
+  }
+  .metric-toggle button:hover:not(.active) { background: #f0f0ee; }
+  .metric-toggle button.active {
+    background: #0b0b0b; color: #fff; border-color: #0b0b0b; cursor: default;
+  }
 
   /* Unified layout — same structure on desktop and mobile: [count][bar][name][flag],
      all left-aligned, read in that order. The count is the only fixed-width column;
@@ -71,11 +86,12 @@
     min-width: 0;
     align-self: stretch;
   }
-  /* ▶ is this app's fixed glyph for "imported players" mirrored (css/taxonomy.css's
-     --imp-accent / .elo-item--imp::after uses ◀ — pointing at a flag on the left of
-     a value; here the value sits to the LEFT of the bar instead, so the arrow points
-     right, toward the name+flag that follow) — the bar echoes it: the tip merges
-     into the rectangle at its trailing (right) edge instead of its leading edge. */
+  /* ▶ is this app's fixed glyph for "imported/exported players" mirrored (css/
+     taxonomy.css's --imp-accent/--exp-accent, .elo-item--imp::after / --exp::after
+     use ◀/▶ pointing at a flag on the left of a value; here the value sits to the
+     LEFT of the bar instead, so the arrow points right, toward the name+flag that
+     follow) — the bar echoes it: the tip merges into the rectangle at its trailing
+     (right) edge instead of its leading edge. */
   .anim-fill {
     position: absolute; left: 0; top: 50%;
     height: 10px;
@@ -84,14 +100,16 @@
     border-radius: 4px 0 0 4px;
     clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 50%, calc(100% - 5px) 100%, 0 100%);
     background: var(--fill-light, #c3c2b7);
-    /* Static — color/width are set once at row-build time from the team's own
-       impCount and never touched again. Elimination is purely the enclosing row
-       sliding away (see .anim-row), not anything the bar itself does. */
+    /* Set once at row-build time from the team's own active-metric count, then only
+       ever touched again by applyMetric() when the imports/exports toggle flips —
+       the transition below is for that switch, not for anything elimination does
+       (elimination is purely the enclosing row sliding away, see .anim-row). */
+    transition: width 0.5s ease, background-color 0.5s ease;
   }
 
   /* Flag + name (pillClasses/pillContent's .elo-item — DOM order is already
      flag-then-name, used as-is here), positioned right after the bar's own end
-     (--pct, set once at row-build time from the row's fixed impCount, drives both
+     (--pct, set once at row-build time from the row's fixed active-metric count, drives both
      `left` and `max-width` via calc so it never overflows the track — it ellipsizes
      instead if a long name has no room). For rows near the bottom of the list,
      where the bar eats most of the track and leaves too little room after it,
@@ -105,6 +123,7 @@
     left: calc(var(--pct) + 6px);
     max-width: calc(100% - var(--pct) - 6px);
     overflow: hidden;
+    transition: left 0.5s ease, max-width 0.5s ease;
   }
   .anim-tail.anim-tail--overflow {
     left: auto; right: 0;
@@ -228,6 +247,10 @@
 
 <div id="main-content" class="container-xxl">
   <div class="chart-card taxonomy">
+    <div id="metricToggle" class="metric-toggle">
+      <button type="button" data-metric="imp">Imports</button>
+      <button type="button" data-metric="exp">Exports</button>
+    </div>
     <div id="statusViz">
       <div id="statusCarousel" class="carousel slide">
         <div class="carousel-inner" id="statusCarouselInner"></div>
@@ -246,9 +269,10 @@
       <div class="stage-wrap" id="stageWrap"></div>
     </div>
     <div id="debugControls">
-      <button type="button" id="stepBack">←</button>
+      <button type="button" id="stepBack">← Prev team</button>
+      <label class="debug-label" for="speedSlider">Speed</label>
       <input type="range" id="speedSlider" min="0.1" max="4" step="0.05" value="0.8">
-      <button type="button" id="stepForward">→</button>
+      <button type="button" id="stepForward">Next team →</button>
     </div>
   </div>
 </div>
@@ -264,9 +288,48 @@ const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
   fetch('../data/v2/map.json').then(r => r.json()),
 ]);
 
+// The one parameter this whole chart is built around: which per-team count drives
+// sort order, bar color, and the metric-flavored strings below. Selected via
+// ?metric=exp in the URL (default: imports — the flavor this chart shipped with
+// first), matching the ?stage= convention on the main map page. #metricToggle below
+// switches METRIC in place (see applyMetric() further down) and mirrors the choice
+// back into the URL via history.replaceState, so a reload or share link still lands
+// on the same flavor without the toggle itself causing one. Colors reuse the exact
+// same red/blue used everywhere else in the app for imported/exported (js/
+// qualified.js's _IMP_LIGHT/_IMP_DARK/_EXP_LIGHT/_EXP_DARK, css/taxonomy.css's
+// --imp-accent/--exp-accent).
+const METRIC_CONFIGS = {
+  imp: {
+    countKey: 'impCount',
+    light: [0xfb, 0xc9, 0xc9], dark: [0xef, 0x44, 0x44],
+    noun: 'imported', pageTitle: 'Imported players',
+  },
+  exp: {
+    countKey: 'expCount',
+    light: [0xbc, 0xd7, 0xfb], dark: [0x3b, 0x82, 0xf6],
+    noun: 'exported', pageTitle: 'Exported players',
+  },
+};
+let METRIC = new URLSearchParams(location.search).get('metric') === 'exp' ? 'exp' : 'imp';
+let METRIC_CONFIG = METRIC_CONFIGS[METRIC];
+document.title = `${METRIC_CONFIG.pageTitle} — elimination status · Mundial 2026`;
+
+document.querySelectorAll('#metricToggle button').forEach(btn => {
+  const isActive = btn.dataset.metric === METRIC;
+  btn.classList.toggle('active', isActive);
+  btn.disabled = isActive;
+  btn.addEventListener('click', () => applyMetric(btn.dataset.metric));
+});
+
 const importByCountry = buildImportByCountry(mapData, countryName);
+// byId keyed by country id -> its export record ({ count, players, ... } from
+// map.json's `data` array) — mirrors wc2026_map.js's buildIndices(). Needed so
+// buildEloItems can compute expCount (byId[id]?.count); the imports flavor doesn't
+// touch byId at all (importByCountry alone drives impCount), but the exports flavor
+// depends on this being populated rather than {}.
+const byId = Object.fromEntries(mapData.data.map(d => [d.id, d]));
 const items = buildEloItems({
-  rankings: eloData.rankings, byId: {}, importByCountry, countryNameFn: countryName, statusByIso2,
+  rankings: eloData.rankings, byId, importByCountry, countryNameFn: countryName, statusByIso2,
 }).filter(item => item.qualified);
 
 // Approximate Group Stage elimination dates + notes — status.json has no exact date
@@ -322,24 +385,27 @@ const eliminationDateFor = item => item.eliminatedDate ?? GROUP_STAGE_ELIMINATIO
 // Fixed row order — never changes between states, only each row's alive/eliminated
 // status does. (An earlier version removed eliminated rows and re-flowed the rest;
 // fixed rows + a status color is clearer since the total team count stays visible.)
-const sorted = [...items].sort((a, b) => a.impCount - b.impCount || a.name.localeCompare(b.name));
+// countKey/sorted/DOMAIN_MAX are `let`, not `const` — applyMetric() reassigns all
+// three when the toggle flips flavors. itemByName is a Map of the same [name, item]
+// pairs regardless of sort order, so it never needs rebuilding.
+let countKey = METRIC_CONFIG.countKey;
+let sorted = [...items].sort((a, b) => a[countKey] - b[countKey] || a.name.localeCompare(b.name));
 const itemByName = new Map(sorted.map(i => [i.name, i]));
 
-const maxImp = Math.max(0, ...sorted.map(i => i.impCount));
-const DOMAIN_MAX = Math.max(5, Math.ceil(maxImp / 5) * 5);
+let maxCount = Math.max(0, ...sorted.map(i => i[countKey]));
+let DOMAIN_MAX = Math.max(5, Math.ceil(maxCount / 5) * 5);
 
-// Sequential gradient, darker/richer as imported-player count rises. Same red used
-// everywhere else in the app for "imported" (js/qualified.js's _IMP_LIGHT/_IMP_DARK,
-// css/taxonomy.css's --imp-accent: #ef4444) — this chart is exclusively about
-// imported-player counts, so there's no export/import duality to color-code here.
-const IMP_LIGHT = [0xfb, 0xc9, 0xc9], IMP_DARK = [0xef, 0x44, 0x44];
+// Sequential gradient, darker/richer as the active metric's count rises. Colors
+// switch with METRIC_CONFIG (red for imports, blue for exports) — same pair used
+// everywhere else in the app (js/qualified.js's _IMP_LIGHT/_IMP_DARK/_EXP_LIGHT/
+// _EXP_DARK, css/taxonomy.css's --imp-accent/--exp-accent).
 function lerpColor(lo, hi, t) {
   const c = lo.map((v, i) => Math.round(v + (hi[i] - v) * t));
   return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
 }
 function gradientFor(value) {
   const t = Math.max(0, Math.min(1, value / DOMAIN_MAX));
-  return lerpColor(IMP_LIGHT, IMP_DARK, t);
+  return lerpColor(METRIC_CONFIG.light, METRIC_CONFIG.dark, t);
 }
 
 // Three real boundaries, no invented scenario: everyone qualified, then whoever
@@ -365,20 +431,21 @@ const outAtRoundOf32 = afterGroupStage.size - afterRoundOf32.size;
 const STATES = [
   {
     alive: allNames,
-    title: `${allNames.size} qualified teams`,
-    subtitle: 'Every WC2026 squad, ranked by imported-player count.',
+    title: `Group stage: ${allNames.size} qualified countries`,
+    subtitle: `ranked by ${METRIC_CONFIG.noun}-player count.`,
   },
   {
     alive: afterGroupStage,
-    title: `${outAtGroupStage} eliminated in the Group Stage`,
-    subtitle: `${afterGroupStage.size} teams remain — the Round of 32 field.`,
-    liveSubtitle: count => `${count} teams remain — the Round of 32 field.`,
+    title: `Round of 32`,
+    subtitle: `16 eliminated in the Group Stage - 32 teams remain.`,
+    
+    liveSubtitle: count => `${allNames.size-count} eliminated in the Group Stage - ${count} teams remain.`,
   },
   {
     alive: afterRoundOf32,
-    title: `${outAtRoundOf32} more eliminated in the Round of 32`,
-    subtitle: `${afterRoundOf32.size} teams still in it after the Round of 32.`,
-    liveSubtitle: count => `${count} teams still in it after the Round of 32.`,
+    title: `Round of 16`,
+    subtitle: `16 eliminated in the Round of 32 - 16 teams remain.`,
+    liveSubtitle: count => `${allNames.size-outAtRoundOf32-count} eliminated in the Round of 32 - ${count} teams remain.`,
   },
 ];
 
@@ -415,15 +482,16 @@ stageWrap.appendChild(meanOverlay);
 
 // Country pills — same component used across the app (elo_ranking.js's pillClasses/
 // pillContent): real flag + qualified border. exp/imp are left off (no arrows, no
-// count-gradient background) since this chart's bar color already encodes import
-// count and elimination status; a second count-driven encoding on the pill itself
-// would just repeat the same signal in a different color.
+// count-gradient background) since this chart's bar color already encodes the
+// active metric's count and elimination status; a second count-driven encoding on
+// the pill itself would just repeat the same signal in a different color.
 const MIN_GAP_PX = 6; // must match .anim-tail's `+ 6px` in CSS
 const stage = document.createElement('div');
 stage.className = 'anim-stage';
 const rowEls = new Map();
 sorted.forEach((item, index) => {
-  const { name, impCount } = item;
+  const { name } = item;
+  const count = item[countKey];
   const row = document.createElement('div');
   row.className = 'anim-row';
 
@@ -432,20 +500,20 @@ sorted.forEach((item, index) => {
   // relative to) stays identical across every row regardless of digit count.
   const val = document.createElement('span');
   val.className = 'anim-value';
-  val.textContent = impCount;
+  val.textContent = count;
   row.appendChild(val);
 
-  // A row's own color/width never change between states (impCount is fixed per
-  // team) — only alive/eliminated does. Set once here rather than recomputed on
-  // every applyState() call.
-  const pct = impCount === 0 ? 0 : impCount / DOMAIN_MAX * 100;
+  // A row's own color/width never change between states (the metric's count is
+  // fixed per team) — only alive/eliminated does. Set once here rather than
+  // recomputed on every applyState() call.
+  const pct = count === 0 ? 0 : count / DOMAIN_MAX * 100;
   const track = document.createElement('span');
   track.className = 'anim-track';
   const fill = document.createElement('span');
   fill.className = 'anim-fill';
   fill.style.width = pct === 0 ? '0' : pct + '%';
   if (pct === 0) fill.style.minWidth = '0';
-  fill.style.setProperty('--fill-light', gradientFor(impCount));
+  fill.style.setProperty('--fill-light', gradientFor(count));
   track.appendChild(fill);
 
   // Name + flag, positioned just after the bar's own end (--pct drives both `left`
@@ -464,7 +532,9 @@ sorted.forEach((item, index) => {
   row.appendChild(track);
 
   stage.appendChild(row);
-  rowEls.set(name, { row, tail, pill, index });
+  // val/fill are kept here (not just tail/pill) so applyMetric() can update the
+  // displayed count and bar width/color in place when the flavor switches.
+  rowEls.set(name, { row, val, fill, tail, pill, index });
 });
 stageWrap.appendChild(stage);
 
@@ -547,7 +617,7 @@ async function animateRow(name, isOut) {
 
 // ── ±1/2/3 std + mean line position for a given alive-set, no DOM writes ──
 function computeStats(aliveSet) {
-  const aliveValues = sorted.filter(i => aliveSet.has(i.name)).map(i => i.impCount);
+  const aliveValues = sorted.filter(i => aliveSet.has(i.name)).map(i => i[countKey]);
   const mean = aliveValues.length ? aliveValues.reduce((a, b) => a + b, 0) / aliveValues.length : 0;
   const variance = aliveValues.length ? aliveValues.reduce((a, b) => a + (b - mean) ** 2, 0) / aliveValues.length : 0;
   return { mean, sd: Math.sqrt(variance) };
@@ -608,7 +678,61 @@ function vanishOrderCompare(ia, ib) {
 // Every team this chart ever eliminates (Group Stage + Round of 32), in vanish
 // order — the full timeline #stepBack/#stepForward below scrub through, one team
 // per click, independent of the carousel's own (coarser, per-stage) navigation.
-const GLOBAL_VANISH_ORDER = sorted.filter(i => i.eliminatedAtIndex != null).sort(vanishOrderCompare);
+// `let`, not `const` — applyMetric() recomputes this since vanishOrderCompare's
+// last-resort tiebreak reads each row's `index`, which changes with the sort.
+let GLOBAL_VANISH_ORDER = sorted.filter(i => i.eliminatedAtIndex != null).sort(vanishOrderCompare);
+
+// ── switch sort/color/text flavor in place — no reload. Row DOM nodes are reused
+// (reordered via appendChild, which moves rather than clones) so eliminated rows
+// keep their existing .is-out state and transform untouched; only each row's own
+// count/width/color and its position in the list change. Ignored mid-cascade (see
+// applyState()) since that's already mutating rowEls' is-out state concurrently. ──
+function applyMetric(newMetric) {
+  if (newMetric === METRIC || animating) return;
+  METRIC = newMetric;
+  METRIC_CONFIG = METRIC_CONFIGS[METRIC];
+  countKey = METRIC_CONFIG.countKey;
+
+  sorted = [...items].sort((a, b) => a[countKey] - b[countKey] || a.name.localeCompare(b.name));
+  maxCount = Math.max(0, ...sorted.map(i => i[countKey]));
+  DOMAIN_MAX = Math.max(5, Math.ceil(maxCount / 5) * 5);
+
+  sorted.forEach((item, index) => {
+    const entry = rowEls.get(item.name);
+    entry.index = index;
+    const count = item[countKey];
+    entry.val.textContent = count;
+    const pct = count === 0 ? 0 : count / DOMAIN_MAX * 100;
+    entry.fill.style.width = pct === 0 ? '0' : pct + '%';
+    entry.fill.style.minWidth = pct === 0 ? '0' : '';
+    entry.fill.style.setProperty('--fill-light', gradientFor(count));
+    entry.tail.style.setProperty('--pct', pct + '%');
+    entry.tail.dataset.pct = pct;
+    stage.appendChild(entry.row); // re-sorts the visual order — appendChild moves, doesn't clone
+  });
+  refreshTailOverflowMode();
+
+  GLOBAL_VANISH_ORDER = sorted.filter(i => i.eliminatedAtIndex != null).sort(vanishOrderCompare);
+
+  STATES[0].subtitle = `ranked by ${METRIC_CONFIG.noun}-player count.`;
+  subtitleEls[0].textContent = STATES[0].subtitle;
+  document.title = `${METRIC_CONFIG.pageTitle} — elimination status · Mundial 2026`;
+
+  document.querySelectorAll('#metricToggle button').forEach(btn => {
+    const isActive = btn.dataset.metric === METRIC;
+    btn.classList.toggle('active', isActive);
+    btn.disabled = isActive;
+  });
+
+  const params = new URLSearchParams(location.search);
+  if (METRIC === 'imp') params.delete('metric'); else params.set('metric', 'exp');
+  const qs = params.toString();
+  history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+
+  const currentAlive = new Set();
+  rowEls.forEach(({ row }, name) => { if (!row.classList.contains('is-out')) currentAlive.add(name); });
+  paintLines(computeStats(currentAlive));
+}
 
 // ── apply one state's alive/eliminated status + mean/std lines in place ────
 function applyState(idx, instant) {
