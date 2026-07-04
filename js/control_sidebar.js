@@ -27,7 +27,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   <div class="csb-body"><table class="csb-table table table-sm table-bordered"><tbody>
     <tr>
       <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}${alwaysOpen ? nothing : html`<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span>`}</td>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all" style="position:relative"><em class="elo-item"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active">?</button></td>
+      <td colspan="2" class="csb-header text-center text-muted" data-col="all" style="position:relative"><button id="csb-share" class="csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button><em class="elo-item"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button></td>
       <td class="csb-col" data-col="exp"><span class="elo-item elo-item--exp"><span class="elo-name">${T.filterLabels.exporter}</span></span></td>
       <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
     </tr>
@@ -838,6 +838,39 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (_displayMode === 'match') lines.push({ param: 'display=match', desc: `display: ${_DISPLAY_NAMES.match}` });
     return lines;
   };
+
+  // ── Share button (#csb-share) — builds a URL that reproduces this exact sidebar
+  // configuration on another app instance, from the very same param lines
+  // _buildActiveStateLines() above already feeds the explain panel/console with, so
+  // "what's active" and "what a share link encodes" can never drift apart.
+  const _shareBtn = _el.querySelector('#csb-share');
+  let _shareToastEl = null;
+  const _showShareToast = msg => {
+    if (!_shareToastEl) {
+      _shareToastEl = document.createElement('div');
+      _shareToastEl.id = 'csb-share-toast';
+      document.body.appendChild(_shareToastEl);
+    }
+    _shareToastEl.textContent = msg;
+    clearTimeout(_shareToastEl._hideTimer);
+    requestAnimationFrame(() => _shareToastEl.classList.add('visible'));
+    _shareToastEl._hideTimer = setTimeout(() => _shareToastEl?.classList.remove('visible'), 2000);
+  };
+  _shareBtn?.addEventListener('click', async e => {
+    e.stopPropagation(); // this button lives inside the [data-col="all"] cell — don't let the click bubble into its own filter-toggle handler
+    const sp = new URLSearchParams();
+    _buildActiveStateLines().forEach(({ param }) => {
+      const eq = param.indexOf('=');
+      sp.set(param.slice(0, eq), param.slice(eq + 1));
+    });
+    const url = `${location.origin}${location.pathname}?${sp.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      _showShareToast('URL copied to clipboard');
+    } catch {
+      _showShareToast('Could not copy URL to clipboard');
+    }
+  });
 
   const applyParams = (sp) => {
     if (!sp) return;

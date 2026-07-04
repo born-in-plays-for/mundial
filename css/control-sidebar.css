@@ -16,6 +16,7 @@
  * .csb-row              — sous-ligne de groupe
  * .csb-check            — label checkbox □/▣
  * .csb-close            — bouton × fermeture
+ * .csb-share            — bouton de partage (copie une URL de config)
  */
 
 /* ── Container ─────────────────────────────────────────────────────────── */
@@ -176,18 +177,44 @@
 #control-sidebar .csb-stage-carousel .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
 #control-sidebar .csb-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
 
+/* ── Share button (copies a URL reproducing the current sidebar config) ── */
+
+#control-sidebar .csb-share {
+  position: absolute; top: 50%; left: 4px; transform: translateY(-50%);
+  width: 18px; height: 18px; padding: 0;
+  border: none; background: none;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.75; cursor: pointer;
+}
+#control-sidebar .csb-share:hover { opacity: 1; }
+#control-sidebar .csb-share img { width: 100%; height: 100%; }
+
+/* ── Share toast ("URL copied to clipboard") — mirrors auth-bar.js's own
+   connection toast (bottom-center, fades in/out), kept as CSS here instead of
+   inline cssText since control-sidebar.css already owns this component's look. */
+#csb-share-toast {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 9999; padding: 6px 16px; border-radius: 6px; font-size: 12px;
+  background: var(--fixed-element-bg, #f8f5f0); color: var(--text-muted, #555);
+  border: 1px solid var(--border, #ddd);
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#csb-share-toast.visible { opacity: 1; }
+
 /* ── URL params badge ──────────────────────────────────────────────────── */
 
 #control-sidebar .csb-params-badge {
-  position: absolute; top: 1px; right: 2px;
-  font-size: 8px; font-family: monospace; font-weight: 700;
-  line-height: 1; padding: 1px 3px;
-  border: 1px solid var(--border); border-radius: 3px;
-  background: transparent; color: var(--text-muted);
-  cursor: pointer; user-select: none; -webkit-user-select: none;
+  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+  width: 18px; height: 18px; padding: 0;
+  border: none; background: none; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.75; cursor: pointer; user-select: none; -webkit-user-select: none;
 }
-#control-sidebar .csb-params-badge.active { background: var(--text-muted, #999); color: #fff; }
-#control-sidebar .csb-params-badge:hover:not(.active) { color: #444; border-color: #999; }
+#control-sidebar .csb-params-badge img { width: 100%; height: 100%; }
+#control-sidebar .csb-params-badge:hover { opacity: 1; }
+#control-sidebar .csb-params-badge.active { opacity: 1; background: var(--bg-hover, rgba(0,0,0,0.08)); }
 
 /* ── URL params explanation panel ──────────────────────────────────────── */
 
