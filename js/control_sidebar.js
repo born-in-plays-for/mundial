@@ -22,6 +22,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   let _autoSwitchedFromMatch = false;
 
   const _sidebarHost = document.getElementById('sidebar-host');
+  const _sortLabel = html`<em>${T.sortLabels.action}</em>`;
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
   <div class="csb-body"><div class="csb-layout d-inline-flex align-items-stretch gap-2">
@@ -29,9 +30,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <table class="csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
           <td class="csb-header text-center text-muted" title="${T.csbTips.action}">
-            ${alwaysOpen ? T.sortLabels.action : html`<div class="d-flex align-items-center justify-content-between">
+            ${alwaysOpen ? _sortLabel : html`<div class="d-flex align-items-center justify-content-between">
               <button class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
-              <span><em>${T.sortLabels.action}</em></span>
+              <span>${_sortLabel}</span>
               <span style="width: 18px;">&nbsp;</span>
             </div>`}
           </td>
