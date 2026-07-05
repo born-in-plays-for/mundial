@@ -18,7 +18,7 @@ Ajoutez `?explain` à n'importe quelle URL pour ouvrir au chargement un panneau 
 Tous les paramètres actifs sont toujours journalisés dans la console du navigateur, indépendamment de `?explain`.
 
 ```
-?in&show=qual&explain    → ouvre le panneau au chargement, reste ouvert pour consultation
+?stage=r16&show=qual&explain    → ouvre le panneau au chargement, reste ouvert pour consultation
 ```
 
 ### `?sort` — critère de tri
@@ -43,36 +43,34 @@ Tous les paramètres actifs sont toujours journalisés dans la console du naviga
 
 S'applique uniquement à la clé de tri principale. `?sort=alpha&dir=desc` donne Z–A.
 
-### `?in` / `?out` — filtre alive & kicking
-
-Indicateurs booléens — la présence seule est le signal ; aucun `=valeur` nécessaire. Ils reflètent le widget de bascule **in · ● · out** dans le panneau de filtre.
+### `?stage` — filtre de phase du tournoi
 
 ```
-(aucun)      par défaut — les 48 pays qualifiés sont affichés
-?in          alive & kicking uniquement — équipes encore en lice
-?out         éliminés uniquement — équipes éliminées
-?in&out      l'équipe de Schrödinger → ensemble vide (aucun pays n'est simultanément in et out)
+?stage=qualified   par défaut — tous les pays qualifiés et leurs exportateurs
+?stage=r32         16es de finale
+?stage=r16         8es de finale
+?stage=qf          Quarts de finale
+?stage=sf          Demi-finales
+?stage=final       Finale
+?stage=winner      Vainqueur uniquement
 ```
 
-![Chat de Schrödinger](../images/Schrödinger.avif)
+Reflète le carrousel de phase du panneau de filtre (Qualifiés → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur). Chaque position filtre à la fois les pays qualifiés et leurs pays exportateurs non qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée. Les pays non qualifiés et non exportateurs (cellules `of`/`on`) ne sont pas affectés — ils n'ont aucun lien avec le tournoi.
 
-Lorsque `?in` ou `?out` est défini, les pays exportateurs non qualifiés sont également filtrés :
+Les valeurs inconnues sont silencieusement ignorées et les valeurs par défaut sont conservées.
 
-- `?in` masque les exportateurs dont tous les joueurs vont vers des équipes éliminées
-- `?out` masque les exportateurs dont tous les joueurs vont vers des équipes alive & kicking
-
-### `?fifa` — filtre confédérations FIFA
+### `?fifaconf` — filtre confédérations FIFA
 
 ```
-?fifa=uefa       UEFA — Europe
-?fifa=afc        AFC — Asie
-?fifa=caf        CAF — Afrique
-?fifa=conmebol   CONMEBOL — Amérique du Sud
-?fifa=concacaf   CONCACAF — Amériques du Nord et Centrale
-?fifa=ofc        OFC — Océanie
+?fifaconf=uefa       UEFA — Europe
+?fifaconf=afc        AFC — Asie
+?fifaconf=caf        CAF — Afrique
+?fifaconf=conmebol   CONMEBOL — Amérique du Sud
+?fifaconf=concacaf   CONCACAF — Amériques du Nord et Centrale
+?fifaconf=ofc        OFC — Océanie
 ```
 
-Filtre la liste aux membres FIFA de la confédération indiquée uniquement. Les pays non-FIFA ne sont pas affectés — ils restent visibles ou masqués selon les paramètres `?show` et `?in`/`?out`. Sur la page Carte, met également en évidence la frontière de la confédération et effectue un zoom dessus.
+Filtre la liste aux membres FIFA de la confédération indiquée uniquement. Les pays non-FIFA ne sont pas affectés — ils restent visibles ou masqués selon les paramètres `?show` et `?stage`. Sur la page Carte, met également en évidence la frontière de la confédération et effectue un zoom dessus.
 
 Les valeurs inconnues sont silencieusement ignorées et les valeurs par défaut sont conservées.
 
@@ -127,26 +125,26 @@ Le cadre officiel de ce projet est **Né Dans / Joue Pour** : un joueur est *né
 
 Les alias et les codes individuels peuvent être librement mélangés ; le résultat est une union. Les jetons inconnus sont silencieusement ignorés — si tous les jetons sont non reconnus, le paramètre est entièrement ignoré et les valeurs par défaut sont conservées.
 
-## Combiner `?in`/`?out` avec `?show`
+## Combiner `?stage` avec `?show`
 
-- `?in&show=qual` → uniquement les pays qualifiés alive & kicking
-- `?out&show=qual` → uniquement les pays qualifiés éliminés
-- `?in&show=exp` → exportateurs (qualifiés ou non) liés aux équipes alive & kicking
-- `?in`/`?out` n'ont aucun effet sur les cellules `of`/`on` (elles n'ont pas de lien avec le tournoi)
+- `?stage=r16&show=qual` → uniquement les pays qualifiés ayant atteint les 8es de finale
+- `?stage=winner&show=qual` → uniquement le champion
+- `?stage=r32&show=exp` → exportateurs (qualifiés ou non) liés aux pays ayant atteint les 16es de finale
+- `?stage` n'a aucun effet sur les cellules `of`/`on` (elles n'ont pas de lien avec le tournoi)
 
 ## Exemples
 
 ```
-?in&show=qual                 Uniquement les pays qualifiés alive & kicking.
-?out&show=qual                Uniquement les pays qualifiés éliminés.
+?stage=r16&show=qual          Pays qualifiés ayant atteint les 8es de finale.
+?stage=winner&show=qual       Uniquement le champion.
 ?show=qual                    Les 48 pays qualifiés ; non qualifiés masqués.
 ?show=qual&sort=pop&dir=asc   Pays qualifiés triés par population croissante.
 ?show=qie                     Uniquement les pays qui importent et exportent.
-?in&show=exp                  Colonne exportateurs, filtrée sur les équipes alive & kicking.
+?stage=r32&show=exp           Colonne exportateurs, filtrée sur les pays ayant atteint les 16es de finale.
 ?sort=delta&dir=asc&show=qual Pays qualifiés avec le moins d'écart joue-pour vs. né-dans en premier.
 ?show=all                     Toutes les 8 cellules, dont of et on normalement masquées.
 ?show=qual,ef                 Pays qualifiés + exportateurs FIFA non qualifiés.
-?fifa=uefa                    Membres UEFA uniquement (filtre FIFA ; non-FIFA non affecté).
-?fifa=caf&show=exp            Exportateurs africains uniquement.
+?fifaconf=uefa                    Membres UEFA uniquement (filtre FIFA ; non-FIFA non affecté).
+?fifaconf=caf&show=exp            Exportateurs africains uniquement.
 ```
 <!-- /i18n:countries_url_params -->

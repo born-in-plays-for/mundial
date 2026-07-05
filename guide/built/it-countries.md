@@ -18,7 +18,7 @@ Aggiungi `?explain` a qualsiasi URL per aprire al caricamento un pannello esplic
 Tutti i parametri attivi vengono sempre registrati nella console del browser, indipendentemente da `?explain`.
 
 ```
-?in&show=qual&explain    → apre il pannello al caricamento, rimane aperto per la revisione
+?stage=r16&show=qual&explain    → apre il pannello al caricamento, rimane aperto per la revisione
 ```
 
 ### `?sort` — criterio di ordinamento
@@ -43,36 +43,34 @@ Tutti i parametri attivi vengono sempre registrati nella console del browser, in
 
 Si applica solo alla chiave di ordinamento primaria. `?sort=alpha&dir=desc` produce Z–A.
 
-### `?in` / `?out` — filtro alive & kicking
-
-Flag booleani — la sola presenza è il segnale; nessun `=valore` necessario. Rispecchiano il widget di commutazione **in · ● · out** nel pannello filtri.
+### `?stage` — filtro fase del torneo
 
 ```
-(nessuno)    predefinito — tutti i 48 paesi qualificati mostrati
-?in          solo alive & kicking — squadre ancora nel torneo
-?out         solo eliminati — squadre eliminate
-?in&out      la squadra di Schrödinger → insieme vuoto (nessun paese è contemporaneamente in e out)
+?stage=qualified   predefinito — tutti i paesi qualificati e i loro esportatori
+?stage=r32         Sedicesimi di finale
+?stage=r16         Ottavi di finale
+?stage=qf          Quarti di finale
+?stage=sf          Semifinali
+?stage=final       Finale
+?stage=winner      Solo il vincitore
 ```
 
-![Gatto di Schrödinger](../images/Schrödinger.avif)
+Rispecchia il carosello di fase nel pannello filtri (Qualificati → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore). Ogni posizione filtra sia i paesi qualificati sia i loro paesi esportatori non qualificati fino a quelli che hanno «raggiunto» quella fase — ancora in gioco all'inizio, o già vincitori. I paesi non qualificati e non esportatori (celle `of`/`on`) non sono interessati — non hanno alcun legame con il torneo.
 
-Quando `?in` o `?out` è impostato, vengono filtrati anche i paesi esportatori non qualificati:
+I valori sconosciuti vengono ignorati silenziosamente e i valori predefiniti vengono mantenuti.
 
-- `?in` nasconde gli esportatori i cui giocatori vanno tutti a squadre eliminate
-- `?out` nasconde gli esportatori i cui giocatori vanno tutti a squadre alive & kicking
-
-### `?fifa` — filtro confederazioni FIFA
+### `?fifaconf` — filtro confederazioni FIFA
 
 ```
-?fifa=uefa       UEFA — Europa
-?fifa=afc        AFC — Asia
-?fifa=caf        CAF — Africa
-?fifa=conmebol   CONMEBOL — America del Sud
-?fifa=concacaf   CONCACAF — America del Nord e Centrale
-?fifa=ofc        OFC — Oceania
+?fifaconf=uefa       UEFA — Europa
+?fifaconf=afc        AFC — Asia
+?fifaconf=caf        CAF — Africa
+?fifaconf=conmebol   CONMEBOL — America del Sud
+?fifaconf=concacaf   CONCACAF — America del Nord e Centrale
+?fifaconf=ofc        OFC — Oceania
 ```
 
-Filtra l'elenco ai soli membri FIFA della confederazione indicata. I paesi non-FIFA non sono interessati — rimangono visibili o nascosti in base alle impostazioni `?show` e `?in`/`?out`. Nella pagina Mappa, evidenzia anche il confine della confederazione e vi zooma sopra.
+Filtra l'elenco ai soli membri FIFA della confederazione indicata. I paesi non-FIFA non sono interessati — rimangono visibili o nascosti in base alle impostazioni `?show` e `?stage`. Nella pagina Mappa, evidenzia anche il confine della confederazione e vi zooma sopra.
 
 I valori sconosciuti vengono ignorati silenziosamente e i valori predefiniti vengono mantenuti.
 
@@ -127,26 +125,26 @@ Il quadro ufficiale di questo progetto è **Nato In / Gioca Per**: un giocatore 
 
 Alias e codici individuali possono essere liberamente mescolati; il risultato è un'unione. I token sconosciuti vengono ignorati silenziosamente — se tutti i token sono sconosciuti il parametro viene ignorato interamente e i valori predefiniti vengono mantenuti.
 
-## Combinare `?in`/`?out` con `?show`
+## Combinare `?stage` con `?show`
 
-- `?in&show=qual` → solo paesi qualificati alive & kicking
-- `?out&show=qual` → solo paesi qualificati eliminati
-- `?in&show=exp` → esportatori (qualificati o meno) collegati a squadre alive & kicking
-- `?in`/`?out` non hanno effetto sulle celle `of`/`on` (non hanno connessione con il torneo)
+- `?stage=r16&show=qual` → solo paesi qualificati che hanno raggiunto gli ottavi di finale
+- `?stage=winner&show=qual` → solo il campione
+- `?stage=r32&show=exp` → esportatori (qualificati o meno) collegati a paesi che hanno raggiunto i sedicesimi di finale
+- `?stage` non ha effetto sulle celle `of`/`on` (non hanno connessione con il torneo)
 
 ## Esempi
 
 ```
-?in&show=qual                 Solo paesi qualificati alive & kicking.
-?out&show=qual                Solo paesi qualificati eliminati.
+?stage=r16&show=qual          Paesi qualificati che hanno raggiunto gli ottavi di finale.
+?stage=winner&show=qual       Solo il campione.
 ?show=qual                    Tutti i 48 paesi qualificati; non qualificati nascosti.
 ?show=qual&sort=pop&dir=asc   Paesi qualificati ordinati per popolazione crescente.
 ?show=qie                     Solo paesi che importano ed esportano giocatori.
-?in&show=exp                  Colonna esportatori, filtrata sulle squadre alive & kicking.
+?stage=r32&show=exp           Colonna esportatori, filtrata sui paesi che hanno raggiunto i sedicesimi.
 ?sort=delta&dir=asc&show=qual Paesi qualificati con minor scarto gioca-per vs. nato-in per primi.
 ?show=all                     Tutte le 8 celle incluse of e on normalmente nascoste.
 ?show=qual,ef                 Paesi qualificati + esportatori FIFA non qualificati.
-?fifa=uefa                    Solo membri UEFA (filtro FIFA; non-FIFA non interessati).
-?fifa=caf&show=exp            Solo esportatori africani.
+?fifaconf=uefa                    Solo membri UEFA (filtro FIFA; non-FIFA non interessati).
+?fifaconf=caf&show=exp            Solo esportatori africani.
 ```
 <!-- /i18n:countries_url_params -->

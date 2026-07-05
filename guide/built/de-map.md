@@ -38,19 +38,16 @@ Die Matrix kreuzt zwei **Spalten** (Exporteur / Nicht-Exporteur) mit vier **Zeil
 
 Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf einen Zeilen- oder Spaltenkopf, um die gesamte Gruppe auf einmal umzuschalten.
 
-### Alive & kicking Filter
+### Turnierphasenfilter
 
-Der Schalter **in · ● · out** befindet sich direkt unterhalb des Zeilenkopfs *Qualifiziert*.
-Standardmäßig ist der Knopf zentriert — alle 48 qualifizierten Länder werden angezeigt.
+Ein kleines Karussell befindet sich im Zeilenkopf *Qualifiziert* und durchläuft sieben Positionen: **Qualifiziert → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger**.
 
-- Seite **in**: zeigt nur noch im Turnier verbliebene Teams; ausgeschiedene Länder werden ausgeblendet.
-- Seite **out**: zeigt nur ausgeschiedene Teams.
-- Tippen Sie erneut auf die aktive Seite oder auf die Mitte, um zurückzusetzen.
+- Verwenden Sie die Pfeile ‹ › oder wischen Sie auf Touchscreens nach links/rechts, um zwischen den Phasen zu wechseln.
+- Jede Position filtert sowohl qualifizierte Länder als auch ihre nicht qualifizierten Exporteurländer auf jene, die diese Phase „erreicht" haben — zu Beginn noch im Turnier, oder bereits Sieger.
+- Die Navigation ist auf die vom Turnier tatsächlich erreichte Phase begrenzt; weitere Positionen bleiben gesperrt, bis die entsprechenden Spiele ausgetragen sind.
 
-Auf Touchscreens nach links oder rechts wischen, um den Knopf schrittweise zu bewegen.
-
-Der Schalter funktioniert in Kombination mit der restlichen Filtermatrix — Sie können beispielsweise
-nur alive & kicking Mannschaften anzeigen, die auch Exporteure sind, indem Sie auf **in** schalten und die Nicht-Exporteur-Spalte deaktivieren.
+Das Karussell funktioniert in Kombination mit der restlichen Filtermatrix — Sie können beispielsweise
+nur Achtelfinal-Mannschaften anzeigen, die auch Exporteure sind, indem Sie das Karussell vorrücken und die Nicht-Exporteur-Spalte deaktivieren.
 
 ### FIFA-Konföderationsfilter
 
@@ -60,7 +57,7 @@ Die Auswahl einer Konföderation hebt zudem ihre Außengrenze auf der Karte herv
 
 ### URL-Parameter
 
-Der Filter- und Sortierstatus kann auch direkt über die URL konfiguriert werden — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`, `?fifa=`. Fügen Sie `?explain` zu einer beliebigen URL hinzu, um ein Panel zu öffnen, das die aktiven Parameter erklärt. Die vollständige Referenz mit allen Zellcodes, Gruppenaliasen und Beispielen finden Sie im [Länderseiten-Guide](?guide=countries).
+Der Filter- und Sortierstatus kann auch direkt über die URL konfiguriert werden — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Fügen Sie `?explain` zu einer beliebigen URL hinzu, um ein Panel zu öffnen, das die aktiven Parameter erklärt. Die vollständige Referenz mit allen Zellcodes, Gruppenaliasen und Beispielen finden Sie im [Länderseiten-Guide](?guide=countries).
 
 ### Zur Länderreferenz
 

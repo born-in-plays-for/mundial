@@ -38,19 +38,16 @@ La matrice croise deux **colonnes** (exportateur / non-exportateur) avec quatre 
 
 Décochez une cellule pour masquer cette catégorie. Cliquez sur un en-tête de ligne ou de colonne pour basculer tout le groupe d'un coup.
 
-### Filtre alive & kicking
+### Filtre de phase du tournoi
 
-Le commutateur **in · ● · out** se trouve juste en dessous de l'en-tête de ligne *qualifié*.
-Par défaut, le curseur est centré — les 48 pays qualifiés sont affichés.
+Un petit carrousel se trouve dans l'en-tête de la ligne *qualifié*, parcourant sept positions : **Qualifiés → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur**.
 
-- Côté **in** : affiche uniquement les équipes encore en lice ; les pays éliminés sont masqués.
-- Côté **out** : affiche uniquement les équipes éliminées.
-- Touchez à nouveau le côté actif, ou le centre, pour réinitialiser et tout afficher.
+- Utilisez les flèches ‹ ›, ou faites glisser vers la gauche/droite sur écran tactile, pour changer de phase.
+- Chaque position filtre à la fois les pays qualifiés et leurs pays exportateurs non qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée.
+- La navigation est limitée à la phase la plus avancée réellement atteinte par le tournoi ; les positions suivantes restent verrouillées tant que les matchs correspondants ne sont pas joués.
 
-Sur écran tactile, faites glisser vers la gauche ou la droite pour déplacer le curseur pas à pas.
-
-Le commutateur fonctionne en combinaison avec le reste de la matrice de filtre — vous pouvez, par exemple,
-n'afficher que les équipes encore en lice qui sont aussi exportatrices en passant à **in** et en décochant la colonne non-exportateurs.
+Le carrousel fonctionne en combinaison avec le reste de la matrice de filtre — vous pouvez, par exemple,
+n'afficher que les équipes des 8es de finale qui sont aussi exportatrices en avançant le carrousel et en décochant la colonne non-exportateurs.
 
 ### Filtre confédérations FIFA
 
@@ -60,7 +57,7 @@ La sélection d'une confédération met également en évidence sa frontière ex
 
 ### Paramètres d'URL
 
-L'état du filtre et du tri peut aussi être configuré directement depuis l'URL — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`, `?fifa=`. Ajoutez `?explain` à n'importe quelle URL pour ouvrir un panneau décrivant l'effet des paramètres actifs. La référence complète avec tous les codes de cellule, alias de groupe et exemples se trouve dans le [guide de la page Pays](?guide=countries).
+L'état du filtre et du tri peut aussi être configuré directement depuis l'URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Ajoutez `?explain` à n'importe quelle URL pour ouvrir un panneau décrivant l'effet des paramètres actifs. La référence complète avec tous les codes de cellule, alias de groupe et exemples se trouve dans le [guide de la page Pays](?guide=countries).
 
 ### À propos de la référence des pays
 

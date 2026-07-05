@@ -23,14 +23,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const _sidebarHost = document.getElementById('sidebar-host');
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
-  ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="Toggle filter">‹</button>`}
+  ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
   <div class="csb-body"><div class="csb-layout d-inline-flex align-items-stretch gap-2">
     <div class="csb-sort-stack d-flex flex-column gap-2">
       <table class="csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
           <td class="csb-header text-center text-muted" title="${T.csbTips.action}">
             ${alwaysOpen ? T.sortLabels.action : html`<div class="d-flex align-items-center justify-content-between">
-              <button class="csb-icon-btn csb-collapse" title="Collapse" aria-label="Collapse"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+              <button class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
               <span><em>${T.sortLabels.action}</em></span>
               <span style="width: 18px;">&nbsp;</span>
             </div>`}
@@ -67,10 +67,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <tr>
       <td colspan="2" class="csb-header text-center text-muted">
         <div class="d-flex align-items-center justify-content-between">
-          <button id="csb-share" class="csb-icon-btn csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+          <button id="csb-share" class="csb-icon-btn csb-share" title="${T.csbParams.share}"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
           <em>${T.filterLabels.action}</em>
-          <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">all</span>
-          <button id="params-badge" class="csb-icon-btn csb-params-badge" title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+          <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
+          <button id="params-badge" class="csb-icon-btn csb-params-badge" title="${T.csbParams.badge}"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
         </div>
       </td>
       <td class="csb-col" data-col="exp" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name"></span></span></td>
@@ -104,18 +104,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="csb-row" data-row="nqf" title="${T.csbTips.fifa}">
         <div>
           <div class="dropdown" id="zoom-conf-dropdown">
-            <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="View by confederation" title="View by confederation">
+            <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
               <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> All FIFA Confederations</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> ${T.csbParams.confAll}</label></li>
               <li><hr class="dropdown-divider"></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="uefa"> UEFA — Europe</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="afc"> AFC — Asia</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="caf"> CAF — Africa</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="conmebol"> CONMEBOL — South America</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="concacaf"> CONCACAF — N. &amp; C. America</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> OFC — Oceania</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="uefa"> ${T.csbParams.confNames.uefa}</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="afc"> ${T.csbParams.confNames.afc}</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="caf"> ${T.csbParams.confNames.caf}</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="conmebol"> ${T.csbParams.confNames.conmebol}</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="concacaf"> ${T.csbParams.confNames.concacaf}</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> ${T.csbParams.confNames.ofc}</label></li>
             </ul>
           </div>
           <span class="elo-item"><span class="elo-name">FIFA</span></span>
@@ -640,7 +640,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (_displayMode === 'match') {
       const groups = _buildGroups(filtered);
       groups.sort((ga, gb) => {
-        for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) {
+        // Only the first 2 of _sortOrder's 4 entries ever drive the actual comparison —
+        // positions 3/4 exist purely so the reorderable sort-list UI has a full permutation
+        // to display/persist; a restore can land on a different 3rd/4th than what was saved
+        // without changing anything observable, so there's nothing to reconcile there.
+        for (let i = 0; i < Math.min(_sortOrder.length, 2); i++) {
           let d = _groupCompare(_sortOrder[i], ga, gb);
           if (i === 0 && _sortDir === 'asc') d = -d;
           if (d !== 0) return d;
@@ -666,7 +670,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       });
     } else {
       ordered = [...filtered].sort((a, b) => {
-        for (let i = 0; i < Math.min(_sortOrder.length, 3); i++) {
+        // Same 2-key cap as the match-display branch above.
+        for (let i = 0; i < Math.min(_sortOrder.length, 2); i++) {
           let d = _sortFns[_sortOrder[i]](a, b);
           if (i === 0 && _sortDir === 'asc') d = -d;
           if (d !== 0) return d;
@@ -695,42 +700,95 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     all:   ['qie','qi','qe','q','ef','en','of','on'],
   };
   const _CELL_MAP   = { qie:_fltQIE, qi:_fltQI, qe:_fltQE, q:_fltQ, ef:_fltEF, en:_fltEN, of:_fltOF, on:_fltON };
+  // Collapses a raw cell-key list back down to _ALIASES names for succinct display —
+  // e.g. ['qie','qi','qe','q'] -> 'qual' instead of 'qie,qi,qe,q'. Only used for the
+  // "implied" (not-in-URL) section of _buildStateLines below; an explicit ?show= value
+  // already present in the URL is always echoed verbatim in the "inUrl" section, never
+  // rewritten, since that's what the user actually typed. Largest alias first so 'all'
+  // wins outright over reconstructing it from 'exp'+'nexp'; leftover cells with no
+  // matching alias are appended as-is. Round-trips fine either way — _ALIASES expansion
+  // happens on read for both the raw and the aliased form.
+  const _describeCells = cells => {
+    const remaining = new Set(cells);
+    const parts = [];
+    for (const [alias, expansion] of Object.entries(_ALIASES).sort((a, b) => b[1].length - a[1].length)) {
+      if (expansion.every(c => remaining.has(c))) {
+        parts.push(alias);
+        expansion.forEach(c => remaining.delete(c));
+      }
+    }
+    parts.push(...remaining);
+    return parts.join(',');
+  };
 
   // ── URL params debug (badge · panel · console) ─────────────────────────
 
-  const _SORT_NAMES  = { elo: 'Elo ranking', alpha: 'A–Z', pop: 'population', delta: 'plays-for minus born-in' };
-  const _STAGE_NAMES = ['Qualified', 'Round of 32', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final', 'Winner'];
-  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'stage', 'show', 'fifa', 'display', 'explain']);
-  const _DISPLAY_NAMES = { team: 'teams (flat list)', match: 'grouped by fixture — sort criteria sum both teams\' values' };
-  const _CONF_NAMES = { uefa:'UEFA — Europe', afc:'AFC — Asia', caf:'CAF — Africa', conmebol:'CONMEBOL — South America', concacaf:'CONCACAF — N. & C. America', ofc:'OFC — Oceania' };
+  // Fuller descriptive names for the explain panel — T.csbParams.{sortNames,displayNames,
+  // confNames} — distinct from T.sortLabels/T.stageLabels' terse column/pill labels.
+  // Stage names reuse T.stageLabels directly (same wording the carousel pill itself shows).
+  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'stage', 'show', 'fifaconf', 'display', 'explain']);
   const _badge = _el.querySelector('#params-badge');
-  let _lastLines = [], _panelEl = null;
+  let _panelEl = null;
 
   const _countVisible = () =>
     [...eloMain.querySelectorAll('.elo-item')].filter(el => el.style.display !== 'none').length;
 
-  const _buildLines = (sp) => {
-    const lines = [];
-    const stageParam = sp.get('stage');
-    if (stageParam) {
+  // Splits the full explain content into two sections, per key:
+  //  - inUrl: the param is actually present in `sp` — echoed verbatim (raw value, "?key="
+  //    prefix), same as the user typed it, never rewritten/optimized.
+  //  - implied: the param is ABSENT from `sp` but needed to fully reconstruct the current
+  //    live state (default or restored) — described from the live state variables instead,
+  //    no "?" prefix (it isn't actually in the URL). _describeCells' alias-optimization
+  //    (e.g. 'qual' instead of 'qie,qi,qe,q') only ever applies here, never to an inUrl
+  //    echo — an explicit URL value is always shown exactly as given.
+  // The Share button calls this with an empty URLSearchParams, so every key lands in
+  // `implied` — i.e. "the full state, as params" — which is exactly what it needs.
+  // Every key always produces exactly one line, in one section or the other — stage/fifa/
+  // display push their at-rest default value (tagged "(default)") rather than being
+  // omitted, so `implied` is always a complete, reconstructable snapshot of the live state,
+  // not just what's changed from default.
+  const _buildStateLines = (sp) => {
+    const inUrl = [], implied = [];
+
+    const P = T.csbParams;
+
+    if (sp.has('stage')) {
+      const stageParam = sp.get('stage');
       const idx = CAROUSEL_STAGES.indexOf(stageParam);
-      lines.push(idx >= 0
-        ? { param: `?stage=${stageParam}`, desc: `stage: ${_STAGE_NAMES[idx]} — qualified & exporters filtered to teams that reached it` }
-        : { param: `?stage=${stageParam}`, desc: `unknown stage — ignored (valid: ${CAROUSEL_STAGES.join(' ')})` });
+      inUrl.push(idx >= 0
+        ? { param: `?stage=${stageParam}`, desc: P.stageDesc(T.stageLabels[idx]) }
+        : { param: `?stage=${stageParam}`, desc: P.stageUnknown(CAROUSEL_STAGES.join(' ')) });
+    } else {
+      implied.push(_stage > 0
+        ? { param: `stage=${CAROUSEL_STAGES[_stage]}`, desc: P.stageDesc(T.stageLabels[_stage]) }
+        : { param: `stage=${CAROUSEL_STAGES[0]}`, desc: P.stageDefault(T.stageLabels[0]) });
     }
-    const sortRaw = sp.get('sort');
-    if (sortRaw) {
+
+    if (sp.has('sort')) {
+      const sortRaw = sp.get('sort');
       const keys = sortRaw.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
-      lines.push(keys.length
-        ? { param: `?sort=${sortRaw.trim()}`, desc: `sort: ${keys.map(k => _SORT_NAMES[k]).join(' → ')}` }
-        : { param: `?sort=${sortRaw.trim()}`, desc: 'no valid sort keys — ignored' });
+      // Only the first 2 keys ever affect the actual sort (see sortAndFilter) — call that
+      // out here since the URL explicitly asked for more; the implied branch below never
+      // needs this note, it's always exactly 2, nothing to explain.
+      const extra = keys.length - 2;
+      inUrl.push(keys.length
+        ? { param: `?sort=${sortRaw.trim()}`, desc: P.sortDesc(keys.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) + (extra > 0 ? P.sortIgnored(extra) : '') }
+        : { param: `?sort=${sortRaw.trim()}`, desc: P.sortInvalid });
+    } else {
+      implied.push({ param: `sort=${_sortOrder.slice(0, 2).join(',')}`, desc: P.sortDesc(_sortOrder.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) });
     }
-    const dir = sp.get('dir');
-    if      (dir === 'asc')  lines.push({ param: '?dir=asc',  desc: 'ascending ↑' });
-    else if (dir === 'desc') lines.push({ param: '?dir=desc', desc: 'descending ↓' });
-    else if (dir)            lines.push({ param: `?dir=${dir}`, desc: 'invalid direction — ignored (use asc or desc)' });
-    const show = sp.get('show');
-    if (show) {
+
+    if (sp.has('dir')) {
+      const dir = sp.get('dir');
+      if      (dir === 'asc')  inUrl.push({ param: '?dir=asc',  desc: P.dirAsc });
+      else if (dir === 'desc') inUrl.push({ param: '?dir=desc', desc: P.dirDesc });
+      else                     inUrl.push({ param: `?dir=${dir}`, desc: P.dirInvalid });
+    } else {
+      implied.push({ param: `dir=${_sortDir}`, desc: _sortDir === 'asc' ? P.dirAsc : P.dirDesc });
+    }
+
+    if (sp.has('show')) {
+      const show = sp.get('show');
       const cells = new Set(), unknown = [];
       show.split(',').forEach(t => {
         const k = t.trim();
@@ -738,55 +796,99 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         expanded.length ? expanded.forEach(c => cells.add(c)) : unknown.push(k);
       });
       const valid = [...cells];
-      const suffix = unknown.length ? ` — unknown: ${unknown.join(', ')}` : '';
-      lines.push(valid.length
-        ? { param: `?show=${show}`, desc: `cells: ${valid.join(' · ')}${suffix}` }
-        : { param: `?show=${show}`, desc: `no valid codes${suffix} — ignored, defaults kept` });
+      const suffix = unknown.length ? P.cellsUnknown(unknown.join(', ')) : '';
+      inUrl.push(valid.length
+        ? { param: `?show=${show}`, desc: P.cellsDesc(valid.join(' · ')) + suffix }
+        : { param: `?show=${show}`, desc: P.cellsInvalid(suffix) });
+    } else {
+      const cells = Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k);
+      implied.push(cells.length
+        ? { param: `show=${_describeCells(cells)}`, desc: P.cellsDesc(cells.join(' · ')) }
+        : { param: 'show=', desc: P.cellsNone });
     }
-    const conf = sp.get('fifa');
-    if (conf) {
-      lines.push(_CONF_NAMES[conf]
-        ? { param: `?fifa=${conf}`, desc: `confederation: ${_CONF_NAMES[conf]}` }
-        : { param: `?fifa=${conf}`, desc: `unknown confederation — ignored (valid: ${Object.keys(_CONF_NAMES).join(' ')})` });
+
+    if (sp.has('fifaconf')) {
+      const conf = sp.get('fifaconf');
+      inUrl.push(P.confNames[conf]
+        ? { param: `?fifaconf=${conf}`, desc: P.confDesc(P.confNames[conf]) }
+        : { param: `?fifaconf=${conf}`, desc: P.confUnknown(Object.keys(P.confNames).join(' ')) });
+    } else {
+      implied.push(_confKey
+        ? { param: `fifaconf=${_confKey}`, desc: P.confDesc(P.confNames[_confKey] ?? _confKey) }
+        : { param: 'fifaconf=', desc: P.confDefault });
     }
-    const display = sp.get('display');
-    if (display) {
-      lines.push(_DISPLAY_NAMES[display]
-        ? { param: `?display=${display}`, desc: `display: ${_DISPLAY_NAMES[display]}` }
-        : { param: `?display=${display}`, desc: `unknown display mode — ignored (valid: team, match)` });
+
+    if (sp.has('display')) {
+      const display = sp.get('display');
+      inUrl.push(P.displayNames[display]
+        ? { param: `?display=${display}`, desc: P.displayDesc(P.displayNames[display]) }
+        : { param: `?display=${display}`, desc: P.displayUnknown });
+    } else {
+      implied.push(_displayMode === 'match'
+        ? { param: 'display=match', desc: P.displayDesc(P.displayNames.match) }
+        : { param: 'display=team', desc: P.displayDefault(P.displayNames.team) });
     }
+
+    // Unrecognized keys are a URL-only concept — no live-state equivalent to imply.
     for (const k of sp.keys()) {
-      if (!_KNOWN_PARAMS.has(k)) lines.push({ param: `?${k}`, desc: 'unrecognized — ignored' });
+      if (!_KNOWN_PARAMS.has(k)) inUrl.push({ param: `?${k}`, desc: P.unrecognized });
     }
-    return lines;
+
+    return { inUrl, implied };
   };
 
-  const _closeExplainPanel = () => { if (_panelEl) _panelEl.hidden = true; _badge?.classList.remove('active'); };
-  const _openExplainPanel  = (lines, visible) => {
+  // Classic Bootstrap modal (bootstrap.bundle.js is already loaded on every page that
+  // uses this sidebar) — backdrop, Escape-to-close, and focus handling all come for
+  // free from bootstrap.Modal instead of bespoke CSS/JS; .csb-params-badge's 'active'
+  // state just mirrors the modal's own shown/hidden events, however it gets closed.
+  let _panelShown = false;
+  const _closeExplainPanel = () => bootstrap.Modal.getInstance(_panelEl)?.hide();
+  const _renderSection = (title, lines, emptyMessage) => html`
+    <h6 class="text-uppercase text-body-secondary fw-semibold mb-1">${title}</h6>
+    ${lines.length ? html`
+      <ul class="list-unstyled mb-2">
+        ${lines.map(l => html`<li class="mb-1"><code class="bg-body-secondary rounded px-1">${l.param}</code> — ${l.desc}</li>`)}
+      </ul>` : html`<p class="fst-italic mb-2">${emptyMessage}</p>`}`;
+  const _openExplainPanel  = (inUrl, implied, visible) => {
     if (!_panelEl) {
       _panelEl = document.createElement('div');
       _panelEl.id = 'params-panel';
+      _panelEl.className = 'modal fade';
+      _panelEl.tabIndex = -1;
       document.body.appendChild(_panelEl);
-      document.addEventListener('keydown', e => { if (e.key === 'Escape') _closeExplainPanel(); });
+      _panelEl.addEventListener('shown.bs.modal',  () => { _panelShown = true;  _badge?.classList.add('active'); });
+      _panelEl.addEventListener('hidden.bs.modal', () => { _panelShown = false; _badge?.classList.remove('active'); });
     }
     render(html`
-      <button class="pep-close" @click=${_closeExplainPanel}>×</button>
-      <ul class="pep-list">
-        ${lines.map(l => html`<li><code>${l.param}</code> — ${l.desc}</li>`)}
-      </ul>
-      <p class="pep-result">→ ${visible} ${visible === 1 ? 'country' : 'countries'} visible</p>`, _panelEl);
-    _panelEl.hidden = false;
-    _badge?.classList.add('active');
+      <div class="modal-dialog modal-dialog-scrollable modal-sm">
+        <div class="modal-content">
+          <div class="modal-header py-2">
+            <h6 class="modal-title mb-0">${T.csbParams.modalTitle}</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="${T.csbParams.close}"></button>
+          </div>
+          <div class="modal-body small">
+            ${_renderSection(T.csbParams.inUrl, inUrl, T.csbParams.inUrlEmpty)}
+            ${_renderSection(T.csbParams.notInUrl, implied, T.csbParams.notInUrlEmpty)}
+            <p class="text-muted border-top pt-2 mb-0">${T.csbParams.visible(visible)}</p>
+          </div>
+        </div>
+      </div>`, _panelEl);
+    bootstrap.Modal.getOrCreateInstance(_panelEl).show();
   };
 
   _badge?.addEventListener('click', e => {
     e.stopPropagation();
-    (_panelEl && !_panelEl.hidden) ? _closeExplainPanel() : (_lastLines.length && _openExplainPanel(_lastLines, _countVisible()));
+    if (_panelShown) { _closeExplainPanel(); return; }
+    // Always recomputed fresh from the live URL + live state — most sidebar interactions
+    // (checkboxes, sort clicks, carousel...) never touch the URL, so a cached snapshot
+    // from page-load would go stale the moment the user touches anything.
+    const { inUrl, implied } = _buildStateLines(new URLSearchParams(location.search));
+    _openExplainPanel(inUrl, implied, _countVisible());
   });
 
   // ── Persistence (localStorage) ──────────────────────────────────────────
 
-  const _CS_PARAM_KEYS = ['sort', 'dir', 'stage', 'show', 'fifa', 'display'];
+  const _CS_PARAM_KEYS = ['sort', 'dir', 'stage', 'show', 'fifaconf', 'display'];
 
   // Set only while _restoreState is applying a saved stage — _setStage below fires
   // 'slide.bs.carousel' synchronously, and that handler calls _saveState() itself (the normal
@@ -858,50 +960,47 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     return true;
   };
 
-  const _buildActiveStateLines = () => {
-    const lines = [];
-    if (_stage > 0) lines.push({ param: `stage=${CAROUSEL_STAGES[_stage]}`, desc: `stage: ${_STAGE_NAMES[_stage]} — qualified & exporters filtered to teams that reached it` });
-    lines.push({ param: `sort=${_sortOrder.join(',')}`, desc: `sort: ${_sortOrder.map(k => _SORT_NAMES[k]).join(' → ')}` });
-    lines.push({ param: `dir=${_sortDir}`, desc: _sortDir === 'asc' ? 'ascending ↑' : 'descending ↓' });
-    const cells = Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k);
-    lines.push(cells.length
-      ? { param: `show=${cells.join(',')}`, desc: `cells: ${cells.join(' · ')}` }
-      : { param: 'show=', desc: 'no cells shown' });
-    if (_confKey) lines.push({ param: `fifa=${_confKey}`, desc: `confederation: ${_CONF_NAMES[_confKey] ?? _confKey}` });
-    if (_displayMode === 'match') lines.push({ param: 'display=match', desc: `display: ${_DISPLAY_NAMES.match}` });
-    return lines;
-  };
-
   // ── Share button (#csb-share) — builds a URL that reproduces this exact sidebar
-  // configuration on another app instance, from the very same param lines
-  // _buildActiveStateLines() above already feeds the explain panel/console with, so
-  // "what's active" and "what a share link encodes" can never drift apart.
+  // configuration on another app instance. Calls _buildStateLines with an empty
+  // URLSearchParams, so every key lands in `implied` (the full live state, as
+  // params) — the very same description/optimization (_describeCells etc.) the
+  // explain panel's "current state" section uses, so the two can never drift apart.
   const _shareBtn = _el.querySelector('#csb-share');
+  // Classic Bootstrap toast — bootstrap.Toast owns the fade transition and the
+  // auto-hide timer, so there's no bespoke CSS/setTimeout bookkeeping to maintain.
   let _shareToastEl = null;
   const _showShareToast = msg => {
     if (!_shareToastEl) {
+      const container = document.createElement('div');
+      container.className = 'toast-container position-fixed end-0 p-3';
+      container.style.top = '32px'; // clears the fixed navbar (mundial-auth-bar), same offset it gives its own siblings
       _shareToastEl = document.createElement('div');
-      _shareToastEl.id = 'csb-share-toast';
-      document.body.appendChild(_shareToastEl);
+      _shareToastEl.className = 'toast align-items-center';
+      _shareToastEl.setAttribute('role', 'status');
+      _shareToastEl.setAttribute('aria-live', 'polite');
+      _shareToastEl.setAttribute('aria-atomic', 'true');
+      container.appendChild(_shareToastEl);
+      document.body.appendChild(container);
     }
-    _shareToastEl.textContent = msg;
-    clearTimeout(_shareToastEl._hideTimer);
-    requestAnimationFrame(() => _shareToastEl.classList.add('visible'));
-    _shareToastEl._hideTimer = setTimeout(() => _shareToastEl?.classList.remove('visible'), 2000);
+    render(html`<div class="d-flex">
+      <div class="toast-body">${msg}</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="${T.csbParams.close}"></button>
+    </div>`, _shareToastEl);
+    bootstrap.Toast.getOrCreateInstance(_shareToastEl, { delay: 2000 }).show();
   };
   _shareBtn?.addEventListener('click', async e => {
     e.stopPropagation(); // harmless now that [data-col="all"] lives on the "all" <em> itself (a sibling, not an ancestor) — kept defensively in case that scoping ever changes back
     const sp = new URLSearchParams();
-    _buildActiveStateLines().forEach(({ param }) => {
+    _buildStateLines(new URLSearchParams()).implied.forEach(({ param }) => {
       const eq = param.indexOf('=');
       sp.set(param.slice(0, eq), param.slice(eq + 1));
     });
     const url = `${location.origin}${location.pathname}?${sp.toString()}`;
     try {
       await navigator.clipboard.writeText(url);
-      _showShareToast('URL copied to clipboard');
+      _showShareToast(T.csbParams.shareCopied);
     } catch {
-      _showShareToast('Could not copy URL to clipboard');
+      _showShareToast(T.csbParams.shareFailed);
     }
   });
 
@@ -912,16 +1011,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // No control-sidebar params in the URL — restore the persisted state instead.
       const restored = _restoreState();
       if (sp.has('explain')) {
-        const lines = _buildActiveStateLines();
-        _lastLines = restored ? [{ param: '(restored)', desc: 'settings restored from your last visit' }, ...lines] : lines;
-        const _visible = _countVisible();
-        if (_lastLines.length) {
-          if (!alwaysOpen && _el.classList.contains('collapsed')) {
-            _el.classList.remove('collapsed');
-            if (_toggle) _toggle.textContent = '›';
-          }
-          _openExplainPanel(_lastLines, _visible);
+        const { inUrl, implied } = _buildStateLines(sp);
+        if (restored) implied.unshift({ param: '(restored)', desc: 'settings restored from your last visit' });
+        if (!alwaysOpen && _el.classList.contains('collapsed')) {
+          _el.classList.remove('collapsed');
+          if (_toggle) _toggle.textContent = '›';
         }
+        _openExplainPanel(inUrl, implied, _countVisible());
       }
       return;
     }
@@ -961,7 +1057,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       if (_valid.length) Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el) el.checked = cells.has(k); });
     }
 
-    const conf = sp.get('fifa');
+    const conf = sp.get('fifaconf');
     if (conf !== null) { _confIds = CONF_IDS[conf] ?? null; _confKey = conf || null; _syncConfRadio(); }
 
     callbacks.renderElo?.();
@@ -971,16 +1067,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       document.dispatchEvent(new CustomEvent('mundial-conf-changed', { detail: { conf, ids: CONF_IDS[conf] } }));
     }
 
-    _lastLines = _buildLines(sp);
+    const { inUrl, implied } = _buildStateLines(sp);
     const _visible = _countVisible();
-    if (_lastLines.length) {
-      console.info('[params]\n' + _lastLines.map(l => `  ${l.param} → ${l.desc}`).join('\n') + `\n  → ${_visible} countries visible`);
-      if (!alwaysOpen && _el.classList.contains('collapsed')) {
-        _el.classList.remove('collapsed');
-        if (_toggle) _toggle.textContent = '›';
-      }
+    // inUrl is guaranteed non-empty here — this branch only runs when at least one
+    // _CS_PARAM_KEYS key is present in sp (see the guard above).
+    console.info('[params]\n' + [...inUrl, ...implied].map(l => `  ${l.param} → ${l.desc}`).join('\n') + `\n  ${T.csbParams.visible(_visible)}`);
+    if (!alwaysOpen && _el.classList.contains('collapsed')) {
+      _el.classList.remove('collapsed');
+      if (_toggle) _toggle.textContent = '›';
     }
-    if (sp.has('explain') && _lastLines.length) _openExplainPanel(_lastLines, _visible);
+    if (sp.has('explain')) _openExplainPanel(inUrl, implied, _visible);
 
     _saveState();
   };

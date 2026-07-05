@@ -38,19 +38,16 @@ La matriz cruza dos **columnas** (exportador / no exportador) con cuatro **filas
 
 Desmarca una celda para ocultar esa categoría. Haz clic en un encabezado de fila o columna para alternar todo el grupo a la vez.
 
-### Filtro alive & kicking
+### Filtro de fase del torneo
 
-El interruptor **in · ● · out** se encuentra justo debajo del encabezado de fila *clasificados*.
-Por defecto el cursor está centrado — se muestran los 48 países clasificados.
+Un pequeño carrusel se encuentra en el encabezado de la fila *clasificados*, recorriendo siete posiciones: **Clasificados → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón**.
 
-- Lado **in**: muestra solo los equipos aún en el torneo; los países eliminados se ocultan.
-- Lado **out**: muestra solo los equipos eliminados.
-- Toca de nuevo el lado activo, o el centro, para restablecer y mostrar todo.
+- Usa las flechas ‹ ›, o desliza hacia la izquierda/derecha en pantallas táctiles, para cambiar de fase.
+- Cada posición filtra tanto los países clasificados como sus países exportadores no clasificados hasta aquellos que «alcanzaron» esa fase — aún en juego al inicio de la misma, o ya campeones.
+- La navegación está limitada a la fase que el torneo ha alcanzado realmente; las posiciones siguientes permanecen bloqueadas hasta que se disputen los partidos correspondientes.
 
-En pantallas táctiles, desliza hacia la izquierda o derecha para mover el cursor paso a paso.
-
-El interruptor funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,
-mostrar solo equipos alive & kicking que también sean exportadores cambiando a **in** y desmarcando la columna de no exportadores.
+El carrusel funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,
+mostrar solo equipos de los octavos de final que también sean exportadores avanzando el carrusel y desmarcando la columna de no exportadores.
 
 ### Filtro de confederaciones FIFA
 
@@ -60,7 +57,7 @@ Al seleccionar una confederación también se resalta su límite externo en el m
 
 ### Parámetros de URL
 
-El estado del filtro y la ordenación también se puede configurar directamente desde la URL — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`, `?fifa=`. Añade `?explain` a cualquier URL para abrir un panel que describe lo que hacen los parámetros activos. La referencia completa con todos los códigos de celda, alias de grupo y ejemplos está en la [guía de la página de Países](?guide=countries).
+El estado del filtro y la ordenación también se puede configurar directamente desde la URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Añade `?explain` a cualquier URL para abrir un panel que describe lo que hacen los parámetros activos. La referencia completa con todos los códigos de celda, alias de grupo y ejemplos está en la [guía de la página de Países](?guide=countries).
 
 ### Sobre la referencia de países
 

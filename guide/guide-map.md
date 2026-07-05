@@ -38,19 +38,16 @@ The matrix crosses two **columns** (exporter / non-exporter) with four **rows** 
 
 Uncheck any cell to hide that category. Click a row or column header to toggle the whole group at once.
 
-### Alive & kicking filter
+### Tournament stage filter
 
-The **in · ● · out** toggle sits just below the *qualified* row header.
-By default the knob is centred — all 48 qualified countries are shown.
+A small carousel sits in the *qualified* row header, cycling through seven positions: **Qualified → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
 
-- **in** side: show only teams still in the tournament; eliminated countries are hidden.
-- **out** side: show only eliminated teams.
-- Tap the active side again, or tap the centre, to reset to both.
+- Use the ‹ › arrows, or swipe left/right on touch screens, to move between stages.
+- Each position filters both qualified countries and their non-qualified exporter countries down to those that "reached" that stage — still alive going into it, or having already won it.
+- Navigation is capped at the furthest stage the tournament has actually reached; later positions stay locked until real fixtures resolve into them.
 
-On touch screens, swipe left or right to step the knob one position at a time.
-
-The toggle works in combination with the rest of the filter matrix — you can, for example,
-show only alive & kicking teams that are also exporters by switching to **in** and unchecking the non-exporter column.
+The carousel works in combination with the rest of the filter matrix — you can, for example,
+show only Round of 16 teams that are also exporters by advancing the carousel and unchecking the non-exporter column.
 
 ### FIFA confederation filter
 
@@ -60,7 +57,7 @@ Selecting a confederation also highlights its external boundary on the map and z
 
 ### URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?in`, `?out`, `?show=`, `?fifa=`. Add `?explain` to any URL to open a panel describing what the active parameters do. The full reference with all cell codes, group aliases and examples is in the [Countries page guide](?guide=countries).
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Add `?explain` to any URL to open a panel describing what the active parameters do. The full reference with all cell codes, group aliases and examples is in the [Countries page guide](?guide=countries).
 
 ### About the country reference
 
