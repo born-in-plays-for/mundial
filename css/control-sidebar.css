@@ -3,7 +3,12 @@
  * #control-sidebar     — conteneur principal (grid dans #page-header)
  * .csb-toggle           — bouton ‹/› latéral
  * .csb-body             — corps collapsible
- * .csb-table            — <table> tri + filtre
+ * .csb-layout           — flex row: sort-stack + filter table, side by side (border.html's
+ *                         "independent tables + flex" fix — three separate <table>s instead
+ *                         of one table with cross-cutting rowspans, which is what caused the
+ *                         double-border misalignment. See border.html / control-sidebar-test.html.)
+ * .csb-sort-stack       — flex column: sort table + display table, stacked
+ * .csb-table            — shared look (border-collapse/font-size) for all three tables
  * .csb-header            — cellule d'en-tête (tri / sélection)
  * .csb-sort-col         — colonne tri (gauche)
  * .csb-sort-list        — flex column des options de tri
@@ -17,8 +22,6 @@
  * .csb-check            — label checkbox □/▣
  * .csb-close            — bouton × fermeture
  * .csb-share            — bouton de partage (copie une URL de config)
- * .csb-border-right     — double bordure verticale (tri / filtre)
- * .csb-border-bottom    — double bordure horizontale (tri / équipes-match)
  */
 
 /* ── Container ─────────────────────────────────────────────────────────── */
@@ -26,10 +29,17 @@
 #control-sidebar {
   display: flex; flex-direction: row-reverse; align-items: flex-start;
   position: relative;
+  /* Same gap as .csb-layout/.csb-sort-stack between the sort-stack and filter
+     table — between .csb-body's content and .csb-toggle, when the toggle exists
+     (alwaysOpen mode renders no .csb-toggle at all, so this is simply unused then). */
+  gap: 0.5rem;
   /* margin-top: 0.4rem; */
 }
 
-#control-sidebar.collapsed .csb-body { max-width: 0; pointer-events: none; border: 1px dashed rgb(187, 187, 187);}
+/* No second flex item to space out from once the body has collapsed to nothing —
+   without this the gap would still reserve 0.5rem next to the now-invisible body. */
+#control-sidebar.collapsed { gap: 0; }
+#control-sidebar.collapsed .csb-body { max-width: 0; pointer-events: none;}
 
 /* Always-open variant (countries page) — no toggle, transparent bg, natural height */
 #control-sidebar.csb-always-open { margin-top: 0; }
@@ -40,7 +50,6 @@
 #control-sidebar .csb-toggle {
   width: 16px; min-width: 16px; padding: 0;
   background: var(--bg-hover); border: 1px solid var(--border);
-  border-radius: 0 4px 4px 0;
   cursor: pointer; font-size: 10px; color: var(--text-muted);
   align-self: stretch;
   display: flex; align-items: center; justify-content: center;
@@ -87,10 +96,14 @@
 #control-sidebar .elo-item--nimp .elo-name::after {
   content: '◁'; color: var(--light-text, #999); font-size: 14px; margin-left: 2px;
 }
-/* import./non-imp. rows: push the symbol pill to the right of its (wide) cell, next
-   to the checkbox columns, instead of stranding it against the left edge. */
+/* Fine-tuned centering nudge for the exp/non-exp column-header arrows specifically
+   (empty .elo-name box the arrow hangs off of) — not needed on the qi/qni row arrows. */
+#control-sidebar .csb-col .elo-name { margin: 0 -0.5px 0 1.5px; }
+/* import./non-imp./non-FIFA rows: push the symbol pill to the right of its (wide)
+   cell, next to the checkbox columns, instead of stranding it against the left edge. */
 #control-sidebar .csb-table td[data-row="qi"],
-#control-sidebar .csb-table td[data-row="qni"] {
+#control-sidebar .csb-table td[data-row="qni"],
+#control-sidebar .csb-table td[data-row="nqn"] {
   text-align: right;
 }
 
@@ -125,9 +138,9 @@
 
 #control-sidebar .csb-header {
   font-style: italic;
+  /* Containing block for .csb-close/.csb-share/.csb-params-badge, all position:absolute. */
+  position: relative;
 }
-#control-sidebar .csb-border-right { border-right: 3px double var(--border); }
-#control-sidebar .csb-border-bottom { border-bottom: 3px double var(--border); }
 #control-sidebar .csb-header[data-col] { cursor: pointer; }
 #control-sidebar .csb-table td.csb-sort-col {
   padding: 0 var(--sort-extra-pad);
@@ -135,10 +148,12 @@
   width: 1px;
   height: 1px;
 }
-/* Reuses .csb-sort-col only for its border/muted/width:1px hint — it isn't
-   actually a sort column (no .csb-sort-list here), so it doesn't need the
-   --sort-extra-pad gutter reserved for .csb-sort-dir's icon. */
-#control-sidebar .csb-table td.csb-toggle-col { padding: 0; }
+/* Its own single-row table now (see .csb-layout above) — no longer needs the
+   --sort-extra-pad gutter reserved for .csb-sort-col's csb-sort-dir icon, or the
+   position:absolute centering trick .csb-display-toggle used to need (see below):
+   normal flow + text-align:center, with the shared .csb-table td padding for
+   breathing room from the cell border. */
+#control-sidebar .csb-table td.csb-toggle-col { text-align: center; }
 #control-sidebar .csb-sort-list::after {
   content: '}'; position: absolute; right: calc((17px - var(--sort-extra-pad)) / 2 - 17px); top: 0;
   height: 40%; display: flex; align-items: center;
@@ -157,15 +172,11 @@
    getbootstrap.com/docs/5.3/forms/checks-radios) — raw Bootstrap .btn-check/.btn look and
    behavior otherwise untouched; only margin/padding/font-size/color below, to match the
    rest of the sort column (.csb-sort-item) instead of Bootstrap's full-size default. */
-/* Taken out of flow (position:absolute) so this row's own natural nowrap width
-   (needed to keep "teams"/"matches" on one line) can't inflate the shared table
-   column — same trick .csb-sort-dir already uses below. Centered on its <td>
-   and free to overflow past the now-narrower column (sized purely by the sort
-   items above) since nothing here clips it before the sidebar's own edge. */
-#control-sidebar .csb-display-toggle {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  white-space: nowrap;
-}
+/* No longer needs to be taken out of flow — that was only to stop its natural
+   nowrap width from inflating a table column shared with the sort-list above,
+   back when both lived in the same table (see .csb-layout: they're now two
+   independent tables, stacked via flex, each free to size to its own content). */
+#control-sidebar .csb-display-toggle { white-space: nowrap; }
 #control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0 3px; font-size: 11px; color: #999; }
 #control-sidebar .csb-display-toggle .btn-check:checked + .btn {
   color: rgba(33, 37, 41, 0.75);
@@ -316,7 +327,7 @@
    a fixed right offset, so this row's icon no longer shares a vertical line with
    .csb-share/.csb-params-badge two rows up. */
 .csb-table [data-row="nqf"] { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
-#zoom-conf-dropdown { display: inline-flex; }
+#zoom-conf-dropdown { display: inline-flex; z-index: 2000; }
 #zoom-conf-dropdown .dropdown-menu { font-size: inherit; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
 .csb-conf-btn:hover { opacity: 1; }
@@ -327,3 +338,5 @@
 #zoom-conf-dropdown .dropdown-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 #zoom-conf-dropdown .dropdown-item::before { content: '○'; }
 #zoom-conf-dropdown .dropdown-item:has(input:checked)::before { content: '●'; }
+
+ #sidebar-host, #control-sidebar, #control-sidebar .csb-body {background-color: transparent;}

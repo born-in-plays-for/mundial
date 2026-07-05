@@ -24,25 +24,46 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _sidebarHost = document.getElementById('sidebar-host');
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="Toggle filter">‹</button>`}
-  <div class="csb-body"><table class="csb-table table table-sm table-bordered"><tbody>
+  <div class="csb-body"><div class="csb-layout d-inline-flex align-items-stretch gap-2">
+    <div class="csb-sort-stack d-flex flex-column gap-2">
+      <table class="csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
+        <tr>
+          <td class="csb-header text-center text-muted" title="${T.csbTips.action}">${T.sortLabels.action}${alwaysOpen ? nothing : html`<button class="csb-close" title="Close" aria-label="Close"><img src="images/solar_linear/close-x.svg" width="18" height="18" aria-hidden="true"></button>`}</td>
+        </tr>
+        <tr>
+          <td class="csb-sort-col text-muted">
+            <div class="csb-sort-list d-flex flex-column h-100 position-relative">
+              <button class="csb-sort-dir" title="${T.csbTips.sortDir}"></button>
+              <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo" title="${T.csbTips.sortElo}">${T.sortLabels.elo}</div>
+              <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="exp">${T.sortLabels.exp}</div> -->
+              <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="imp">${T.sortLabels.imp}</div> -->
+              <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="pop" title="${T.csbTips.sortPop}">${T.sortLabels.pop}</div>
+              <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="delta" title="${T.csbTips.sortDelta}">${T.sortLabels.delta}</div>
+              <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha" title="${T.csbTips.sortAlpha}">${T.sortLabels.alpha}</div>
+            </div>
+          </td>
+        </tr>
+      </tbody></table>
+      <table class="csb-table csb-display-table table table-sm table-bordered mb-0"><tbody>
+        <tr>
+          <td class="csb-toggle-col text-muted">
+            <div class="csb-display-toggle" title="${T.sortLabels.matchHint}">
+              <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
+              <label class="btn elo-item" for="csb-display-team">${T.sortLabels.teamDisplay}</label>
+              <input type="radio" class="btn-check" name="csb-display" id="csb-display-match" data-display="match">
+              <label class="btn" for="csb-display-match">${T.sortLabels.match}</label>
+            </div>
+          </td>
+        </tr>
+      </tbody></table>
+    </div>
+    <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
     <tr>
-      <td class="csb-header csb-border-right text-center text-muted" style="position:relative" title="${T.csbTips.action}">${T.sortLabels.action}${alwaysOpen ? nothing : html`<button class="csb-close" title="Close" aria-label="Close"><img src="images/solar_linear/close-x.svg" width="18" height="18" aria-hidden="true"></button>`}</td>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all" style="position:relative"><button id="csb-share" class="csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button><em class="elo-item" title="${T.csbTips.filterAll}"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button></td>
-      <td class="csb-col" data-col="exp" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name style="margin: 0px -0.5px 0px 1.5px;"></span></span></td>
-      <td class="csb-col" data-col="nexp" title="${T.filterLabels.nonExp}"><span class="elo-item elo-item--nexp"><span class="elo-name style="margin: 0px -0.5px 0px 1.5px;"></span></span></td>
+      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><button id="csb-share" class="csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button><em class="elo-item" title="${T.csbTips.filterAll}"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button></td>
+      <td class="csb-col" data-col="exp" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name"></span></span></td>
+      <td class="csb-col" data-col="nexp" title="${T.filterLabels.nonExp}"><span class="elo-item elo-item--nexp"><span class="elo-name"></span></span></td>
     </tr>
     <tr>
-      <td rowspan="3" class="csb-sort-col csb-border-right csb-border-bottom text-muted">
-        <div class="csb-sort-list d-flex flex-column h-100 position-relative">
-          <button class="csb-sort-dir" title="${T.csbTips.sortDir}"></button>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo" title="${T.csbTips.sortElo}">${T.sortLabels.elo}</div>
-          <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="exp">${T.sortLabels.exp}</div> -->
-          <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="imp">${T.sortLabels.imp}</div> -->
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="pop" title="${T.csbTips.sortPop}">${T.sortLabels.pop}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="delta" title="${T.csbTips.sortDelta}">${T.sortLabels.delta}</div>
-          <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha" title="${T.csbTips.sortAlpha}">${T.sortLabels.alpha}</div>
-        </div>
-      </td>
       <td rowspan="2" class="csb-group" data-row="q"><div id="csb-stage-carousel" class="carousel slide csb-stage-carousel">
         <div class="carousel-inner">
           ${CAROUSEL_STAGES.map((key, i) => html`
@@ -67,8 +88,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     </tr>
     <tr>
       <td rowspan="2" class="csb-group" data-row="nq" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
-      <td class="csb-row" data-row="nqf" style="white-space:nowrap;" title="${T.csbTips.fifa}">
-        <div class="dropdown" id="zoom-conf-dropdown"  style="z-index:2000;">
+      <td class="csb-row" data-row="nqf" title="${T.csbTips.fifa}">
+        <div class="dropdown" id="zoom-conf-dropdown">
           <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="View by confederation" title="View by confederation">
             <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
           </button>
@@ -89,19 +110,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
     <tr>
-      <td class="csb-sort-col csb-toggle-col csb-border-right text-muted" style="position:relative">
-        <div class="csb-display-toggle" title="${T.sortLabels.matchHint}">
-          <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
-          <label class="btn elo-item" for="csb-display-team">${T.sortLabels.teamDisplay}</label>
-          <input type="radio" class="btn-check" name="csb-display" id="csb-display-match" data-display="match">
-          <label class="btn" for="csb-display-match">${T.sortLabels.match}</label>
-        </div>
-      </td>
-      <td class="csb-row" data-row="nqn" style="text-align: end;" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa" style="text-align: end;"><span class="elo-name">non-FIFA</span></span></td>
+      <td class="csb-row" data-row="nqn" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
       <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-en"  checked></label></td>
       <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
     </tr>
-  </tbody></table></div>
+  </tbody></table>
+  </div></div>
 </div>`, _sidebarHost);
 
   const _el = document.getElementById('control-sidebar');
@@ -529,7 +543,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _body.style.maxWidth = 'none';
     _body.style.width = 'max-content';
     document.documentElement.style.setProperty('--csb-w', _body.offsetWidth + 'px');
-    document.documentElement.style.setProperty('--csb-h', _panel.querySelector('.csb-table').offsetHeight + 'px');
+    document.documentElement.style.setProperty('--csb-h', _panel.querySelector('.csb-layout').offsetHeight + 'px');
     _body.style.maxWidth = '';
     _body.style.width = '';
     if (wasCollapsed) _el.classList.add('collapsed');
