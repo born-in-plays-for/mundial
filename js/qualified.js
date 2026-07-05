@@ -266,8 +266,11 @@ export const buildMatchInfo = (statusByIso2, fixturesData, nameByIso2) => {
     // other code needing to change.
     const loserPen = f?.score?.penalty ? (f.home === iso2 ? f.score.penalty.home : f.score.penalty.away) : null;
     const winnerPen = f?.score?.penalty ? (f.home === iso2 ? f.score.penalty.away : f.score.penalty.home) : null;
-    record(iso2, roundIdx, info.lostTo, info.date, false, loserGoals, winnerGoals, penalties, loserPen, winnerPen);
-    record(info.lostTo, roundIdx, iso2, info.date, true, winnerGoals, loserGoals, penalties, winnerPen, loserPen);
+    // status.json's own `date` is date-only (no kickoff time) — prefer fixtures.json's full ISO
+    // datetime (the same `f` already looked up above for the goal tally) when available.
+    const date = f?.date ?? info.date;
+    record(iso2, roundIdx, info.lostTo, date, false, loserGoals, winnerGoals, penalties, loserPen, winnerPen);
+    record(info.lostTo, roundIdx, iso2, date, true, winnerGoals, loserGoals, penalties, winnerPen, loserPen);
   }
   for (const f of fixturesData?.fixtures ?? []) {
     const roundIdx = ELIM_ROUNDS.indexOf(f.round);

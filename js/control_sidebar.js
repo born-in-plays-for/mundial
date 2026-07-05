@@ -641,6 +641,17 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (_displayMode === 'match') {
       const groups = _buildGroups(filtered);
       groups.sort((ga, gb) => {
+        // Fixture couples always come first, ahead of any lone (unpaired) team, regardless of
+        // the active sort criteria or direction — a real fixture is more actionable information
+        // than "no opponent to show". Among fixtures, always ascending kickoff date/time (not
+        // affected by _sortDir either); lone rows fall back to the usual sort criteria below.
+        const gaFixture = ga.length === 2, gbFixture = gb.length === 2;
+        if (gaFixture !== gbFixture) return gaFixture ? -1 : 1;
+        if (gaFixture) {
+          const da = _matchInfo(ga[0])?.date, db = _matchInfo(gb[0])?.date;
+          const ta = da ? new Date(da).getTime() : Infinity, tb = db ? new Date(db).getTime() : Infinity;
+          return ta - tb;
+        }
         // Only the first 2 of _sortOrder's 4 entries ever drive the actual comparison —
         // positions 3/4 exist purely so the reorderable sort-list UI has a full permutation
         // to display/persist; a restore can land on a different 3rd/4th than what was saved
@@ -658,7 +669,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // grouping (see EloRanking.show()) — absent (undefined) for lone rows. _pairScore is the
       // "a – b" goal tally (from a's own matchInfo, so it already reads in [a, b] display
       // order), null for a fixture that hasn't been played yet — elo_ranking.js falls back to
-      // a plain separator in that case.
+      // a plain separator in that case. _pairDate is the fixture's kickoff datetime (also from
+      // matchInfo), rendered as a compact "day|hour" label alongside the score/separator.
       ordered = groups.flatMap(g => {
         if (g.length === 1) return g;
         const [a, b] = primary === 'alpha' ? [...g].sort((x, y) => x.name.localeCompare(y.name)) : [...g].sort((x, y) => _aggregateValue(primary, y) - _aggregateValue(primary, x));
@@ -667,7 +679,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         const pairScore = infoA?.myGoals != null
           ? { home: infoA.myGoals, away: infoA.oppGoals, penalties: infoA.penalties, penaltyHome: infoA.myPenGoals, penaltyAway: infoA.oppPenGoals }
           : null;
-        return [{ ...a, _pairId: pairId, _pairScore: pairScore }, { ...b, _pairId: pairId, _pairScore: pairScore }];
+        const pairDate = infoA?.date ?? null;
+        return [{ ...a, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate }, { ...b, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate }];
       });
     } else {
       ordered = [...filtered].sort((a, b) => {

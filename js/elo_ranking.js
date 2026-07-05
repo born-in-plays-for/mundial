@@ -4,6 +4,26 @@ import { LOCALE, T } from './i18n.js';
 
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 
+// Compact "day/month hour" kickoff label for a fixture pair separator — e.g. "20/7 23h"
+// (24h-clock locales) or "7/20 11PM" (12h-clock locales, e.g. en-US), no year (sits in a tiny
+// pill-sized space). \xa0 (non-breaking space) between the two halves keeps them from wrapping
+// onto separate lines within the already-narrow pill. Locale changes the day/month order
+// (toLocaleDateString) and the 12h/24h clock convention for the hour; the leading zero some
+// locales pad numeric dates with (e.g. fr-FR's "07") is stripped for compactness/consistency —
+// it's not a meaningful i18n distinction the way day/month order is. `date` is a full ISO
+// datetime string.
+const _fixtureDateLabel = date => {
+  if (!date) return null;
+  const d = new Date(date);
+  if (isNaN(d)) return null;
+  const dayMonth = d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'numeric' }).replace(/(^|\D)0(\d)/g, '$1$2');
+  const hourCycle = new Intl.DateTimeFormat(LOCALE, { hour: 'numeric' }).resolvedOptions().hourCycle;
+  const hour = (hourCycle === 'h12' || hourCycle === 'h11')
+    ? d.toLocaleTimeString(LOCALE, { hour: 'numeric', hour12: true }).replace(/\s+/g, '')
+    : `${d.getHours()}h`;
+  return `${dayMonth}\xa0${hour}`;
+};
+
 const _eliminationTitle = ({ knockedOut, eliminatedRound, eliminatedDate, eliminatedLostTo } = {}) => {
   if (!knockedOut) return '';
   const idx = ELIM_ROUNDS.indexOf(eliminatedRound);
@@ -126,6 +146,7 @@ class EloRanking extends HTMLElement {
       if (paired) {
         const sep = document.createElement('span');
         const score = cur._pairScore; // { home, away, penalties, penaltyHome, penaltyAway } — see sortAndFilter's _pairScore
+        const dateLabel = _fixtureDateLabel(cur._pairDate); // "day|hour" — see sortAndFilter's _pairDate
         if (score) {
           sep.className = 'elo-pair-sep elo-pair-sep--score';
           // penaltyHome/Away (the actual shootout tally, e.g. "4-3") isn't published by
@@ -135,10 +156,14 @@ class EloRanking extends HTMLElement {
           const penSuffix = score.penalties
             ? (score.penaltyHome != null ? ` (${score.penaltyHome}-${score.penaltyAway} pen.)` : ' (pen.)')
             : '';
-          sep.textContent = `${score.home}–${score.away}${penSuffix}`;
+          // Decided fixture — two stacked rows: kickoff day|hour above the score, so the
+          // score still reads as the primary, larger-emphasis line (see .elo-pair-sep--score).
+          render(html`${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}<span class="elo-pair-sep-score">${score.home}–${score.away}${penSuffix}</span>`, sep);
         } else {
           sep.className = 'elo-pair-sep';
-          sep.textContent = '–'; // en dash — reads cleaner than "vs" at this pill size
+          // Not yet played — just the kickoff day|hour (single row); falls back to a plain
+          // dash if a fixture couple has no date at all (shouldn't normally happen).
+          render(dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : html`–`, sep); // en dash — reads cleaner than "vs" at this pill size
         }
         row.appendChild(sep);
         place(row, next);

@@ -43,10 +43,16 @@ body { background: #f5f2ec; color: var(--color-default); }
   border-radius: 0 0 10px 10px;
   padding-bottom: 2px;
 }
-.elo-pair-sep { font-size: 10px; color: var(--border-strong); }
+/* Undecided fixture: a single line (kickoff "day month|hour", or a plain dash with no date at
+   all). Decided fixture (.elo-pair-sep--score): two stacked lines, kickoff day|hour above the
+   score — see js/elo_ranking.js's EloRanking.show(). */
+.elo-pair-sep { font-size: 10px; color: var(--border-strong); display: inline-flex; flex-direction: column; align-items: center; line-height: 1.15; }
+/* --color-default (body's own default text color) — both the kickoff date and the score are
+   real match information, not a muted secondary cue. */
+.elo-pair-sep-date { font-size: 9px; color: var(--color-default); }
 /* Decided fixture — the actual score instead of a plain dash, so it reads as real information
    (final result) rather than just the same pairing cue as an undecided one. */
-.elo-pair-sep--score { font-weight: 600; color: #555; font-variant-numeric: tabular-nums; }
+.elo-pair-sep-score { font-weight: 600; color: var(--color-default); font-variant-numeric: tabular-nums; }
 .elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 20px; background: #fff; }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
