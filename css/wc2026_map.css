@@ -46,6 +46,7 @@ body { padding-bottom: 48px; }
 #bottomTabContent {
     padding-left: var(--vert-gutter) !important;
     padding-right: var(--vert-gutter) !important;
+    overflow-x: hidden; 
 }
 .tab-footer-panel { overflow: hidden; max-height: 200px; transition: max-height 0.5s ease; }
 .tab-footer-panel.collapsed { max-height: 0; }
