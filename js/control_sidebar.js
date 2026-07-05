@@ -26,13 +26,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="Toggle filter">‹</button>`}
   <div class="csb-body"><table class="csb-table table table-sm table-bordered"><tbody>
     <tr>
-      <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}${alwaysOpen ? nothing : html`<span class="csb-close btn-close btn-close-sm position-absolute top-0 start-0 m-1" aria-label="Close" style="font-size:0.5rem;"></span>`}</td>
+      <td class="csb-header csb-border-right text-center text-muted" style="position:relative">${T.sortLabels.action}${alwaysOpen ? nothing : html`<button class="csb-close" title="Close" aria-label="Close"><img src="images/solar_linear/close-x.svg" width="18" height="18" aria-hidden="true"></button>`}</td>
       <td colspan="2" class="csb-header text-center text-muted" data-col="all" style="position:relative"><button id="csb-share" class="csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button><em class="elo-item"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button></td>
       <td class="csb-col" data-col="exp"><span class="elo-item elo-item--exp"><span class="elo-name">${T.filterLabels.exporter}</span></span></td>
       <td class="csb-col" data-col="nexp"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonExp}</span></span></td>
     </tr>
     <tr>
-      <td rowspan="3" class="csb-sort-col csb-border-right text-muted">
+      <td rowspan="3" class="csb-sort-col csb-border-right csb-border-bottom text-muted">
         <div class="csb-sort-list d-flex flex-column h-100 position-relative">
           <button class="csb-sort-dir"></button>
           <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo">${T.sortLabels.elo}</div>
@@ -71,7 +71,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         <span class="elo-item"><span class="elo-name">FIFA</span></span>
         <div class="dropdown" id="zoom-conf-dropdown"  style="z-index:2000;">
           <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="View by confederation">
-            <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="16" height="16" aria-hidden="true">
+            <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
             <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> All FIFA Confederations</label></li>
@@ -89,7 +89,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="text-muted"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
     <tr>
-      <td class="csb-sort-col csb-border-right text-muted">
+      <td class="csb-sort-col csb-toggle-col csb-border-right text-muted" style="position:relative">
         <div class="csb-display-toggle" title="${T.sortLabels.matchHint}">
           <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
           <label class="btn" for="csb-display-team">${T.sortLabels.teamDisplay}</label>

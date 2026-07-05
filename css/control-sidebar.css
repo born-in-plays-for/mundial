@@ -17,6 +17,8 @@
  * .csb-check            — label checkbox □/▣
  * .csb-close            — bouton × fermeture
  * .csb-share            — bouton de partage (copie une URL de config)
+ * .csb-border-right     — double bordure verticale (tri / filtre)
+ * .csb-border-bottom    — double bordure horizontale (tri / équipes-match)
  */
 
 /* ── Container ─────────────────────────────────────────────────────────── */
@@ -107,6 +109,7 @@
   font-style: italic;
 }
 #control-sidebar .csb-border-right { border-right: 3px double var(--border); }
+#control-sidebar .csb-border-bottom { border-bottom: 3px double var(--border); }
 #control-sidebar .csb-header[data-col] { cursor: pointer; }
 #control-sidebar .csb-table td.csb-sort-col {
   padding: 0 var(--sort-extra-pad);
@@ -114,6 +117,10 @@
   width: 1px;
   height: 1px;
 }
+/* Reuses .csb-sort-col only for its border/muted/width:1px hint — it isn't
+   actually a sort column (no .csb-sort-list here), so it doesn't need the
+   --sort-extra-pad gutter reserved for .csb-sort-dir's icon. */
+#control-sidebar .csb-table td.csb-toggle-col { padding: 0; }
 #control-sidebar .csb-sort-list::after {
   content: '}'; position: absolute; right: calc((17px - var(--sort-extra-pad)) / 2 - 17px); top: 0;
   height: 40%; display: flex; align-items: center;
@@ -132,15 +139,26 @@
    getbootstrap.com/docs/5.3/forms/checks-radios) — raw Bootstrap .btn-check/.btn look and
    behavior otherwise untouched; only margin/padding/font-size/color below, to match the
    rest of the sort column (.csb-sort-item) instead of Bootstrap's full-size default. */
-#control-sidebar .csb-display-toggle { white-space: nowrap; }
-#control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0; font-size: 11px; color: #999; }
+/* Taken out of flow (position:absolute) so this row's own natural nowrap width
+   (needed to keep "teams"/"matches" on one line) can't inflate the shared table
+   column — same trick .csb-sort-dir already uses below. Centered on its <td>
+   and free to overflow past the now-narrower column (sized purely by the sort
+   items above) since nothing here clips it before the sidebar's own edge. */
+#control-sidebar .csb-display-toggle {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+#control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0 3px; font-size: 11px; color: #999; }
+#control-sidebar .csb-display-toggle .btn-check:checked + .btn {
+  color: rgba(33, 37, 41, 0.75);
+}
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
 
 #control-sidebar .csb-sort-dir {
-  position: absolute; top: 1px; left: calc((17px - var(--sort-extra-pad)) / 2 - 17px); width: 17px; height: 17px;
-  background: url('../images/sort-vertical-svgrepo-com.svg') no-repeat center / 17px 17px;
-  border: none; padding: 0; cursor: pointer; opacity: 0.5;
+  position: absolute; top: 1px; left: calc((18px - var(--sort-extra-pad)) / 2 - 18px); width: 18px; height: 18px;
+  background: url('../images/sort-vertical-svgrepo-com.svg') no-repeat center / 18px 18px;
+  border: none; padding: 0; cursor: pointer; opacity: 0.75;
 }
 #control-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
 #control-sidebar .csb-sort-dir:hover { opacity: 1; }
@@ -176,6 +194,19 @@
 /* Stages the tournament hasn't reached yet (nobody's there to show) — locked, not just empty */
 #control-sidebar .csb-stage-carousel .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
 #control-sidebar .csb-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
+
+/* ── Close button (top-left of the sort header cell) — same icon-in-button
+   recipe as .csb-share below (own SVG, not Bootstrap's stock .btn-close, whose
+   hardcoded black glyph didn't match this icon set's #1C274C navy stroke). */
+#control-sidebar .csb-close {
+  position: absolute; top: 50%; left: 4px; transform: translateY(-50%);
+  width: 18px; height: 18px; padding: 0;
+  border: none; background: none;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.75; cursor: pointer;
+}
+#control-sidebar .csb-close:hover { opacity: 1; }
+#control-sidebar .csb-close img { width: 100%; height: 100%; }
 
 /* ── Share button (copies a URL reproducing the current sidebar config) ── */
 
@@ -262,10 +293,17 @@
 
 /* ── Confederation dropdown ─────────────────────────────────────────────── */
 
-.csb-table [data-row="nqf"] { display: flex; align-items: center; justify-content: space-between; }
-#zoom-conf-dropdown { display: inline-flex; }
+/* position:relative + the dropdown pinned at right:4px — same reference frame
+   (padding edge of this positioned ancestor) as .csb-share/.csb-params-badge two
+   rows up, so all three icons land on the exact same right-hand vertical line
+   regardless of how much space the "FIFA" label text next to it takes up. */
+.csb-table [data-row="nqf"] { position: relative; }
+#zoom-conf-dropdown {
+  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+  display: inline-flex;
+}
 #zoom-conf-dropdown .dropdown-menu { font-size: inherit; }
-.csb-conf-btn { cursor: pointer; background: none; border: none; padding: 2px; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+.csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
 .csb-conf-btn:hover { opacity: 1; }
 .csb-conf-btn.dropdown-toggle { flex-direction: row-reverse; }
 .csb-conf-btn.dropdown-toggle::after { margin-left: 0; margin-right: .255em; }
