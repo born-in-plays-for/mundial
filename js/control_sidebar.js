@@ -59,7 +59,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     </div>
     <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
     <tr>
-      <td colspan="2" class="csb-header text-center text-muted" data-col="all"><button id="csb-share" class="csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button><em class="elo-item" title="${T.csbTips.filterAll}"> ${T.filterLabels.action}</em><button id="params-badge" class="csb-params-badge" hidden title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button></td>
+      <td colspan="2" class="csb-header text-center text-muted">
+        <div class="d-flex align-items-center justify-content-between">
+          <button id="csb-share" class="csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+          ${T.filterLabels.action}
+          <em class="elo-item" data-col="all" title="${T.csbTips.filterAll}">all</em>
+          <button id="params-badge" class="csb-params-badge" title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+        </div>
+      </td>
       <td class="csb-col" data-col="exp" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name"></span></span></td>
       <td class="csb-col" data-col="nexp" title="${T.filterLabels.nonExp}"><span class="elo-item elo-item--nexp"><span class="elo-name"></span></span></td>
     </tr>
@@ -875,7 +882,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _shareToastEl._hideTimer = setTimeout(() => _shareToastEl?.classList.remove('visible'), 2000);
   };
   _shareBtn?.addEventListener('click', async e => {
-    e.stopPropagation(); // this button lives inside the [data-col="all"] cell — don't let the click bubble into its own filter-toggle handler
+    e.stopPropagation(); // harmless now that [data-col="all"] lives on the "all" <em> itself (a sibling, not an ancestor) — kept defensively in case that scoping ever changes back
     const sp = new URLSearchParams();
     _buildActiveStateLines().forEach(({ param }) => {
       const eq = param.indexOf('=');
@@ -900,7 +907,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         const lines = _buildActiveStateLines();
         _lastLines = restored ? [{ param: '(restored)', desc: 'settings restored from your last visit' }, ...lines] : lines;
         const _visible = _countVisible();
-        if (_badge) _badge.hidden = _lastLines.length === 0;
         if (_lastLines.length) {
           if (!alwaysOpen && _el.classList.contains('collapsed')) {
             _el.classList.remove('collapsed');
@@ -966,7 +972,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         if (_toggle) _toggle.textContent = '›';
       }
     }
-    if (_badge) _badge.hidden = _lastLines.length === 0;
     if (sp.has('explain') && _lastLines.length) _openExplainPanel(_lastLines, _visible);
 
     _saveState();

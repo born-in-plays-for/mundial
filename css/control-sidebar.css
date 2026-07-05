@@ -138,7 +138,9 @@
 
 #control-sidebar .csb-header {
   font-style: italic;
-  /* Containing block for .csb-close/.csb-share/.csb-params-badge, all position:absolute. */
+  /* Containing block for .csb-close (position:absolute) — the "tri" td's own close
+     button, alone in its cell with no flex wrapper. .csb-share/.csb-params-badge no
+     longer need this: they're normal flex items in the data-col="all" cell now. */
   position: relative;
 }
 #control-sidebar .csb-header[data-col] { cursor: pointer; }
@@ -237,10 +239,11 @@
 #control-sidebar .csb-close:hover { opacity: 1; }
 #control-sidebar .csb-close img { width: 100%; height: 100%; }
 
-/* ── Share button (copies a URL reproducing the current sidebar config) ── */
-
+/* ── Share button (copies a URL reproducing the current sidebar config) ──
+   Normal flex item now (see the data-col="all" cell's d-flex wrapper) — no
+   longer needs position:absolute, unlike .csb-close above (still alone in its
+   td, no flex wrapper of its own yet). */
 #control-sidebar .csb-share {
-  position: absolute; top: 50%; left: 4px; transform: translateY(-50%);
   width: 18px; height: 18px; padding: 0;
   border: none; background: none;
   display: flex; align-items: center; justify-content: center;
@@ -265,8 +268,9 @@
 
 /* ── URL params badge ──────────────────────────────────────────────────── */
 
+/* Normal flex item now (see the data-col="all" cell's d-flex wrapper) — no
+   longer needs position:absolute. */
 #control-sidebar .csb-params-badge {
-  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
   width: 18px; height: 18px; padding: 0;
   border: none; background: none; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
