@@ -20,7 +20,7 @@
  * .csb-stage-carousel   — carrousel Bootstrap (Qualifiés → … → Vainqueur)
  * .csb-row              — sous-ligne de groupe
  * .csb-check            — label checkbox □/▣
- * .csb-close            — bouton × fermeture
+ * .csb-collapse         — bouton › repli
  * .csb-share            — bouton de partage (copie une URL de config)
  */
 
@@ -75,12 +75,11 @@
   --sort-extra-pad: 26px;
 }
 #control-sidebar .csb-table td { padding: 2px 6px; background: var(--bg-hover); }
-#control-sidebar .elo-item { font-size: 9px; padding: 0 0.2rem; gap: 2px; border-radius: 0.375rem; }
+#control-sidebar .elo-item { font-size: 11px; padding: 0 0.2rem; gap: 2px; border-radius: 0.375rem; }
 #control-sidebar .elo-name { font-size: 11px; }
 @media (max-width: 400px) {
   #control-sidebar .csb-table { --sort-extra-pad: 20px; }
   #control-sidebar .csb-table td { padding: 2px 2px; }
-  #control-sidebar .elo-name { font-size: 9px; }
   #legend-parent { display: none !important;}
 }
 #control-sidebar .csb-table .form-check-input { display: none; }
@@ -137,10 +136,9 @@
 /* ── Sort column ───────────────────────────────────────────────────────── */
 
 #control-sidebar .csb-header {
-  font-style: italic;
-  /* Containing block for .csb-close (position:absolute) — the "tri" td's own close
-     button, alone in its cell with no flex wrapper. .csb-share/.csb-params-badge no
-     longer need this: they're normal flex items in the data-col="all" cell now. */
+  /* Containing block for .csb-collapse (position:absolute) — the "tri" td's own
+     collapse button, alone in its cell with no flex wrapper. .csb-share/.csb-params-badge
+     no longer need this: they're normal flex items in the data-col="all" cell now. */
   position: relative;
 }
 #control-sidebar .csb-header[data-col] { cursor: pointer; }
@@ -226,31 +224,23 @@
 #control-sidebar .csb-stage-carousel .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
 #control-sidebar .csb-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
 
-/* ── Close button (top-left of the sort header cell) — same icon-in-button
-   recipe as .csb-share below (own SVG, not Bootstrap's stock .btn-close, whose
-   hardcoded black glyph didn't match this icon set's #1C274C navy stroke). */
-#control-sidebar .csb-close {
-  position: absolute; top: 50%; left: 4px; transform: translateY(-50%);
+/* ── Icon button (shared recipe) ───────────────────────────────────────────
+   18×18, own SVG (not Bootstrap's stock .btn-close, whose hardcoded black
+   glyph didn't match this icon set's #1C274C navy stroke), opacity fades in
+   on hover. Shared by .csb-collapse, .csb-share, .csb-params-badge below —
+   each adds only what makes it different. */
+#control-sidebar .csb-icon-btn {
   width: 18px; height: 18px; padding: 0;
   border: none; background: none;
   display: flex; align-items: center; justify-content: center;
   opacity: 0.75; cursor: pointer;
 }
-#control-sidebar .csb-close:hover { opacity: 1; }
-#control-sidebar .csb-close img { width: 100%; height: 100%; }
+#control-sidebar .csb-icon-btn:hover { opacity: 1; }
+#control-sidebar .csb-icon-btn img { width: 100%; height: 100%; }
 
 /* ── Share button (copies a URL reproducing the current sidebar config) ──
-   Normal flex item now (see the data-col="all" cell's d-flex wrapper) — no
-   longer needs position:absolute, unlike .csb-close above (still alone in its
-   td, no flex wrapper of its own yet). */
-#control-sidebar .csb-share {
-  width: 18px; height: 18px; padding: 0;
-  border: none; background: none;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0.75; cursor: pointer;
-}
-#control-sidebar .csb-share:hover { opacity: 1; }
-#control-sidebar .csb-share img { width: 100%; height: 100%; }
+   Normal flex item (see the data-col="all" cell's d-flex wrapper) — nothing
+   to add beyond the shared recipe. */
 
 /* ── Share toast ("URL copied to clipboard") — mirrors auth-bar.js's own
    connection toast (bottom-center, fades in/out), kept as CSS here instead of
@@ -268,16 +258,11 @@
 
 /* ── URL params badge ──────────────────────────────────────────────────── */
 
-/* Normal flex item now (see the data-col="all" cell's d-flex wrapper) — no
-   longer needs position:absolute. */
+/* Normal flex item (see the data-col="all" cell's d-flex wrapper) — round,
+   and stays highlighted while its explanation panel is open. */
 #control-sidebar .csb-params-badge {
-  width: 18px; height: 18px; padding: 0;
-  border: none; background: none; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0.75; cursor: pointer; user-select: none; -webkit-user-select: none;
+  border-radius: 50%; user-select: none; -webkit-user-select: none;
 }
-#control-sidebar .csb-params-badge img { width: 100%; height: 100%; }
-#control-sidebar .csb-params-badge:hover { opacity: 1; }
 #control-sidebar .csb-params-badge.active { opacity: 1; background: var(--bg-hover, rgba(0,0,0,0.08)); }
 
 /* ── URL params explanation panel ──────────────────────────────────────── */
@@ -330,7 +315,7 @@
    (matching the import./non-imp. rows above) — no longer independently pinned to
    a fixed right offset, so this row's icon no longer shares a vertical line with
    .csb-share/.csb-params-badge two rows up. */
-.csb-table [data-row="nqf"] > div { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.csb-table [data-row="nqf"] > div { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
 #zoom-conf-dropdown { display: inline-flex; z-index: 2000; }
 #zoom-conf-dropdown .dropdown-menu { font-size: inherit; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }

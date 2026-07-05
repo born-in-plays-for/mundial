@@ -28,7 +28,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <div class="csb-sort-stack d-flex flex-column gap-2">
       <table class="csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
-          <td class="csb-header text-center text-muted" title="${T.csbTips.action}">${T.sortLabels.action}${alwaysOpen ? nothing : html`<button class="csb-close" title="Close" aria-label="Close"><img src="images/solar_linear/close-x.svg" width="18" height="18" aria-hidden="true"></button>`}</td>
+          <td class="csb-header text-center text-muted" title="${T.csbTips.action}">
+            ${alwaysOpen ? T.sortLabels.action : html`<div class="d-flex align-items-center justify-content-between">
+              <button class="csb-icon-btn csb-collapse" title="Collapse" aria-label="Collapse"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+              <span><em>${T.sortLabels.action}</em></span>
+              <span style="width: 18px;">&nbsp;</span>
+            </div>`}
+          </td>
         </tr>
         <tr>
           <td class="csb-sort-col text-muted">
@@ -61,10 +67,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <tr>
       <td colspan="2" class="csb-header text-center text-muted">
         <div class="d-flex align-items-center justify-content-between">
-          <button id="csb-share" class="csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
-          ${T.filterLabels.action}
-          <em class="elo-item" data-col="all" title="${T.csbTips.filterAll}">all</em>
-          <button id="params-badge" class="csb-params-badge" title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+          <button id="csb-share" class="csb-icon-btn csb-share" title="Copy shareable link"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+          <em>${T.filterLabels.action}</em>
+          <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">all</span>
+          <button id="params-badge" class="csb-icon-btn csb-params-badge" title="URL params active"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
         </div>
       </td>
       <td class="csb-col" data-col="exp" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name"></span></span></td>
@@ -75,7 +81,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         <div class="carousel-inner">
           ${CAROUSEL_STAGES.map((key, i) => html`
           <div class="carousel-item ${i === 0 ? 'active' : ''}" data-stage="${i}">
-            <span class="elo-item elo-item--qualified"><span class="elo-name">${T.stageLabels[i].toLowerCase()}</span></span>
+            <span class="elo-item elo-item--qualified" style="margin-bottom: 4px;"><span class="elo-name">${T.stageLabels[i].toLowerCase()}</span></span>
           </div>`)}
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#csb-stage-carousel" data-bs-slide="prev" title="${T.csbTips.prevStage}"><span class="carousel-control-prev-icon" aria-hidden="true"></span></button>
@@ -84,12 +90,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           ${CAROUSEL_STAGES.map((key, i) => html`<button type="button" data-bs-target="#csb-stage-carousel" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-label="${T.stageLabels[i]}" title="${T.stageLabels[i]}"></button>`)}
         </div>
       </div></td>
-      <td class="csb-row" data-row="qi" title="${T.filterLabels.importer}"><span class="elo-item elo-item--qualified elo-item--imp"><span class="elo-name"></span></span></td>
+      <td class="csb-row" data-row="qi" title="${T.filterLabels.importer}"><span class="elo-item elo-item--imp"><span class="elo-name"></span></span></td>
       <td class="text-muted" title="${T.csbTips.qie}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
       <td class="text-muted" title="${T.csbTips.qi}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
     </tr>
     <tr>
-      <td class="csb-row" data-row="qni" title="${T.filterLabels.nonImp}"><span class="elo-item elo-item--qualified elo-item--nimp"><span class="elo-name"></span></span></td>
+      <td class="csb-row" data-row="qni" title="${T.filterLabels.nonImp}"><span class="elo-item elo-item--nimp"><span class="elo-name"></span></span></td>
       <td class="text-muted" title="${T.csbTips.qe}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qe"  checked></label></td>
       <td class="text-muted" title="${T.csbTips.q}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-q"   checked></label></td>
     </tr>
@@ -302,7 +308,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _panel.querySelector('[data-col="all"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ, _fltEF, _fltOF, _fltEN, _fltON]));
   _panel.addEventListener('change', () => { callbacks.renderElo?.(); applyFlagFilter(); _saveState(); });
 
-  _panel.querySelector('.csb-close')?.addEventListener('click', e => {
+  _panel.querySelector('.csb-collapse')?.addEventListener('click', e => {
     e.stopPropagation();
     _el.classList.add('collapsed');
     _toggle.textContent = '‹';
