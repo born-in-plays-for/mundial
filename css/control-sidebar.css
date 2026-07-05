@@ -328,4 +328,5 @@
 #zoom-conf-dropdown .dropdown-item::before { content: '○'; }
 #zoom-conf-dropdown .dropdown-item:has(input:checked)::before { content: '●'; }
 
- #sidebar-host, #control-sidebar, #control-sidebar .csb-body {background-color: transparent;}
+ #sidebar-host, #control-sidebar .csb-body {background-color: transparent;}
+ #control-sidebar {background-color: rgba(256,256,256,.5);}
