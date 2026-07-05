@@ -96,22 +96,24 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <tr>
       <td rowspan="2" class="csb-group" data-row="nq" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
       <td class="csb-row" data-row="nqf" title="${T.csbTips.fifa}">
-        <div class="dropdown" id="zoom-conf-dropdown">
-          <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="View by confederation" title="View by confederation">
-            <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> All FIFA Confederations</label></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="uefa"> UEFA — Europe</label></li>
-            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="afc"> AFC — Asia</label></li>
-            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="caf"> CAF — Africa</label></li>
-            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="conmebol"> CONMEBOL — South America</label></li>
-            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="concacaf"> CONCACAF — N. &amp; C. America</label></li>
-            <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> OFC — Oceania</label></li>
-          </ul>
+        <div>
+          <div class="dropdown" id="zoom-conf-dropdown">
+            <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="View by confederation" title="View by confederation">
+              <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> All FIFA Confederations</label></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="uefa"> UEFA — Europe</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="afc"> AFC — Asia</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="caf"> CAF — Africa</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="conmebol"> CONMEBOL — South America</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="concacaf"> CONCACAF — N. &amp; C. America</label></li>
+              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> OFC — Oceania</label></li>
+            </ul>
+          </div>
+          <span class="elo-item"><span class="elo-name">FIFA</span></span>
         </div>
-        <span class="elo-item"><span class="elo-name">FIFA</span></span>
       </td>
       <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-ef"  checked></label></td>
       <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>

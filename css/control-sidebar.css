@@ -330,7 +330,7 @@
    (matching the import./non-imp. rows above) — no longer independently pinned to
    a fixed right offset, so this row's icon no longer shares a vertical line with
    .csb-share/.csb-params-badge two rows up. */
-.csb-table [data-row="nqf"] { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.csb-table [data-row="nqf"] > div { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
 #zoom-conf-dropdown { display: inline-flex; z-index: 2000; }
 #zoom-conf-dropdown .dropdown-menu { font-size: inherit; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
