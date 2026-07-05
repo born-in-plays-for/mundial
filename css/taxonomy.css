@@ -78,6 +78,8 @@
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* Smaller dots inside the control sidebar 
+/* Smaller dots inside the control sidebar. margin-left is zeroed too: with the name
+   text emptied (symbol-only headers/rows), the 2px gap meant to separate the arrow
+   from preceding text instead just pushed it off-center inside the small circular pill.
 */
-#control-sidebar .elo-name::after { font-size: 9px !important; }
+#control-sidebar .elo-name::after { font-size: 9px !important; margin: 0 !important; margin-bottom: -1px !important; padding: 0;}

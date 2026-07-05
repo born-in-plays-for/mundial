@@ -66,7 +66,7 @@
   --sort-extra-pad: 26px;
 }
 #control-sidebar .csb-table td { padding: 2px 6px; background: var(--bg-hover); }
-#control-sidebar .elo-item { font-size: 9px; padding: 1px 4px; gap: 2px; border-radius: 12px; }
+#control-sidebar .elo-item { font-size: 9px; padding: 0 0.2rem; gap: 2px; border-radius: 0.375rem; }
 #control-sidebar .elo-name { font-size: 11px; }
 @media (max-width: 400px) {
   #control-sidebar .csb-table { --sort-extra-pad: 20px; }
@@ -75,6 +75,24 @@
   #legend-parent { display: none !important;}
 }
 #control-sidebar .csb-table .form-check-input { display: none; }
+
+/* exp/non-exp column headers and import./non-imp. row headers: symbol-only (name text
+   emptied in JS), full word still available via the cell's title tooltip. ".elo-item--exp"
+   and ".elo-item--imp" reuse taxonomy.css's existing blue "▶" / red "◀" pill decorations;
+   ".elo-item--nexp" / ".elo-item--nimp" are control-sidebar-only and mirror them with a
+   hollow grey "▷" / "◁" — same shape, muted/outline reads as each one's negation. */
+#control-sidebar .elo-item--nexp .elo-name::after {
+  content: '▷'; color: var(--light-text, #999); font-size: 14px; margin-left: 2px;
+}
+#control-sidebar .elo-item--nimp .elo-name::after {
+  content: '◁'; color: var(--light-text, #999); font-size: 14px; margin-left: 2px;
+}
+/* import./non-imp. rows: push the symbol pill to the right of its (wide) cell, next
+   to the checkbox columns, instead of stranding it against the left edge. */
+#control-sidebar .csb-table td[data-row="qi"],
+#control-sidebar .csb-table td[data-row="qni"] {
+  text-align: right;
+}
 
 /* wc2026_countries.html header: title + #sidebar-host sit side by side (flex,
    justify-content:space-between) until they don't fit, at which point #sidebar-host
@@ -293,15 +311,12 @@
 
 /* ── Confederation dropdown ─────────────────────────────────────────────── */
 
-/* position:relative + the dropdown pinned at right:4px — same reference frame
-   (padding edge of this positioned ancestor) as .csb-share/.csb-params-badge two
-   rows up, so all three icons land on the exact same right-hand vertical line
-   regardless of how much space the "FIFA" label text next to it takes up. */
-.csb-table [data-row="nqf"] { position: relative; }
-#zoom-conf-dropdown {
-  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
-  display: inline-flex;
-}
+/* Icon + "FIFA" label as a flex row, clustered together at the cell's right edge
+   (matching the import./non-imp. rows above) — no longer independently pinned to
+   a fixed right offset, so this row's icon no longer shares a vertical line with
+   .csb-share/.csb-params-badge two rows up. */
+.csb-table [data-row="nqf"] { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+#zoom-conf-dropdown { display: inline-flex; }
 #zoom-conf-dropdown .dropdown-menu { font-size: inherit; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
 .csb-conf-btn:hover { opacity: 1; }
