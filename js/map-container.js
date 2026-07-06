@@ -37,6 +37,51 @@
 // importCount today). Metrics fall back to 0 for a missing field rather than
 // throwing, since insights/perf.html builds its own byId records and doesn't
 // compute every field the main map does.
+// ── Diverging scale (violet) — EASY TWEAKS ──────────────────────────────────
+// Live-tunable at runtime via setDivergingParams()/getDivergingParams() below
+// (see the #diverging-debug panel in wc2026_map.html for a slider/color-picker
+// UI over this exact API) — not baked-in constants, and no pre-baked gradient
+// data (no array of hand-picked intermediate hex stops) backing this theme the
+// way the sequential ramps below have either. The color for a given value v is
+// computed live, right here, as a straight RGB line from `neutral` (at v = 0)
+// to `easyLeft`/`easyRight` (whichever side v falls on, reached in full at
+// that side's own ratioMaxNeg/ratioMaxPos — see the violet theme entry below),
+// positioned along that line at t = ease(|v| / max). That's the entire
+// algorithm — see _buildPalettes()/normalize()/_ease() further down, there's
+// no other step.
+//   - easyLeft / easyRight: the color at each side's extreme.
+//   - algoLeft / algoRight: 'power' (t = x**exponent — exponent <1 reaches
+//     that color quickly and stays there for most of the range, only fading
+//     near 0 right at the end; >1 is the reverse, staying close to `neutral`
+//     for most of the range; 1 = plain linear) or 'smoothstep' (a fixed S-curve
+//     easing in and out, ignores the exponent).
+//   - easeLeft / easeRight: the exponent power mode uses.
+//   - outlierLeft / outlierRight: the outlier dot color for each side —
+//     independent fields (not auto-derived from easyLeft/easyRight), so they
+//     have their own controls in #diverging-debug and don't silently drift
+//     if you change easyLeft/easyRight afterward.
+// All 8 values below were tuned live via #diverging-debug and logged to the
+// console from there — see that panel to keep iterating.
+let _divergingParams = {
+  neutral:      '#efece4',
+  easyLeft:     '#ff0000', // negative extreme — "plays for" (import), red
+  easyRight:    '#0044ff', // positive extreme — "born in" (export), blue
+  outlierLeft:  '#7f1f00',
+  outlierRight: '#001f7f',
+  algoLeft:     'power',
+  algoRight:    'power',
+  easeLeft:     2,
+  easeRight:    2,
+};
+export const getDivergingParams = () => ({ ..._divergingParams });
+export const setDivergingParams = patch => {
+  Object.assign(_divergingParams, patch);
+  _buildPalettes(THEMES[_themeName]);
+  if (THEMES[_themeName].diverging) _themeListeners.forEach(fn => fn(_themeName));
+};
+const _ease = (x, algo, exponent) => algo === 'smoothstep' ? x * x * (3 - 2 * x) : x ** exponent;
+export const divergingOutlierColor = side => side === 'pos' ? _divergingParams.outlierRight : _divergingParams.outlierLeft;
+
 export const THEMES = {
   earthy: {
     label: 'Earthy',
@@ -64,23 +109,26 @@ export const THEMES = {
   },
   violet: {
     label: 'Violet',
-    ramp: ['#f3e8f7','#ddb8ea','#c285d8','#a354c2','#7b2d8b','#581f65','#361240'],
-    // No `ease` override — keeps the original quadratic curve (see normalize()
-    // below) exactly as it always was, unaffected by earthy/forest's tuning.
-    // Net talent balance — home-grown contribution (export + native) minus
-    // imports. Can go negative (net importers, e.g. Curaçao at -25) — clamped
-    // to 0 for now (reads identically to "no data"; a real diverging scale,
-    // two hues either side of a neutral midpoint, is the honest fix later).
-    metric: rec => Math.max(0, (rec.count ?? 0) + (rec.nativeCount ?? 0) - (rec.importCount ?? 0)),
-    ratioMax: 68, // 2nd after France (102) — Netherlands
-    outlierIds: new Set([250]),
+    // A genuine diverging scale, not a clamped-at-0 sequential one — net talent
+    // balance (home-grown contribution: export + native, minus imports) is
+    // signed and means something different on each side of 0: positive is a
+    // net exporter (dominated by "born in"), negative a net importer
+    // (dominated by "plays for", e.g. Curaçao at -25). Colors/easing live in
+    // _divergingParams above (getDivergingParams()/setDivergingParams()), not
+    // here — see the #diverging-debug panel for a live slider/color-picker UI.
+    diverging: true,
+    metric: rec => (rec.count ?? 0) + (rec.nativeCount ?? 0) - (rec.importCount ?? 0),
+    ratioMaxPos: 68, // 2nd after France (102) — Netherlands
+    ratioMaxNeg: 15, // 2nd after Curaçao (-25) — DR Congo
+    outlierIdsPos: new Set([250]), // France — biggest net exporter
+    outlierIdsNeg: new Set([531]), // Curaçao — biggest net importer
     legendKey: 'balance',
-
-    outlier: '#000',
     noData: '#e8e4e0',
-    placeholderFill: '#d8d0e8',
-    placeholderStroke: '#b4a8cc',
-    graticule: '#ccc4dc',
+    // Neutral, not tinted toward either arm — shown only briefly before world
+    // data loads, so it has no "diverging" meaning of its own to represent.
+    placeholderFill: '#e8e6e0',
+    placeholderStroke: '#c2c0ba',
+    graticule: '#d8d6d0',
   },
   forest: {
     label: 'Forest',
@@ -107,15 +155,55 @@ export const THEMES = {
 const _THEME_KEY = 'mundial-map-theme';
 const _storedTheme = localStorage.getItem(_THEME_KEY);
 let _themeName = THEMES[_storedTheme] ? _storedTheme : 'earthy';
-let _palette   = d3.interpolateRgbBasis(THEMES[_themeName].ramp);
+
+// Sequential themes cache one interpolator (_palette), built from that theme's
+// own hand-picked `ramp` array via a multi-stop spline (interpolateRgbBasis).
+// Diverging themes cache two (_posPalette/_negPalette, picked by value sign in
+// color() below) and leave _palette null — each is just a live 2-point
+// straight line (interpolateRgb, no spline, no intermediate stops) between
+// _divergingParams.neutral and .easyLeft/.easyRight, so editing those (via
+// setDivergingParams()) is instantly the whole story. Rebuilt here, inside
+// setTheme() on every switch, and inside setDivergingParams() on every tweak.
+let _palette = null, _posPalette = null, _negPalette = null;
+const _buildPalettes = theme => {
+  if (theme.diverging) {
+    _posPalette = d3.interpolateRgb(_divergingParams.neutral, _divergingParams.easyRight);
+    _negPalette = d3.interpolateRgb(_divergingParams.neutral, _divergingParams.easyLeft);
+    _palette = null;
+  } else {
+    _palette = d3.interpolateRgbBasis(theme.ramp);
+    _posPalette = _negPalette = null;
+  }
+};
+_buildPalettes(THEMES[_themeName]);
 
 // ── Shared colour scale ───────────────────────────────────────────────────────
-// Per-theme exponent (default 2, quadratic) — see each theme's `ease` above.
-export const normalize     = (v, theme = THEMES[_themeName]) => (Math.max(0, v) / theme.ratioMax) ** (theme.ease ?? 2);
-export const color         = (v, theme = THEMES[_themeName]) => _palette(Math.max(0, Math.min(1, normalize(v, theme))));
-export const choroFill     = (id, byId) => {
+// Per-theme exponent (default 2, quadratic) for sequential themes — see each
+// theme's `ease` above; diverging themes use _divergingParams's
+// algoLeft/algoRight + easeLeft/easeRight instead (via _ease() above).
+// Magnitude only (0..1) — color() below picks which side's max/palette to use.
+export const normalize = (v, theme = THEMES[_themeName]) => {
+  if (theme.diverging) {
+    const neg = v < 0;
+    const max = neg ? theme.ratioMaxNeg : theme.ratioMaxPos;
+    const x = Math.min(Math.abs(v), max) / max;
+    return neg ? _ease(x, _divergingParams.algoLeft, _divergingParams.easeLeft)
+               : _ease(x, _divergingParams.algoRight, _divergingParams.easeRight);
+  }
+  return (Math.max(0, v) / theme.ratioMax) ** (theme.ease ?? 2);
+};
+export const color = (v, theme = THEMES[_themeName]) => {
+  const t = Math.max(0, Math.min(1, normalize(v, theme)));
+  return theme.diverging ? (v >= 0 ? _posPalette : _negPalette)(t) : _palette(t);
+};
+export const choroFill = (id, byId) => {
   const theme = THEMES[_themeName];
-  if (theme.outlierIds.has(id)) return theme.outlier;
+  if (theme.diverging) {
+    if (theme.outlierIdsPos.has(id)) return divergingOutlierColor('pos');
+    if (theme.outlierIdsNeg.has(id)) return divergingOutlierColor('neg');
+  } else if (theme.outlierIds.has(id)) {
+    return theme.outlier;
+  }
   const r = byId[id];
   return r ? color(theme.metric(r), theme) : theme.noData;
 };
@@ -133,7 +221,7 @@ export const onThemeChange = fn => { _themeListeners.add(fn); return () => _them
 export const setTheme = name => {
   if (!THEMES[name] || name === _themeName) return false;
   _themeName = name;
-  _palette   = d3.interpolateRgbBasis(THEMES[name].ramp);
+  _buildPalettes(THEMES[name]);
   localStorage.setItem(_THEME_KEY, name);
   _themeListeners.forEach(fn => fn(name));
   return true;

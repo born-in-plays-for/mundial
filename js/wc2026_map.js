@@ -6,7 +6,7 @@ import { LOCALE, _LANG, T, countryName, wikiUrl, wikiUrlEn, loadWikiData } from 
 import { initSidebar } from './control_sidebar.js';
 import { CONF_BOUNDS } from './conf.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
-import { color, choroFill,
+import { color, choroFill, divergingOutlierColor, getDivergingParams, setDivergingParams,
          themeName, currentTheme, themeNames, setTheme, onThemeChange,
          FLAG, DOT_R, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT,
          W, H } from './map-container.js';
@@ -1700,14 +1700,24 @@ Promise.all([
 });
 
 // ── Legend gradient + ticks + outlier count ─────────────────────────────────────
-// All three are keyed off the active theme's own ratioMax/outlierIds/metric —
-// see map-container.js's THEMES for why that varies per theme (different
-// metric, different country tops it, different ceiling).
+// All three are keyed off the active theme's own ratioMax/outlierIds/metric (or,
+// for diverging themes, ratioMaxPos/Neg + outlierIdsPos/Neg) — see
+// map-container.js's THEMES for why that varies per theme (different metric,
+// different country tops it, different ceiling — and for violet, two ceilings
+// either side of a neutral 0).
 const _legendBar = document.getElementById('legend-bar');
 const _buildLegendGradient = () => {
-  const ratioMax = currentTheme().ratioMax;
-  const stops = Array.from({length: 60}, (_, i) => color(RATIO_MIN + (i / 59) * (ratioMax - RATIO_MIN)));
-  _legendBar.style.background = `linear-gradient(to left, ${stops.join(',')})`;
+  const theme = currentTheme();
+  const stops = theme.diverging
+    // Negative extreme (left) -> neutral 0 (middle) -> positive extreme (right) —
+    // a number-line reading, not the sequential themes' "high/dark on the left"
+    // convention (which has no single "high side" once values can go negative).
+    ? [
+        ...Array.from({length: 30}, (_, i) => color(-theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg, theme)),
+        ...Array.from({length: 30}, (_, i) => color((i / 29) * theme.ratioMaxPos, theme)),
+      ]
+    : Array.from({length: 60}, (_, i) => color(RATIO_MIN + (i / 59) * (theme.ratioMax - RATIO_MIN), theme));
+  _legendBar.style.background = `linear-gradient(to ${theme.diverging ? 'right' : 'left'}, ${stops.join(',')})`;
   _legendBar.style.borderRadius = '5px';
 };
 _buildLegendGradient();
@@ -1715,19 +1725,43 @@ _buildLegendGradient();
 const _legendTicksEl = document.getElementById('legend-ticks');
 const _updateLegendTicks = () => {
   if (!_legendTicksEl) return;
-  const ratioMax = currentTheme().ratioMax;
-  const ticks = [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(ratioMax * f));
+  const theme = currentTheme();
+  const ticks = theme.diverging
+    ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
+    : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
   render(html`${ticks.map(t => html`<span>${t}</span>`)}`, _legendTicksEl);
 };
 _updateLegendTicks();
 
+const _legendOutlierPosWrapEl = document.getElementById('legend-outlier-pos-wrap');
+const _legendOutlierDotEl    = document.getElementById('legend-outlier-dot');
+const _legendOutlierDotPosEl = document.getElementById('legend-outlier-dot-pos');
 const _updateLegendOutlier = () => {
   const el = document.getElementById('legend-outlier-count');
   if (!el) return;
   const theme = currentTheme();
-  const [outlierId] = theme.outlierIds;
-  const rec = app.byId[outlierId];
-  el.textContent = rec ? theme.metric(rec) : '';
+  if (theme.diverging) {
+    // Negative outlier keeps the original (pre-diverging) slot before the bar;
+    // positive outlier is the mirrored slot after it — see wc2026_map.html.
+    // Each dot is tinted with its own arm's outlier color (map-container.js's
+    // divergingOutlierColor()), not the shared flat black the sequential
+    // themes' single dot uses.
+    const [negId] = theme.outlierIdsNeg, [posId] = theme.outlierIdsPos;
+    const negRec = app.byId[negId], posRec = app.byId[posId];
+    el.textContent = negRec ? theme.metric(negRec) : '';
+    if (_legendOutlierDotEl) _legendOutlierDotEl.style.background = divergingOutlierColor('neg');
+    if (_legendOutlierPosWrapEl) {
+      _legendOutlierPosWrapEl.hidden = false;
+      document.getElementById('legend-outlier-count-pos').textContent = posRec ? theme.metric(posRec) : '';
+      if (_legendOutlierDotPosEl) _legendOutlierDotPosEl.style.background = divergingOutlierColor('pos');
+    }
+  } else {
+    const [outlierId] = theme.outlierIds;
+    const rec = app.byId[outlierId];
+    el.textContent = rec ? theme.metric(rec) : '';
+    if (_legendOutlierDotEl) _legendOutlierDotEl.style.background = theme.outlier;
+    if (_legendOutlierPosWrapEl) _legendOutlierPosWrapEl.hidden = true;
+  }
 };
 
 const _legendBornFullEl  = document.getElementById('legend-born-full');
@@ -1744,9 +1778,13 @@ _updateLegendBorn();
 // ── Map colour theme (cycled via #theme-toggle, floating over the map) ─────────
 const _paintThemeToggle = () => {
   if (!_themeToggleBtn) return;
-  const ramp = currentTheme().ramp;
-  const at = f => ramp[Math.round(f * (ramp.length - 1))];
-  _themeToggleBtn.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${at(0.55)}, ${at(0.9)})`);
+  const theme = currentTheme();
+  // Diverging: each arm's own outlier color (already the darkest point of that
+  // arm — see map-container.js), so the swatch hints at the two-sided scale.
+  // Sequential: two stops from the one ramp, as before.
+  const at = f => theme.ramp[Math.round(f * (theme.ramp.length - 1))];
+  const stops = theme.diverging ? [divergingOutlierColor('neg'), divergingOutlierColor('pos')] : [at(0.55), at(0.9)];
+  _themeToggleBtn.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${stops[0]}, ${stops[1]})`);
 };
 _paintThemeToggle();
 _themeToggleBtn?.addEventListener('click', () => {
@@ -1763,3 +1801,63 @@ onThemeChange(() => {
   _updateLegendBorn();
   _paintThemeToggle();
 });
+
+// ── Diverging scale debug panel (#diverging-debug, wc2026_map.html) ─────────
+// Live-tunes map-container.js's _divergingParams via getDivergingParams()/
+// setDivergingParams() — the latter already notifies onThemeChange()'s
+// listener above (only when Violet is the active theme), so every input here
+// just needs to call it; the repaint above happens for free.
+{
+  const _dbgDefaults = getDivergingParams();
+  const _dbgEls = {
+    neutral:      document.getElementById('dbg-neutral'),
+    easyLeft:     document.getElementById('dbg-easy-left'),
+    easyRight:    document.getElementById('dbg-easy-right'),
+    outlierLeft:  document.getElementById('dbg-outlier-left'),
+    outlierRight: document.getElementById('dbg-outlier-right'),
+    algoLeft:     document.getElementById('dbg-algo-left'),
+    algoRight:    document.getElementById('dbg-algo-right'),
+    easeLeft:     document.getElementById('dbg-ease-left'),
+    easeRight:    document.getElementById('dbg-ease-right'),
+  };
+  const _dbgEaseLeftVal  = document.getElementById('dbg-ease-left-val');
+  const _dbgEaseRightVal = document.getElementById('dbg-ease-right-val');
+  const _dbgSync = params => {
+    _dbgEls.neutral.value      = params.neutral;
+    _dbgEls.easyLeft.value     = params.easyLeft;
+    _dbgEls.easyRight.value    = params.easyRight;
+    _dbgEls.outlierLeft.value  = params.outlierLeft;
+    _dbgEls.outlierRight.value = params.outlierRight;
+    _dbgEls.algoLeft.value     = params.algoLeft;
+    _dbgEls.algoRight.value    = params.algoRight;
+    _dbgEls.easeLeft.value     = params.easeLeft;
+    _dbgEls.easeRight.value    = params.easeRight;
+    _dbgEaseLeftVal.textContent  = params.easeLeft;
+    _dbgEaseRightVal.textContent = params.easeRight;
+  };
+  _dbgSync(_dbgDefaults);
+  const _dbgApply = () => {
+    const next = {
+      neutral:      _dbgEls.neutral.value,
+      easyLeft:     _dbgEls.easyLeft.value,
+      easyRight:    _dbgEls.easyRight.value,
+      outlierLeft:  _dbgEls.outlierLeft.value,
+      outlierRight: _dbgEls.outlierRight.value,
+      algoLeft:     _dbgEls.algoLeft.value,
+      algoRight:    _dbgEls.algoRight.value,
+      easeLeft:     +_dbgEls.easeLeft.value,
+      easeRight:    +_dbgEls.easeRight.value,
+    };
+    setDivergingParams(next);
+    _dbgEaseLeftVal.textContent  = _dbgEls.easeLeft.value;
+    _dbgEaseRightVal.textContent = _dbgEls.easeRight.value;
+    // eslint-disable-next-line no-console
+    console.log('[diverging-debug]', next);
+  };
+  Object.values(_dbgEls).forEach(el => el.addEventListener('input', _dbgApply));
+  document.getElementById('dbg-reset').addEventListener('click', () => {
+    setDivergingParams(_dbgDefaults);
+    _dbgSync(_dbgDefaults);
+    console.log('[diverging-debug] reset to', _dbgDefaults);
+  });
+}

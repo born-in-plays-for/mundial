@@ -67,7 +67,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   align-self: flex-start;
 }
 #legend-bar { height: 10px; flex: 1; max-width: 280px; }
-#legend-ticks, #legend-outlier-count { font-family: var(--bs-font-monospace); }
+#legend-ticks, #legend-outlier-count, #legend-outlier-count-pos { font-family: var(--bs-font-monospace); }
 #legend-ticks { width: 280px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
 @media (max-width: 767.98px) {
   #legend-bar { max-width: 90px; }

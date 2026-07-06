@@ -66,13 +66,22 @@
     <div id="legend" class="d-flex align-items-center">
       <div class="d-flex flex-column pe-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
-          <div class="legend-outlier-dot"></div>
+          <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
         </div>
         <div id="legend-outlier-count" class="text-center"></div>
       </div>
       <div>
         <div id="legend-bar" class="overflow-hidden rounded-2"></div>
         <div id="legend-ticks" class="d-flex justify-content-between"></div>
+      </div>
+      <!-- Diverging themes only (see map-container.js's THEMES.*.diverging) — the positive-
+           side outlier (negative's is the block above, reused; see _updateLegendOutlier in
+           wc2026_map.js). Hidden for sequential themes, which have just the one outlier. -->
+      <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2" hidden>
+        <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+          <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
+        </div>
+        <div id="legend-outlier-count-pos" class="text-center"></div>
       </div>
     </div>
   </div>
@@ -85,6 +94,50 @@
   </button>
   <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
 </div>
+
+<!-- Debug tool for tuning the violet theme's diverging color scale live — see
+     map-container.js's getDivergingParams()/setDivergingParams() and the
+     wiring right after _paintThemeToggle in js/wc2026_map.js. Only has a
+     visible effect while the Violet theme is active. -->
+<details id="diverging-debug" class="container-xxl my-2 sub" open style="display:none">
+  <summary style="cursor:pointer;">Diverging scale debug (Violet theme only)</summary>
+  <div class="d-flex flex-wrap gap-3 align-items-end py-2">
+    <label class="d-flex flex-column">Neutral (v = 0)
+      <input type="color" id="dbg-neutral">
+    </label>
+    <label class="d-flex flex-column">Left color — negative / "plays for"
+      <input type="color" id="dbg-easy-left">
+    </label>
+    <label class="d-flex flex-column">Right color — positive / "born in"
+      <input type="color" id="dbg-easy-right">
+    </label>
+    <label class="d-flex flex-column">Left outlier dot
+      <input type="color" id="dbg-outlier-left">
+    </label>
+    <label class="d-flex flex-column">Right outlier dot
+      <input type="color" id="dbg-outlier-right">
+    </label>
+    <label class="d-flex flex-column">Left algo
+      <select id="dbg-algo-left">
+        <option value="power">power</option>
+        <option value="smoothstep">smoothstep</option>
+      </select>
+    </label>
+    <label class="d-flex flex-column">Left ease (power only) <span id="dbg-ease-left-val"></span>
+      <input type="range" id="dbg-ease-left" min="0.2" max="3" step="0.1">
+    </label>
+    <label class="d-flex flex-column">Right algo
+      <select id="dbg-algo-right">
+        <option value="power">power</option>
+        <option value="smoothstep">smoothstep</option>
+      </select>
+    </label>
+    <label class="d-flex flex-column">Right ease (power only) <span id="dbg-ease-right-val"></span>
+      <input type="range" id="dbg-ease-right" min="0.2" max="3" step="0.1">
+    </label>
+    <button id="dbg-reset" type="button" class="btn btn-sm btn-outline-secondary">Reset</button>
+  </div>
+</details>
 
 <main id="bottomTabContent" class="container-xxl px-4 mt-2">
   <div id="tab-elo" class="taxonomy"></div>
