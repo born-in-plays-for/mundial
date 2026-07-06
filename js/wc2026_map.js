@@ -93,9 +93,17 @@ const zoom = _wm.zoom;
 // that generic step reads it — no 1-frame lag.
 _wm.onZoomPre = e => { _blendedInsets.forEach(fn => fn(e.transform.k)); };
 
+const COUNTRY_STROKE_W = 0.3; // world-space base for .country/.mesh-border — see onZoom's 1/k compensation
 _wm.onZoom = e => {
   dimState.k = e.transform.k;
   const k = dimState.k;
+  // Country borders (and the mesh lines between them) would otherwise get
+  // linearly thicker while zooming in, same as everything else in `g` — keep
+  // them a near-constant screen weight instead, like arc-lines/leader-lines
+  // already do below. (.country-extra — the blended-zoom island insets — is
+  // excluded here since it lives inside its own extra-scaled group and
+  // compensates for that separately, in buildBlendedInset's own update().)
+  g.selectAll('.country:not(.country-extra), .mesh-border').attr('stroke-width', COUNTRY_STROKE_W / k);
   // Fixed-zoom insets (Cape Verde, Curaçao…) — counter-scale by 1/k so their
   // content stays a constant on-screen size regardless of the main map's zoom.
   g.selectAll('.inset-fixed-scale').attr('transform', function() {
@@ -1436,7 +1444,7 @@ const onCountryClick = (event, id) => {
   activateCountry(id);
 };
 // ── World render ────────────────────────────────────────────────────────────
-const renderWorld = (world, ukNations, capeVerdeGeo) => {
+const renderWorld = (world, ukNations, capeVerdeGeo, curacaoGeo) => {
 
 // Patch topojson geometries that have no numeric id but a known name.
 // Kosovo appears in the 110m dataset with only {properties:{name:'Kosovo'}} — no id field.
@@ -1465,6 +1473,7 @@ g.selectAll('.country')
   .on('click',     (event, d) => onCountryClick(event, +d.id));
 
 g.append('path')
+  .attr('class', 'mesh-border')
   .datum(topojson.mesh(world, world.objects.countries, (a,b) => a!==b))
   .attr('fill','none').attr('stroke','#b8b0a8').attr('stroke-width',.3).attr('d', path);
 
@@ -1610,35 +1619,72 @@ const buildPlainCountry = ({ id, geo }) => {
 
 // ── Third kind of zoom (alongside the main map's own, and each flag icon's own
 // sub-linear FLAG_SIZE_ZOOM_EXP growth — see map-container.js): the real
-// archipelago is drawn as a normal `.country` path — at k ≥ CV_BLEND_K_THRESHOLD
-// this is pixel-identical to buildPlainCountry above (the wrapping transform
-// below is the identity there, and the flag sits at a small, constant, Croatia-
-// like offset from the shape — CV_REST_MULT × the true bbox side). Below that
-// threshold, an ocean-tinted circle appears, inscribed in a virtual square
-// anchored at the shape's true bottom-right corner — BR never moves beyond
-// normal map pan/zoom. The square's on-screen side grows smoothly from its
-// (small) value right at the threshold up to CV_INSET_SIDE_AT_MIN as k reaches
-// the map's own zoom floor (k=1) — independent of the resting offset, so the
-// low-zoom circle can be dramatically bigger than the flag without the
-// high-zoom (k→18) resting gap also blowing up. The flag itself uses the exact
-// same generic sizing as every other flag — only its anchor (data-cx/data-cy)
-// is recomputed each tick (via onZoomPre) to track the receding top-left corner.
-const CV_BLEND_K_THRESHOLD = 1.6; // main-map k below which the inset appears — tune to taste
-const CV_REST_MULT         = 1.2; // resting (k ≥ threshold) flag offset = true bbox side × this
-const CV_INSET_SIDE_AT_MIN = 36;  // circle's on-screen side (viewBox units) at k=1 — the dramatic end state
-const CV_GROWTH_EASE       = 0.6; // shape of the growth curve, threshold→k=1 (1 = linear, <1 = front-loaded)
+// island shape is drawn as a normal `.country` path — at k ≥ CV_BLEND_K_THRESHOLD
+// this is pixel-identical to plain rendering (the wrapping transform below is
+// the identity there, and the flag sits at a small, constant, Croatia-like
+// offset from the shape). Below that threshold, an ocean-tinted circle appears.
+// Two earlier iterations of this got the circle's placement wrong: anchoring
+// the square AT the island's own bbox corner let the (always-outside-the-
+// -inscribed-circle) corner region eat into real island territory once
+// CV_REST_MIN inflated the square past a tiny island's true size (Curaçao);
+// centering the circle exactly on the island's centroid fixed containment but
+// dragged the fixed anchor corner uncomfortably far from the real shore. The
+// current compromise (CV_ISLAND_RATIO) places the island's true centroid a
+// fraction of the way from the anchor corner toward the flag corner — close
+// enough to the anchor to keep drift small, far enough from the true bbox's
+// own corner to stay inside the circle (CV_REST_MULT is sized accordingly).
+// The square that circle is inscribed in has the shape's real `corner` as its
+// fixed corner (bottom-right or bottom-left) — that corner never moves beyond
+// normal map pan/zoom — and the flag sits at the diagonally-opposite (square)
+// corner. CRITICAL: below threshold the circle must never get BIGGER on
+// screen than it was AT the threshold — it only shrinks, just more slowly than
+// the main map does (CV_BLEND_ALPHA controls how much more slowly) — an
+// earlier version interpolated toward a bigger fixed end-size at k=1, which
+// made Cape Verde visibly zoom IN on itself while unzooming — wrong. The power
+// curve below is continuous and monotonically non-increasing as k drops, by
+// construction (screenSide(k_th) is the curve's maximum). The flag itself uses
+// the exact same generic sizing as every other flag — only its anchor
+// (data-cx/data-cy) is recomputed each tick (via onZoomPre) to track the
+// receding corner.
+const CV_BLEND_K_THRESHOLD = 3;   // main-map k below which the inset appears — higher = starts sooner
+                                   // (while still more zoomed-in), also raising the size ceiling below
+const CV_REST_MULT         = 1.6; // resting (k ≥ threshold) circle radius = true bbox's own half-diagonal × this
+                                   // (bumped up from 1.2 to keep the island safely inside the circle now that
+                                   // CV_ISLAND_RATIO no longer centers it — see containment note below)
+const CV_REST_MIN          = 3.75; // …but never smaller than this radius (world units) — Curaçao's true bbox
+                                    // is much smaller than Cape Verde's archipelago, so pure padding alone
+                                    // made its circle/gap imperceptibly tiny (~5px vs Cape Verde's ~26px)
+const CV_BLEND_ALPHA       = 0.35; // below threshold: screenSide ∝ k^ALPHA — 0 = fixed size, 1 = no decoupling
+const CV_ISLAND_RATIO      = 1/3;  // where the island's true centroid sits between the anchor corner (0) and
+                                    // the flag corner (1), as a fraction of the square's side. 0.5 = dead
+                                    // center (what centroid-centering gave us — correct but dragged the fixed
+                                    // anchor corner uncomfortably far from the real shore). A smaller value
+                                    // keeps the anchor close to the real island (less visible drift), at the
+                                    // cost of the square/circle extending further past the flag corner —
+                                    // fine, that's just open sea either way.
 
-const buildBlendedInset = ({ id, geo }) => {
+// corner = the square's fixed corner (opposite the flag) as 'bottom-right' or
+// 'bottom-left' — always on the island side; the flag sits diagonally opposite.
+const buildBlendedInset = ({ id, geo, corner = 'bottom-right' }) => {
   if (!geo || !_eloItemsById.has(id)) return;
   const [[bx0, by0], [bx1, by1]] = path.bounds({ type: 'FeatureCollection', features: geo.features });
-  const rawSide = Math.max(bx1 - bx0, by1 - by0);
-  const restSide = rawSide * CV_REST_MULT; // world units — the always-on, subtle square size
-  const atThreshold = restSide * CV_BLEND_K_THRESHOLD; // screenSide right at the boundary (continuity)
-  const brx = bx1, bry = by1; // fixed anchor — the square/circle's bottom-right corner
+  const midX = (bx0 + bx1) / 2, midY = (by0 + by1) / 2; // true island's own centroid
+  const trueRadius = Math.hypot(bx1 - bx0, by1 - by0) / 2; // reaches the true bbox's own corners exactly
+  const restRadius = Math.max(trueRadius * CV_REST_MULT, CV_REST_MIN);
+  const restSide = restRadius * 2; // side of the square this circle is inscribed in
+  const [cornerY, cornerX] = corner.split('-'); // 'bottom','right'
+  const signX = cornerX === 'right' ? -1 : 1; // direction from the square's fixed corner toward the flag's corner
+  const signY = cornerY === 'bottom' ? -1 : 1;
+  // Anchor placed so the island's true centroid sits CV_ISLAND_RATIO of the way from it toward the flag corner
+  // (not at the square's own center — see CV_ISLAND_RATIO above).
+  const ax = midX - signX * restSide * CV_ISLAND_RATIO; // fixed corner point — never moves beyond normal map pan/zoom
+  const ay = midY - signY * restSide * CV_ISLAND_RATIO;
+  const ccx = ax + signX * restSide / 2; // circle center — standard inscribed-circle placement within the square
+  const ccy = ay + signY * restSide / 2;
 
   const blend = g.append('g').attr('class', 'cv-blend');
   const circle = blend.append('circle')
-    .attr('cx', brx - restSide / 2).attr('cy', bry - restSide / 2).attr('r', restSide / 2)
+    .attr('cx', ccx).attr('cy', ccy).attr('r', restRadius)
     .attr('fill', '#dbeeff').attr('stroke', '#ccc8c0') // same stroke color as .country borders
     .attr('pointer-events', 'none');
 
@@ -1675,25 +1721,22 @@ const buildBlendedInset = ({ id, geo }) => {
   syncVisibility();
 
   const update = k => {
-    let screenSide;
-    if (k >= CV_BLEND_K_THRESHOLD) {
-      screenSide = restSide * k;
-    } else {
-      const t = Math.pow((CV_BLEND_K_THRESHOLD - k) / (CV_BLEND_K_THRESHOLD - 1), CV_GROWTH_EASE);
-      screenSide = atThreshold + (CV_INSET_SIDE_AT_MIN - atThreshold) * t;
-    }
-    const factor = screenSide / (k * restSide); // extra world-space scale, pivoted on BR, on top of the map's own k
-    blend.attr('transform', `translate(${brx},${bry}) scale(${factor}) translate(${-brx},${-bry})`);
+    const screenSide = k >= CV_BLEND_K_THRESHOLD
+      ? restSide * k
+      : restSide * Math.pow(CV_BLEND_K_THRESHOLD, 1 - CV_BLEND_ALPHA) * Math.pow(k, CV_BLEND_ALPHA);
+    const factor = screenSide / (k * restSide); // extra world-space scale, pivoted on the anchor, on top of the map's own k
+    blend.attr('transform', `translate(${ax},${ay}) scale(${factor}) translate(${-ax},${-ay})`);
     circle.attr('opacity', k >= CV_BLEND_K_THRESHOLD ? 0 : 1)
       .attr('stroke-width', 0.3 / (k * factor)); // same weight as .country borders (stroke-width: .3), counteracting blend's own scaling
-    const anchor = brx - screenSide / k; // same offset for x and y — square, not rect
-    const anchorY = bry - screenSide / k;
-    flag.attr('data-cx', anchor).attr('data-cy', anchorY)
-      .attr('x', anchor - FLAG/2).attr('y', anchorY - FLAG/2); // seed value; generic resize overwrites width/height/x/y right after
+    blend.selectAll('path.country-extra').attr('stroke-width', 0.3 / (k * factor)); // same treatment for the island outline itself
+    const flagX = ax + signX * screenSide / k;
+    const flagY = ay + signY * screenSide / k;
+    flag.attr('data-cx', flagX).attr('data-cy', flagY)
+      .attr('x', flagX - FLAG/2).attr('y', flagY - FLAG/2); // seed value; generic resize overwrites width/height/x/y right after
     // Arcs' stored endpoints (data-sx/sy) are frozen at draw time (see applyDim) —
     // known limitation: if dim mode is active on this country while the user keeps
     // zooming, its arc endpoint won't visually track the receding anchor.
-    centroids[id] = [anchor, anchorY];
+    centroids[id] = [flagX, flagY];
   };
 
   _blendedInsets.push(update);
@@ -1755,7 +1798,8 @@ ukFeatures
 // ── Fixed-zoom insets — islands absent from the 110m world-atlas topojson ──────
 // buildFixedInset({ id: 132, geo: capeVerdeGeo, anchor: [-36, 10], r: 22 }); // Cape Verde — parked (full decoupling, offset anchor + leader line)
 // buildPlainCountry({ id: 132, geo: capeVerdeGeo }); // Cape Verde — parked (zero decoupling, no circle)
-buildBlendedInset({ id: 132, geo: capeVerdeGeo }); // Cape Verde
+buildBlendedInset({ id: 132, geo: capeVerdeGeo, corner: 'bottom-right' }); // Cape Verde — flag top-left
+buildBlendedInset({ id: 531, geo: curacaoGeo, corner: 'bottom-left' });    // Curaçao — flag top-right
 
 // ── Stamp all flags with elo-filter category ────────────────────────────────
 g.selectAll('.flag-qualified[data-id]').attr('data-elo-cat', function() {
@@ -1782,7 +1826,8 @@ Promise.all([
   loadWikiData(),
   fetch('data/fixtures.json').then(r => r.json()).catch(() => null),
   fetch('geo/cape-verde.geojson').then(r => r.json()).catch(() => null),
-]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData, capeVerdeGeo]) => {
+  fetch('geo/curacao.geojson').then(r => r.json()).catch(() => null),
+]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData, capeVerdeGeo, curacaoGeo]) => {
   _worldTopo = world;
   _eloData = eloData;
   app.eloRank = Object.fromEntries(
@@ -1796,7 +1841,7 @@ Promise.all([
     nativeByCountry: app.nativeByCountry,
     fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2,
   }).forEach(item => _eloItemsById.set(item.id, item));
-  renderWorld(world, ukNations, capeVerdeGeo);
+  renderWorld(world, ukNations, capeVerdeGeo, curacaoGeo);
   // Init elo ranking component with centroids now populated
   _eloMain.onCountryClick = id => {
     if (dimState.sourceId === id) { clearDim(); return; }
