@@ -154,7 +154,7 @@ export const THEMES = {
 
 const _THEME_KEY = 'mundial-map-theme';
 const _storedTheme = localStorage.getItem(_THEME_KEY);
-let _themeName = THEMES[_storedTheme] ? _storedTheme : 'earthy';
+let _themeName = THEMES[_storedTheme] ? _storedTheme : 'violet';
 
 // Sequential themes cache one interpolator (_palette), built from that theme's
 // own hand-picked `ramp` array via a multi-stop spline (interpolateRgbBasis).
