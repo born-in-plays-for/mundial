@@ -25,7 +25,8 @@
  * .csb-display-toggle   — switch équipes/match (bas de la colonne tri)
  * .csb-col              — en-tête de colonne cliquable (exp / non-exp)
  * .csb-group            — en-tête de groupe de lignes (qualifié / non-qual.)
- * .csb-stage-carousel   — carrousel Bootstrap (Qualifiés → … → Vainqueur)
+ *                         (le carrousel d'étapes Qualifiés → … → Vainqueur vit maintenant dans
+ *                         <elo-ranking> — voir .elo-viz / .elo-stage-carousel dans global.css)
  * .csb-row              — sous-ligne de groupe
  * .csb-check            — label checkbox □/▣
  * .csb-collapse         — bouton › repli (dans .csb-toolbar)
@@ -41,7 +42,7 @@
   /* Same gap as .csb-layout/.csb-sort-stack between the sort-stack and filter
      table — between .csb-body's content and .csb-toggle, when the toggle exists
      (alwaysOpen mode renders no .csb-toggle at all, so this is simply unused then). */
-  gap: 0.5rem;
+  gap: .25rem !important;
   /* margin-top: 0.4rem; */
 }
 
@@ -115,7 +116,7 @@
 #control-sidebar .csb-footer {
   width: 100%;
   background: var(--bg-hover);
-  padding: 2px 6px;
+  padding: 0 6px;
   /* #elo-meta is empty at initSidebar()'s own measureControlSidebar() call — data hasn't
      loaded yet — so it contributes 0 height there. Reserving one line's worth up front
      means that first measurement already gets the right --csb-h, instead of a second,
@@ -297,38 +298,6 @@
 }
 #control-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
 #control-sidebar .csb-sort-dir:hover { opacity: 1; }
-
-/* ── Stage carousel (Qualified → Round of 32 → … → Winner) ─────────────── */
-
-#control-sidebar .csb-stage-carousel {
-  width: 86px; margin-top: 3px;
-}
-#control-sidebar .csb-stage-carousel .carousel-inner { min-height: 14px; }
-#control-sidebar .csb-stage-carousel .carousel-item { text-align: center; }
-#control-sidebar .csb-stage-carousel .carousel-control-prev,
-#control-sidebar .csb-stage-carousel .carousel-control-next {
-  width: 12px; opacity: 0.35;
-}
-#control-sidebar .csb-stage-carousel .carousel-control-prev:hover,
-#control-sidebar .csb-stage-carousel .carousel-control-next:hover { opacity: 0.9; }
-#control-sidebar .csb-stage-carousel .carousel-control-prev-icon,
-#control-sidebar .csb-stage-carousel .carousel-control-next-icon {
-  width: 10px; height: 10px;
-  filter: invert(40%); /* bootstrap's default icon is white; darken for our light bg */
-}
-#control-sidebar .csb-stage-carousel .carousel-indicators {
-  position: static; margin: 3px 0 0; gap: 2px;
-}
-#control-sidebar .csb-stage-carousel .carousel-indicators [data-bs-target] {
-  width: 4px; height: 4px; border-radius: 50%;
-  background-color: #ccc; opacity: 1; border: none;
-  margin: 0 1px; padding: 0;
-}
-#control-sidebar .csb-stage-carousel .carousel-indicators .active { background-color: #666; }
-
-/* Stages the tournament hasn't reached yet (nobody's there to show) — locked, not just empty */
-#control-sidebar .csb-stage-carousel .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
-#control-sidebar .csb-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
 
 /* ── Icon button (shared recipe) ───────────────────────────────────────────
    18×18, own SVG (not Bootstrap's stock .btn-close, whose hardcoded black

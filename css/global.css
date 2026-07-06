@@ -28,6 +28,46 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
 .elo-title { font-size: 14px; font-weight: 500; }
 .elo-meta { font-size: 10px; color: var(--text-muted); overflow-x: hidden; white-space: nowrap;}
+
+/* Stage carousel (Qualified → Round of 32 → … → Winner) — wraps the whole .elo-list below,
+   the same pattern insights/status.html uses for its own carousel: a real Bootstrap carousel
+   (bootstrap.Carousel instance + data-bs-* controls/indicators — native swipe/keyboard/a11y)
+   whose carousel-items only carry a lightweight per-stage caption; prev/next sit absolutely
+   over the list's left/right edges (full height of .elo-viz, i.e. caption + list combined),
+   indicators sit below the caption in normal flow, above the list. See js/elo_ranking.js's
+   EloRanking.connectedCallback(). Overrides below undo Bootstrap's full-bleed-image-carousel
+   defaults (wide dark gradient buttons, large rectangular indicators) for this compact look. */
+.elo-viz { position: relative; }
+.elo-stage-carousel .carousel-inner { min-height: 20px; }
+.elo-stage-carousel .carousel-item { text-align: center; }
+.elo-stage-carousel .stage-caption { padding: 2px 40px 8px; }
+.elo-stage-carousel .stage-title.elo-item--qualified { margin: 0 auto; }
+.elo-viz .carousel-control-prev,
+.elo-viz .carousel-control-next {
+  position: absolute; top: 0; bottom: 0;
+  display: flex; align-items: center;
+  width: 32px; border: 0; background: transparent; opacity: 0.35;
+  z-index: 2; cursor: pointer;
+}
+.elo-viz .carousel-control-prev { left: 0; justify-content: flex-start; }
+.elo-viz .carousel-control-next { right: 0; justify-content: flex-end; }
+.elo-viz .carousel-control-prev:hover,
+.elo-viz .carousel-control-next:hover { opacity: 0.9; }
+.elo-viz .carousel-control-prev-icon,
+.elo-viz .carousel-control-next-icon { width: 16px; height: 16px; filter: invert(40%); }
+.elo-stage-carousel .carousel-indicators {
+  position: static; display: flex; justify-content: center; margin: 0 0 8px; gap: 4px;
+}
+.elo-stage-carousel .carousel-indicators button {
+  width: 6px; height: 6px; border-radius: 50%;
+  background-color: #ccc; opacity: 1; border: none;
+  margin: 0 2px; padding: 0; cursor: pointer;
+}
+.elo-stage-carousel .carousel-indicators button.active { background-color: #666; }
+/* Stages the tournament hasn't reached yet (nobody's there to show) — locked, not just empty */
+.elo-viz .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
+.elo-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
+
 .elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 /* Row wrapper — the <ul>'s actual flex-wrap children (see js/elo_ranking.js's EloRanking.show()).
    Each <li> holds one pill (.elo-row) or, in match-display mode, two fixture opponents

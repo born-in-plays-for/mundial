@@ -25,8 +25,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _sortLabel = html`<span class="cbs-header-label">${T.sortLabels.action}</span>`;
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
-  <div class="csb-body"><div class="csb-content d-flex flex-column gap-2">
-    <div class="csb-toolbar d-flex align-items-center gap-2">
+  <div class="csb-body"><div class="csb-content d-flex flex-column gap-1">
+    <div class="csb-toolbar d-flex align-items-center gap-1">
       ${alwaysOpen ? nothing : html`<button class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>`}
       <div class="dropdown" id="zoom-conf-dropdown">
         <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
@@ -46,11 +46,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <button id="csb-share" class="csb-icon-btn csb-share ms-auto" title="${T.csbParams.share}"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
       <button id="params-badge" class="csb-icon-btn csb-params-badge" title="${T.csbParams.badge}"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
     </div>
-    <div class="csb-layout d-inline-flex align-items-stretch gap-2">
-    <div class="csb-sort-stack d-flex flex-column gap-2">
-      <table class="csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
+    <div class="csb-layout d-inline-flex align-items-stretch gap-1">
+    <div class="csb-sort-stack d-flex flex-column gap-1">
+      <table class="flex-grow-1 csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
-          <td class="csb-header text-muted" title="${T.csbTips.action}">${_sortLabel}</td>
+          <td class="csb-header text-muted" title="${T.csbTips.action}" style="vertical-align: middle;">${_sortLabel}</td>
         </tr>
         <tr>
           <td class="csb-sort-col text-muted">
@@ -81,7 +81,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     </div>
     <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
     <tr>
-      <td colspan="2" class="csb-header text-center text-muted">
+      <td colspan="2" class="csb-header text-center text-muted" style="vertical-align: middle;">
         <div class="d-flex align-items-center justify-content-between">
           <span class="cbs-header-label">${T.filterLabels.action}</span>
           <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
@@ -91,19 +91,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="csb-col" data-col="nexp" title="${T.filterLabels.nonExp}"><span class="elo-item elo-item--nexp"><span class="elo-name"></span></span></td>
     </tr>
     <tr>
-      <td rowspan="2" class="csb-group" data-row="q"><div id="csb-stage-carousel" class="carousel slide csb-stage-carousel">
-        <div class="carousel-inner">
-          ${CAROUSEL_STAGES.map((key, i) => html`
-          <div class="carousel-item ${i === 0 ? 'active' : ''}" data-stage="${i}">
-            <span class="elo-item elo-item--qualified" style="margin-bottom: 4px;"><span class="elo-name">${T.stageLabels[i].toLowerCase()}</span></span>
-          </div>`)}
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#csb-stage-carousel" data-bs-slide="prev" title="${T.csbTips.prevStage}"><span class="carousel-control-prev-icon" aria-hidden="true"></span></button>
-        <button class="carousel-control-next" type="button" data-bs-target="#csb-stage-carousel" data-bs-slide="next" title="${T.csbTips.nextStage}"><span class="carousel-control-next-icon" aria-hidden="true"></span></button>
-        <div class="carousel-indicators">
-          ${CAROUSEL_STAGES.map((key, i) => html`<button type="button" data-bs-target="#csb-stage-carousel" data-bs-slide-to="${i}" class="${i === 0 ? 'active' : ''}" aria-label="${T.stageLabels[i]}" title="${T.stageLabels[i]}"></button>`)}
-        </div>
-      </div></td>
+      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item"><span class="elo-name">${T.filterLabels.qualified}</span></span></td>
       <td class="csb-row" data-row="qi" title="${T.filterLabels.importer}"><span class="elo-item elo-item--imp"><span class="elo-name"></span></span></td>
       <td class="text-muted" title="${T.csbTips.qie}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
       <td class="text-muted" title="${T.csbTips.qi}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
@@ -144,24 +132,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _fltEN  = _panel.querySelector('#filter-en');
   const _fltON  = _panel.querySelector('#filter-on');
   // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
-  const _carouselEl = _panel.querySelector('#csb-stage-carousel');
+  // The carousel's DOM/Bootstrap wiring lives in <elo-ranking> (js/elo_ranking.js) now — it
+  // wraps the whole pill list there. This sidebar still owns the stage index itself, its
+  // persistence, and the filtering it drives; it just pushes state to eloMain (.maxStage,
+  // .stage) and reacts to its 'stage-change' event instead of a local Bootstrap listener.
   let _stage = 0; // index into CAROUSEL_STAGES — 0 ('qualified') shows every qualified team
-  const _bsCarousel = (_carouselEl && typeof bootstrap !== 'undefined')
-    ? new bootstrap.Carousel(_carouselEl, { interval: false, wrap: false })
-    : null;
-  _carouselEl?.addEventListener('click', e => {
-    if (e.target.closest('.carousel-control-prev, .carousel-control-next, .carousel-indicators')) e.stopPropagation();
-  });
-  // Native title tooltip: team count at this stage, plus the eliminated/through/to-play
-  // breakdown from app.bracketState when the stage falls on a real knockout round.
+
   const _updateCarouselTitle = () => {
-    if (!_carouselEl) return;
-    const qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
-    const total = qualifiedIds.filter(id => reachesStage(app.stageIndexById?.get(id), _stage)).length;
-    const bs = app.bracketState?.[ELIM_ROUNDS[_stage]];
-    _carouselEl.title = bs
-      ? `${total} · ${bs.eliminated} ${T.bracketEliminated} · ${bs.playing} ${T.bracketToPlay}`
-      : `${total}`;
     _refreshCarouselBounds();
     // "match" display only means anything once the carousel has moved off 'qualified' (stage
     // 0) — there's no fixture to group by until a knockout round is being viewed. Disabled
@@ -184,9 +161,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // The tournament hasn't reached every stage yet — cap navigation at the furthest stage that
   // currently has at least one team in it (counts are monotonically non-increasing by stage,
   // so the first empty one marks the boundary; everything past it stays locked until it fills).
+  // eloMain applies this both visually (disabled/locked classes) and as its own slide guard.
   let _maxStage = CAROUSEL_STAGES.length - 1;
-  const _nextBtn = _carouselEl?.querySelector('.carousel-control-next') ?? null;
-  const _indicatorBtns = _carouselEl ? [..._carouselEl.querySelectorAll('.carousel-indicators button')] : [];
   const _refreshCarouselBounds = () => {
     const qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
     let max = 0;
@@ -195,20 +171,17 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       if (count > 0) max = p; else break;
     }
     _maxStage = max;
-    _nextBtn?.classList.toggle('csb-stage-disabled', _stage >= _maxStage);
-    _indicatorBtns.forEach((btn, i) => btn.classList.toggle('csb-stage-locked', i > _maxStage));
+    eloMain.maxStage = _maxStage;
   };
 
-  _carouselEl?.addEventListener('slide.bs.carousel', e => {
-    if (e.to > _maxStage) { e.preventDefault(); return; }
-    _stage = e.to;
+  eloMain.addEventListener('stage-change', e => {
+    _stage = e.detail.stage;
     _updateCarouselTitle();
-    _refreshCarouselBounds();
     callbacks.renderElo?.();
     applyFlagFilter();
     _saveState();
   });
-  const _setStage = idx => { if (idx !== _stage) _bsCarousel?.to(idx); };
+  const _setStage = idx => { if (idx !== _stage) eloMain.stage = idx; };
 
   const flagCat = id => {
     const qual = !!QUALIFIED_NAMES[id];
@@ -280,7 +253,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _saveState();
   };
 
-  _panel.querySelectorAll('[data-row="q"] .elo-item.elo-item--qualified').forEach(el => el.addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ])));
+  // The stage carousel's own title pill (now inside <elo-ranking>) dispatches this same toggle
+  // independently of carousel position — see elo_ranking.js's 'qualified-toggle' event.
+  _panel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
+  eloMain.addEventListener('qualified-toggle', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
   _panel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
   _panel.querySelector('[data-row="qni"]' ).addEventListener('click', () => _filterToggle([_fltQE,  _fltQ]));
   _panel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));
