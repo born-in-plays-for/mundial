@@ -8,7 +8,7 @@ import { CONF_BOUNDS } from './conf.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
 import { color, choroFill, divergingOutlierColor, getDivergingParams, setDivergingParams,
          themeName, currentTheme, themeNames, setTheme, onThemeChange,
-         FLAG, DOT_R, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT,
+         FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT,
          W, H } from './map-container.js';
 
 const FOOTER_PANELS = {
@@ -76,7 +76,6 @@ const CENTROID_OVERRIDE = {
 // Arcs still connect to the geographic centroid (via CENTROID_OVERRIDE / dotCentroid).
 const FLAG_POS_OVERRIDE = {
   191: [16.8, 45.8],    // Croatia — flag placed in Slavonia, away from the coastal strip
-  858: [-51.5, -37.5],  // Uruguay — flag placed SE in the Atlantic
 };
 
 const dotCentroid = d => {
@@ -89,9 +88,20 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') clearDim(); 
 
 // Zoom behaviour lives in <world-map>; register page-specific extra work here.
 const zoom = _wm.zoom;
+// Runs before the generic per-flag resize (map-container.js) so a blended-inset
+// country's flag anchor (data-cx/data-cy) is up to date for THIS tick's k before
+// that generic step reads it — no 1-frame lag.
+_wm.onZoomPre = e => { _blendedInsets.forEach(fn => fn(e.transform.k)); };
+
 _wm.onZoom = e => {
   dimState.k = e.transform.k;
   const k = dimState.k;
+  // Fixed-zoom insets (Cape Verde, Curaçao…) — counter-scale by 1/k so their
+  // content stays a constant on-screen size regardless of the main map's zoom.
+  g.selectAll('.inset-fixed-scale').attr('transform', function() {
+    const cx = +this.getAttribute('data-cx'), cy = +this.getAttribute('data-cy');
+    return `translate(${cx},${cy}) scale(${1 / k})`;
+  });
   g.selectAll('path.arc-line')
     .attr('stroke-width', function() { return +this.getAttribute('data-sw') / k; })
     .attr('d', function() {
@@ -743,15 +753,6 @@ const iso2ForId = id => ISO2[id] ?? whereNumeric(String(id).padStart(3,'0'))?.al
 // Birth country names not in ISO 3166-1 numeric that have a known alpha-2 code
 const _NULL_CODE = { 'Democratic Republic of the Congo': 'cd', 'U.S.': 'us', 'Isle of Man': 'im' };
 
-// Small island countries — absent from 110m topojson. A dot marker is drawn at lon/lat (choropleth color);
-// the flag icon is offset by dLon/dLat (degrees) from the centroid so both are visible.
-// dLon: + east, − west  |  dLat: + north, − south
-const STANDALONE_FLAGS = [
-  { id: 132, lon: -23.6, lat: 15.1, dLon:  -4.0, dLat: 4.0 },  // Cape Verde — flag south in Atlantic
-  { id: 531, lon: -69.0, lat: 12.2, dLon:  4.0, dLat:  4.0 },  // Curaçao   — flag north in Caribbean
-];
-const STANDALONE_IDS = new Set(STANDALONE_FLAGS.map(f => f.id));
-
 // ── Tooltip helpers ───────────────────────────────────────────────────────────
 const DISABLE_TOOLTIP = /Mobi/i.test(navigator.userAgent);
 
@@ -801,6 +802,7 @@ const app = {
   eloRank: {},
 };
 const centroids = {};
+const _blendedInsets = []; // per-tick update fns for buildBlendedInset() countries (see below)
 
 const _sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds: _fifaMemberIds, eloMain: _eloMain, callbacks: _sidebarCallbacks });
@@ -1434,7 +1436,7 @@ const onCountryClick = (event, id) => {
   activateCountry(id);
 };
 // ── World render ────────────────────────────────────────────────────────────
-const renderWorld = (world, ukNations) => {
+const renderWorld = (world, ukNations, capeVerdeGeo) => {
 
 // Patch topojson geometries that have no numeric id but a known name.
 // Kosovo appears in the 110m dataset with only {properties:{name:'Kosovo'}} — no id field.
@@ -1509,6 +1511,195 @@ const appendLeaderLine = (cx, cy, fx, fy) =>
     .attr('stroke-dasharray', '0,3').attr('stroke-linecap', 'round').attr('opacity', 0.5)
     .attr('pointer-events', 'none');
 
+// ── Fixed-zoom country insets (Cape Verde, Curaçao — islands invisible in the
+// 110m world-atlas topojson at any sane scale). Each renders the real archipelago
+// shape (from a standalone geoBoundaries GeoJSON) inside a small circle held at a
+// CONSTANT on-screen size via a nested `.inset-fixed-scale` group whose transform
+// is recomputed every zoom tick as `translate(anchor) scale(1/k)` — since it sits
+// inside `g` (already scaled by k from the main zoom), the net scale on its content
+// is always 1, however far the user zooms the main map in or out. Anchored to an
+// open-ocean lon/lat near the real islands; a leader line (existing mechanism)
+// connects the true (essentially invisible) centroid to the inset.
+const buildFixedInset = ({ id, geo, anchor, r }) => {
+  if (!geo || !_eloItemsById.has(id)) return;
+  const [cx, cy] = projection(d3.geoCentroid(geo));
+  const [fx, fy] = projection(anchor);
+  const line = appendLeaderLine(cx, cy, fx, fy);
+
+  const localProjection = d3.geoMercator().fitExtent([[-r + 5, -r + 5], [r - 5, r - 5]], geo);
+  const localPath = d3.geoPath(localProjection);
+
+  const fix = g.append('g').attr('class', 'inset-fixed-scale')
+    .attr('data-cx', fx).attr('data-cy', fy)
+    .attr('transform', 'scale(1)')
+    .style('pointer-events', 'none');
+  fix.append('circle').attr('r', r).attr('fill', '#dbeeff').attr('stroke', '#556677').attr('stroke-width', 1);
+  fix.selectAll('path').data(geo.features).join('path')
+    .attr('d', localPath).attr('fill', '#cabf9e').attr('stroke', '#8a7f63').attr('stroke-width', 0.6);
+  fix.append('circle').attr('r', r).attr('fill', 'none').attr('stroke', '#333').attr('stroke-width', 1.2);
+
+  const flagS = FLAG * 1.3;
+  const flag = fix.append('image')
+    .attr('class', 'flag-qualified flag-fixed')
+    .attr('href', FLAG_CDN(iso2ForId(id)))
+    .attr('data-id', id)
+    // data-cx/cy here are NOT used to position this element (.flag-fixed opts out
+    // of that in map-container.js's zoom handler — x/y above are local badge
+    // coordinates instead) — they exist only so code that scans .flag-qualified
+    // positions directly off the DOM (_zoomToLinkedFlags, the initial fit-all-flags
+    // bounds) sees the same anchor point already stored in the `centroids` map.
+    .attr('data-cx', fx).attr('data-cy', fy)
+    .attr('width', flagS).attr('height', flagS)
+    .attr('x', r * 0.5 - flagS / 2).attr('y', r * 0.5 - flagS / 2)
+    .style('pointer-events', 'all')
+    .attr('data-enables-dim', enablesDim(id) ? '' : null)
+    .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
+    .on('mousemove', event => onCountryMousemove(event, id))
+    .on('mouseleave', () => { if (!dimState.active) hideTip(); })
+    .on('click', event => onCountryClick(event, id));
+
+  const flagNode = flag.node();
+  const syncVisibility = () => {
+    const hidden = flagNode.getAttribute('visibility') === 'hidden';
+    fix.attr('visibility', hidden ? 'hidden' : null);
+    line.attr('visibility', hidden ? 'hidden' : null);
+  };
+  new MutationObserver(syncVisibility).observe(flagNode, { attributes: true, attributeFilter: ['visibility'] });
+  syncVisibility();
+
+  centroids[id] = [fx, fy];
+};
+
+// Simpler stand-in for buildFixedInset: the real archipelago shape drawn at true
+// scale (like the UK home nations' own uk-nations.geojson paths) plus a flag at
+// its centroid, both scaling normally with zoom like every other country. At low
+// zoom the shape is a few px and the flag effectively stands in for it; at high
+// enough zoom the real islands become distinguishable on their own, making the
+// fixed-zoom inset above unnecessary — parked here rather than deleted, in case
+// we want it back once the tradeoff is settled.
+const buildPlainCountry = ({ id, geo }) => {
+  if (!geo || !_eloItemsById.has(id)) return;
+  g.selectAll(`.country-extra[data-id="${id}"]`)
+    .data(geo.features.map(f => ({ ...f, id })))
+    .join('path')
+    .attr('class', 'country country-extra')
+    .attr('data-id', id)
+    .attr('d', path)
+    .attr('fill', choroFill(id, app.byId))
+    .attr('stroke', '#ccc8c0').attr('stroke-width', .3)
+    .attr('data-enables-dim', enablesDim(id) ? '' : null)
+    .style('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
+    .on('mousemove', (event) => onCountryMousemove(event, id))
+    .on('mouseleave', () => { if (!dimState.active) hideTip(); })
+    .on('click',     (event) => onCountryClick(event, id));
+
+  const [cx, cy] = projection(d3.geoCentroid(geo));
+  g.append('image')
+    .call(placeFlag)
+    .attr('href', FLAG_CDN(iso2ForId(id)))
+    .attr('data-id', id)
+    .attr('data-cx', cx).attr('data-cy', cy)
+    .attr('x', cx - FLAG/2).attr('y', cy - FLAG/2)
+    .attr('pointer-events', 'all')
+    .attr('data-enables-dim', enablesDim(id) ? '' : null)
+    .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
+    .on('mousemove', (event) => onCountryMousemove(event, id))
+    .on('click',     (event) => onCountryClick(event, id));
+  centroids[id] = [cx, cy];
+};
+
+// ── Third kind of zoom (alongside the main map's own, and each flag icon's own
+// sub-linear FLAG_SIZE_ZOOM_EXP growth — see map-container.js): the real
+// archipelago is drawn as a normal `.country` path — at k ≥ CV_BLEND_K_THRESHOLD
+// this is pixel-identical to buildPlainCountry above (the wrapping transform
+// below is the identity there, and the flag sits at a small, constant, Croatia-
+// like offset from the shape — CV_REST_MULT × the true bbox side). Below that
+// threshold, an ocean-tinted circle appears, inscribed in a virtual square
+// anchored at the shape's true bottom-right corner — BR never moves beyond
+// normal map pan/zoom. The square's on-screen side grows smoothly from its
+// (small) value right at the threshold up to CV_INSET_SIDE_AT_MIN as k reaches
+// the map's own zoom floor (k=1) — independent of the resting offset, so the
+// low-zoom circle can be dramatically bigger than the flag without the
+// high-zoom (k→18) resting gap also blowing up. The flag itself uses the exact
+// same generic sizing as every other flag — only its anchor (data-cx/data-cy)
+// is recomputed each tick (via onZoomPre) to track the receding top-left corner.
+const CV_BLEND_K_THRESHOLD = 1.6; // main-map k below which the inset appears — tune to taste
+const CV_REST_MULT         = 1.2; // resting (k ≥ threshold) flag offset = true bbox side × this
+const CV_INSET_SIDE_AT_MIN = 36;  // circle's on-screen side (viewBox units) at k=1 — the dramatic end state
+const CV_GROWTH_EASE       = 0.6; // shape of the growth curve, threshold→k=1 (1 = linear, <1 = front-loaded)
+
+const buildBlendedInset = ({ id, geo }) => {
+  if (!geo || !_eloItemsById.has(id)) return;
+  const [[bx0, by0], [bx1, by1]] = path.bounds({ type: 'FeatureCollection', features: geo.features });
+  const rawSide = Math.max(bx1 - bx0, by1 - by0);
+  const restSide = rawSide * CV_REST_MULT; // world units — the always-on, subtle square size
+  const atThreshold = restSide * CV_BLEND_K_THRESHOLD; // screenSide right at the boundary (continuity)
+  const brx = bx1, bry = by1; // fixed anchor — the square/circle's bottom-right corner
+
+  const blend = g.append('g').attr('class', 'cv-blend');
+  const circle = blend.append('circle')
+    .attr('cx', brx - restSide / 2).attr('cy', bry - restSide / 2).attr('r', restSide / 2)
+    .attr('fill', '#dbeeff').attr('stroke', '#ccc8c0') // same stroke color as .country borders
+    .attr('pointer-events', 'none');
+
+  blend.selectAll('path')
+    .data(geo.features.map(f => ({ ...f, id })))
+    .join('path')
+    .attr('class', 'country country-extra')
+    .attr('data-id', id)
+    .attr('d', path)
+    .attr('fill', choroFill(id, app.byId))
+    .attr('stroke', '#ccc8c0').attr('stroke-width', .3)
+    .attr('data-enables-dim', enablesDim(id) ? '' : null)
+    .style('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
+    .on('mousemove', (event) => onCountryMousemove(event, id))
+    .on('mouseleave', () => { if (!dimState.active) hideTip(); })
+    .on('click',     (event) => onCountryClick(event, id));
+
+  const flag = g.append('image')
+    .call(placeFlag)
+    .attr('href', FLAG_CDN(iso2ForId(id)))
+    .attr('data-id', id)
+    .attr('pointer-events', 'all')
+    .attr('data-enables-dim', enablesDim(id) ? '' : null)
+    .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
+    .on('mousemove', (event) => onCountryMousemove(event, id))
+    .on('click',     (event) => onCountryClick(event, id));
+
+  const flagNode = flag.node();
+  const syncVisibility = () => {
+    const hidden = flagNode.getAttribute('visibility') === 'hidden';
+    blend.attr('visibility', hidden ? 'hidden' : null);
+  };
+  new MutationObserver(syncVisibility).observe(flagNode, { attributes: true, attributeFilter: ['visibility'] });
+  syncVisibility();
+
+  const update = k => {
+    let screenSide;
+    if (k >= CV_BLEND_K_THRESHOLD) {
+      screenSide = restSide * k;
+    } else {
+      const t = Math.pow((CV_BLEND_K_THRESHOLD - k) / (CV_BLEND_K_THRESHOLD - 1), CV_GROWTH_EASE);
+      screenSide = atThreshold + (CV_INSET_SIDE_AT_MIN - atThreshold) * t;
+    }
+    const factor = screenSide / (k * restSide); // extra world-space scale, pivoted on BR, on top of the map's own k
+    blend.attr('transform', `translate(${brx},${bry}) scale(${factor}) translate(${-brx},${-bry})`);
+    circle.attr('opacity', k >= CV_BLEND_K_THRESHOLD ? 0 : 1)
+      .attr('stroke-width', 0.3 / (k * factor)); // same weight as .country borders (stroke-width: .3), counteracting blend's own scaling
+    const anchor = brx - screenSide / k; // same offset for x and y — square, not rect
+    const anchorY = bry - screenSide / k;
+    flag.attr('data-cx', anchor).attr('data-cy', anchorY)
+      .attr('x', anchor - FLAG/2).attr('y', anchorY - FLAG/2); // seed value; generic resize overwrites width/height/x/y right after
+    // Arcs' stored endpoints (data-sx/sy) are frozen at draw time (see applyDim) —
+    // known limitation: if dim mode is active on this country while the user keeps
+    // zooming, its arc endpoint won't visually track the receding anchor.
+    centroids[id] = [anchor, anchorY];
+  };
+
+  _blendedInsets.push(update);
+  update(dimState.k || 1);
+};
+
 worldFeatures.forEach(d => {
   const fp = FLAG_POS_OVERRIDE[+d.id];
   if (!fp) return;
@@ -1517,15 +1708,9 @@ worldFeatures.forEach(d => {
   appendLeaderLine(cx, cy, fx, fy);
 });
 
-STANDALONE_FLAGS.forEach(({ lon, lat, dLon = 0, dLat = 0 }) => {
-  const [cx, cy] = projection([lon, lat]);
-  const [fx, fy] = projection([lon + dLon, lat + dLat]);
-  appendLeaderLine(cx, cy, fx, fy);
-});
-
 // ── All flags from world topojson (qualified + non-qualified, filtered by elo membership) ──
 worldFeatures
-  .filter(d => { const id = +d.id; return id !== 826 && !STANDALONE_IDS.has(id) && _eloItemsById.has(id); })
+  .filter(d => { const id = +d.id; return id !== 826 && _eloItemsById.has(id); })
   .forEach(d => {
     const id = +d.id;
     const [cx, cy] = dotCentroid(d);
@@ -1547,43 +1732,6 @@ worldFeatures
       .attr('data-flag-dx', fx - cx).attr('data-flag-dy', fy - cy);
   });
 
-// Dot markers at true island centroid — choropleth color, zoom-stable, interactive
-STANDALONE_FLAGS.forEach(({ id, lon, lat }) => {
-  const [cx, cy] = projection([lon, lat]);
-  g.append('circle')
-    .attr('class', 'flag-qualified standalone-dot')
-    .attr('data-id', id)
-    .attr('data-cx', cx).attr('data-cy', cy)
-    .attr('cx', cx).attr('cy', cy)
-    .attr('r', DOT_R)
-    .attr('fill', choroFill(id, app.byId))
-    .attr('stroke', '#fff')
-    .attr('stroke-width', 0.5)
-    .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
-    .on('mousemove', (event) => onCountryMousemove(event, id))
-    .on('click',     (event) => onCountryClick(event, id));
-});
-
-STANDALONE_FLAGS.forEach(({ id, lon, lat, dLon = 0, dLat = 0 }) => {
-  const [cx, cy] = projection([lon, lat]);
-  const [fx, fy] = projection([lon + dLon, lat + dLat]);
-  g.append('image')
-    .call(placeFlag)
-    .classed('offset-flag', true)
-    .attr('href', FLAG_CDN(iso2ForId(id)))
-    .attr('data-id', id)
-    .attr('data-cx', fx).attr('data-cy', fy)
-    .attr('data-centroid-cx', cx).attr('data-centroid-cy', cy)
-    .attr('data-flag-dx', fx - cx).attr('data-flag-dy', fy - cy)
-    .attr('x', fx - FLAG/2).attr('y', fy - FLAG/2)
-    .attr('pointer-events', 'all')
-    .attr('data-enables-dim', enablesDim(id) ? '' : null)
-    .attr('cursor', sidebar.isClickable(id) ? 'pointer' : 'default')
-    .on('mousemove', (event) => onCountryMousemove(event, id))
-    .on('click',     (event) => onCountryClick(event, id));
-});
-
 // ── UK home nations flags (after the .flag-qualified join so England/Scotland aren't removed by its exit) ──
 ukFeatures
   .filter(f => f._id === 8260 || f._id === 8261 || f._id === 8262 || f._id === 8263)
@@ -1604,6 +1752,11 @@ ukFeatures
       .on('click',     (event) => onCountryClick(event, f._id));
   });
 
+// ── Fixed-zoom insets — islands absent from the 110m world-atlas topojson ──────
+// buildFixedInset({ id: 132, geo: capeVerdeGeo, anchor: [-36, 10], r: 22 }); // Cape Verde — parked (full decoupling, offset anchor + leader line)
+// buildPlainCountry({ id: 132, geo: capeVerdeGeo }); // Cape Verde — parked (zero decoupling, no circle)
+buildBlendedInset({ id: 132, geo: capeVerdeGeo }); // Cape Verde
+
 // ── Stamp all flags with elo-filter category ────────────────────────────────
 g.selectAll('.flag-qualified[data-id]').attr('data-elo-cat', function() {
   return sidebar.flagCat(+this.getAttribute('data-id'));
@@ -1617,7 +1770,6 @@ topojson.feature(world, world.objects.countries).features
   .filter(f => +f.id !== 826)
   .forEach(f => { centroids[+f.id] = dotCentroid(f); });
 // UK nation centroids set above when placing flags
-STANDALONE_FLAGS.forEach(({ id, lon, lat }) => { centroids[id] = projection([lon, lat]); });
 
 
 };
@@ -1629,7 +1781,8 @@ Promise.all([
   loadEloData(),
   loadWikiData(),
   fetch('data/fixtures.json').then(r => r.json()).catch(() => null),
-]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData]) => {
+  fetch('geo/cape-verde.geojson').then(r => r.json()).catch(() => null),
+]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData, capeVerdeGeo]) => {
   _worldTopo = world;
   _eloData = eloData;
   app.eloRank = Object.fromEntries(
@@ -1643,7 +1796,7 @@ Promise.all([
     nativeByCountry: app.nativeByCountry,
     fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2,
   }).forEach(item => _eloItemsById.set(item.id, item));
-  renderWorld(world, ukNations);
+  renderWorld(world, ukNations, capeVerdeGeo);
   // Init elo ranking component with centroids now populated
   _eloMain.onCountryClick = id => {
     if (dimState.sourceId === id) { clearDim(); return; }

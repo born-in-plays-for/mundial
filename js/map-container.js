@@ -265,12 +265,20 @@ class WorldMap extends HTMLElement {
 
     this.g      = this.svg.append('g');
     this.onZoom = null;
+    // Fires before the generic per-flag resize below — lets page code recompute a
+    // flag's data-cx/data-cy for the CURRENT tick's k (e.g. wc2026_map.js's Cape
+    // Verde inset, whose anchor point is itself a function of k) with no 1-frame lag.
+    this.onZoomPre = null;
 
     this.zoom = d3.zoom().scaleExtent([1, 18]).on('zoom', e => {
+      if (this.onZoomPre) this.onZoomPre(e);
       this.g.attr('transform', e.transform);
 
       const s = FLAG / Math.pow(e.transform.k, 1 - FLAG_SIZE_ZOOM_EXP);
-      this.svg.selectAll('.flag-qualified')
+      // .flag-fixed opts out — it lives inside a fixed-zoom inset (see wc2026_map.js's
+      // buildFixedInset) that already counter-scales itself; x/y/width there are
+      // local badge coordinates, not data-cx/data-cy world coordinates.
+      this.svg.selectAll('.flag-qualified:not(.flag-fixed)')
         .attr('width', s).attr('height', s)
         .attr('x', function() { return +this.getAttribute('data-cx') - s/2; })
         .attr('y', function() { return +this.getAttribute('data-cy') - s/2; });

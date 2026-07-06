@@ -109,13 +109,13 @@
 }
 
 /* Hosts #elo-meta (source/date attribution) — .sub itself has no padding, so it comes
-   from here instead, same recipe as .csb-toolbar. No gap above it though — cancel
-   .csb-content's gap-2 (0.5rem) with a matching negative margin, .csb-toolbar/.csb-layout
-   keep theirs. */
+   from here instead, same recipe as .csb-toolbar (including its background/gap —
+   no negative margin here anymore, so it now spaces from .csb-layout the same
+   way .csb-toolbar does above it). */
 #control-sidebar .csb-footer {
   width: 100%;
-  /* padding: 2px 0; */
-  margin: -0.5rem 0 0 0;
+  background: var(--bg-hover);
+  padding: 2px 6px;
   /* #elo-meta is empty at initSidebar()'s own measureControlSidebar() call — data hasn't
      loaded yet — so it contributes 0 height there. Reserving one line's worth up front
      means that first measurement already gets the right --csb-h, instead of a second,
