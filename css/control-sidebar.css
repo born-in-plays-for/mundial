@@ -12,7 +12,7 @@
  *                         of one table with cross-cutting rowspans, which is what caused the
  *                         double-border misalignment. See border.html / control-sidebar-test.html.)
  * .csb-sort-stack       — flex column: sort table + display table, stacked
- * .csb-table            — shared look (border-collapse) for all three tables. Base font-size
+ * .csb-table            — shared look (border-collapse) for all three tables. Base font-size!important
  *                         (11px) lives on #control-sidebar and most descendants just inherit
  *                         it — but a few (global.css's .elo-name, Bootstrap's .btn and
  *                         .dropdown-menu) set their own font-size elsewhere and need an
@@ -212,7 +212,7 @@
 
 /* ── Sort column ───────────────────────────────────────────────────────── */
 
-#control-sidebar .csb-header { text-align: left; }
+#control-sidebar .csb-header { text-align: left !important; }
 #control-sidebar .csb-header[data-col] { cursor: pointer; }
 #control-sidebar .csb-table td.csb-sort-col {
   padding: 0 var(--sort-extra-pad);
