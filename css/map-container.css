@@ -13,21 +13,69 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
 body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
-#zoom-reset, #zoom-span, #scroll-top-btn { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
+#zoom-reset, #zoom-span, #scroll-top-btn, #theme-toggle { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.85); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
 #scroll-top-btn { display: none; }
 #scroll-top-btn.visible { display: flex; }
 #zoom-reset:disabled, #zoom-span:disabled { opacity: 0.35; cursor: default; }
+/* Round, not square like the zoom buttons — reads as a color swatch. The swatch
+   itself is a ::before, not the button's own background, so the button keeps
+   its normal chrome (border + neutral backdrop) showing as a ring around a
+   smaller, centered dot — scale(0.5) on a position:absolute (inset:0) box
+   shrinks toward the box's own center by default, no extra centering math
+   needed. js/wc2026_map.js's _paintThemeToggle sets --theme-swatch, a two-stop
+   preview of the active theme's ramp. */
+#theme-toggle { border-radius: 50%; }
+#theme-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--theme-swatch, transparent);
+  /* Matches the .85 alpha the shared rule above uses for zoom-reset/zoom-span's
+     own background — without it the swatch's solid ramp colors read as more
+     opaque/heavier than its two sibling buttons. */
+  opacity: .85;
+  transform: scale(0.5);
+  pointer-events: none;
+}
+/* Never grows past one line: nowrap (cascades to #legend-born/#legend's text
+   children) plus clipping instead of letting an overlong description push
+   the row wider or wrap onto a second line. */
+#legend-parent { overflow-x: hidden; white-space: nowrap; }
 #legend { font-size: 11px; color: var(--text-muted); }
-#legend-countries, #legend-born { font-size: 11px; color: #bbb; }
+#legend-countries { font-size: 11px; color: #bbb; }
 #legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }
-#legend-born::before { content: '#'; margin-right: 0.25em; }
-#legend-born::after { content: '→'; margin-left: 0.25em; }
+/* Describes what the active color theme's shading means (js/wc2026_map.js's
+   _updateLegendBorn(), rebuilt on every theme switch — see map-container.js's
+   THEMES.*.legendKey / i18n.js's T.legendMetric, each a {full, brief} pair —
+   #legend-born-full/-brief swap via Bootstrap's d-none/d-md-* rather than one
+   span with two possible strings, so no JS resize listener is needed). Direct
+   child of #legend-parent (not #legend), left-aligned via that container's
+   justify-content:between against #legend on the right.
+   min-width:0 overrides flexbox's default min-width:auto — without it a flex
+   item won't shrink below its content's natural width, so text-overflow can
+   never kick in no matter how tight the row gets. The full (desktop) string
+   is a real sentence, not a fixed-width label, so ellipsis + the element's own
+   title attribute (set alongside its textContent) is the fallback once the
+   window is too narrow for it to fit next to the gradient bar. */
+#legend-born {
+  font-size: 11px; color: #bbb;
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* #legend-parent's align-items:center would otherwise vertically center
+     this against the taller #legend (gradient bar + ticks stacked) beside it. */
+  align-self: flex-start;
+}
 #legend-bar { height: 10px; flex: 1; max-width: 280px; }
 #legend-ticks, #legend-outlier-count { font-family: var(--bs-font-monospace); }
 #legend-ticks { width: 280px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
 @media (max-width: 767.98px) {
   #legend-bar { max-width: 90px; }
   #legend-ticks { width: 90px; font-size: 8px; }
+  /* wc2026_map.html's pt-1 is a Bootstrap spacing utility (!important) — needs
+     matching !important to actually override it here. Without this, the gap
+     above #legend-born reads as if it weren't top-aligned at all. */
+  #legend-parent { padding-top: 0 !important; }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {

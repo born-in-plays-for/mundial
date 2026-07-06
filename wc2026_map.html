@@ -57,11 +57,13 @@
 </header>
 <div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative">
   <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
-  <div id="legend-parent" class="d-flex align-items-center justify-content-end w-100 pt-2">
+  <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
+    <div id="legend-born" class="sub">
+      <span id="legend-born-full" class="d-none d-md-inline"></span>
+      <span id="legend-born-brief" class="d-md-none"></span>
+    </div>
     <span id="zoom-level" hidden></span>
     <div id="legend" class="d-flex align-items-center">
-      <div id="legend-born" class="sub mb-auto"></div>
-      &nbsp;
       <div class="d-flex flex-column pe-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
           <div class="legend-outlier-dot"></div>
@@ -70,7 +72,7 @@
       </div>
       <div>
         <div id="legend-bar" class="overflow-hidden rounded-2"></div>
-        <div id="legend-ticks" class="d-flex justify-content-between"><span>69</span><span>52</span><span>35</span><span>17</span><span>0</span></div>
+        <div id="legend-ticks" class="d-flex justify-content-between"></div>
       </div>
     </div>
   </div>
@@ -81,6 +83,7 @@
 <button id="zoom-span" type="button" aria-label="Span all linked countries" disabled>
     <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="24" height="24" aria-hidden="true">
   </button>
+  <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
 </div>
 
 <main id="bottomTabContent" class="container-xxl px-4 mt-2">

@@ -6,7 +6,8 @@ import { LOCALE, _LANG, T, countryName, wikiUrl, wikiUrlEn, loadWikiData } from 
 import { initSidebar } from './control_sidebar.js';
 import { CONF_BOUNDS } from './conf.js';
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
-import { RATIO_MAX, PALETTE, normalize, color, choroFill, OUTLIER_COLOR, OUTLIER_IDS,
+import { color, choroFill,
+         themeName, currentTheme, themeNames, setTheme, onThemeChange,
          FLAG, DOT_R, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT,
          W, H } from './map-container.js';
 
@@ -112,12 +113,15 @@ _wm.onZoom = e => {
   if (zoomEl) zoomEl.textContent = `k=${e.transform.k.toFixed(2)}`;
 };
 
+// Loading placeholder — shown before world.json arrives, then fully covered by
+// renderWorld()'s own ocean fill. Not repainted on setTheme() (the loading window
+// is brief and renderWorld() always reads the theme live once data does arrive).
 g.append('path').datum({type:'Sphere'})
-  .attr('d', path).attr('fill','#f0e6d2').attr('stroke','#cbb28c').attr('stroke-width',.5)
+  .attr('d', path).attr('fill', currentTheme().placeholderFill).attr('stroke', currentTheme().placeholderStroke).attr('stroke-width',.5)
   .attr('cursor', 'default')
   .on('mousemove', () => { hideTip(); });
 g.append('path').datum(d3.geoGraticule()())
-  .attr('d', path).attr('fill','none').attr('stroke','#e3d3b8').attr('stroke-width',.25);
+  .attr('d', path).attr('fill','none').attr('stroke', currentTheme().graticule).attr('stroke-width',.25);
 
 // QUALIFIED_NAMES, QUALIFIED_BY_NAME imported from qualified.js
 
@@ -261,6 +265,7 @@ _zoomHintEl.textContent = T.zoomHint;
 let _initialTransform = d3.zoomIdentity;
 const _zoomResetBtn = document.getElementById('zoom-reset');
 const _zoomSpanBtn  = document.getElementById('zoom-span');
+const _themeToggleBtn = document.getElementById('theme-toggle');
 const _syncResetBtn = t => {
   if (!_zoomResetBtn) return;
   _zoomResetBtn.disabled = Math.abs(t.k - _initialTransform.k) < 0.001
@@ -297,7 +302,6 @@ function _highlightConf(ids) {
 }
 
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
-document.getElementById('legend-born').textContent = T.legendBorn;
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
 
 // Chain tab: load data lazily, render when tab is shown, re-render on resize
@@ -468,7 +472,8 @@ const _syncMapHeight = () => {
     const fromBottom = mcRect.bottom - svgRect.bottom;
     const resetH = _zoomResetBtn?.offsetHeight ?? 26;
     const spanH  = _zoomSpanBtn?.offsetHeight  ?? 26;
-    const totalH = resetH + 4 + spanH;
+    const themeH = _themeToggleBtn?.offsetHeight ?? 26;
+    const totalH = resetH + 4 + spanH + 4 + themeH;
     const midTop = Math.round((svgRect.top - mcRect.top) + (svgRect.height - totalH) / 2);
     if (_zoomResetBtn) {
       _zoomResetBtn.style.right = (fromRight + 8) + 'px';
@@ -477,6 +482,10 @@ const _syncMapHeight = () => {
     if (_zoomSpanBtn) {
       _zoomSpanBtn.style.right = (fromRight + 8) + 'px';
       _zoomSpanBtn.style.top   = (midTop + resetH + 4) + 'px';
+    }
+    if (_themeToggleBtn) {
+      _themeToggleBtn.style.right = (fromRight + 8) + 'px';
+      _themeToggleBtn.style.top   = (midTop + resetH + 4 + spanH + 4) + 'px';
     }
     if (_zoomHintEl) {
       _zoomHintEl.style.left      = (svgRect.right - mcRect.left) + 'px';
@@ -1201,11 +1210,14 @@ if (rawData.natives) {
     if (nId != null) app.nativeByCountry[nId] = players;
   });
 }
+// Built before the byId loops below — both need importCount per country, and
+// this only needs rawData.data (already in hand), not anything byId sets up.
+app.importByCountry = buildImportByCountry(rawData, countryName);
 DATA.forEach(d => {
   d.pop        = rawData.pop[iso2ForId(d.id)] || null;
   d.nativeCount = (app.nativeByCountry[d.id] ?? []).length;
+  d.importCount = (app.importByCountry[d.id] ?? []).length;
   d.totalCount  = d.count + d.nativeCount;
-  d.ratio       = d.totalCount;
   app.byId[d.id] = d;
 });
 // Add coloring entries for qualified countries all of whose players play for their own country
@@ -1214,19 +1226,16 @@ Object.entries(app.nativeByCountry).forEach(([nId, players]) => {
   if (app.byId[id]) return;
   const name = QUALIFIED_NAMES[id];
   const pop  = rawData.pop[iso2ForId(id)] || null;
-  app.byId[id] = { id, country: name, count: 0, nativeCount: players.length,
-               totalCount: players.length, pop, ratio: players.length,
+  const importCount = (app.importByCountry[id] ?? []).length;
+  app.byId[id] = { id, country: name, count: 0, nativeCount: players.length, importCount,
+               totalCount: players.length, pop,
                players: [], top: [], nations: [] };
 });
 app.pop      = rawData.pop;
 app.capital  = rawData.capital ?? {};
 app.eloRank = {};  // populated by wc2026_elo_rank.json fetch below
-OUTLIER_IDS.forEach(id => {
-  const el = document.getElementById('legend-outlier-count');
-  if (el && app.byId[id]) el.textContent = app.byId[id].totalCount;
-});
-
-app.importByCountry = buildImportByCountry(rawData, countryName);};
+_updateLegendOutlier();
+};
 
 
 // ── Shared tooltip/click helpers (used by both world and UK nation paths) ──────
@@ -1690,11 +1699,67 @@ Promise.all([
   });
 });
 
-// ── Legend gradient ───────────────────────────────────────────────────────────
-const bar = document.getElementById('legend-bar');
-const stops = Array.from({length: 60}, (_, i) => {
-  const v = RATIO_MIN + (i / 59) * (RATIO_MAX - RATIO_MIN);
-  return color(v);
+// ── Legend gradient + ticks + outlier count ─────────────────────────────────────
+// All three are keyed off the active theme's own ratioMax/outlierIds/metric —
+// see map-container.js's THEMES for why that varies per theme (different
+// metric, different country tops it, different ceiling).
+const _legendBar = document.getElementById('legend-bar');
+const _buildLegendGradient = () => {
+  const ratioMax = currentTheme().ratioMax;
+  const stops = Array.from({length: 60}, (_, i) => color(RATIO_MIN + (i / 59) * (ratioMax - RATIO_MIN)));
+  _legendBar.style.background = `linear-gradient(to left, ${stops.join(',')})`;
+  _legendBar.style.borderRadius = '5px';
+};
+_buildLegendGradient();
+
+const _legendTicksEl = document.getElementById('legend-ticks');
+const _updateLegendTicks = () => {
+  if (!_legendTicksEl) return;
+  const ratioMax = currentTheme().ratioMax;
+  const ticks = [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(ratioMax * f));
+  render(html`${ticks.map(t => html`<span>${t}</span>`)}`, _legendTicksEl);
+};
+_updateLegendTicks();
+
+const _updateLegendOutlier = () => {
+  const el = document.getElementById('legend-outlier-count');
+  if (!el) return;
+  const theme = currentTheme();
+  const [outlierId] = theme.outlierIds;
+  const rec = app.byId[outlierId];
+  el.textContent = rec ? theme.metric(rec) : '';
+};
+
+const _legendBornFullEl  = document.getElementById('legend-born-full');
+const _legendBornBriefEl = document.getElementById('legend-born-brief');
+const _updateLegendBorn = () => {
+  const { full, brief } = T.legendMetric[currentTheme().legendKey];
+  // title: fallback for when #legend-born's ellipsis truncates the (real
+  // sentence, not a fixed-width label) full text on a narrower desktop window.
+  if (_legendBornFullEl)  { _legendBornFullEl.textContent  = full;  _legendBornFullEl.title = full; }
+  if (_legendBornBriefEl) _legendBornBriefEl.textContent = brief;
+};
+_updateLegendBorn();
+
+// ── Map colour theme (cycled via #theme-toggle, floating over the map) ─────────
+const _paintThemeToggle = () => {
+  if (!_themeToggleBtn) return;
+  const ramp = currentTheme().ramp;
+  const at = f => ramp[Math.round(f * (ramp.length - 1))];
+  _themeToggleBtn.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${at(0.55)}, ${at(0.9)})`);
+};
+_paintThemeToggle();
+_themeToggleBtn?.addEventListener('click', () => {
+  const names = themeNames();
+  const next  = names[(names.indexOf(themeName()) + 1) % names.length];
+  setTheme(next);
 });
-bar.style.background = `linear-gradient(to left, ${stops.join(',')})`;
-bar.style.borderRadius = '5px';
+onThemeChange(() => {
+  g.selectAll('.country').attr('fill', function(d) { return choroFill(+d.id, app.byId); });
+  g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
+  _buildLegendGradient();
+  _updateLegendTicks();
+  _updateLegendOutlier();
+  _updateLegendBorn();
+  _paintThemeToggle();
+});

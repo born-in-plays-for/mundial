@@ -84,8 +84,8 @@ body { padding-bottom: 48px; }
 /* scroll-to-top / zoom controls */
 #scroll-top-btn { position: absolute; right: 12px; top: calc(-26px - 8px); cursor: pointer; }
 #scroll-top-btn:hover { color: #000; }
-#zoom-reset, #zoom-span { cursor: pointer; }
-#zoom-reset:hover:not(:disabled), #zoom-span:hover:not(:disabled) { color: #000; opacity: 0.8; }
+#zoom-reset, #zoom-span, #theme-toggle { cursor: pointer; }
+#zoom-reset:hover:not(:disabled), #zoom-span:hover:not(:disabled), #theme-toggle:hover { color: #000; opacity: 0.8; }
 #zoom-reset:disabled, #zoom-span:disabled { cursor: default; opacity: 0.3; }
 #tab-players-btn .btn-close:hover { opacity: 1; }
 

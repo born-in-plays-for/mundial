@@ -114,13 +114,35 @@
    keep theirs. */
 #control-sidebar .csb-footer {
   width: 100%;
-  padding: 2px 0;
+  /* padding: 2px 0; */
   margin: -0.5rem 0 0 0;
   /* #elo-meta is empty at initSidebar()'s own measureControlSidebar() call — data hasn't
      loaded yet — so it contributes 0 height there. Reserving one line's worth up front
      means that first measurement already gets the right --csb-h, instead of a second,
      visible resize once the real text arrives and pushes .csb-toggle taller. */
   min-height: 22px;
+}
+
+/* #elo-meta-count (e.g. "66/236 Countries") left, #elo-meta-source (source
+   link + update date) right — one line, never wraps. min-width:0 on the
+   source span overrides flexbox's default min-width:auto (which otherwise
+   blocks shrinking below content size) so text-overflow can actually engage
+   once the row is too narrow for both; count doesn't shrink, so it's never
+   the one that gets truncated. */
+#elo-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  overflow-x: hidden;
+  white-space: nowrap;
+}
+#elo-meta-count { flex-shrink: 0; }
+#elo-meta-source {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Table ─────────────────────────────────────────────────────────────── */
@@ -157,7 +179,6 @@
 @media (max-width: 400px) {
   #control-sidebar .csb-table { --sort-extra-pad: 20px; }
   #control-sidebar .csb-table td { padding: 2px 2px; }
-  #legend-parent { display: none !important;}
 }
 #control-sidebar .csb-table .form-check-input { display: none; }
 

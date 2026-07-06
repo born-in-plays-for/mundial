@@ -219,7 +219,8 @@ export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloDa
   const rawItems = buildEloItems(buildArgs);
   el.items = rawItems;
 
-  // Build stable #elo-meta structure once: [count span] · [source span (dynamic content, toggled)]
+  // Build stable #elo-meta structure once: count span (left) + source span (right,
+  // dynamic content, toggled) — see css/control-sidebar.css's #elo-meta flex rule.
   const metaEl = document.getElementById('elo-meta');
   let metaCountEl = null, metaSourceEl = null;
   if (metaEl) {
@@ -240,7 +241,7 @@ export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloDa
       const html = sort === 'elo' ? _sourceHtml(eloData)
                  : sort === 'pop' ? _sourceHtml(popData)
                  : '';
-      metaSourceEl.innerHTML = html ? ` · ${html}` : '';
+      metaSourceEl.innerHTML = html;
       metaSourceEl.hidden = !html;
     }
     onRender?.();
