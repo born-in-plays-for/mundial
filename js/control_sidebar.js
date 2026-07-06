@@ -375,6 +375,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _toggle.addEventListener('click', () => {
     const collapsed = _el.classList.toggle('collapsed');
     _toggle.textContent = collapsed ? '‹' : '›';
+    callbacks.onSidebarToggle?.();
   });
   } // end !alwaysOpen
 
@@ -400,7 +401,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _swDragging = true;
       _swExpanding = expanding;
       _body.style.transition = 'none';
-      if (expanding) _el.classList.remove('collapsed');
+      if (expanding) { _el.classList.remove('collapsed'); callbacks.onSidebarToggle?.(); }
     }
     const mw = _maxW();
     let w;
@@ -438,6 +439,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _el.classList.add('collapsed');
       _toggle.textContent = '‹';
     }
+    callbacks.onSidebarToggle?.();
     const _cleanup = () => {
       _body.style.transition = '';
       _body.style.maxWidth = '';

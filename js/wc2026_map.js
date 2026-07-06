@@ -174,7 +174,7 @@ _pqDotsEl.addEventListener('click', e => {
   _pqDots.forEach((d, i) => d.classList.toggle('active', i === _quoteIdx));
   if (_pageHeader) {
     requestAnimationFrame(() => {
-      document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
+      document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
       _syncPaddingTop();
     });
   }
@@ -241,7 +241,7 @@ _fillPanel(_pqPrev, _prevIdx());
       clearDrag();
       if (_pageHeader) {
         requestAnimationFrame(() => {
-          document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
+          document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
           _syncPaddingTop();
         });
       }
@@ -441,7 +441,19 @@ const _eloMain = document.querySelector('#tab-elo elo-ranking');
 const _eloMetaPanel = FOOTER_PANELS.eloMeta ? document.getElementById('elo-meta-panel') : null;
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
-if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
+// #sidebar-host is position:absolute (see wc2026_map.html) so it never affects #page-header's
+// own (quote-only) box — when collapsed it just overlaps the map below, as intended. When
+// expanded, the map still needs to make room for it, so the target height is computed here
+// as max(quote bottom, sidebar bottom) rather than left to grid auto-sizing.
+const _computeHeaderHeight = () => {
+  if (!_pageHeader) return 0;
+  const quoteBottom = _pageHeader.getBoundingClientRect().bottom;
+  const csb = document.getElementById('control-sidebar');
+  if (!csb || csb.classList.contains('collapsed')) return quoteBottom;
+  const csbH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--csb-h')) || 0;
+  return Math.max(quoteBottom, _pageHeader.getBoundingClientRect().top + csbH);
+};
+if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
 const _isFullyVisible = el => {
   if (!el) return false;
   const r = el.getBoundingClientRect();
@@ -467,7 +479,11 @@ const _syncPaddingTop = () => {
     return;
   }
   if (_mc) {
-    const mapBottom = _mc.getBoundingClientRect().bottom + (parseFloat(getComputedStyle(_mc).marginBottom) || 0);
+    // Uses the *target* header height, not a live read of #map-container's own rect — its
+    // `top` now transitions (see map-container.css), so a live read right after changing
+    // --page-header-h would catch it mid-animation and go stale. #map-container's own height
+    // is intrinsic (content-driven), unaffected by `top`, so it's safe to read live here.
+    const mapBottom = _computeHeaderHeight() + _mc.getBoundingClientRect().height + (parseFloat(getComputedStyle(_mc).marginBottom) || 0);
     document.body.style.paddingTop = mapBottom + 'px';
     document.documentElement.style.scrollPaddingTop    = mapBottom + 'px';
     document.documentElement.style.scrollPaddingBottom = (_bottomPanel ? _bottomPanel.offsetHeight : 0) + 'px';
@@ -475,9 +491,15 @@ const _syncPaddingTop = () => {
 };
 requestAnimationFrame(_syncPaddingTop);
 window.addEventListener('resize', () => {
-  if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
+  if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
   _syncMapHeight();
 });
+// Tracks #page-header's own live height (the quote block — #sidebar-host is position:absolute
+// and never affects it, see wc2026_map.html), e.g. when a longer/shorter quote is paged in.
+if (_pageHeader) new ResizeObserver(() => {
+  document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
+  _syncPaddingTop();
+}).observe(_pageHeader);
 const _bottomPanel  = document.getElementById('bottom-panel');
 const _bottomTabNav = document.getElementById('bottomTabList');
 const _syncMapHeight = () => {
@@ -816,6 +838,12 @@ const _sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds: _fifaMemberIds, eloMain: _eloMain, callbacks: _sidebarCallbacks });
 _sidebarCallbacks.renderElo = _renderElo;
 _sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
+// Sidebar collapse/expand no longer affects #page-header's own box (it's position:absolute —
+// see wc2026_map.html), so the map's push-down amount must be recomputed explicitly here.
+_sidebarCallbacks.onSidebarToggle = () => {
+  if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
+  _syncPaddingTop();
+};
 
 document.addEventListener('mundial-conf-changed', ({ detail: { conf, ids } }) => {
   _highlightConf(ids);
@@ -1891,7 +1919,7 @@ Promise.all([
   }
   // Re-measure after reflow triggered by renderWorld + initial zoom
   requestAnimationFrame(() => {
-    if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _pageHeader.getBoundingClientRect().bottom + 'px');
+    if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
     _syncPaddingTop();
     _syncMapHeight();
   });

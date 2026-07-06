@@ -1,5 +1,5 @@
 /* mobile portrait — clearance for fixed bottom tab bar; JS ResizeObserver overrides at runtime */
-body { padding-bottom: 48px; }
+body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 
 /* legend outlier dot(s) — one (France) for sequential themes, two (Curaçao +
    France, either side of the bar) for violet's diverging scale — see
