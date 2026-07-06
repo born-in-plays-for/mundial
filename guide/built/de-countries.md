@@ -90,8 +90,8 @@ Die Filtermatrix spiegelt das Panel-Layout wider — zwei Spalten (Exporteur / N
 |---|:---:|:---:|
 | **qualifiziert · Importe**        | `qie`&nbsp;&nbsp;✓  | `qi`&nbsp;&nbsp;✓ |
 | **qualifiziert · keine Importe**  |  `qe` &nbsp;&nbsp;✓ |  `q` &nbsp;&nbsp;✓ |
-| **nicht qualifiziert · FIFA**     |  `ef` &nbsp;&nbsp;✓ | `of`&nbsp;&nbsp;○ |
-| **nicht qualifiziert · non-FIFA** |  `en` &nbsp;&nbsp;✓ | `on`&nbsp;&nbsp;○ |
+| **nicht qualifiziert · FIFA**     |  `ef` &nbsp;&nbsp;○ | `of`&nbsp;&nbsp;○ |
+| **nicht qualifiziert · non-FIFA** |  `en` &nbsp;&nbsp;○ | `on`&nbsp;&nbsp;○ |
 
 ✓ standardmäßig aktiv · ○ standardmäßig inaktiv
 

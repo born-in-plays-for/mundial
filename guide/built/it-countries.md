@@ -90,8 +90,8 @@ La matrice di filtro rispecchia il layout del pannello — due colonne (esportat
 |---|:---:|:---:|
 | **qualificato · importazioni**      | `qie`&nbsp;&nbsp;✓  | `qi`&nbsp;&nbsp;✓ |
 | **qualificato · nessuna import.**   |  `qe` &nbsp;&nbsp;✓ |  `q` &nbsp;&nbsp;✓ |
-| **non qualificato · FIFA**          |  `ef` &nbsp;&nbsp;✓ | `of`&nbsp;&nbsp;○ |
-| **non qualificato · non-FIFA**      |  `en` &nbsp;&nbsp;✓ | `on`&nbsp;&nbsp;○ |
+| **non qualificato · FIFA**          |  `ef` &nbsp;&nbsp;○ | `of`&nbsp;&nbsp;○ |
+| **non qualificato · non-FIFA**      |  `en` &nbsp;&nbsp;○ | `on`&nbsp;&nbsp;○ |
 
 ✓ attivo per impostazione predefinita · ○ disattivo per impostazione predefinita
 

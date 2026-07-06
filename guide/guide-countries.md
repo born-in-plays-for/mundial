@@ -90,8 +90,8 @@ The filter matrix mirrors the sidebar layout — two columns (exporter / non-exp
 |---|:---:|:---:|
 | **qualified · imports**        | `qie`&nbsp;&nbsp;✓  | `qi`&nbsp;&nbsp;✓ |
 | **qualified · no imports**     |  `qe` &nbsp;&nbsp;✓ |  `q` &nbsp;&nbsp;✓ |
-| **non-qualified · FIFA**       |  `ef` &nbsp;&nbsp;✓ | `of`&nbsp;&nbsp;○ |
-| **non-qualified · non-FIFA**   |  `en` &nbsp;&nbsp;✓ | `on`&nbsp;&nbsp;○ |
+| **non-qualified · FIFA**       |  `ef` &nbsp;&nbsp;○ | `of`&nbsp;&nbsp;○ |
+| **non-qualified · non-FIFA**   |  `en` &nbsp;&nbsp;○ | `on`&nbsp;&nbsp;○ |
 
 ✓ on by default · ○ off by default
 

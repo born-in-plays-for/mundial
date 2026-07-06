@@ -90,8 +90,8 @@ La matriz de filtro refleja el diseño del panel — dos columnas (exportador / 
 |---|:---:|:---:|
 | **clasificado · importaciones**     | `qie`&nbsp;&nbsp;✓  | `qi`&nbsp;&nbsp;✓ |
 | **clasificado · sin importaciones** |  `qe` &nbsp;&nbsp;✓ |  `q` &nbsp;&nbsp;✓ |
-| **no clasificado · FIFA**           |  `ef` &nbsp;&nbsp;✓ | `of`&nbsp;&nbsp;○ |
-| **no clasificado · no-FIFA**        |  `en` &nbsp;&nbsp;✓ | `on`&nbsp;&nbsp;○ |
+| **no clasificado · FIFA**           |  `ef` &nbsp;&nbsp;○ | `of`&nbsp;&nbsp;○ |
+| **no clasificado · no-FIFA**        |  `en` &nbsp;&nbsp;○ | `on`&nbsp;&nbsp;○ |
 
 ✓ activo por defecto · ○ inactivo por defecto
 
