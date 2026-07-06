@@ -22,20 +22,35 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   let _autoSwitchedFromMatch = false;
 
   const _sidebarHost = document.getElementById('sidebar-host');
-  const _sortLabel = html`<em>${T.sortLabels.action}</em>`;
+  const _sortLabel = html`<span class="cbs-header-label">${T.sortLabels.action}</span>`;
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
-  <div class="csb-body"><div class="csb-layout d-inline-flex align-items-stretch gap-2">
+  <div class="csb-body"><div class="csb-content d-flex flex-column gap-2">
+    <div class="csb-toolbar d-flex align-items-center gap-2">
+      ${alwaysOpen ? nothing : html`<button class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>`}
+      <div class="dropdown" id="zoom-conf-dropdown">
+        <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
+          <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> ${T.csbParams.confAll}</label></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="uefa"> ${T.csbParams.confNames.uefa}</label></li>
+          <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="afc"> ${T.csbParams.confNames.afc}</label></li>
+          <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="caf"> ${T.csbParams.confNames.caf}</label></li>
+          <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="conmebol"> ${T.csbParams.confNames.conmebol}</label></li>
+          <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="concacaf"> ${T.csbParams.confNames.concacaf}</label></li>
+          <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> ${T.csbParams.confNames.ofc}</label></li>
+        </ul>
+      </div>
+      <button id="csb-share" class="csb-icon-btn csb-share ms-auto" title="${T.csbParams.share}"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+      <button id="params-badge" class="csb-icon-btn csb-params-badge" title="${T.csbParams.badge}"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
+    </div>
+    <div class="csb-layout d-inline-flex align-items-stretch gap-2">
     <div class="csb-sort-stack d-flex flex-column gap-2">
       <table class="csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
-          <td class="csb-header text-center text-muted" title="${T.csbTips.action}">
-            ${alwaysOpen ? _sortLabel : html`<div class="d-flex align-items-center justify-content-between">
-              <button class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
-              <span>${_sortLabel}</span>
-              <span style="width: 18px;">&nbsp;</span>
-            </div>`}
-          </td>
+          <td class="csb-header text-muted" title="${T.csbTips.action}">${_sortLabel}</td>
         </tr>
         <tr>
           <td class="csb-sort-col text-muted">
@@ -68,10 +83,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <tr>
       <td colspan="2" class="csb-header text-center text-muted">
         <div class="d-flex align-items-center justify-content-between">
-          <button id="csb-share" class="csb-icon-btn csb-share" title="${T.csbParams.share}"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
-          <em>${T.filterLabels.action}</em>
+          <span class="cbs-header-label">${T.filterLabels.action}</span>
           <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
-          <button id="params-badge" class="csb-icon-btn csb-params-badge" title="${T.csbParams.badge}"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
         </div>
       </td>
       <td class="csb-col" data-col="exp" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name"></span></span></td>
@@ -102,26 +115,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     </tr>
     <tr>
       <td rowspan="2" class="csb-group" data-row="nq" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
-      <td class="csb-row" data-row="nqf" title="${T.csbTips.fifa}">
-        <div>
-          <div class="dropdown" id="zoom-conf-dropdown">
-            <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
-              <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="" checked> ${T.csbParams.confAll}</label></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="uefa"> ${T.csbParams.confNames.uefa}</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="afc"> ${T.csbParams.confNames.afc}</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="caf"> ${T.csbParams.confNames.caf}</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="conmebol"> ${T.csbParams.confNames.conmebol}</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="concacaf"> ${T.csbParams.confNames.concacaf}</label></li>
-              <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> ${T.csbParams.confNames.ofc}</label></li>
-            </ul>
-          </div>
-          <span class="elo-item"><span class="elo-name">FIFA</span></span>
-        </div>
-      </td>
+      <td class="csb-row" data-row="nqf" title="${T.csbTips.fifa}"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
       <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-ef"  checked></label></td>
       <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
@@ -131,6 +125,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
     </tr>
   </tbody></table>
+  </div>
+    <div class="csb-footer"><div id="elo-meta" class="elo-meta"></div></div>
   </div></div>
 </div>`, _sidebarHost);
 
@@ -288,7 +284,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _panel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
   _panel.querySelector('[data-row="qni"]' ).addEventListener('click', () => _filterToggle([_fltQE,  _fltQ]));
   _panel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));
-  _panel.querySelector('[data-row="nqf"]' ).addEventListener('click', e => { if (e.target.closest('#zoom-conf-dropdown')) return; _filterToggle([_fltEF, _fltOF]); });
+  _panel.querySelector('[data-row="nqf"]' ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF]));
   const _confDropdown = _panel.querySelector('#zoom-conf-dropdown');
   const _confRadios = _confDropdown?.querySelectorAll('input[data-conf]');
   const _syncConfRadio = () => { _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); }); };
@@ -559,7 +555,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _body.style.maxWidth = 'none';
     _body.style.width = 'max-content';
     document.documentElement.style.setProperty('--csb-w', _body.offsetWidth + 'px');
-    document.documentElement.style.setProperty('--csb-h', _panel.querySelector('.csb-layout').offsetHeight + 'px');
+    document.documentElement.style.setProperty('--csb-h', _panel.querySelector('.csb-content').offsetHeight + 'px');
     _body.style.maxWidth = '';
     _body.style.width = '';
     if (wasCollapsed) _el.classList.add('collapsed');
@@ -1003,7 +999,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     bootstrap.Toast.getOrCreateInstance(_shareToastEl, { delay: 2000 }).show();
   };
   _shareBtn?.addEventListener('click', async e => {
-    e.stopPropagation(); // harmless now that [data-col="all"] lives on the "all" <em> itself (a sibling, not an ancestor) — kept defensively in case that scoping ever changes back
+    e.stopPropagation(); // harmless now that [data-col="all"] lives on the "all" <span class="cbs-header-label"> itself (a sibling, not an ancestor) — kept defensively in case that scoping ever changes back
     const sp = new URLSearchParams();
     _buildStateLines(new URLSearchParams()).implied.forEach(({ param }) => {
       const eq = param.indexOf('=');

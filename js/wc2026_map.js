@@ -113,11 +113,11 @@ _wm.onZoom = e => {
 };
 
 g.append('path').datum({type:'Sphere'})
-  .attr('d', path).attr('fill','#d8d0e8').attr('stroke','#b4a8cc').attr('stroke-width',.5)
+  .attr('d', path).attr('fill','#f0e6d2').attr('stroke','#cbb28c').attr('stroke-width',.5)
   .attr('cursor', 'default')
   .on('mousemove', () => { hideTip(); });
 g.append('path').datum(d3.geoGraticule()())
-  .attr('d', path).attr('fill','none').attr('stroke','#ccc4dc').attr('stroke-width',.25);
+  .attr('d', path).attr('fill','none').attr('stroke','#e3d3b8').attr('stroke-width',.25);
 
 // QUALIFIED_NAMES, QUALIFIED_BY_NAME imported from qualified.js
 

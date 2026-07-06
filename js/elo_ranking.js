@@ -201,7 +201,12 @@ customElements.define('elo-ranking', EloRanking);
 const _sourceHtml = (data) => {
   if (!data) return '';
   const parts = [];
-  if (data.source) parts.push(`<a href="https://${data.source}/" target="_blank" rel="noopener" class="sub">${data.source}</a>`);
+  if (data.source) {
+    // data.source is sometimes host+path (e.g. "data.worldbank.org/indicator/SP.POP.TOTL")
+    // rather than a bare host (e.g. "eloratings.net") — link text shows the domain only.
+    const host = new URL(`https://${data.source}`).hostname;
+    parts.push(`<a href="https://${data.source}/" target="_blank" rel="noopener" class="sub">${host}</a>`);
+  }
   if (data.updated) {
     const d = new Date(data.updated + 'T00:00:00');
     const fmt = isNaN(d) ? data.updated : d.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });

@@ -27,7 +27,7 @@ body { background: #f5f2ec; color: var(--color-default); }
 /* Elo ranking flow (elo-) — used by <elo-ranking> web component on multiple pages */
 .elo-header { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
 .elo-title { font-size: 14px; font-weight: 500; }
-.elo-meta { font-size: 10px; color: var(--text-muted); }
+.elo-meta { font-size: 10px; color: var(--text-muted); overflow-x: hidden; white-space: nowrap;}
 .elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 /* Row wrapper — the <ul>'s actual flex-wrap children (see js/elo_ranking.js's EloRanking.show()).
    Each <li> holds one pill (.elo-row) or, in match-display mode, two fixture opponents

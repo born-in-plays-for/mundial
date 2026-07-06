@@ -3,12 +3,20 @@
  * #control-sidebar     — conteneur principal (grid dans #page-header)
  * .csb-toggle           — bouton ‹/› latéral
  * .csb-body             — corps collapsible
+ * .csb-content          — flex column: toolbar + layout + footer, stacked, gap between them
+ * .csb-toolbar          — full-width row above .csb-layout: collapse, share, confederation
+ *                         dropdown, params badge — all four icon controls in one place
+ * .csb-footer           — full-width row below .csb-layout, hosts #elo-meta
  * .csb-layout           — flex row: sort-stack + filter table, side by side (border.html's
  *                         "independent tables + flex" fix — three separate <table>s instead
  *                         of one table with cross-cutting rowspans, which is what caused the
  *                         double-border misalignment. See border.html / control-sidebar-test.html.)
  * .csb-sort-stack       — flex column: sort table + display table, stacked
- * .csb-table            — shared look (border-collapse/font-size) for all three tables
+ * .csb-table            — shared look (border-collapse) for all three tables. Base font-size
+ *                         (11px) lives on #control-sidebar and most descendants just inherit
+ *                         it — but a few (global.css's .elo-name, Bootstrap's .btn and
+ *                         .dropdown-menu) set their own font-size elsewhere and need an
+ *                         explicit #control-sidebar-scoped re-declaration to fall in line
  * .csb-header            — cellule d'en-tête (tri / sélection)
  * .csb-sort-col         — colonne tri (gauche)
  * .csb-sort-list        — flex column des options de tri
@@ -20,8 +28,8 @@
  * .csb-stage-carousel   — carrousel Bootstrap (Qualifiés → … → Vainqueur)
  * .csb-row              — sous-ligne de groupe
  * .csb-check            — label checkbox □/▣
- * .csb-collapse         — bouton › repli
- * .csb-share            — bouton de partage (copie une URL de config)
+ * .csb-collapse         — bouton › repli (dans .csb-toolbar)
+ * .csb-share            — bouton de partage (copie une URL de config, dans .csb-toolbar)
  */
 
 /* ── Container ─────────────────────────────────────────────────────────── */
@@ -29,6 +37,7 @@
 #control-sidebar {
   display: flex; flex-direction: row-reverse; align-items: flex-start;
   position: relative;
+  font-size: 11px;
   /* Same gap as .csb-layout/.csb-sort-stack between the sort-stack and filter
      table — between .csb-body's content and .csb-toggle, when the toggle exists
      (alwaysOpen mode renders no .csb-toggle at all, so this is simply unused then). */
@@ -49,8 +58,12 @@
 
 #control-sidebar .csb-toggle {
   width: 16px; min-width: 16px; padding: 0;
-  background: var(--bg-hover); border: 1px solid var(--border);
-  cursor: pointer; font-size: 10px; color: var(--text-muted);
+  background: var(--bg-hover);
+  /* Removing the border earlier exposed the browser's native <button> chrome
+     (appearance:button's default outset border, themed per OS/browser — the "ugly
+     border") since nothing was left to override it. border:none neutralizes that. */
+  border: none; appearance: none;
+  cursor: pointer; color: var(--text-muted);
   align-self: stretch;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -58,6 +71,15 @@
   user-select: none; -webkit-user-select: none;
 }
 #control-sidebar .csb-toggle:hover { background: var(--bg-hover); color: #333; }
+
+/* Browser default focus ring (bright blue) was harmless back when these buttons had their
+   own border to blend into — now that borders are gone (.csb-toggle, .csb-icon-btn,
+   .csb-conf-btn), it stands out on its own. Replace with something in the sidebar's own
+   muted palette, kept inset so it doesn't add layout width. */
+#control-sidebar button:focus-visible {
+  outline: 1px solid var(--border-strong);
+  outline-offset: -1px;
+}
 
 /* ── Body ──────────────────────────────────────────────────────────────── */
 
@@ -68,14 +90,69 @@
   background: var(--fixed-element-bg);
 }
 
+/* Stacks the toolbar above .csb-layout. Block-level (not inline-flex like .csb-layout)
+   so it stretches to the body's full measured width — see measureControlSidebar() in
+   control_sidebar.js, which now reads this element's offsetHeight (toolbar + gap +
+   .csb-layout) instead of .csb-layout's alone. */
+#control-sidebar .csb-content {
+  width: 100%;
+}
+
+/* Houses .csb-collapse/#zoom-conf-dropdown/.csb-share/.csb-params-badge — see .csb-icon-btn
+   and the confederation-dropdown rules further down for their own styling. Same background
+   as .csb-table's cells, so it reads as one of the sidebar's top-level blocks rather than
+   bare on .csb-body's background. */
+#control-sidebar .csb-toolbar {
+  width: 100%;
+  padding: 2px 6px;
+  background: var(--bg-hover);
+}
+
+/* Hosts #elo-meta (source/date attribution) — .sub itself has no padding, so it comes
+   from here instead, same recipe as .csb-toolbar. No gap above it though — cancel
+   .csb-content's gap-2 (0.5rem) with a matching negative margin, .csb-toolbar/.csb-layout
+   keep theirs. */
+#control-sidebar .csb-footer {
+  width: 100%;
+  padding: 2px 0;
+  margin: -0.5rem 0 0 0;
+  /* #elo-meta is empty at initSidebar()'s own measureControlSidebar() call — data hasn't
+     loaded yet — so it contributes 0 height there. Reserving one line's worth up front
+     means that first measurement already gets the right --csb-h, instead of a second,
+     visible resize once the real text arrives and pushes .csb-toggle taller. */
+  min-height: 22px;
+}
+
 /* ── Table ─────────────────────────────────────────────────────────────── */
 
 #control-sidebar .csb-table {
-  border-collapse: collapse; font-size: 11px; margin: 0;
+  border-collapse: collapse; margin: 0;
   --sort-extra-pad: 26px;
 }
 #control-sidebar .csb-table td { padding: 2px 6px; background: var(--bg-hover); }
-#control-sidebar .elo-item { font-size: 11px; padding: 0 0.2rem; gap: 2px; border-radius: 0.375rem; }
+
+/* Strip each table's outer perimeter, keep Bootstrap's .table-bordered grid lines between
+   cells. With border-collapse, Bootstrap's top/bottom border-width lives on the <tr> and
+   left/right on the <td> — the override has to land on that same box, since a collapsed
+   border is resolved by comparing widths across all contributing boxes (widest wins), not
+   by normal cascade specificity alone. */
+#control-sidebar .csb-table tr:first-child { border-top: 0; }
+#control-sidebar .csb-table tr:last-child  { border-bottom: 0; }
+#control-sidebar .csb-table tr > td:last-child { border-right: 0; }
+/* Left edge: .csb-sort-table/.csb-display-table are single-column, so every cell is the
+   left edge. .csb-filter-table's left column only ever has a cell — via rowspan/colspan —
+   on its genuine edge rows (header/q/nq); qni/nqn have no cell of their own in that column
+   (covered by the rowspan above), so their own first cell is really the *second* visual
+   column and must keep its left border (an inner divider, not the perimeter). */
+#control-sidebar .csb-sort-table td,
+#control-sidebar .csb-display-table td,
+#control-sidebar .csb-filter-table td[rowspan],
+#control-sidebar .csb-filter-table td[colspan] {
+  border-left: 0;
+}
+
+#control-sidebar .elo-item { padding: 0 0.2rem; gap: 2px; border-radius: 0.375rem; }
+/* global.css's .elo-name sets its own 12px, unscoped — needs beating back down to 11px here */
 #control-sidebar .elo-name { font-size: 11px; }
 @media (max-width: 400px) {
   #control-sidebar .csb-table { --sort-extra-pad: 20px; }
@@ -135,12 +212,6 @@
 
 /* ── Sort column ───────────────────────────────────────────────────────── */
 
-#control-sidebar .csb-header {
-  /* Containing block for .csb-collapse (position:absolute) — the "tri" td's own
-     collapse button, alone in its cell with no flex wrapper. .csb-share/.csb-params-badge
-     no longer need this: they're normal flex items in the data-col="all" cell now. */
-  position: relative;
-}
 #control-sidebar .csb-header[data-col] { cursor: pointer; }
 #control-sidebar .csb-table td.csb-sort-col {
   padding: 0 var(--sort-extra-pad);
@@ -154,17 +225,28 @@
    normal flow + text-align:center, with the shared .csb-table td padding for
    breathing room from the cell border. */
 #control-sidebar .csb-table td.csb-toggle-col { text-align: center; }
-#control-sidebar .csb-sort-list::after {
-  content: '}'; position: absolute; right: calc((17px - var(--sort-extra-pad)) / 2 - 17px); top: 0;
-  height: 40%; display: flex; align-items: center;
-  font-size: 1.8em; font-weight: 200; color: #bbb;
-}
 #control-sidebar .csb-sort-item { cursor: pointer; padding: 0; }
-#control-sidebar .csb-sort-item:first-of-type { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
-#control-sidebar .csb-sort-item:nth-child(n+3 of .csb-sort-item) { color: #999; }
+/* #control-sidebar .csb-sort-item:first-of-type { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }*/
+/* Groups elo+pop visually (was a '}' glyph via .csb-sort-list::after) — a plain vertical
+   line instead, centered in the --sort-extra-pad gutter rather than flush against the
+   item's own edge. One element on .csb-sort-list itself (not per-item) so there's no seam:
+   two independently-positioned 1px borders meeting at a flex-item boundary can show a
+   hairline gap from sub-pixel rounding. height:50% assumes exactly 4 equal-flex-grow items
+   with elo+pop as the first two — update if that count ever changes. */
+#control-sidebar .csb-sort-list::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  height: calc(50% - 4px);
+  right: calc(var(--sort-extra-pad) / -2);
+  border-right: 1px solid #999;
+}
 #control-sidebar .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
 #control-sidebar .csb-sort-item--disabled { opacity: 0.3; pointer-events: none; }
-
+.cbs-header-label {
+  font-style: italic;
+  color:#999;
+}
 /* ── Team/match display switch (bottom of the sort column) ───────────────
    Not a sort criterion (see control_sidebar.js's _displayMode) — a persistent two-state
    switch, always visible, that decides whether rows are one team each or grouped fixture
@@ -177,10 +259,12 @@
    back when both lived in the same table (see .csb-layout: they're now two
    independent tables, stacked via flex, each free to size to its own content). */
 #control-sidebar .csb-display-toggle { white-space: nowrap; }
-#control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0 3px; font-size: 11px; color: #999; }
-#control-sidebar .csb-display-toggle .btn-check:checked + .btn {
+/* Bootstrap's .btn sets its own font-size (its full-size default) — needs an explicit
+   re-declaration here, same as .elo-name above, to match the rest of the sort column. */
+#control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0 3px; font-size: 11px; }
+/* #control-sidebar .csb-display-toggle .btn-check:checked + .btn {
   color: rgba(33, 37, 41, 0.75);
-}
+} */
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
 
@@ -239,13 +323,12 @@
 #control-sidebar .csb-icon-btn img { width: 100%; height: 100%; }
 
 /* ── Share button (copies a URL reproducing the current sidebar config) ──
-   Normal flex item (see the data-col="all" cell's d-flex wrapper) — nothing
-   to add beyond the shared recipe. */
+   Normal flex item of .csb-toolbar — nothing to add beyond the shared recipe. */
 
 /* ── URL params badge ──────────────────────────────────────────────────── */
 
-/* Normal flex item (see the data-col="all" cell's d-flex wrapper) — round,
-   and stays highlighted while its explanation panel is open. */
+/* Normal flex item of .csb-toolbar — round, and stays highlighted while its
+   explanation panel is open. */
 #control-sidebar .csb-params-badge {
   border-radius: 50%; user-select: none; -webkit-user-select: none;
 }
@@ -267,13 +350,12 @@
 
 /* ── Confederation dropdown ─────────────────────────────────────────────── */
 
-/* Icon + "FIFA" label as a flex row, clustered together at the cell's right edge
-   (matching the import./non-imp. rows above) — no longer independently pinned to
-   a fixed right offset, so this row's icon no longer shares a vertical line with
-   .csb-share/.csb-params-badge two rows up. */
-.csb-table [data-row="nqf"] > div { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+/* Lives in .csb-toolbar now (flex item, normal flow) — the "nqf" row itself only
+   shows the plain "FIFA" label; picking a confederation is a global zoom action,
+   not scoped to that one filter row. */
 #zoom-conf-dropdown { display: inline-flex; z-index: 2000; }
-#zoom-conf-dropdown .dropdown-menu { font-size: inherit; }
+/* Bootstrap's .dropdown-menu sets its own font-size — same fix as .elo-name/.btn above */
+#zoom-conf-dropdown .dropdown-menu { font-size: 11px; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
 .csb-conf-btn:hover { opacity: 1; }
 .csb-conf-btn.dropdown-toggle { flex-direction: row-reverse; }

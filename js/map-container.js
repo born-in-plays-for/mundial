@@ -16,8 +16,8 @@
 //   .onZoom     — optional callback(e) for extra page-level zoom work
 
 // ── Shared colour scale ───────────────────────────────────────────────────────
-export const RATIO_MAX     = 66;
-export const PALETTE       = d3.interpolateRgbBasis(['#f3e8f7','#ddb8ea','#c285d8','#a354c2','#7b2d8b','#581f65','#361240']);
+export const RATIO_MAX     = 69;
+export const PALETTE       = d3.interpolateRgbBasis(['#f5ecdf','#e8d2b0','#d3ab74','#b8823f','#8f5a2a','#6b3f1f','#3f2414']);
 export const normalize     = r => (r / RATIO_MAX) ** 2;
 export const color         = r => PALETTE(Math.max(0, Math.min(1, normalize(r))));
 export const OUTLIER_COLOR = '#000';

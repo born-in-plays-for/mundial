@@ -274,7 +274,7 @@ The page uses two fixed elements:
 
 ### Legend
 The legend (`#legend`) lives as the third child of `#page-heading-sub`, bottom-aligned via `mt-auto` on a `d-flex flex-column h-100` wrapper.
-- **Gradient direction**: `linear-gradient(to left, …)` — **high values (dark) on the left, 0 on the right**. Ticks read: `66 · 55 · 35 · 15 · 0`.
+- **Gradient direction**: `linear-gradient(to left, …)` — **high values (dark) on the left, 0 on the right**. Ticks read: `69 · 52 · 35 · 17 · 0` — the top tick is `RATIO_MAX` (`js/map-container.js`), the domain max for `normalize()`/`color()`; the other three are just `RATIO_MAX × 3/4 / 1/2 / 1/4`, illustrative waypoints, not tied to any specific country. Both the tick markup (`wc2026_map.html`'s `#legend-ticks`) and `RATIO_MAX` are hardcoded and must be bumped together whenever the 2nd-highest `ratio` (export + native count, after France's outlier) grows past the current `RATIO_MAX` — otherwise that country's color silently clamps to the scale's darkest value instead of reflecting its real position.
 - **Outlier**: France (id=250) is off-scale, rendered black (`#000`), shown as a standalone dot to the left of the gradient bar.
 - On narrow screens (`max-width: 767.98px`), the bar and ticks shrink to 90px.
 
