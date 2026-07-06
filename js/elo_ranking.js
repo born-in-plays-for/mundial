@@ -147,6 +147,9 @@ class EloRanking extends HTMLElement {
         const sep = document.createElement('span');
         const score = cur._pairScore; // { home, away, penalties, penaltyHome, penaltyAway } — see sortAndFilter's _pairScore
         const dateLabel = _fixtureDateLabel(cur._pairDate); // "day|hour" — see sortAndFilter's _pairDate
+        // Not decided yet — blur the underline (css/global.css), the same "Schrödinger's team"
+        // treatment .elo-item--pending gives a team pill's border (see taxonomy.css).
+        if (!score) row.classList.add('elo-pair--pending');
         if (score) {
           sep.className = 'elo-pair-sep elo-pair-sep--score';
           // penaltyHome/Away (the actual shootout tally, e.g. "4-3") isn't published by

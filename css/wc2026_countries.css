@@ -1,2 +1,3 @@
 /* countries page fixed header — auth-bar _offsetSibling() sets top:32px automatically */
 #countries-header { position: fixed; left: 0; right: 0; z-index: 100; background: var(--fixed-element-bg); }
+#main-content { overflow-x: hidden; }

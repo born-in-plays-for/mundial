@@ -39,9 +39,26 @@ body { background: #f5f2ec; color: var(--color-default); }
    the outer pill's own rounded corner instead of stopping in a hard right angle. */
 .elo-list > li.elo-pair {
   gap: 4px;
-  border-bottom: 1.5px solid darkslategray;
+  border-bottom: 1.5px solid rgb(166, 126, 24);
   border-radius: 0 0 10px 10px;
   padding-bottom: 2px;
+}
+/* Fixture not decided yet — blur the underline instead of drawing it solid, the same
+   "Schrödinger's team" treatment .elo-item--pending gives a pill's border (taxonomy.css):
+   the real border is hidden and a duplicate on ::after is blurred in its place, rather than
+   blurring the whole row (which would make the pills themselves hard to read). */
+.elo-list > li.elo-pair--pending {
+  border-bottom-color: transparent;
+  position: relative;
+}
+.elo-list > li.elo-pair--pending::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-bottom: 1.5px solid goldenrod;
+  border-radius: inherit;
+  /* filter: blur(1px); */
+  pointer-events: none;
 }
 /* Undecided fixture: a single line (kickoff "day month|hour", or a plain dash with no date at
    all). Decided fixture (.elo-pair-sep--score): two stacked lines, kickoff day|hour above the
