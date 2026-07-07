@@ -12,7 +12,10 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 .color-exp { color: var(--arc-export-color); }
 .color-imp { color: var(--arc-import-color); }
 
-/* page header — grid so both children share row 1/col 1 and the row height = max(quote, sidebar) */
+/* page header — #sidebar-host is position:absolute (see wc2026_map.html), taken out of the
+   grid flow so it can overlap the map when collapsed instead of pushing it down. That leaves
+   #page-heading-sub as the grid's only real item; its own height drives #page-header's — see
+   js/wc2026_map.js's _computeHeaderHeight()/--page-header-h. */
 #page-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--fixed-element-bg); padding: 0; display: grid; }
 #page-header ~ * { user-select: none; -webkit-user-select: none; }
 #page-heading-sub { grid-row: 1; grid-column: 1; padding: 0.4rem 1.5rem; padding-left: var(--vert-gutter); padding-right: var(--vert-gutter); align-self: stretch; margin: 0 !important; position: relative; display: flex; flex-direction: column; }
@@ -27,7 +30,12 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 .pq-prev { position: absolute; top: 0; left: 0; transform: translateX(-100%); }
 .pq-cur { position: relative; }
 .pq-icons { position: relative; z-index: 2; }
-.pq-dots { display: flex; gap: 5px; margin-top: auto; padding-top: 4px; user-select: none; }
+/* margin-top:auto is the natural-height default (no extra push); js/wc2026_map.js's
+   _computeHeaderHeight() overrides it inline with a definite px value whenever the sidebar is
+   expanded and taller than the quote, so this row sits flush against the map instead of a gap.
+   0.4s to match #map-container's own top transition (map-container.css) — same duration so the
+   dots and the map move in step instead of one lagging the other. */
+.pq-dots { display: flex; gap: 5px; margin-top: auto; padding-top: 4px; user-select: none; transition: margin-top 0.4s ease; }
 .pq-dot { font-size: 12px; line-height: 1; color: #ccc; transition: color .25s; cursor: pointer; font-weight: bolder;}
 .pq-dot.active { color: #888; }
 

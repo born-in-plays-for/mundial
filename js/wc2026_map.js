@@ -441,17 +441,39 @@ const _eloMain = document.querySelector('#tab-elo elo-ranking');
 const _eloMetaPanel = FOOTER_PANELS.eloMeta ? document.getElementById('elo-meta-panel') : null;
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
+const _pageHeadingSub = document.getElementById('page-heading-sub');
 // #sidebar-host is position:absolute (see wc2026_map.html) so it never affects #page-header's
 // own (quote-only) box — when collapsed it just overlaps the map below, as intended. When
 // expanded, the map still needs to make room for it, so the target height is computed here
 // as max(quote bottom, sidebar bottom) rather than left to grid auto-sizing.
 const _computeHeaderHeight = () => {
   if (!_pageHeader) return 0;
-  const quoteBottom = _pageHeader.getBoundingClientRect().bottom;
+  // Natural (unpushed) total header height, reconstructed from .pq-wrap's own bottom — an
+  // anchor .pq-dots' margin push (below) never touches — rather than measured off #page-header
+  // itself. An earlier version reset .pq-dots' margin to '' to get this same "natural" read off
+  // #page-header, then immediately overwrote it with the real value; that reset-then-set pair,
+  // separated by a forced-layout read, retargets/kills the CSS transition on .pq-dots (it only
+  // ever sees a single write per call now, so the transition runs cleanly).
+  const dotsHeight = _pqDotsEl.offsetHeight;
+  const paddingBottom = parseFloat(getComputedStyle(_pageHeadingSub).paddingBottom) || 0;
+  const quoteBottom = _pqWrap.getBoundingClientRect().bottom + dotsHeight + paddingBottom;
   const csb = document.getElementById('control-sidebar');
-  if (!csb || csb.classList.contains('collapsed')) return quoteBottom;
-  const csbH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--csb-h')) || 0;
-  return Math.max(quoteBottom, _pageHeader.getBoundingClientRect().top + csbH);
+  let target = quoteBottom;
+  if (csb && !csb.classList.contains('collapsed')) {
+    const csbH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--csb-h')) || 0;
+    target = Math.max(quoteBottom, _pageHeader.getBoundingClientRect().top + csbH);
+  }
+  // Push .pq-dots down to sit flush against the (possibly lower, sidebar-expanded) map instead
+  // of leaving a gap. Tried stretching #page-heading-sub itself first (via height/min-height,
+  // relying on .pq-dots' CSS margin-top:auto to consume the free space) — grid's "automatic
+  // minimum size" for a stretched item with visible overflow made the box render *taller* than
+  // the value actually set (~32px overshoot, reproduced with min-height and with height alike).
+  // Overriding the margin directly sidesteps grid item sizing entirely. Always a definite px
+  // value (never '' / the CSS auto default) — transitioning to/from auto doesn't animate (see
+  // .pq-dots' own transition in wc2026_map.css), so this needs a real number even at 0.
+  const extra = Math.max(0, target - quoteBottom);
+  _pqDotsEl.style.marginTop = extra + 'px';
+  return target;
 };
 if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
 const _isFullyVisible = el => {
