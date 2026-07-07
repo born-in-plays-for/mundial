@@ -94,9 +94,16 @@
 /* Stacks the toolbar above .csb-layout. Block-level (not inline-flex like .csb-layout)
    so it stretches to the body's full measured width — see measureControlSidebar() in
    control_sidebar.js, which now reads this element's offsetHeight (toolbar + gap +
-   .csb-layout) instead of .csb-layout's alone. */
+   .csb-layout) instead of .csb-layout's alone.
+   padding-block: .25rem adds the "space above/below .csb-body" gap indirectly rather than
+   via margin on .csb-body itself — .csb-body's own height (above) and .csb-toggle's
+   min-height are both driven by --csb-h, which is exactly this element's measured
+   offsetHeight, padding included. So the extra .5rem here automatically grows *both* boxes
+   by the same amount, with .csb-content's real content sitting centered within it (equal
+   padding top/bottom) — no separate height recalculation needed anywhere else. */
 #control-sidebar .csb-content {
   width: 100%;
+  padding-block: .25rem;
 }
 
 /* Houses .csb-collapse/#zoom-conf-dropdown/.csb-share/.csb-params-badge — see .csb-icon-btn
