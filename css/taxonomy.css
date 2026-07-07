@@ -49,17 +49,22 @@
    vertically, so a mismatched height here silently clips whatever falls outside the tile
    (which is exactly how an earlier 26px version lost its entire bottom border). Update this if
    the pill's own box model changes. */
-/* border-width here needs .elo-item--qualified in the selector too — plain .elo-item--pending
-   alone has lower specificity than the 1.5px rule above and would silently lose to it. */
-.taxonomy .elo-item--qualified.elo-item--pending {
+/* .elo-item--pending is a no-op outside match-display — no border tweak, no dimmed name,
+   nothing distinguishes a pending team from a decided one in team-display, exactly as if the
+   class weren't applied at all. Every effect below is scoped under .elo-viz--match
+   (js/elo_ranking.js's `set displayMode`, driven by control_sidebar.js's
+   csb-display-match/csb-display-team radios) for that reason — "pending" is a fixture-pairing
+   concept (this specific matchup isn't decided), meaningless without a fixture to pair against. */
+.elo-viz--match .elo-item--qualified.elo-item--pending {
   border-width: 1px;
+  border-color: #888;
 }
-.taxonomy .elo-item--pending {
+.elo-viz--match .elo-item--pending {
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='29'%3E%3Cmask id='m'%3E%3Crect width='12' height='29' fill='%23fff'/%3E%3Ccircle cx='0' cy='0' r='2.5' fill='%23000'/%3E%3Ccircle cx='12' cy='0' r='2.5' fill='%23000'/%3E%3Ccircle cx='6' cy='0' r='2.5' fill='%23fff'/%3E%3Ccircle cx='0' cy='29' r='2.5' fill='%23000'/%3E%3Ccircle cx='12' cy='29' r='2.5' fill='%23000'/%3E%3Ccircle cx='6' cy='29' r='2.5' fill='%23fff'/%3E%3C/mask%3E%3Crect width='12' height='29' fill='%23fff' mask='url(%23m)'/%3E%3C/svg%3E");
   mask-repeat: repeat-x;
   mask-size: 12px 29px;
 }
-.taxonomy .elo-item--pending .elo-name { color: var(--light-text); }
+.elo-viz--match .elo-item--pending .elo-name { color: var(--light-text); }
 
 /* Non-FIFA: light text */
 .taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
