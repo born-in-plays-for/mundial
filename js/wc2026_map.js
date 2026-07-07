@@ -530,24 +530,25 @@ const _syncMapHeight = () => {
     _syncPaddingTop();
     const svgRect = svgEl.getBoundingClientRect();
     const mcRect  = _mc.getBoundingClientRect();
-    const fromRight  = mcRect.right  - svgRect.right;
+    const fromLeft   = svgRect.left  - mcRect.left;
     const fromBottom = mcRect.bottom - svgRect.bottom;
     const resetH = _zoomResetBtn?.offsetHeight ?? 26;
     const spanH  = _zoomSpanBtn?.offsetHeight  ?? 26;
     const themeH = _themeToggleBtn?.offsetHeight ?? 26;
-    const totalH = resetH + 4 + spanH + 4 + themeH;
-    const midTop = Math.round((svgRect.top - mcRect.top) + (svgRect.height - totalH) / 2);
-    if (_zoomResetBtn) {
-      _zoomResetBtn.style.right = (fromRight + 8) + 'px';
-      _zoomResetBtn.style.top   = midTop + 'px';
+    // Stacked bottom-up in the SVG's bottom-left corner (8px inset), so reading top-to-bottom
+    // still goes reset → span → theme, same order the right-side vertically-centered stack
+    // used before.
+    if (_themeToggleBtn) {
+      _themeToggleBtn.style.left   = (fromLeft + 8) + 'px';
+      _themeToggleBtn.style.bottom = (fromBottom + 8) + 'px';
     }
     if (_zoomSpanBtn) {
-      _zoomSpanBtn.style.right = (fromRight + 8) + 'px';
-      _zoomSpanBtn.style.top   = (midTop + resetH + 4) + 'px';
+      _zoomSpanBtn.style.left   = (fromLeft + 8) + 'px';
+      _zoomSpanBtn.style.bottom = (fromBottom + 8 + themeH + 4) + 'px';
     }
-    if (_themeToggleBtn) {
-      _themeToggleBtn.style.right = (fromRight + 8) + 'px';
-      _themeToggleBtn.style.top   = (midTop + resetH + 4 + spanH + 4) + 'px';
+    if (_zoomResetBtn) {
+      _zoomResetBtn.style.left   = (fromLeft + 8) + 'px';
+      _zoomResetBtn.style.bottom = (fromBottom + 8 + themeH + 4 + spanH + 4) + 'px';
     }
     if (_zoomHintEl) {
       _zoomHintEl.style.left      = (svgRect.right - mcRect.left) + 'px';
