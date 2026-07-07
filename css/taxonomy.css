@@ -30,12 +30,34 @@
 .taxonomy .elo-item--knocked-out .elo-name { color: var(--light-text); }
 
 /* Schrödinger's team: fixture for the currently-viewed stage hasn't been played yet — could
-   still go either way. No border treatment — just border-color:transparent, i.e. the pill's
-   own normal border simply isn't drawn — and a dimmed name below. (Several wavy-border attempts
-   — feTurbulence, feImage/feTile, border-image — were tried and dropped here; see git history
-   if picking this back up.) */
+   still go either way. Wavy top AND bottom edges (sides keep the pill's own normal border
+   untouched) — a mask directly on the pill itself, not a separate border/pseudo-element (the
+   feTurbulence/feImage/border-image attempts tried earlier all drew a duplicate border shape
+   instead; see git history).
+   A single repeating-radial-gradient mask can do ONE edge (add-composited pair of huge-radius
+   circles, nearly flat except right at that edge — tried and kept simple for bottom-only
+   earlier). Combining top+bottom that way doesn't work: CSS mask-composite only folds layers
+   left-to-right (no parenthesized grouping), so there's no ordering of composite keywords that
+   correctly expresses "(top pair unioned) intersected with (bottom pair unioned)" — every
+   combination tried either erased one edge's notches or destroyed the whole shape. An SVG tile
+   with its own internal <mask> sidesteps that entirely: circles are plain black/white shapes
+   resolved once, correctly, inside the image itself, and the *result* (opaque where kept,
+   transparent where notched) is what CSS then tiles as a normal luminance mask — no composite
+   algebra needed at the CSS layer at all. 12×29 matches the tile period to this pill's own
+   *rendered* height (29px, measured — not the 20px flag + 3px×2 padding = 26px it naively adds
+   up to; borders/line-height push it a bit taller) — mask-repeat: repeat-x doesn't repeat
+   vertically, so a mismatched height here silently clips whatever falls outside the tile
+   (which is exactly how an earlier 26px version lost its entire bottom border). Update this if
+   the pill's own box model changes. */
+/* border-width here needs .elo-item--qualified in the selector too — plain .elo-item--pending
+   alone has lower specificity than the 1.5px rule above and would silently lose to it. */
+.taxonomy .elo-item--qualified.elo-item--pending {
+  border-width: 1px;
+}
 .taxonomy .elo-item--pending {
-  border-color: transparent;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='29'%3E%3Cmask id='m'%3E%3Crect width='12' height='29' fill='%23fff'/%3E%3Ccircle cx='0' cy='0' r='2.5' fill='%23000'/%3E%3Ccircle cx='12' cy='0' r='2.5' fill='%23000'/%3E%3Ccircle cx='6' cy='0' r='2.5' fill='%23fff'/%3E%3Ccircle cx='0' cy='29' r='2.5' fill='%23000'/%3E%3Ccircle cx='12' cy='29' r='2.5' fill='%23000'/%3E%3Ccircle cx='6' cy='29' r='2.5' fill='%23fff'/%3E%3C/mask%3E%3Crect width='12' height='29' fill='%23fff' mask='url(%23m)'/%3E%3C/svg%3E");
+  mask-repeat: repeat-x;
+  mask-size: 12px 29px;
 }
 .taxonomy .elo-item--pending .elo-name { color: var(--light-text); }
 
@@ -47,7 +69,7 @@
    are set inline per pill by pillStyle in elo_ranking.js, proportional to each group's share of
    the country's total player pool. Excludes :hover/--active so those states' own background
    still shows through. */
-.taxonomy .elo-item:not(.elo-item--active):not(:hover) {
+.taxonomy .elo-item {
   background: linear-gradient(to right,
     var(--imp-color, #fff) 0%,
     #fff var(--imp-pivot, 0%),
