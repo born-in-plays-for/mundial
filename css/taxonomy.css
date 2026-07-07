@@ -114,14 +114,14 @@
    an unwanted side effect (::after is generated content inside .elo-name itself, unaffected by
    the parent's flex-direction: row-reverse). Swapping to ::before with a mirrored margin here
    keeps it on the outer side instead, matching the right team's (unreversed) dot. */
-.elo-list > li.elo-pair > .elo-item:first-child .elo-name::after { content: none; }
-.elo-list > li.elo-pair > .elo-item--exp:first-child:not(.elo-item--imp) .elo-name::before {
+.elo-pairs > li.elo-pair > .elo-item:first-child .elo-name::after { content: none; }
+.elo-pairs > li.elo-pair > .elo-item--exp:first-child:not(.elo-item--imp) .elo-name::before {
   content: '▶'; color: var(--exp-accent); font-size: 14px; margin-right: 2px;
 }
-.elo-list > li.elo-pair > .elo-item--imp:first-child:not(.elo-item--exp) .elo-name::before {
+.elo-pairs > li.elo-pair > .elo-item--imp:first-child:not(.elo-item--exp) .elo-name::before {
   content: '◀'; color: var(--imp-accent); font-size: 14px; margin-right: 2px;
 }
-.elo-list > li.elo-pair > .elo-item--exp.elo-item--imp:first-child .elo-name::before {
+.elo-pairs > li.elo-pair > .elo-item--exp.elo-item--imp:first-child .elo-name::before {
   content: '◀▶'; font-size: 14px; margin-right: 2px;
   background: linear-gradient(90deg, var(--imp-accent) 45%, var(--exp-accent) 55%);
   -webkit-background-clip: text; background-clip: text; color: transparent;

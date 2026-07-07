@@ -64,8 +64,9 @@ class EloRanking extends HTMLElement {
 
   // #itemById holds the reusable pill <span> per country — stable identity across renders,
   // so FLIP position animation and click listeners survive re-sorting/re-grouping. The <ul>'s
-  // direct children are instead per-render <li> "row" wrappers (.elo-row / .elo-pair, see
-  // show() below): cheap, rebuilt every call, never reused — only the pills inside them persist.
+  // direct children are instead per-render <li> "row" wrappers (.elo-solo, or .elo-pair nested
+  // inside a shared .elo-pairs block — see show() below): cheap, rebuilt every call, never
+  // reused — only the pills inside them persist.
   #ul; #itemById = new Map(); #itemDataById = new Map(); #activeId = null;
   #onCountryClick = null; #isClickable = null; #isZoomable = null;
   // Stage carousel — wraps the whole pill list (like insights/status.html's #statusViz: prev/
@@ -247,13 +248,19 @@ class EloRanking extends HTMLElement {
   // nothing in this app currently counts hidden-vs-visible pills in the DOM, so this is safe).
   // Adjacent items sharing the same `_pairId` (match-display mode's fixture couples — see
   // sortAndFilter) are placed into ONE <li class="elo-pair"> row instead of two separate rows,
-  // so they can never be split across a flex-wrap line break (css/global.css's .elo-pair).
+  // so they can never be split across a flex-wrap line break — and every .elo-pair row lives
+  // inside a single shared .elo-pairs wrapper (css/global.css), not as a direct <ul> child,
+  // so match-display mode's fixture grid gets its own column-track sizing independent of
+  // whatever .elo-solo rows follow it. sortAndFilter always sorts pairs ahead of lone teams, so
+  // building .elo-pairs first (on the first paired row encountered) and appending solos
+  // straight to the <ul> after it keeps that ordering automatic, no separate pass needed.
   show(visibleItems, onAnimationDone) {
     const before = new Map();
     for (const [id, pill] of this.#itemById)
       if (pill.isConnected) before.set(id, pill.getBoundingClientRect().top);
 
     this.#ul.innerHTML = ''; // clears old row wrappers only — pills persist via #itemById
+    let pairsWrap = null;
 
     const place = (row, { id, pts, pending, _lost }) => {
       const pill = this.#itemById.get(id);
@@ -272,7 +279,7 @@ class EloRanking extends HTMLElement {
       const cur = visibleItems[i], next = visibleItems[i + 1];
       const paired = cur._pairId != null && next?._pairId === cur._pairId;
       const row = document.createElement('li');
-      row.className = paired ? 'elo-pair' : 'elo-row';
+      row.className = paired ? 'elo-pair' : 'elo-solo';
       place(row, cur);
       if (paired) {
         const sep = document.createElement('span');
@@ -304,8 +311,15 @@ class EloRanking extends HTMLElement {
         row.appendChild(sep);
         place(row, next);
         i++;
+        if (!pairsWrap) {
+          pairsWrap = document.createElement('div');
+          pairsWrap.className = 'elo-pairs';
+          this.#ul.appendChild(pairsWrap);
+        }
+        pairsWrap.appendChild(row);
+      } else {
+        this.#ul.appendChild(row);
       }
-      this.#ul.appendChild(row);
     }
 
     let animating = 0;

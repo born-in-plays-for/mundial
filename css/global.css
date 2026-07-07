@@ -97,24 +97,43 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-viz .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
 .elo-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
 
-.elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 /* Row wrapper — the <ul>'s actual flex-wrap children (see js/elo_ranking.js's EloRanking.show()).
-   Each <li> holds one pill (.elo-row) or, in match-display mode, two fixture opponents
-   (.elo-pair) — being ONE flex item, a pair can never be split across a wrap line break.
-   The underline is the pair's only visual cue; the pills themselves render unchanged. */
+   Two zones, structurally: .elo-pairs (below), a single block-level wrapper holding every
+   fixture couple, is the <ul>'s first child whenever match-display mode has at least one
+   decided/undecided pairing — sortAndFilter always sorts pairs ahead of lone teams, so
+   building it first and appending it before any .elo-solo <li> keeps that order automatic. A
+   dedicated wrapper (rather than each .elo-pair row individually claiming flex-basis:100% in
+   the same flow as .elo-solo rows, the earlier approach) is what let mobile-width fixture rows
+   get their own column-track sizing without a bare 1fr track growing to fit whichever row's
+   pill content happens to be longest — see .elo-pairs > li.elo-pair below for why that
+   mattered. Lone (unpaired) teams render as plain <li class="elo-solo"> — one pill each — as
+   direct children of .elo-list, after .elo-pairs. */
 .elo-list > li { display: inline-flex; align-items: center; white-space: nowrap; }
-/* flex: 0 0 100% claims the whole flex-wrap row for itself — a fixture always starts its own
-   line, pushing whatever comes before/after (lone unpaired rows, or the next fixture) onto a
-   fresh line, while lone .elo-row items keep flowing several-per-line as before. Switching to
-   a 1fr/auto/1fr grid (instead of the plain inline-flex every other row uses) is what actually
-   aligns the separator: since every fixture row spans the same full width, a symmetric grid
-   centers the separator column at the same x position on every line regardless of how long
-   each side's team name is — the two 1fr team columns absorb the difference and push each
-   pill to the edge nearest the separator (justify-self below). */
-.elo-list > li.elo-pair {
-  flex: 0 0 100%;
+/* .elo-pairs is one flex-wrap item, exactly the way each .elo-pair row used to claim its own
+   line individually — pushing whatever solos come after it onto a fresh line below the whole
+   fixture block, never interleaved with it. Column (not row) flex internally, stacking its own
+   .elo-pair children with the same gap .elo-list uses between its own flex-wrap lines, for a
+   consistent rhythm whether a gap is between two fixture rows or between the fixture block and
+   the first solo row. */
+.elo-pairs { flex: 0 0 100%; display: flex; flex-direction: column; gap: 6px; }
+/* Only meaningfully different once match-display mode actually has fixtures: .elo-pairs is
+   always flex-basis:100%, so .elo-list's own justify-content never affects it either way — but
+   it does affect .elo-solo rows (lone, unpaired teams), which always render after .elo-pairs.
+   Team-display mode has only .elo-solo rows and wants them centered (see the "horiz centered"
+   ask this rule was added for); match-display mode's trailing solos should instead read as a
+   plain left-aligned overflow list underneath the fixture grid, not re-centered on their own. */
+.elo-viz--match .elo-list { justify-content: flex-start; }
+/* grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) (not a bare 1fr) is what keeps the
+   separator aligned row to row: a bare 1fr track still grows past its "fair" share to fit a
+   long pill's content (grid tracks default to a content-based minimum), so on a narrow
+   (mobile) screen a row with e.g. "Netherlands" pushes its column wider than a row with
+   "Norway", and the separator — centered within whatever's left over — drifts row to row.
+   minmax(0, 1fr) caps each side column at its fair half-share no matter what; overflowing pill
+   content is clipped (below) instead of stretching the column. */
+.elo-pairs > li.elo-pair {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 4px;
 }
 /* Left team's pill content (flag, name, pts — see pillContent in elo_ranking.js) renders
@@ -122,9 +141,31 @@ body { background: #f5f2ec; color: var(--color-default); }
    pushed flush right via justify-self:end. Reversing just this pill's internal order puts
    its flag last instead, i.e. innermost — right next to the separator, mirroring the right
    team's pill (unreversed, so its flag — already first — sits adjacent on its own side). */
-.elo-list > li.elo-pair > .elo-item:first-child { justify-self: end; flex-direction: row-reverse; }
-.elo-list > li.elo-pair > .elo-item:last-child { justify-self: start; }
-.elo-list > li.elo-pair > .elo-pair-sep { justify-self: center; }
+.elo-pairs > li.elo-pair > .elo-item:first-child { justify-self: end; flex-direction: row-reverse; }
+.elo-pairs > li.elo-pair > .elo-item:last-child { justify-self: start; }
+.elo-pairs > li.elo-pair > .elo-pair-sep { justify-self: center; }
+/* Clip instead of stretch: max-width:100% caps each pill at its minmax(0,1fr) column's actual
+   width (grid items otherwise size to content regardless of the column, per justify-self's own
+   spec) — min-width:0 lets it actually shrink there instead of stopping at content size. On
+   the left pill this crops from its own left edge (already right-aligned via justify-self:end
+   above, so it reads as "outer edge clipped, inner/flag edge intact"); the right pill crops
+   symmetrically from its right edge. */
+.elo-pairs > li.elo-pair > .elo-item:first-child,
+.elo-pairs > li.elo-pair > .elo-item:last-child {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+/* The pill's own fixed-size children (flag, ▶/◀ dot, pts) keep their natural size; only the
+   name — the one arbitrarily-long piece — actually shrinks and ellipsizes when a pill gets
+   clipped by the rule above. min-width:0 overrides flex's own default content-based minimum
+   (the standard "flex child won't shrink below its content" gotcha), which is what lets
+   text-overflow:ellipsis engage at all instead of the browser just refusing to shrink the box. */
+.elo-pairs > li.elo-pair > .elo-item .elo-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* Undecided fixture: a single line (kickoff "day month|hour", or a plain dash with no date at
    all). Decided fixture (.elo-pair-sep--score): kickoff day|hour above the score, plus a third
    row for the penalty shootout tally when the fixture went to penalties — see
