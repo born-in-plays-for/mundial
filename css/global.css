@@ -5,6 +5,7 @@
   --color-default: #171715;
   /* structural grays */
   --bg-hover:      #f0ede8;
+  --bg-button:      #c2c0bc;
   --border:        #e4e0d8;
   --border-strong: #c8c4be;
   --text-muted:    #999;
@@ -37,7 +38,18 @@ body { background: #f5f2ec; color: var(--color-default); }
    indicators sit below the caption in normal flow, above the list. See js/elo_ranking.js's
    EloRanking.connectedCallback(). Overrides below undo Bootstrap's full-bleed-image-carousel
    defaults (wide dark gradient buttons, large rectangular indicators) for this compact look. */
-.elo-viz { position: relative; }
+.elo-viz { position: relative; padding-top: 8px; padding-bottom: 8px; }
+/* .elo-viz--match (js/elo_ranking.js's `set displayMode`, driven by control_sidebar.js's
+   _displayMode) marks match-display mode itself, independent of the currently rendered stage's
+   actual content — a `:has(.elo-list > li.elo-pair)` selector would react to *that* instead,
+   and a stage with no decided/paired fixtures yet (e.g. the Final before it's played) has zero
+   .elo-pair rows even while match-display is on, so anything keyed off :has() would flicker on
+   and off as the carousel moves between stages that do/don't currently have fixtures. This rule
+   no longer constrains width (it used to cap .elo-viz at 520px to remove the dead gutters full
+   page width leaves around a fixture row's actual content — dropped per request); margin-inline
+   is a no-op without a width/max-width alongside it, kept only so a future width rule (or any
+   other match-display-only styling) has this selector ready without re-deriving the above. */
+.elo-viz.elo-viz--match { margin-inline: auto; }
 .elo-stage-carousel .carousel-inner { min-height: 20px; }
 .elo-stage-carousel .carousel-item { text-align: center; }
 .elo-stage-carousel .stage-caption { padding: 2px 40px 8px; }
@@ -53,8 +65,25 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-viz .carousel-control-next { right: 0; justify-content: flex-end; }
 .elo-viz .carousel-control-prev:hover,
 .elo-viz .carousel-control-next:hover { opacity: 0.9; }
+/* Swapped Bootstrap's default white chevron data-URIs for the same navy alt-arrow SVGs used
+   elsewhere (e.g. #control-sidebar's csb-collapse button, navbar icons — all #1C274C stroke) —
+   no filter needed since, unlike Bootstrap's white-on-transparent original, this SVG is already
+   that color natively. The round rgba(245,242,236,.85) + border pairing is this app's own
+   standard floating-icon-button look (see map-container.css's #zoom-reset/#theme-toggle) rather
+   than the plain opacity-only treatment #control-sidebar's .csb-icon-btn uses — needed here
+   since these buttons float directly over the pill list rather than a plain page background,
+   and were hard to notice without one. background-size is pinned in px (Bootstrap's own default
+   is 100% 100%, i.e. relative to the padding box) so the icon itself doesn't stretch to fill
+   the extra circle made room for it via padding. */
 .elo-viz .carousel-control-prev-icon,
-.elo-viz .carousel-control-next-icon { width: 16px; height: 16px; filter: invert(40%); }
+.elo-viz .carousel-control-next-icon {
+  width: 16px; height: 16px; background-size: 16px 16px;
+  box-sizing: content-box; padding: 7px;
+  background-color: var(--bg-button);
+  border: 1px solid var(--border); border-radius: 50%;
+}
+.elo-viz .carousel-control-prev-icon { background-image: url("/images/solar_linear/alt-arrow-left-svgrepo-com.svg"); }
+.elo-viz .carousel-control-next-icon { background-image: url("/images/solar_linear/alt-arrow-right-svgrepo-com.svg"); }
 .elo-stage-carousel .carousel-indicators {
   position: static; display: flex; justify-content: center; margin: 0 0 8px; gap: 4px;
 }
@@ -68,48 +97,53 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-viz .carousel-control-next.csb-stage-disabled { opacity: 0.1; pointer-events: none; }
 .elo-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
 
-.elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 /* Row wrapper — the <ul>'s actual flex-wrap children (see js/elo_ranking.js's EloRanking.show()).
    Each <li> holds one pill (.elo-row) or, in match-display mode, two fixture opponents
    (.elo-pair) — being ONE flex item, a pair can never be split across a wrap line break.
    The underline is the pair's only visual cue; the pills themselves render unchanged. */
 .elo-list > li { display: inline-flex; align-items: center; white-space: nowrap; }
-/* border-radius on the two bottom corners lets the lone border-bottom sweep upward at both
-   ends — with no left/right border to fight it, it reads as the underline curving in to hug
-   the outer pill's own rounded corner instead of stopping in a hard right angle. */
+/* flex: 0 0 100% claims the whole flex-wrap row for itself — a fixture always starts its own
+   line, pushing whatever comes before/after (lone unpaired rows, or the next fixture) onto a
+   fresh line, while lone .elo-row items keep flowing several-per-line as before. Switching to
+   a 1fr/auto/1fr grid (instead of the plain inline-flex every other row uses) is what actually
+   aligns the separator: since every fixture row spans the same full width, a symmetric grid
+   centers the separator column at the same x position on every line regardless of how long
+   each side's team name is — the two 1fr team columns absorb the difference and push each
+   pill to the edge nearest the separator (justify-self below). */
 .elo-list > li.elo-pair {
+  flex: 0 0 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   gap: 4px;
-  border-bottom: 1.5px solid rgb(166, 126, 24);
-  border-radius: 0 0 10px 10px;
-  padding-bottom: 2px;
 }
-/* Fixture not decided yet — blur the underline instead of drawing it solid, the same
-   "Schrödinger's team" treatment .elo-item--pending gives a pill's border (taxonomy.css):
-   the real border is hidden and a duplicate on ::after is blurred in its place, rather than
-   blurring the whole row (which would make the pills themselves hard to read). */
-.elo-list > li.elo-pair--pending {
-  border-bottom-color: transparent;
-  position: relative;
-}
-.elo-list > li.elo-pair--pending::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-bottom: 1.5px solid goldenrod;
-  border-radius: inherit;
-  /* filter: blur(1px); */
-  pointer-events: none;
-}
+/* Left team's pill content (flag, name, pts — see pillContent in elo_ranking.js) renders
+   flag-first, which would put it at the outer/left edge of the row once the pill itself is
+   pushed flush right via justify-self:end. Reversing just this pill's internal order puts
+   its flag last instead, i.e. innermost — right next to the separator, mirroring the right
+   team's pill (unreversed, so its flag — already first — sits adjacent on its own side). */
+.elo-list > li.elo-pair > .elo-item:first-child { justify-self: end; flex-direction: row-reverse; }
+.elo-list > li.elo-pair > .elo-item:last-child { justify-self: start; }
+.elo-list > li.elo-pair > .elo-pair-sep { justify-self: center; }
 /* Undecided fixture: a single line (kickoff "day month|hour", or a plain dash with no date at
-   all). Decided fixture (.elo-pair-sep--score): two stacked lines, kickoff day|hour above the
-   score — see js/elo_ranking.js's EloRanking.show(). */
+   all). Decided fixture (.elo-pair-sep--score): kickoff day|hour above the score, plus a third
+   row for the penalty shootout tally when the fixture went to penalties — see
+   js/elo_ranking.js's EloRanking.show(). */
 .elo-pair-sep { font-size: 10px; color: var(--border-strong); display: inline-flex; flex-direction: column; align-items: center; line-height: 1.15; }
+/* Decided fixture (date + score + optional penalty rows): pinned to a fixed width regardless of
+   content length (e.g. "4-3 pen." vs a plain score) so the separator column never pushes the
+   team pills around row to row — overflow is clipped rather than wrapped or shrinking the font. */
+.elo-pair-sep.elo-pair-sep--score { width: 45px; white-space: nowrap; overflow-x: hidden; }
 /* --color-default (body's own default text color) — both the kickoff date and the score are
    real match information, not a muted secondary cue. */
 .elo-pair-sep-date { font-size: 9px; color: var(--color-default); }
 /* Decided fixture — the actual score instead of a plain dash, so it reads as real information
    (final result) rather than just the same pairing cue as an undecided one. */
 .elo-pair-sep-score { font-weight: 600; color: var(--color-default); font-variant-numeric: tabular-nums; }
+/* Penalty shootout tally — its own row below the (drawn) regulation/extra-time score, same
+   treatment as the kickoff date above it: small and muted, since the score line stays the
+   primary, larger-emphasis result. */
+.elo-pair-sep-pens { font-size: 9px; color: var(--color-default); font-variant-numeric: tabular-nums; }
 .elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 20px; background: #fff; }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: var(--bg-hover); border-color: var(--border-strong); }

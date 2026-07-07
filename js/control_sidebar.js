@@ -27,7 +27,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
   <div class="csb-body"><div class="csb-content d-flex flex-column gap-1">
     <div class="csb-toolbar d-flex align-items-center gap-1">
-      ${alwaysOpen ? nothing : html`<button class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>`}
+      ${alwaysOpen ? nothing : html`<button id="csb-close" class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>`}
       <div class="dropdown" id="zoom-conf-dropdown">
         <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
           <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
@@ -285,6 +285,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     e.stopPropagation();
     _el.classList.add('collapsed');
     _toggle.textContent = '‹';
+    callbacks.onSidebarToggle?.();
   });
 
   // ── Sort controls ──
@@ -316,6 +317,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _matchDisplayRadio.checked = mode === 'match';
     _teamDisplayLabel.classList.toggle('elo-item', mode === 'team');
     _matchDisplayLabel.classList.toggle('elo-item', mode === 'match');
+    eloMain.displayMode = mode;
   };
 
   const _updateAlphaLabel = () => {
@@ -558,9 +560,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     alpha: (a, b) => a.name.localeCompare(b.name),
   };
 
+  // exp/imp show both counts, always imports-then-exports — same fixed reading order as the
+  // ◀▶ import/export dot (taxonomy.css: red ◀ import, blue ▶ export), regardless of which of
+  // the two is the active primary sort key, so a fixture's left/right pills (and any other
+  // pair of pills on screen) always read the same way instead of flipping order between
+  // sort=imp and sort=exp. Unlike delta below, which collapses to a single number when one
+  // side is 0 (its own count is a difference, not a sort key picked specifically to look at
+  // exports/imports by), sort=exp/sort=imp is a deliberate request to see that pair, so both
+  // numbers always show even when one side is 0.
   const _ptsFor = (key, item, fmtPop) =>
-      key === 'exp'   ? item.expCount
-    : key === 'imp'   ? item.impCount
+      key === 'exp' || key === 'imp' ? `${item.impCount} · ${item.expCount}`
     : key === 'delta' ? (item.impCount && item.expCount ? `${item.impCount} · ${item.expCount}` : item.impCount || item.expCount || null)
     : key === 'elo'   ? item.pts
     : key === 'pop'   ? (item.pop ? fmtPop(item.pop) : null)
@@ -577,6 +586,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       key === 'elo'   ? Number(item.pts) || 0
     : key === 'pop'   ? (item.pop ?? 0)
     : key === 'delta' ? (item.expCount - item.impCount)
+    : key === 'imp'   ? item.impCount
+    : key === 'exp'   ? item.expCount
     : 0;
 
   // Groups filtered items into fixture couples for match-display mode: each team pairs with
@@ -644,17 +655,24 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // "a – b" goal tally (from a's own matchInfo, so it already reads in [a, b] display
       // order), null for a fixture that hasn't been played yet — elo_ranking.js falls back to
       // a plain separator in that case. _pairDate is the fixture's kickoff datetime (also from
-      // matchInfo), rendered as a compact "day|hour" label alongside the score/separator.
+      // matchInfo), rendered as a compact "day|hour" label alongside the score/separator. _lost
+      // is each side's own matchInfo.won === false (a decided fixture this team lost) — read
+      // per-side since a/b's matchInfo entries are each other's mirror, not shared — so
+      // elo_ranking.js can grey out the losing side's flag.
       ordered = groups.flatMap(g => {
         if (g.length === 1) return g;
         const [a, b] = primary === 'alpha' ? [...g].sort((x, y) => x.name.localeCompare(y.name)) : [...g].sort((x, y) => _aggregateValue(primary, y) - _aggregateValue(primary, x));
         const pairId = [a.id, b.id].sort().join('-');
         const infoA = _matchInfo(a);
+        const infoB = _matchInfo(b);
         const pairScore = infoA?.myGoals != null
           ? { home: infoA.myGoals, away: infoA.oppGoals, penalties: infoA.penalties, penaltyHome: infoA.myPenGoals, penaltyAway: infoA.oppPenGoals }
           : null;
         const pairDate = infoA?.date ?? null;
-        return [{ ...a, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate }, { ...b, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate }];
+        return [
+          { ...a, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate, _lost: infoA?.won === false },
+          { ...b, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate, _lost: infoB?.won === false },
+        ];
       });
     } else {
       ordered = [...filtered].sort((a, b) => {
@@ -678,7 +696,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }));
   };
 
-  const _SORT_KEYS  = new Set(['elo', 'alpha', 'pop', 'delta']);
+  // 'imp'/'exp' are valid sort keys with no UI entry (the .csb-sort-item rows for them are
+  // commented out in the template above) — reachable only via ?sort=imp / ?sort=exp (see
+  // _SORT_PAIR below and applyParams' bare-key handling), never by clicking/dragging. Still
+  // full members of _SORT_KEYS so they pass the same validation as the 4 UI keys everywhere
+  // else that checks membership (URL parsing, localStorage restore, the explain panel).
+  const _SORT_KEYS  = new Set(['elo', 'alpha', 'pop', 'delta', 'imp', 'exp']);
+  // Documents the ?sort=imp / ?sort=exp pairing used by applyParams below: each is the other's
+  // automatic 2nd criterion when requested bare (no second key given).
+  const _SORT_PAIR  = { imp: 'exp', exp: 'imp' };
   const _ALIASES    = {
     qual:  ['qie','qi','qe','q'],
     nq:    ['ef','en','of','on'],
@@ -754,7 +780,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
     if (sp.has('sort')) {
       const sortRaw = sp.get('sort');
-      const keys = sortRaw.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
+      let keys = sortRaw.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
+      // Mirror applyParams' bare imp/exp auto-pairing so the explain panel describes what
+      // actually gets applied, not a literal 1-key read.
+      if (keys.length === 1 && _SORT_PAIR[keys[0]]) keys = [keys[0], _SORT_PAIR[keys[0]]];
       // Only the first 2 keys ever affect the actual sort (see sortAndFilter) — call that
       // out here since the URL explicitly asked for more; the implied branch below never
       // needs this note, it's always exactly 2, nothing to explain.
@@ -1004,6 +1033,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         if (!alwaysOpen && _el.classList.contains('collapsed')) {
           _el.classList.remove('collapsed');
           if (_toggle) _toggle.textContent = '›';
+          callbacks.onSidebarToggle?.();
         }
         _openExplainPanel(inUrl, implied, _countVisible());
       }
@@ -1014,7 +1044,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
     const sort = sp.get('sort');
     if (sort) {
-      const keys = sort.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
+      let keys = sort.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
+      // ?sort=imp / ?sort=exp bare (no explicit 2nd key) auto-fill their documented pair
+      // partner as the 2nd criterion, rather than falling through to whatever's currently
+      // 3rd/4th in _sortOrder. A multi-key request (e.g. ?sort=imp,pop) is left alone — naming
+      // an explicit 2nd key always overrides the automatic pairing.
+      if (keys.length === 1 && _SORT_PAIR[keys[0]]) keys = [keys[0], _SORT_PAIR[keys[0]]];
       if (keys.length) { _sortOrder = [...new Set([...keys, ..._sortOrder])].slice(0, _sortOrder.length); changed = true; }
     }
 
@@ -1063,6 +1098,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (!alwaysOpen && _el.classList.contains('collapsed')) {
       _el.classList.remove('collapsed');
       if (_toggle) _toggle.textContent = '›';
+      callbacks.onSidebarToggle?.();
     }
     if (sp.has('explain')) _openExplainPanel(inUrl, implied, _visible);
 

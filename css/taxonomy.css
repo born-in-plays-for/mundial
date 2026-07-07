@@ -21,26 +21,21 @@
 
 /* Qualified vs. non qualified: solid 1px border vs. no border */
 .taxonomy .elo-item--qualified { --elo-border: 1px solid #888; border: var(--elo-border); }
+.taxonomy .elo-item--qualified:not(.elo-item--knocked-out) { border-width: 1.5px;} 
 .taxonomy .elo-item:not(.elo-item--qualified) { border: none; }
 
-/* Qualified but knocked out: dashed border */
+/* Qualified but knocked out: dashed border + lighter (less dark) name, same treatment as
+   pending/non-FIFA pills — signals "no longer alive" alongside the border. */
 .taxonomy .elo-item--qualified.elo-item--knocked-out { border-style: dashed; }
+.taxonomy .elo-item--knocked-out .elo-name { color: var(--light-text); }
 
 /* Schrödinger's team: fixture for the currently-viewed stage hasn't been played yet — could
-   still go either way. Only the border is blurred (via a duplicate on ::before) — blurring the
-   whole pill made names hard to read, and the point is the team's status is fuzzy, not its name. */
+   still go either way. No border treatment — just border-color:transparent, i.e. the pill's
+   own normal border simply isn't drawn — and a dimmed name below. (Several wavy-border attempts
+   — feTurbulence, feImage/feTile, border-image — were tried and dropped here; see git history
+   if picking this back up.) */
 .taxonomy .elo-item--pending {
-  position: relative;
   border-color: transparent;
-}
-.taxonomy .elo-item--pending::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border: var(--elo-border);
-  border-radius: inherit;
-  filter: blur(1.3px);
-  pointer-events: none;
 }
 .taxonomy .elo-item--pending .elo-name { color: var(--light-text); }
 
@@ -58,11 +53,20 @@
     #fff var(--imp-pivot, 0%),
     #fff var(--native-pivot, 0%),
     var(--exp-color, #fff) 100%);
+  /* Default background-clip (border-box) paints the gradient under the border, relying on the
+     border itself to fully cover it — at a pill's near-semicircular tip (border-radius = half
+     the height), the border and background rasterize with slightly different anti-aliasing, so
+     a hairline of the gradient's edge color (red/blue) can peek past the border ring. Clipping
+     to padding-box keeps the gradient strictly inside the border instead, closing that seam. */
+  background-clip: padding-box;
 }
 
 /* No map centroid: italic name + dimmed flag */
 .taxonomy .elo-item--no-map .elo-name { font-style: italic; }
 .taxonomy .elo-item--no-map .elo-flag { opacity: 0.35; }
+
+/* Match-display mode: lost a decided fixture — grey out the flag, name stays legible */
+.taxonomy .elo-item--lost .elo-flag { filter: grayscale(1); opacity: 0.5; }
 
 /* Dots via pseudo-elements — both on the right of the name. Fixed accent colors (not
    count-scaled — the pill's gradient background already carries that signal). */
@@ -74,6 +78,24 @@
 }
 .taxonomy .elo-item--exp.elo-item--imp .elo-name::after {
   content: '◀▶'; font-size: 14px; margin-left: 2px; /* vertical-align: super; */
+  background: linear-gradient(90deg, var(--imp-accent) 45%, var(--exp-accent) 55%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Fixture rows (global.css's .elo-pair) reverse the left team's pill so its flag ends up
+   innermost, next to the separator — which also flips this dot to the inner/separator side as
+   an unwanted side effect (::after is generated content inside .elo-name itself, unaffected by
+   the parent's flex-direction: row-reverse). Swapping to ::before with a mirrored margin here
+   keeps it on the outer side instead, matching the right team's (unreversed) dot. */
+.elo-list > li.elo-pair > .elo-item:first-child .elo-name::after { content: none; }
+.elo-list > li.elo-pair > .elo-item--exp:first-child:not(.elo-item--imp) .elo-name::before {
+  content: '▶'; color: var(--exp-accent); font-size: 14px; margin-right: 2px;
+}
+.elo-list > li.elo-pair > .elo-item--imp:first-child:not(.elo-item--exp) .elo-name::before {
+  content: '◀'; color: var(--imp-accent); font-size: 14px; margin-right: 2px;
+}
+.elo-list > li.elo-pair > .elo-item--exp.elo-item--imp:first-child .elo-name::before {
+  content: '◀▶'; font-size: 14px; margin-right: 2px;
   background: linear-gradient(90deg, var(--imp-accent) 45%, var(--exp-accent) 55%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }

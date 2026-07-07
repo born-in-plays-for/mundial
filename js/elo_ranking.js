@@ -75,6 +75,7 @@ class EloRanking extends HTMLElement {
   // via events ('stage-change', 'qualified-toggle') rather than holding any tournament state.
   #bsCarousel = null; #nextBtn = null; #indicatorBtns = [];
   #stage = 0; #maxStage = CAROUSEL_STAGES.length - 1;
+  #viz = null; // the wrap div itself — see set displayMode below
 
   get hasItems() { return this.#itemById.size > 0; }
 
@@ -169,6 +170,20 @@ class EloRanking extends HTMLElement {
     this.#ul.className = 'elo-list';
     wrap.appendChild(this.#ul);
     this.appendChild(wrap);
+    this.#viz = wrap;
+  }
+
+  // Drives .elo-viz--match (css/global.css) — caps .elo-viz to a stable width in match-display
+  // mode instead of the full page-container width. Previously this was a `:has(.elo-list >
+  // li.elo-pair)` CSS selector reacting to the currently-rendered stage's actual DOM content,
+  // which flips per stage rather than per mode: a stage with no decided/paired fixtures yet
+  // (e.g. the Final before it's been played) has no .elo-pair rows even while match-display is
+  // active, so .elo-viz — and the carousel prev/next arrows anchored to its edges — would snap
+  // back out to full width on exactly those stages and jump back narrow on the next. Driving it
+  // from control_sidebar.js's own _displayMode instead keeps the width (and the arrows) stable
+  // across every stage for the duration of match-display, regardless of that stage's content.
+  set displayMode(mode) {
+    this.#viz?.classList.toggle('elo-viz--match', mode === 'match');
   }
 
   // The tournament hasn't reached every stage yet — control_sidebar.js computes the furthest
@@ -240,13 +255,14 @@ class EloRanking extends HTMLElement {
 
     this.#ul.innerHTML = ''; // clears old row wrappers only — pills persist via #itemById
 
-    const place = (row, { id, pts, pending }) => {
+    const place = (row, { id, pts, pending, _lost }) => {
       const pill = this.#itemById.get(id);
       const data = this.#itemDataById.get(id);
       if (!pill || !data) return;
       pill.classList.toggle('elo-item--clickable', this.#onCountryClick != null && (this.#isClickable == null || this.#isClickable(id)));
       pill.classList.toggle('elo-item--zoomable', this.#onCountryClick != null && this.#isZoomable != null && this.#isZoomable(id) && !(this.#isClickable == null || this.#isClickable(id)));
       pill.classList.toggle('elo-item--pending', !!pending);
+      pill.classList.toggle('elo-item--lost', !!_lost);
       row.appendChild(pill);
       data.pts = pts;
       render(pillContent(data), pill);
@@ -269,14 +285,16 @@ class EloRanking extends HTMLElement {
           sep.className = 'elo-pair-sep elo-pair-sep--score';
           // penaltyHome/Away (the actual shootout tally, e.g. "4-3") isn't published by
           // mundial-build yet — data/fixtures.json's `goals` is only the tied extra-time score
-          // for a PEN decision. Falls back to a bare "(pen.)" until that lands; see the prompt
+          // for a PEN decision. Falls back to a bare "pen." until that lands; see the prompt
           // in CLAUDE.md's buildMatchInfo section / the mundial-build ask for the follow-up.
-          const penSuffix = score.penalties
-            ? (score.penaltyHome != null ? ` (${score.penaltyHome}-${score.penaltyAway} pen.)` : ' (pen.)')
-            : '';
-          // Decided fixture — two stacked rows: kickoff day|hour above the score, so the
-          // score still reads as the primary, larger-emphasis line (see .elo-pair-sep--score).
-          render(html`${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}<span class="elo-pair-sep-score">${score.home}–${score.away}${penSuffix}</span>`, sep);
+          const pens = score.penalties
+            ? (score.penaltyHome != null ? `${score.penaltyHome}-${score.penaltyAway} pen.` : 'pen.')
+            : null;
+          // Decided fixture — kickoff day|hour above the score, so the score still reads as
+          // the primary, larger-emphasis line (see .elo-pair-sep--score); a penalty shootout
+          // gets its own third row below rather than an inline suffix on the score line, since
+          // it's the score that actually decided the tie, not a footnote on the drawn scoreline.
+          render(html`${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}<span class="elo-pair-sep-score">${score.home}–${score.away}</span>${pens ? html`<span class="elo-pair-sep-pens">${pens}</span>` : nothing}`, sep);
         } else {
           sep.className = 'elo-pair-sep';
           // Not yet played — just the kickoff day|hour (single row); falls back to a plain
