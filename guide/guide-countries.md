@@ -46,7 +46,7 @@ Applies to the primary sort key only. `?sort=alpha&dir=desc` yields Z–A.
 ### `?stage` — tournament stage filter
 
 ```
-?stage=qualified   default — all qualified countries and their exporters
+?stage=group       default — all qualified countries and their exporters
 ?stage=r32         Round of 32
 ?stage=r16         Round of 16
 ?stage=qf          Quarter-finals
@@ -55,7 +55,7 @@ Applies to the primary sort key only. `?sort=alpha&dir=desc` yields Z–A.
 ?stage=winner      Winner only
 ```
 
-Mirrors the stage carousel in the filter panel (Qualified → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner). Each position filters both qualified countries and their non-qualified exporter countries down to those that "reached" that stage — still alive going into it, or having already won it. Non-exporter, non-qualified countries (`of`/`on` cells) are unaffected — they have no tournament connection.
+Mirrors the stage carousel in the filter panel (Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner). Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it. Non-qualified exporter countries (`ef`/`en` cells) are unaffected, same as non-exporter, non-qualified countries (`of`/`on` cells) — neither has a tournament position to "reach".
 
 Unknown values are silently ignored and defaults are kept.
 
@@ -129,8 +129,8 @@ Aliases and individual codes may be freely mixed; the result is a union. Unknown
 
 - `?stage=r16&show=qual` → only qualified countries that reached the Round of 16
 - `?stage=winner&show=qual` → only the eventual champion
-- `?stage=r32&show=exp` → exporters (qualified or not) linked to countries that reached the Round of 32
-- `?stage` has no effect on `of`/`on` cells (they have no tournament connection)
+- `?stage=r32&show=exp` → qualified exporters that reached the Round of 32, plus all non-qualified exporters (unaffected by stage)
+- `?stage` has no effect on non-qualified rows (`ef`/`en`/`of`/`on`) — none of them have a tournament position to reach
 
 ## Examples
 
@@ -140,7 +140,7 @@ Aliases and individual codes may be freely mixed; the result is a union. Unknown
 ?show=qual                    All 48 qualified countries; non-qualified hidden.
 ?show=qual&sort=pop&dir=asc   Qualified countries sorted by population ascending.
 ?show=qie                     Only countries that both import and export players.
-?stage=r32&show=exp           Exporter column, filtered to countries reaching the Round of 32.
+?stage=r32&show=exp           Exporter column; qualified exporters filtered to the Round of 32, non-qualified exporters unaffected.
 ?sort=delta&dir=asc&show=qual Qualified countries with fewest plays-for vs. born-in first.
 ?show=all                     All 8 cells including normally-hidden of and on.
 ?show=qual,ef                 Qualified countries + non-qualified FIFA exporters.

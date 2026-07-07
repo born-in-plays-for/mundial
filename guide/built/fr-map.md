@@ -40,10 +40,10 @@ Décochez une cellule pour masquer cette catégorie. Cliquez sur un en-tête de 
 
 ### Filtre de phase du tournoi
 
-Un petit carrousel se trouve dans l'en-tête de la ligne *qualifié*, parcourant sept positions : **Qualifiés → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur**.
+Un petit carrousel se trouve dans l'en-tête de la ligne *qualifié*, parcourant sept positions : **Phase de groupes → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur**.
 
 - Utilisez les flèches ‹ ›, ou faites glisser vers la gauche/droite sur écran tactile, pour changer de phase.
-- Chaque position filtre à la fois les pays qualifiés et leurs pays exportateurs non qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée.
+- Chaque position filtre les pays qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée. Les pays exportateurs non qualifiés ne sont pas affectés, montrés quelle que soit la phase.
 - La navigation est limitée à la phase la plus avancée réellement atteinte par le tournoi ; les positions suivantes restent verrouillées tant que les matchs correspondants ne sont pas joués.
 
 Le carrousel fonctionne en combinaison avec le reste de la matrice de filtre — vous pouvez, par exemple,

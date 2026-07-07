@@ -40,10 +40,10 @@ Deseleziona una cella per nascondere quella categoria. Clicca su un'intestazione
 
 ### Filtro fase del torneo
 
-Un piccolo carosello si trova nell'intestazione della riga *qualificati*, che scorre tra sette posizioni: **Qualificati → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore**.
+Un piccolo carosello si trova nell'intestazione della riga *qualificati*, che scorre tra sette posizioni: **Fase a gironi → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore**.
 
 - Usa le frecce ‹ ›, oppure scorri verso sinistra/destra su schermi touch, per passare da una fase all'altra.
-- Ogni posizione filtra sia i paesi qualificati sia i loro paesi esportatori non qualificati fino a quelli che hanno «raggiunto» quella fase — ancora in gioco all'inizio, o già vincitori.
+- Ogni posizione filtra i paesi qualificati fino a quelli che hanno «raggiunto» quella fase — ancora in gioco all'inizio, o già vincitori. I paesi esportatori non qualificati non sono interessati, mostrati indipendentemente dalla fase.
 - La navigazione è limitata alla fase effettivamente raggiunta dal torneo; le posizioni successive restano bloccate finché le partite corrispondenti non vengono giocate.
 
 Il carosello funziona in combinazione con il resto della matrice di filtro — puoi, ad esempio,

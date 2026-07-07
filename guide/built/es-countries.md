@@ -46,7 +46,7 @@ Se aplica solo a la clave de ordenación primaria. `?sort=alpha&dir=desc` produc
 ### `?stage` — filtro de fase del torneo
 
 ```
-?stage=qualified   predeterminado — todos los países clasificados y sus exportadores
+?stage=group       predeterminado — todos los países clasificados y sus exportadores
 ?stage=r32         Dieciseisavos de final
 ?stage=r16         Octavos de final
 ?stage=qf          Cuartos de final
@@ -55,7 +55,7 @@ Se aplica solo a la clave de ordenación primaria. `?sort=alpha&dir=desc` produc
 ?stage=winner      Solo el campeón
 ```
 
-Refleja el carrusel de fase en el panel de filtros (Clasificados → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón). Cada posición filtra tanto los países clasificados como sus países exportadores no clasificados hasta aquellos que «alcanzaron» esa fase — aún en juego al inicio de la misma, o ya campeones. Los países no clasificados y no exportadores (celdas `of`/`on`) no se ven afectados — no tienen conexión con el torneo.
+Refleja el carrusel de fase en el panel de filtros (Fase de grupos → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón). Cada posición filtra los países clasificados hasta aquellos que «alcanzaron» esa fase — aún en juego al inicio de la misma, o ya campeones. Los países exportadores no clasificados (celdas `ef`/`en`) no se ven afectados, al igual que los países no clasificados y no exportadores (celdas `of`/`on`) — ninguno de los dos tiene una posición en el torneo que «alcanzar».
 
 Los valores desconocidos se ignoran silenciosamente y se mantienen los valores predeterminados.
 
@@ -129,8 +129,8 @@ Los alias y los códigos individuales se pueden mezclar libremente; el resultado
 
 - `?stage=r16&show=qual` → solo países clasificados que alcanzaron los octavos de final
 - `?stage=winner&show=qual` → solo el campeón
-- `?stage=r32&show=exp` → exportadores (clasificados o no) vinculados a países que alcanzaron los dieciseisavos de final
-- `?stage` no tiene efecto en las celdas `of`/`on` (no tienen conexión con el torneo)
+- `?stage=r32&show=exp` → exportadores clasificados que alcanzaron los dieciseisavos de final, más todos los exportadores no clasificados (no afectados por la fase)
+- `?stage` no tiene efecto en las filas no clasificadas (`ef`/`en`/`of`/`on`) — ninguna tiene una posición en el torneo que alcanzar
 
 ## Ejemplos
 
@@ -140,7 +140,7 @@ Los alias y los códigos individuales se pueden mezclar libremente; el resultado
 ?show=qual                    Los 48 países clasificados; no clasificados ocultos.
 ?show=qual&sort=pop&dir=asc   Países clasificados ordenados por población ascendente.
 ?show=qie                     Solo países que tanto importan como exportan jugadores.
-?stage=r32&show=exp           Columna exportadores, filtrada a países en los dieciseisavos.
+?stage=r32&show=exp           Columna exportadores; exportadores clasificados filtrados a los dieciseisavos, exportadores no clasificados no afectados.
 ?sort=delta&dir=asc&show=qual Países clasificados con menor diferencia juega-para vs. nacido-en primero.
 ?show=all                     Las 8 celdas incluidas of y on normalmente ocultas.
 ?show=qual,ef                 Países clasificados + exportadores FIFA no clasificados.

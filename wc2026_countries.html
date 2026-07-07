@@ -27,7 +27,7 @@
 </div>
 <script type="module">
 import { initEloRanking } from './js/elo_ranking.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildExporterStageIndex, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData } from './js/qualified.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData } from './js/qualified.js';
 import { LOCALE, T, countryName } from './js/i18n.js';
 import { initSidebar } from './js/control_sidebar.js';
 
@@ -82,7 +82,6 @@ const { render: renderElo, rawItems } = initEloRanking({
   onRender: _syncHeaderLayout,
 });
 app.stageIndexById = new Map(rawItems.map(item => [item.id, item.visibleThroughIndex]));
-app.exporterStageIndex = buildExporterStageIndex(app.importByCountry, app.stageIndexById);
 app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
 app.matchInfoByIso2 = buildMatchInfo(statusByIso2, fixturesData, buildNameByIso2(eloData.rankings, countryName));
 sidebar.updateStageTitle();

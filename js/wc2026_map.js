@@ -1,7 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildExporterStageIndex, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initSidebar } from './control_sidebar.js';
 import { CONF_BOUNDS } from './conf.js';
@@ -1910,7 +1910,6 @@ Promise.all([
   _eloItemsById.clear();
   _eloRawItems.forEach(item => _eloItemsById.set(item.id, item));
   app.stageIndexById = new Map(_eloRawItems.map(item => [item.id, item.visibleThroughIndex]));
-  app.exporterStageIndex = buildExporterStageIndex(app.importByCountry, app.stageIndexById);
   app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
   // Powers the control-sidebar's "match" sort criterion — pairs each team with its
   // known opponent for the round matching whichever carousel stage is active.

@@ -40,10 +40,10 @@ Desmarca una celda para ocultar esa categoría. Haz clic en un encabezado de fil
 
 ### Filtro de fase del torneo
 
-Un pequeño carrusel se encuentra en el encabezado de la fila *clasificados*, recorriendo siete posiciones: **Clasificados → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón**.
+Un pequeño carrusel se encuentra en el encabezado de la fila *clasificados*, recorriendo siete posiciones: **Fase de grupos → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón**.
 
 - Usa las flechas ‹ ›, o desliza hacia la izquierda/derecha en pantallas táctiles, para cambiar de fase.
-- Cada posición filtra tanto los países clasificados como sus países exportadores no clasificados hasta aquellos que «alcanzaron» esa fase — aún en juego al inicio de la misma, o ya campeones.
+- Cada posición filtra los países clasificados hasta aquellos que «alcanzaron» esa fase — aún en juego al inicio de la misma, o ya campeones. Los países exportadores no clasificados no se ven afectados, mostrados independientemente de la fase.
 - La navegación está limitada a la fase que el torneo ha alcanzado realmente; las posiciones siguientes permanecen bloqueadas hasta que se disputen los partidos correspondientes.
 
 El carrusel funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,

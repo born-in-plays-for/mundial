@@ -41,28 +41,12 @@ export const buildImportByCountry = (mapData, countryNameFn) => {
 export const ELIM_ROUNDS = ['Group Stage', 'Round of 32', 'Round of 16', 'Quarter-finals', 'Semi-finals', 'Final'];
 
 // The control-sidebar carousel's 7 stops. Position p's textual label differs from
-// ELIM_ROUNDS at the two ends ('qualified' has no elimination round; 'winner' means
+// ELIM_ROUNDS at the two ends ('group' has no elimination round; 'winner' means
 // never eliminated) but the numeric scale is the same: a country is shown at carousel
 // position p iff its ELIM_ROUNDS index (or Infinity if alive) is >= p.
-export const CAROUSEL_STAGES = ['qualified', 'r32', 'r16', 'qf', 'sf', 'final', 'winner'];
+export const CAROUSEL_STAGES = ['group', 'r32', 'r16', 'qf', 'sf', 'final', 'winner'];
 
 export const reachesStage = (eliminatedAtIndex, stagePos) => (eliminatedAtIndex ?? Infinity) >= stagePos;
-
-// birthCountryId -> the furthest ELIM_ROUNDS index reached by any of its exported
-// players' destination countries (Infinity if at least one destination is still alive).
-// Lets exporter rows filter by the same carousel position as qualified countries: an
-// exporter "reaches" stage S if any country it sends players to reached stage S.
-export const buildExporterStageIndex = (importByCountry, stageIndexById) => {
-  const out = new Map();
-  for (const [nIdStr, players] of Object.entries(importByCountry)) {
-    const destStage = stageIndexById.get(+nIdStr) ?? Infinity;
-    for (const p of players) {
-      const cur = out.get(p.birthCountryId);
-      if (cur === undefined || destStage > cur) out.set(p.birthCountryId, destStage);
-    }
-  }
-  return out;
-};
 
 export const loadEloData = async (basePath = '') => {
   const [eloData, statusByIso2] = await Promise.all([

@@ -40,10 +40,10 @@ Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf ei
 
 ### Turnierphasenfilter
 
-Ein kleines Karussell befindet sich im Zeilenkopf *Qualifiziert* und durchläuft sieben Positionen: **Qualifiziert → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger**.
+Ein kleines Karussell befindet sich im Zeilenkopf *Qualifiziert* und durchläuft sieben Positionen: **Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger**.
 
 - Verwenden Sie die Pfeile ‹ › oder wischen Sie auf Touchscreens nach links/rechts, um zwischen den Phasen zu wechseln.
-- Jede Position filtert sowohl qualifizierte Länder als auch ihre nicht qualifizierten Exporteurländer auf jene, die diese Phase „erreicht" haben — zu Beginn noch im Turnier, oder bereits Sieger.
+- Jede Position filtert qualifizierte Länder auf jene, die diese Phase „erreicht" haben — zu Beginn noch im Turnier, oder bereits Sieger. Nicht qualifizierte Exporteurländer sind nicht betroffen, unabhängig von der Phase sichtbar.
 - Die Navigation ist auf die vom Turnier tatsächlich erreichte Phase begrenzt; weitere Positionen bleiben gesperrt, bis die entsprechenden Spiele ausgetragen sind.
 
 Das Karussell funktioniert in Kombination mit der restlichen Filtermatrix — Sie können beispielsweise

@@ -46,7 +46,7 @@ S'applique uniquement à la clé de tri principale. `?sort=alpha&dir=desc` donne
 ### `?stage` — filtre de phase du tournoi
 
 ```
-?stage=qualified   par défaut — tous les pays qualifiés et leurs exportateurs
+?stage=group       par défaut — tous les pays qualifiés et leurs exportateurs
 ?stage=r32         16es de finale
 ?stage=r16         8es de finale
 ?stage=qf          Quarts de finale
@@ -55,7 +55,7 @@ S'applique uniquement à la clé de tri principale. `?sort=alpha&dir=desc` donne
 ?stage=winner      Vainqueur uniquement
 ```
 
-Reflète le carrousel de phase du panneau de filtre (Qualifiés → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur). Chaque position filtre à la fois les pays qualifiés et leurs pays exportateurs non qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée. Les pays non qualifiés et non exportateurs (cellules `of`/`on`) ne sont pas affectés — ils n'ont aucun lien avec le tournoi.
+Reflète le carrousel de phase du panneau de filtre (Phase de groupes → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur). Chaque position filtre les pays qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée. Les pays exportateurs non qualifiés (cellules `ef`/`en`) ne sont pas affectés, tout comme les pays non qualifiés et non exportateurs (cellules `of`/`on`) — aucun des deux n'a de position dans le tournoi à « atteindre ».
 
 Les valeurs inconnues sont silencieusement ignorées et les valeurs par défaut sont conservées.
 
@@ -129,8 +129,8 @@ Les alias et les codes individuels peuvent être librement mélangés ; le résu
 
 - `?stage=r16&show=qual` → uniquement les pays qualifiés ayant atteint les 8es de finale
 - `?stage=winner&show=qual` → uniquement le champion
-- `?stage=r32&show=exp` → exportateurs (qualifiés ou non) liés aux pays ayant atteint les 16es de finale
-- `?stage` n'a aucun effet sur les cellules `of`/`on` (elles n'ont pas de lien avec le tournoi)
+- `?stage=r32&show=exp` → exportateurs qualifiés ayant atteint les 16es de finale, plus tous les exportateurs non qualifiés (non affectés par la phase)
+- `?stage` n'a aucun effet sur les lignes non qualifiées (`ef`/`en`/`of`/`on`) — aucune n'a de position dans le tournoi à atteindre
 
 ## Exemples
 
@@ -140,7 +140,7 @@ Les alias et les codes individuels peuvent être librement mélangés ; le résu
 ?show=qual                    Les 48 pays qualifiés ; non qualifiés masqués.
 ?show=qual&sort=pop&dir=asc   Pays qualifiés triés par population croissante.
 ?show=qie                     Uniquement les pays qui importent et exportent.
-?stage=r32&show=exp           Colonne exportateurs, filtrée sur les pays ayant atteint les 16es de finale.
+?stage=r32&show=exp           Colonne exportateurs ; exportateurs qualifiés filtrés sur les 16es de finale, exportateurs non qualifiés non affectés.
 ?sort=delta&dir=asc&show=qual Pays qualifiés avec le moins d'écart joue-pour vs. né-dans en premier.
 ?show=all                     Toutes les 8 cellules, dont of et on normalement masquées.
 ?show=qual,ef                 Pays qualifiés + exportateurs FIFA non qualifiés.

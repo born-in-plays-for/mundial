@@ -12,7 +12,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // sort criteria compare couples by the SUM of both members' values instead of one team's
   // own. Not itself a sort criterion — a display-mode switch alongside the sort column,
   // gated the same way the old "match" sort-item was: no fixtures to group by at the
-  // 'qualified' stage, so switching to 'match' there is a no-op (forced back to 'team').
+  // 'group' stage, so switching to 'match' there is a no-op (forced back to 'team').
   let _displayMode = 'team';
   // Set only when _updateCarouselTitle auto-forces 'match' back to 'team' because the carousel
   // dropped to stage 0 (see below) — remembers that this was NOT the user's own choice, so
@@ -50,7 +50,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <div class="csb-sort-stack d-flex flex-column gap-1">
       <table class="flex-grow-1 csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
-          <td class="csb-header text-muted" title="${T.csbTips.action}" style="vertical-align: middle;">${_sortLabel}</td>
+          <td class="csb-header text-muted ps-1" title="${T.csbTips.action}" style="vertical-align: middle;">${_sortLabel}</td>
         </tr>
         <tr>
           <td class="csb-sort-col text-muted">
@@ -68,6 +68,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       </tbody></table>
       <table class="csb-table csb-display-table table table-sm table-bordered mb-0"><tbody>
         <tr>
+          <td class="csb-header text-muted ps-1" style="vertical-align: middle;" title="${T.csbTips.view}">
+            <span class="cbs-header-label">${T.sortLabels.view}</span>
+          </td>
+        </tr>
+        <tr>
           <td class="csb-toggle-col text-muted">
             <div class="csb-display-toggle" title="${T.sortLabels.matchHint}">
               <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
@@ -81,7 +86,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     </div>
     <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
     <tr>
-      <td colspan="2" class="csb-header text-center text-muted" style="vertical-align: middle;">
+      <td colspan="2" class="csb-header text-muted ps-1" style="vertical-align: baseline;">
         <div class="d-flex align-items-center justify-content-between">
           <span class="cbs-header-label">${T.filterLabels.action}</span>
           <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
@@ -136,11 +141,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // wraps the whole pill list there. This sidebar still owns the stage index itself, its
   // persistence, and the filtering it drives; it just pushes state to eloMain (.maxStage,
   // .stage) and reacts to its 'stage-change' event instead of a local Bootstrap listener.
-  let _stage = 0; // index into CAROUSEL_STAGES — 0 ('qualified') shows every qualified team
+  let _stage = 0; // index into CAROUSEL_STAGES — 0 ('group') shows every qualified team
 
   const _updateCarouselTitle = () => {
     _refreshCarouselBounds();
-    // "match" display only means anything once the carousel has moved off 'qualified' (stage
+    // "match" display only means anything once the carousel has moved off 'group' (stage
     // 0) — there's no fixture to group by until a knockout round is being viewed. Disabled
     // (native `disabled` on the radio — Bootstrap's own .btn-check:disabled+.btn CSS dims the
     // label, and a disabled radio's label click is a no-op natively) rather than removed, so
@@ -200,13 +205,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   let _confIds = null; // set by setConfFilter(); null = no confederation filter
   let _confKey = null; // confederation key ('uefa' etc.) matching _confIds, for persistence/explain
 
+  // 'e' (non-qualified exporter) and 'o' (non-qualified, no tournament connection) are both
+  // unaffected by the stage carousel — only the qualified categories (qie/qi/qe/q) below get
+  // the reachesStage check, since only they have a tournament position to "reach". A
+  // non-qualified exporter's players' destination countries can be filtered by stage on their
+  // own (qualified) side already; the exporter itself always shows/hides purely by its own
+  // ef/en checkbox, same as of/on.
   const catEloChecked = (id, fifaMember) => {
     if (_confIds && fifaMember && !_confIds.has(id)) return false;
     const cat = flagCat(id);
-    if (cat === 'e') {
-      if (!reachesStage(app.exporterStageIndex?.get(id), _stage)) return false;
-      return fifaMember ? _fltEF.checked : _fltEN.checked;
-    }
+    if (cat === 'e') return fifaMember ? _fltEF.checked : _fltEN.checked;
     if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
     if (!reachesStage(app.stageIndexById?.get(id), _stage)) return false;
     return _catChecked(cat);
@@ -543,7 +551,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   measureControlSidebar();
 
   // Fixture pairing for match-display mode — only meaningful once the carousel is off
-  // 'qualified' (stage 0), since there's no single fixture per team at the qualified stage.
+  // 'group' (stage 0), since there's no single fixture per team at the group stage.
   // Data comes from app.matchInfoByIso2 (qualified.js's buildMatchInfo), layering two sources:
   // status.json's lostTo (authoritative winner/loser, including penalty shootouts) for decided
   // fixtures, and data/fixtures.json (mundial-build) for real pairing — home/away, date,

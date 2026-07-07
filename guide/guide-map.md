@@ -40,10 +40,10 @@ Uncheck any cell to hide that category. Click a row or column header to toggle t
 
 ### Tournament stage filter
 
-A small carousel sits in the *qualified* row header, cycling through seven positions: **Qualified → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
+A small carousel sits in the *qualified* row header, cycling through seven positions: **Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
 
 - Use the ‹ › arrows, or swipe left/right on touch screens, to move between stages.
-- Each position filters both qualified countries and their non-qualified exporter countries down to those that "reached" that stage — still alive going into it, or having already won it.
+- Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it. Non-qualified exporter countries are unaffected, shown regardless of stage.
 - Navigation is capped at the furthest stage the tournament has actually reached; later positions stay locked until real fixtures resolve into them.
 
 The carousel works in combination with the rest of the filter matrix — you can, for example,
