@@ -1933,9 +1933,22 @@ Promise.all([
     const x0 = Math.min(...xs), x1 = Math.max(...xs);
     const y0 = Math.min(...ys), y1 = Math.max(...ys);
     const pad = 20;
-    const k = Math.max(1, Math.min(12, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
-    const tx = vbX + vbW / 2 - k * (x0 + x1) / 2;
-    const ty = vbY + vbH / 2 - k * (y0 + y1) / 2;
+    // The zoom-reset/zoom-span/theme-toggle stack floats over the map's bottom-left corner
+    // (_syncMapHeight below) — without extra clearance there, "fit everything" can zoom in
+    // just far enough to tuck a flag right behind those buttons. viewBox units aren't 1:1
+    // with real screen pixels (the SVG scales responsively to its container's actual CSS
+    // width, and that ratio swings a lot between a phone and a desktop), so 20 *viewBox*
+    // units of extra padding would give a much smaller on-screen margin on a narrow phone
+    // than on a wide desktop — the opposite of what's needed, since the button stack itself
+    // is a fixed ~38px regardless of viewport. Converting through the SVG's current rendered
+    // width keeps the clearance a consistent ~20 real screen px everywhere.
+    const svgWidthPx = svg.node().getBoundingClientRect().width || vbW;
+    const leftPad = pad + 20 * (vbW / svgWidthPx);
+    const k = Math.max(1, Math.min(12, Math.min(vbW / (x1 - x0 + leftPad + pad), vbH / (y1 - y0 + 2 * pad))));
+    const cx = (x0 + x1) / 2 + (pad - leftPad) / 2; // shifted left so centering pushes content right, clear of the buttons
+    const cy = (y0 + y1) / 2;
+    const tx = vbX + vbW / 2 - k * cx;
+    const ty = vbY + vbH / 2 - k * cy;
     _initialTransform = d3.zoomIdentity.translate(tx, ty).scale(k);
     svg.call(zoom.transform, _initialTransform);
   }
