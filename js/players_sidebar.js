@@ -58,10 +58,10 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
       </div>
       <span id="players-conf-label" class="cbs-header-label csb-conf-label"></span>
       <div class="psb-conf-scope ms-auto" title="${T.psbLabels.confScopeTip}">
-        <input type="radio" class="btn-check" name="psb-conf-scope" id="psb-conf-scope-playsFor" autocomplete="off" data-scope="playsFor" checked>
-        <label class="btn" for="psb-conf-scope-playsFor">${T.psbLabels.confScopeTeam}</label>
         <input type="radio" class="btn-check" name="psb-conf-scope" id="psb-conf-scope-bornIn" autocomplete="off" data-scope="bornIn">
         <label class="btn" for="psb-conf-scope-bornIn">${T.psbLabels.confScopeBirth}</label>
+        <input type="radio" class="btn-check" name="psb-conf-scope" id="psb-conf-scope-playsFor" autocomplete="off" data-scope="playsFor" checked>
+        <label class="btn" for="psb-conf-scope-playsFor">${T.psbLabels.confScopeTeam}</label>
       </div>
     </div>
     <div class="psb-carousel-host"></div>
@@ -150,9 +150,15 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   // is already crowded with collapse/share/params-badge) — shows the active filter at a
   // glance instead of only revealing it by opening the dropdown.
   const _confLabelEl = _panel.querySelector('#players-conf-label');
+  // .psb-conf-scope (declared properly below, next to its own change listener) means nothing
+  // without a confederation actually selected — disabled (native `disabled`, dims via
+  // Bootstrap's own .btn-check:disabled+.btn CSS) rather than removed, so the toolbar's layout
+  // stays stable regardless of whether a confederation is currently picked.
+  const _confScopeEl = _panel.querySelector('.psb-conf-scope');
   const _syncConfRadio = () => {
     _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); });
     if (_confLabelEl) _confLabelEl.textContent = _confKey ? (T.csbParams.confNames[_confKey] ?? _confKey) : T.csbParams.confAll;
+    _confScopeEl?.querySelectorAll('input[data-scope]').forEach(r => { r.disabled = !_confKey; });
   };
   _syncConfRadio();
   _confDropdown?.addEventListener('show.bs.dropdown',   () => { _body.style.overflow = 'visible'; });
@@ -167,8 +173,8 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
 
   // Which country the confederation dropdown checks — CONF_IDS covers arbitrary countries, not
   // just the 48 qualified teams, so a birth country resolves the exact same way a plays-for
-  // team does (js/conf.js's own id sets, no separate table needed).
-  const _confScopeEl = _panel.querySelector('.psb-conf-scope');
+  // team does (js/conf.js's own id sets, no separate table needed). _confScopeEl itself is
+  // declared above, next to _syncConfRadio (which also needs it — see that comment).
   const _syncConfScope = () => {
     _confScopeEl?.querySelectorAll('input[data-scope]').forEach(r => { r.checked = r.dataset.scope === _confScope; });
   };

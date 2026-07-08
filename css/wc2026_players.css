@@ -59,7 +59,7 @@
    .psb-conf-scope), so on/off state and the click target are both Bootstrap's own; this only
    needs to override .csb-table td's default right-align (meant for a column that sits next to
    a separate checkbox column, which these rows don't have). */
-#players-sidebar .csb-filter-table .csb-row { text-align: left; }
+#players-sidebar .csb-filter-table .csb-row { text-align: center; }
 
 /* Marks which criterion is currently leading the "plays for" column's team sort — every item
    stays clickable regardless (see js/players_sidebar.js's sort-list click handler, which
@@ -79,7 +79,7 @@
    (css/global.css), not tied to <elo-ranking> — mounting createStageCarousel()'s own .el
    here needs no extra rules beyond not letting it collide with the toolbar above it. No
    control-1 equivalent — its own carousel lives inside <elo-ranking>, not the sidebar itself. */
-#players-sidebar .psb-carousel-host { width: 100%; }
+#players-sidebar .psb-carousel-host { width: 360px; }
 
 /* Footer (visible/total count) — js/players_sidebar.js reuses control 1's own #elo-meta/
    #elo-meta-count ids directly (styled in css/control-sidebar.css) rather than a

@@ -226,7 +226,7 @@ export const T = {
       sortTeamsTip: 'Trie par classement de l’équipe — n’affecte pas le tri par nom de joueur (en-tête de colonne du tableau)',
       native: 'natif', nativeTip: 'Né et sélectionné dans le même pays',
       moved: 'expatrié', movedTip: 'Né dans un pays, sélectionné dans un autre',
-      confScopeTeam: 'équipe', confScopeBirth: 'naissance',
+      confScopeTeam: 'Joue pour', confScopeBirth: 'Né en',
       confScopeTip: 'Filtrer la confédération par équipe (pays représenté) ou par pays de naissance',
     },
     csbTips: {
@@ -353,7 +353,7 @@ export const T = {
       sortTeamsTip: "Ordina per classifica della squadra — non influisce sull'ordine per nome del giocatore (intestazione della colonna nella tabella)",
       native: 'nativo', nativeTip: 'Nato e selezionato nello stesso paese',
       moved: 'espatriato', movedTip: 'Nato in un paese, selezionato in un altro',
-      confScopeTeam: 'squadra', confScopeBirth: 'nascita',
+      confScopeTeam: 'Gioca per', confScopeBirth: 'Nato in',
       confScopeTip: 'Filtra la confederazione per squadra (paese rappresentato) o per paese di nascita',
     },
     csbTips: {
@@ -480,7 +480,7 @@ export const T = {
       sortTeamsTip: 'Sortiert nach Team-Rang — betrifft nicht die Sortierung nach Spielername (Tabellenspaltenkopf)',
       native: 'einheimisch', nativeTip: 'Geboren und nominiert im selben Land',
       moved: 'ausgewandert', movedTip: 'Geboren in einem Land, nominiert für ein anderes',
-      confScopeTeam: 'Team', confScopeBirth: 'Geburt',
+      confScopeTeam: 'Spielt für', confScopeBirth: 'Geboren in',
       confScopeTip: 'Konföderation nach Team (vertretenes Land) oder nach Geburtsland filtern',
     },
     csbTips: {
@@ -607,7 +607,7 @@ export const T = {
       sortTeamsTip: 'Ordena por ranking del equipo — no afecta al orden por nombre del jugador (encabezado de columna de la tabla)',
       native: 'nativo', nativeTip: 'Nacido y seleccionado en el mismo país',
       moved: 'expatriado', movedTip: 'Nacido en un país, seleccionado en otro',
-      confScopeTeam: 'equipo', confScopeBirth: 'nacimiento',
+      confScopeTeam: 'Juega para', confScopeBirth: 'Nacido en',
       confScopeTip: 'Filtrar la confederación por equipo (país representado) o por país de nacimiento',
     },
     csbTips: {
@@ -734,7 +734,7 @@ export const T = {
       sortTeamsTip: "Sorts by team ranking — doesn't affect sorting by player name (the table's own column header)",
       native: 'native', nativeTip: 'Born and selected in the same country',
       moved: 'moved', movedTip: 'Born in one country, selected for another',
-      confScopeTeam: 'team', confScopeBirth: 'birth',
+      confScopeTeam: 'Plays For', confScopeBirth: 'Born In',
       confScopeTip: 'Filter confederation by team (country represented) or by birth country',
     },
     csbTips: {
