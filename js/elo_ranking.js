@@ -1,6 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { buildEloItems, ELIM_ROUNDS, CAROUSEL_STAGES } from './qualified.js';
+import { buildEloItems, ELIM_ROUNDS } from './qualified.js';
 import { LOCALE, T } from './i18n.js';
+import { createStageCarousel } from './stage_carousel.js';
 
 const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 
@@ -60,7 +61,6 @@ export const pillContent = ({ iso2, name, pts = null } = {}) => html`
   ${pts != null ? html`<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : nothing}`;
 
 class EloRanking extends HTMLElement {
-  static _carouselCount = 0; // see connectedCallback's carouselId
 
   // #itemById holds the reusable pill <span> per country — stable identity across renders,
   // so FLIP position animation and click listeners survive re-sorting/re-grouping. The <ul>'s
@@ -72,10 +72,10 @@ class EloRanking extends HTMLElement {
   // Stage carousel — wraps the whole pill list (like insights/status.html's #statusViz: prev/
   // next controls sit absolutely over the list's left/right edges, indicators below — see
   // css/global.css's .elo-viz). Position/persistence stays owned by control_sidebar.js — this
-  // component only renders the carousel and its per-stage captions, and reports slides/toggles
-  // via events ('stage-change', 'qualified-toggle') rather than holding any tournament state.
-  #bsCarousel = null; #nextBtn = null; #indicatorBtns = [];
-  #stage = 0; #maxStage = CAROUSEL_STAGES.length - 1;
+  // component only mounts the widget (built by createStageCarousel, shared with
+  // players_sidebar.js — see js/stage_carousel.js) and reports slides/toggles via events
+  // ('stage-change', 'qualified-toggle') rather than holding any tournament state itself.
+  #carousel = null;
   #viz = null; // the wrap div itself — see set displayMode below
 
   get hasItems() { return this.#itemById.size > 0; }
@@ -85,88 +85,13 @@ class EloRanking extends HTMLElement {
     const wrap = document.createElement('div');
     wrap.className = 'elo-viz';
 
-    // Bootstrap's carousel data-api (prev/next/indicator clicks) resolves its target purely via
-    // data-bs-target="#id" (Selector.getElementFromSelector) — no fallback to closest() — so an
-    // id is required even though this instance is only ever addressed through it, never by
-    // anything external. Suffixed with a counter in case more than one <elo-ranking> ever exists
-    // on the same page at once.
-    const carouselId = `elo-stage-carousel-${++EloRanking._carouselCount}`;
-    const carousel = document.createElement('div');
-    carousel.id = carouselId;
-    carousel.className = 'elo-stage-carousel carousel slide';
-    const inner = document.createElement('div');
-    inner.className = 'carousel-inner';
-    CAROUSEL_STAGES.forEach((_, i) => {
-      const item = document.createElement('div');
-      item.className = 'carousel-item' + (i === 0 ? ' active' : '');
-      item.dataset.stage = i;
-      const caption = document.createElement('div');
-      caption.className = 'stage-caption';
-      const title = document.createElement('span');
-      title.className = 'elo-item elo-item--qualified stage-title';
-      title.innerHTML = `<span class="elo-name">${T.stageLabels[i]}</span>`;
-      // Independent of carousel position — toggles the qie/qi/qe/q show/hide checkboxes,
-      // same as clicking "?show=qual" would (see control_sidebar.js's qualified-toggle listener).
-      title.addEventListener('click', e => {
-        e.stopPropagation();
-        this.dispatchEvent(new CustomEvent('qualified-toggle', { bubbles: true }));
-      });
-      caption.append(title);
-      item.appendChild(caption);
-      inner.appendChild(item);
-    });
-    carousel.appendChild(inner);
+    // Built by the shared factory (js/stage_carousel.js) — 'stage-change'/'qualified-toggle'
+    // dispatch on the carousel element itself and bubble up through wrap/this, so external
+    // listeners attached to this <elo-ranking> instance (e.g. control_sidebar.js's
+    // eloMain.addEventListener('stage-change', ...)) still receive them unchanged.
+    this.#carousel = createStageCarousel(T);
+    wrap.appendChild(this.#carousel.el);
 
-    const prevBtn = document.createElement('button');
-    prevBtn.type = 'button';
-    prevBtn.className = 'carousel-control-prev';
-    prevBtn.dataset.bsTarget = `#${carouselId}`;
-    prevBtn.dataset.bsSlide = 'prev';
-    prevBtn.title = T.csbTips.prevStage;
-    prevBtn.innerHTML = '<span class="carousel-control-prev-icon" aria-hidden="true"></span>';
-    const nextBtn = document.createElement('button');
-    nextBtn.type = 'button';
-    nextBtn.className = 'carousel-control-next';
-    nextBtn.dataset.bsTarget = `#${carouselId}`;
-    nextBtn.dataset.bsSlide = 'next';
-    nextBtn.title = T.csbTips.nextStage;
-    nextBtn.innerHTML = '<span class="carousel-control-next-icon" aria-hidden="true"></span>';
-    carousel.append(prevBtn, nextBtn);
-
-    const indicators = document.createElement('div');
-    indicators.className = 'carousel-indicators';
-    this.#indicatorBtns = CAROUSEL_STAGES.map((_, i) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.dataset.bsTarget = `#${carouselId}`;
-      btn.dataset.bsSlideTo = i;
-      if (i === 0) btn.className = 'active';
-      btn.setAttribute('aria-label', T.stageLabels[i]);
-      btn.title = T.stageLabels[i];
-      indicators.appendChild(btn);
-      return btn;
-    });
-    carousel.appendChild(indicators);
-    this.#nextBtn = nextBtn;
-
-    // Paging clicks (prev/next/indicators) are carousel-internal — don't let them also trigger
-    // whatever click handling a host page attaches to the component itself.
-    carousel.addEventListener('click', e => {
-      if (e.target.closest('.carousel-control-prev, .carousel-control-next, .carousel-indicators')) e.stopPropagation();
-    });
-
-    this.#bsCarousel = (typeof bootstrap !== 'undefined')
-      ? new bootstrap.Carousel(carousel, { interval: false, wrap: false })
-      : null;
-    carousel.addEventListener('slide.bs.carousel', e => {
-      if (e.to > this.#maxStage) { e.preventDefault(); return; }
-      this.#stage = e.to;
-      this.#refreshCarouselBounds();
-      this.dispatchEvent(new CustomEvent('stage-change', { detail: { stage: e.to }, bubbles: true }));
-    });
-    this.#refreshCarouselBounds();
-
-    wrap.appendChild(carousel);
     this.#ul = document.createElement('ul');
     this.#ul.className = 'elo-list';
     wrap.appendChild(this.#ul);
@@ -191,19 +116,13 @@ class EloRanking extends HTMLElement {
   // stage that currently has at least one team in it and pushes it here; disables (visually +
   // via the slide guard above) the next-arrow and indicator dots beyond it.
   set maxStage(n) {
-    this.#maxStage = n;
-    this.#refreshCarouselBounds();
-  }
-
-  #refreshCarouselBounds() {
-    this.#nextBtn?.classList.toggle('csb-stage-disabled', this.#stage >= this.#maxStage);
-    this.#indicatorBtns.forEach((btn, i) => btn.classList.toggle('csb-stage-locked', i > this.#maxStage));
+    if (this.#carousel) this.#carousel.maxStage = n;
   }
 
   // Programmatic navigation (URL ?stage=, restored localStorage state) — control_sidebar.js's
   // only way to move the carousel; user clicks go through Bootstrap directly instead.
   set stage(idx) {
-    if (idx !== this.#stage) this.#bsCarousel?.to(idx);
+    if (this.#carousel) this.#carousel.stage = idx;
   }
 
   set items(list) {

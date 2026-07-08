@@ -167,6 +167,19 @@ export const buildEloItems = ({ rankings, byId, importByCountry, nativeByCountry
     });
 };
 
+// Per-country comparators, keyed the same as the reorderable sort criteria — pure functions of
+// the two items' own fields (.rank/.pop/.expCount/.impCount/.name), i.e. exactly buildEloItems'
+// own output shape above. Shared by control_sidebar.js's country sort and players_sidebar.js's
+// "sort by team" mode, so the two can't silently drift apart on what e.g. "delta" means.
+export const teamComparators = {
+  elo:   (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999),
+  exp:   (a, b) => b.expCount - a.expCount,
+  imp:   (a, b) => b.impCount - a.impCount,
+  delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount) || (b.expCount + b.impCount) - (a.expCount + a.impCount),
+  pop:   (a, b) => (b.pop ?? 0) - (a.pop ?? 0),
+  alpha: (a, b) => a.name.localeCompare(b.name),
+};
+
 // Per knockout round: how many of the 48 qualifiers were eliminated in it, passed through it
 // (won and moved on), or are still contesting it (fixture not yet played/decided). Derived
 // purely from status.json's `lostTo` links — a team that appears as someone else's lostTo has

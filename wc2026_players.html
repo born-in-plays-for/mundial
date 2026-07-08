@@ -6,6 +6,7 @@
 <title>Players & Coaches · Mundial 2026</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7/css/flag-icons.min.css">
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/player.css">
 <link rel="stylesheet" href="css/wc2026_players.css">
@@ -25,13 +26,17 @@
   </div>
 </header>
 <div id="main-content" class="container pb-2 taxonomy">
-  <div id="player-list"></div>
+  <table class="table table-sm pt-table">
+    <thead><tr id="player-list-head"></tr></thead>
+    <tbody id="player-list"></tbody>
+  </table>
 </div>
 <script type="module">
-import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { wikiUrl, wikiUrlEn, loadWikiData, T, countryName } from './js/i18n.js';
-import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, buildEloItems, loadEloData } from './js/qualified.js';
-import { initSidebar } from './js/control_sidebar.js';
+import { QUALIFIED_BY_NAME, buildImportByCountry, buildEloItems, loadEloData } from './js/qualified.js';
+import { iso2ForId, _NULL_CODE } from './js/iso2.js';
+import { initPlayersSidebar } from './js/players_sidebar.js';
 
 const _header = document.getElementById('players-header');
 const _main   = document.getElementById('main-content');
@@ -53,15 +58,13 @@ const _syncHeaderLayout = () => {
 requestAnimationFrame(_syncHeaderLayout);
 window.addEventListener('resize', _syncHeaderLayout);
 
-const [{ eloData, statusByIso2 }, mapData, fixturesData] = await Promise.all([
+const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
   loadEloData(),
   fetch('./data/v2/map.json').then(r => r.json()),
-  fetch('./data/fixtures.json').then(r => r.json()).catch(() => null),
   loadWikiData(),
 ]);
 
 const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
-const fifaMemberIds = new Set(eloData.rankings.filter(r => r.fifaMember).map(r => r.id));
 const importByCountry = buildImportByCountry(mapData, countryName);
 const nativeByCountry = {};
 Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
@@ -69,46 +72,27 @@ Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
   if (nId != null) nativeByCountry[nId] = players;
 });
 
-const app = { byId, importByCountry };
-// No <elo-ranking> on this page at all — a bare, disconnected element stands in for it.
-// initSidebar's every touchpoint on eloMain (.stage=, .maxStage=, .displayMode=,
-// addEventListener, querySelectorAll('.elo-item')) is satisfied by plain Element/EventTarget
-// behavior: property sets are harmless expando assignments, addEventListener/querySelectorAll
-// work natively and simply never fire/never find anything. rawItems (needed for
-// app.stageIndexById, the same data <elo-ranking> would otherwise compute internally) comes
-// straight from buildEloItems — the pure data function initEloRanking calls under the hood —
-// so no rendering machinery is needed to get it. No renderElo callback either: there's nothing
-// to render, and callbacks.renderElo?.() is already optional-chained everywhere in the sidebar.
-const el = document.createElement('div');
-
-const sidebarCallbacks = {};
-// showNonQualified: false — every player on this page belongs to one of the 48 qualified
-// squads by construction (mapData.data[]/natives only ever cover qualified rosters), so the
-// non-qualified filter row (FIFA/non-FIFA, exporter/non-exporter of countries not even in the
-// tournament) has nothing to filter here — hide it rather than show a control with no effect.
-const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true, showNonQualified: false });
-
 const rawItems = buildEloItems({ rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2 });
-// Keyed by country id — the same per-country fields (rank/pop/expCount/impCount) sidebar.sortFns'
-// comparators read, looked up per player via QUALIFIED_BY_NAME[p.nation].
+// Keyed by country id — the same per-country fields (rank/pop/expCount/impCount)
+// teamComparators reads, looked up per player via QUALIFIED_BY_NAME[p.nation].
 const rawById = new Map(rawItems.map(item => [item.id, item]));
-app.stageIndexById = new Map(rawItems.map(item => [item.id, item.visibleThroughIndex]));
-app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
-app.matchInfoByIso2 = buildMatchInfo(statusByIso2, fixturesData, buildNameByIso2(eloData.rankings, countryName));
-sidebar.updateStageTitle();
 
 // Every player and coach across the 48 qualified squads: exported entries (data[].players,
 // already tagged with the country they represent) plus natives (born and serving the same
-// country, listed separately under mapData.natives). Sorted by name once up front purely as
-// a stable tie-break base — renderPlayers below re-sorts a copy by whatever criterion is
-// currently active every time it runs, and Array#sort is stable, so ties within that
-// re-sort naturally fall back to this alphabetical order rather than DOM/data order.
+// country, listed separately under mapData.natives). `.native` records which of the two a
+// player is — export entries are by construction born elsewhere than they play for (that's
+// what makes them an export), native entries the opposite — this is the whole of
+// players_sidebar.js's native/moved filter, no further lookup needed. Sorted by name once up
+// front purely as a stable tie-break base — renderPlayers below re-sorts a copy by whatever
+// criterion is currently active every time it runs, and Array#sort is stable, so ties within
+// that re-sort naturally fall back to this alphabetical order rather than DOM/data order.
 const entries = [];
 for (const rec of mapData.data ?? []) {
-  for (const p of rec.players ?? []) entries.push(p);
+  for (const p of rec.players ?? []) entries.push({ ...p, native: false, birthCountry: rec.country, birthCountryId: rec.id });
 }
 for (const [country, natives] of Object.entries(mapData.natives ?? {})) {
-  for (const p of natives) entries.push({ ...p, nation: country });
+  const nId = QUALIFIED_BY_NAME[country];
+  for (const p of natives) entries.push({ ...p, nation: country, native: true, birthCountry: country, birthCountryId: nId });
 }
 entries.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -127,39 +111,63 @@ const wikiLink = p => {
   return html`${p.name}${coachBadge(p)}`;
 };
 
-// Reactive to the control panel's own Sort column via sidebarCallbacks.renderElo below — the
-// same hook <elo-ranking> pages assign their own render function to. 'alpha' sorts by the
-// player's own name (sidebar.sortFns.alpha compares *country* names, meant for the country
-// list — not what "A-Z" means for a list of players); every other key looks up each player's
-// own team via QUALIFIED_BY_NAME[p.nation] and reuses the sidebar's own comparator for that
-// team's standing, so player sort exactly matches how the same criterion orders countries.
+// flag-icons (css/flag-icons.min.css, linked in <head>) — same "fi fi-<iso2>" span pattern
+// wc2026_live.html already uses. Birth country can be any country in the world (not just a
+// qualified team), so it goes through iso2ForId (js/iso2.js's shared id→iso2 table, falling
+// back to iso-3166-1 for anything not hardcoded there) with the same _NULL_CODE fallback for
+// the handful of id=null historical/alias names. "Plays for" is always one of the 48 qualified
+// teams, so its flag reuses buildEloItems' own .iso2 (already resolved, no extra lookup).
+const flagSpan = iso2 => iso2 ? html`<span class="fi fi-${iso2} pt-flag"></span>` : nothing;
+const birthFlag = p => flagSpan(p.birthCountryId != null ? iso2ForId(p.birthCountryId) : (_NULL_CODE[p.birthCountry] ?? null));
+const playsForFlag = p => {
+  const teamId = QUALIFIED_BY_NAME[p.nation];
+  return flagSpan(teamId != null ? rawById.get(teamId)?.iso2 : null);
+};
+
+// Table-header sort UI (click a column to sort by it, click again to reverse) — drives the same
+// sidebar state the filter panel's own sort controls do (players_sidebar.js's setSort), so the
+// two can never disagree about what's currently sorting the list.
+const _sortArrow = () => sidebar.sortDir === 'asc' ? ' ▾' : ' ▴';
+// With only natives shown (sidebar.onlyNative — moved unchecked), "born in" and "plays for" are
+// the same string for every row by construction, so the two columns collapse into one. Its
+// click target is whichever of 'birth'/'team' is already active (so a repeat click still just
+// reverses direction, same as any other header); defaults to 'team' otherwise.
+const renderHead = () => {
+  const mode = sidebar.sortMode;
+  const th = (key, label) => html`<th class="pt-th${mode === key ? ' pt-th-active' : ''}" @click=${() => sidebar.setSort(key)}>${label}${mode === key ? _sortArrow() : ''}</th>`;
+  const cols = sidebar.onlyNative
+    ? [th('player', T.psbLabels.byPlayer), th(mode === 'birth' ? 'birth' : 'team', `${T.chainLegend.bornIn} / ${T.chainLegend.playsFor}`)]
+    : [th('player', T.psbLabels.byPlayer), th('birth', T.chainLegend.bornIn), th('team', T.chainLegend.playsFor)];
+  render(html`${cols}`, document.getElementById('player-list-head'));
+};
+
+// sidebar.sortPlayers filters (native/moved, confederation, tournament stage) and sorts
+// (by team standing, player name, or birth country) in one pass — see players_sidebar.js's own
+// comment. Re-renders the header alongside the body so the active-column arrow always matches.
 const renderPlayers = () => {
-  const key = sidebar.sortOrder[0];
-  const sorted = [...entries].sort((a, b) => {
-    if (key === 'alpha') return (sidebar.sortDir === 'asc' ? -1 : 1) * a.name.localeCompare(b.name);
-    const teamA = rawById.get(QUALIFIED_BY_NAME[a.nation]);
-    const teamB = rawById.get(QUALIFIED_BY_NAME[b.nation]);
-    let d = (!teamA || !teamB) ? 0 : sidebar.sortFns[key](teamA, teamB);
-    if (sidebar.sortDir === 'asc') d = -d;
-    // Ties are common (e.g. delta = expCount - impCount is 0 for any team exporting and
-    // importing the same count — several teams can land on the exact same value). Without
-    // a secondary key, Array#sort's stability would fall through to entries' original
-    // per-player name order, scattering a tied team's own players apart instead of keeping
-    // them together. Grouping by team name on a tie keeps every team's players bundled
-    // regardless of how many other teams share its value on the primary criterion.
-    return d !== 0 ? d : a.nation.localeCompare(b.nation);
-  });
+  const sorted = sidebar.sortPlayers(entries);
+  renderHead();
+  const merged = sidebar.onlyNative;
   render(html`
     ${sorted.map(p => html`
-      <div class="pt-player-row d-flex justify-content-between align-items-center">
-        <span>${wikiLink(p)}</span>
-        <span class="pt-caps text-nowrap">${p.nation}</span>
-      </div>`)}
+      <tr>
+        <td>${wikiLink(p)}</td>
+        ${merged ? nothing : html`<td class="pt-born text-nowrap">${birthFlag(p)}${p.birthCountry}</td>`}
+        <td class="pt-caps text-nowrap">${playsForFlag(p)}${p.nation}</td>
+      </tr>`)}
   `, document.getElementById('player-list'));
 };
-sidebarCallbacks.renderElo = renderPlayers;
+
+const sidebar = initPlayersSidebar({ T, rawById, callbacks: { onChange: renderPlayers } });
 renderPlayers();
 sidebar.applyParams(new URLSearchParams(location.search));
+// initPlayersSidebar renders the whole filter/sort/carousel panel into #sidebar-host after the
+// _syncHeaderLayout() call above (the one right after setting #players-meta's text) already
+// ran — that earlier call measured #players-header before the sidebar existed, so #main-content
+// ends up under-padded (the fixed header is visually taller than what was measured) until a
+// window resize happens to trigger a re-sync. One more pass, now that the sidebar's real DOM is
+// in place, fixes the initial load.
+requestAnimationFrame(_syncHeaderLayout);
 </script>
 </body>
 </html>

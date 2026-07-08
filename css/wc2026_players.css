@@ -1,3 +1,98 @@
 /* players page fixed header — auth-bar _offsetSibling() sets top:32px automatically */
 #players-header { position: fixed; left: 0; right: 0; z-index: 100; background: var(--fixed-element-bg); }
 #main-content { overflow-x: hidden; }
+
+/* Players table — a genuine <table> (name | born in | plays for), page-specific: the map
+   page's own dim-mode player list (css/player.css's .pt-player-row/.pt-country-header) groups
+   players under a country header instead of one flat sortable row per player, a different
+   enough shape that it isn't reused here. */
+.pt-table { font-size: 12px; }
+.pt-table thead th.pt-th { font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+.pt-table thead th.pt-th:hover { color: var(--color-default); }
+.pt-table thead th.pt-th-active { color: var(--color-default); }
+.pt-table td { vertical-align: middle; padding: 4px 8px; border-bottom: 1px solid #f8f5f2; }
+.pt-table td:first-child { padding-left: 4px; }
+.pt-flag { margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
+
+/* "born in"/"plays for" columns — same muted/11px look as .pt-caps (css/player.css) had on
+   its own, restated here since .pt-caps' own rule doesn't touch layout, just color/size. */
+.pt-born { color: var(--text-muted); font-size: 11px; }
+
+/* Players sidebar (control 2 — js/players_sidebar.js)
+ *
+ * Own id, own rules — deliberately not sharing #control-sidebar's id/CSS (see
+ * css/control-sidebar.css's own header comment). Bare, unscoped classes control-sidebar.css
+ * already defines (.csb-conf-btn, .cbs-header-label, .csb-table [data-col] hover, .elo-item,
+ * the Bootstrap .btn-check pattern) apply here for free — only the id-scoped rules (container
+ * chrome, table borders, sort list/dir button, checkbox glyph, confederation dropdown sizing)
+ * need a #players-sidebar-scoped equivalent, written fresh for this simpler 2-row filter shape
+ * (no rowspan/colspan grid, no --sort-extra-pad divider math tied to control 1's 4×2 matrix).
+ */
+
+#players-sidebar {
+  font-size: 11px;
+  background-color: rgba(256,256,256,.667);
+}
+#players-sidebar .csb-body { background: transparent; }
+#players-sidebar .csb-content { width: 100%; }
+#players-sidebar .csb-inset { padding: .25rem; }
+#players-sidebar .csb-toolbar { width: 100%; padding: 2px 6px; background: var(--bg-hover); }
+
+#players-sidebar .csb-table { border-collapse: collapse; margin: 0; }
+#players-sidebar .csb-table td { padding: 2px 6px; background: var(--bg-hover); text-align: right; }
+#players-sidebar .csb-table tr:first-child { border-top: 0; }
+#players-sidebar .csb-table tr:last-child  { border-bottom: 0; }
+#players-sidebar .csb-table tr > td:last-child { border-right: 0; }
+#players-sidebar .csb-sort-table td,
+#players-sidebar .csb-filter-table td:first-child { border-left: 0; }
+#players-sidebar .elo-item { padding: 0 0.2rem; gap: 2px; border-radius: 0.375rem; }
+#players-sidebar .elo-name { font-size: 11px; }
+#players-sidebar .csb-table .form-check-input { display: none; }
+#players-sidebar .csb-header { text-align: left !important; }
+
+#players-sidebar .csb-row { cursor: pointer; white-space: nowrap; }
+#players-sidebar .csb-row:hover { background: var(--bg-hover); border-radius: 3px; color: var(--text-muted); }
+/* Filter rows (native/moved) — no separate checkbox column (the row itself is the click
+   target, see js/players_sidebar.js's [data-row] click listeners), so the label reads left
+   rather than inheriting .csb-table td's default right-align (meant for a column that sits
+   next to a checkbox). On/off state shows on the pill itself, driven straight off the
+   checkbox's :checked state via :has() — no separate JS class to keep in sync. */
+#players-sidebar .csb-filter-table .csb-row { text-align: left; }
+#players-sidebar .csb-filter-table .csb-row:has(input:not(:checked)) .elo-item { opacity: 0.35; }
+
+/* ── Sort column — same recipe as #control-sidebar's (fixed 4-item reorderable list +
+   absolutely-positioned dir button), just without the elo/pop-grouping divider (::after),
+   which was tied to control 1's specific 4-key order/meaning. */
+#players-sidebar { --sort-extra-pad: 26px; }
+#players-sidebar .csb-table td.csb-sort-col { padding: 0 var(--sort-extra-pad); vertical-align: top; width: 1px; height: 1px; }
+#players-sidebar .csb-sort-item { cursor: pointer; padding: 0; }
+#players-sidebar .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
+/* Marks which criterion is currently leading the "plays for" column's team sort — every item
+   stays clickable regardless (see js/players_sidebar.js's sort-list click handler, which
+   switches into team mode itself rather than requiring it first), so unlike control 1's
+   .csb-sort-item--disabled this never dims/disables, just highlights the active one. */
+#players-sidebar .csb-sort-item--active { background: var(--bg-hover); font-weight: 600; }
+#players-sidebar .csb-sort-dir {
+  position: absolute; top: 1px; left: calc((18px - var(--sort-extra-pad)) / 2 - 18px); width: 18px; height: 18px;
+  background: url('../images/sort-vertical-svgrepo-com.svg') no-repeat center / 18px 18px;
+  border: none; padding: 0; cursor: pointer; opacity: 0.75;
+}
+#players-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
+#players-sidebar .csb-sort-dir:hover { opacity: 1; }
+
+/* ── Confederation dropdown — own id, same sizing fix as #zoom-conf-dropdown. ── */
+#players-conf-dropdown { display: inline-flex; z-index: 2000; }
+#players-conf-dropdown .dropdown-menu { font-size: 11px; }
+
+/* ── Stage carousel host — .elo-viz/.elo-stage-carousel/.carousel-* are all global
+   (css/global.css), not tied to <elo-ranking> — mounting createStageCarousel()'s own .el
+   here needs no extra rules beyond not letting it collide with the toolbar above it. */
+#players-sidebar .psb-carousel-host { width: 100%; }
+
+/* ── Footer (visible/total count) — same recipe as #control-sidebar's #elo-meta, own id since
+   #elo-meta/#elo-meta-count are plain (unscoped) ids in control-sidebar.css and this page has
+   no <elo-ranking> to own them. */
+#players-sidebar .csb-footer { width: 100%; background: var(--bg-hover); padding: 0 6px; min-height: 22px; }
+#psb-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; overflow-x: hidden; white-space: nowrap; }
+#psb-meta-count { flex-shrink: 0; }
+

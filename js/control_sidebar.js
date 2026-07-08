@@ -1,6 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { CONF_IDS } from './conf.js';
-import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage } from './qualified.js';
+import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './qualified.js';
+import { maxReachableStage } from './stage_carousel.js';
 
 const _STORAGE_KEY = 'mundial-control-sidebar-state';
 
@@ -178,13 +179,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // eloMain applies this both visually (disabled/locked classes) and as its own slide guard.
   let _maxStage = CAROUSEL_STAGES.length - 1;
   const _refreshCarouselBounds = () => {
-    const qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
-    let max = 0;
-    for (let p = 0; p < CAROUSEL_STAGES.length; p++) {
-      const count = qualifiedIds.filter(id => reachesStage(app.stageIndexById?.get(id), p)).length;
-      if (count > 0) max = p; else break;
-    }
-    _maxStage = max;
+    _maxStage = maxReachableStage(Object.keys(QUALIFIED_NAMES).map(Number), app.stageIndexById);
     eloMain.maxStage = _maxStage;
   };
 
@@ -602,14 +597,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // pairing at all (e.g. a bracket slot too far out to be scheduled yet) — see _buildGroups.
   const _matchInfo = item => _stage > 0 ? app.matchInfoByIso2?.[item.iso2]?.[_stage] : undefined;
 
-  const _sortFns = {
-    elo:   (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999),
-    exp:   (a, b) => b.expCount - a.expCount,
-    imp:   (a, b) => b.impCount - a.impCount,
-    delta: (a, b) => (b.expCount - b.impCount) - (a.expCount - a.impCount) || (b.expCount + b.impCount) - (a.expCount + a.impCount),
-    pop:   (a, b) => (b.pop ?? 0) - (a.pop ?? 0),
-    alpha: (a, b) => a.name.localeCompare(b.name),
-  };
+  // Shared with players_sidebar.js's "sort by team" mode — see qualified.js's own comment.
+  const _sortFns = teamComparators;
 
   // exp/imp show both counts, always imports-then-exports — same fixed reading order as the
   // ◀▶ import/export dot (taxonomy.css: red ◀ import, blue ▶ export), regardless of which of

@@ -220,6 +220,11 @@ export const T = {
     },
     sortLabels: { action: 'trier', view: 'afficher', elo: 'classement', exp: 'exports', imp: 'imports', pop: 'population', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'équipes', match: 'matchs', matchHint: 'Regrouper par match (à partir des 16es de finale)' },
     filterLabels: { action: 'filtrer', exporter: "A des joueurs nés ici qui jouent pour un autre pays", nonExp: "Aucun joueur né ici ne joue pour un autre pays", qualified: 'qualifié', importer: "A des joueurs nés dans un autre pays dans sa sélection", nonImp: "Toute la sélection est née dans ce pays", nonQual: 'non-qual.', all: 'tout' },
+    psbLabels: {
+      byPlayer: 'nom',
+      native: 'natif', nativeTip: 'Né et sélectionné dans le même pays',
+      moved: 'expatrié', movedTip: 'Né dans un pays, sélectionné dans un autre',
+    },
     csbTips: {
       action: "Choisir comment la liste des pays est triée",
       view: "Choisir comment la liste des pays est affichée (équipes ou matchs)",
@@ -338,6 +343,11 @@ export const T = {
     },
     sortLabels: { action: 'ordinare', view: 'visualizzare', elo: 'classifica', exp: 'export', imp: 'import', pop: 'popolazione', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'squadre', match: 'partite', matchHint: 'Raggruppa per partita (dagli ottavi in poi)' },
     filterLabels: { action: 'filtrare', exporter: "Ha giocatori nati qui che giocano per un altro paese", nonExp: "Nessun giocatore nato qui gioca per un altro paese", qualified: 'qualific.', importer: "Ha giocatori nati in un altro paese nella sua selezione", nonImp: "L'intera selezione è nata in questo paese", nonQual: 'non-qual.', all: 'tutto' },
+    psbLabels: {
+      byPlayer: 'nome',
+      native: 'nativo', nativeTip: 'Nato e selezionato nello stesso paese',
+      moved: 'espatriato', movedTip: 'Nato in un paese, selezionato in un altro',
+    },
     csbTips: {
       action: "Scegli come ordinare l'elenco dei paesi",
       view: "Scegli come visualizzare l'elenco dei paesi (squadre o partite)",
@@ -456,6 +466,11 @@ export const T = {
     },
     sortLabels: { action: 'Sortieren', view: 'Anzeigen', elo: 'Rang', exp: 'Export', imp: 'Import', pop: 'Bevölkerung', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'Teams', match: 'Spiele', matchHint: 'Nach Spielpaarung gruppieren (ab dem Achtelfinale)' },
     filterLabels: { action: 'Filtern', exporter: "Hat hier geborene Spieler, die für ein anderes Land spielen", nonExp: "Kein hier geborener Spieler spielt für ein anderes Land", qualified: 'qualif.', importer: "Hat im Kader Spieler, die anderswo geboren wurden", nonImp: "Der gesamte Kader wurde in diesem Land geboren", nonQual: 'nicht-qual.', all: 'alle' },
+    psbLabels: {
+      byPlayer: 'Name',
+      native: 'einheimisch', nativeTip: 'Geboren und nominiert im selben Land',
+      moved: 'ausgewandert', movedTip: 'Geboren in einem Land, nominiert für ein anderes',
+    },
     csbTips: {
       action: "Festlegen, wie die Länderliste sortiert wird",
       view: "Festlegen, wie die Länderliste angezeigt wird (Teams oder Spiele)",
@@ -574,6 +589,11 @@ export const T = {
     },
     sortLabels: { action: 'ordenar', view: 'ver', elo: 'ranking', exp: 'exports', imp: 'imports', pop: 'población', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'equipos', match: 'partidos', matchHint: 'Agrupar por partido (desde dieciseisavos)' },
     filterLabels: { action: 'filtrar', exporter: "Tiene jugadores nacidos aquí que juegan para otro país", nonExp: "Ningún jugador nacido aquí juega para otro país", qualified: 'clasific.', importer: "Tiene en su plantilla jugadores nacidos en otro país", nonImp: "Toda la plantilla nació en este país", nonQual: 'no-clasif.', all: 'todo' },
+    psbLabels: {
+      byPlayer: 'nombre',
+      native: 'nativo', nativeTip: 'Nacido y seleccionado en el mismo país',
+      moved: 'expatriado', movedTip: 'Nacido en un país, seleccionado en otro',
+    },
     csbTips: {
       action: "Elegir cómo se ordena la lista de países",
       view: "Elegir cómo se muestra la lista de países (equipos o partidos)",
@@ -692,6 +712,11 @@ export const T = {
     },
     sortLabels: { action: 'sort', view: 'view', elo: 'ranking', exp: 'exports', imp: 'imports', pop: 'population', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'teams', match: 'matches', matchHint: 'Group by fixture (Round of 32 onward)' },
     filterLabels: { action: 'filter', exporter: "Has players born here who play for another country", nonExp: "No players born here play for another country", qualified: 'qualified', importer: "Has players born elsewhere on its squad", nonImp: "Entire squad was born in this country", nonQual: 'non-qual.', all: 'all' },
+    psbLabels: {
+      byPlayer: 'name',
+      native: 'native', nativeTip: 'Born and selected in the same country',
+      moved: 'moved', movedTip: 'Born in one country, selected for another',
+    },
     csbTips: {
       action: "Choose how the country list is sorted",
       view: "Choose how the country list is displayed (teams or fixtures)",
