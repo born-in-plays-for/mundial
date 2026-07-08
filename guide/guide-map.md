@@ -9,23 +9,26 @@ covering players born there, players who play there, or the balance between the 
 <!-- /i18n:intro -->
 
 <!-- i18n:quotes -->
-## The Quotes
+## The Twisted Quotes
 
 The header area shows a rotating carousel of 15 famous literary quotes —
-from François Villon (1461) to Simone de Beauvoir (1949) — each playfully reworded
-to swap the original key phrase for a football selection term.
+from François Villon (1461) to Simone de Beauvoir (1949) — each playfully
+twisted into a football line.
 
-Navigate between quotes using the left-oriented chevrons, or swipe left / right on touch screens.
+Navigate between quotes using the left-oriented chevrons, or swipe right on touch screens.
 Long-press (or hold the mouse button) on a quote to reveal the original line; release to go back.
+
+Swiping left, on the other hand, reveals a different panel entirely — the Control Panel,
+covering how countries are filtered, sorted, and displayed.
 <!-- /i18n:quotes -->
 
 <!-- i18n:control_sidebar -->
-## The Filter & Sort Panel
+## The Control Panel
 
-The <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> button in the top-right corner of the header opens the filter and sort panel,
+The <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> button in the top-right corner of the window opens the control panel,
 controlling what appears on the map and in the country list.
 
-![Filter and sort panel](screenshots/control_sidebar.png)
+![Control panel](screenshots/control_sidebar.png)
 
 The panel has five parts: a **toolbar** across the top; **sort** and **view** stacked on the left; the **filter** matrix on the right; and an **infobar** along the bottom.
 
@@ -38,7 +41,7 @@ The panel has five parts: a **toolbar** across the top; **sort** and **view** st
 
 ### Sort
 
-Four reorderable criteria — Elo ranking, population, Δ (plays-for minus born-in), A–Z — plus a direction toggle (↓↑) to reverse ascending/descending. Only the top two criteria are actually used; click a criterion to move it to the top of the list.
+Four reorderable criteria — **Elo ranking** (an independent rating that adjusts after every match based on the result and the opponent's strength — see *Data Sources*, below), **population**, **Δ** (delta of plays-for minus born-in), **A–Z** — plus a direction toggle (↓↑) to reverse ascending/descending. Only the top two criteria are actually used; click a criterion to move it to the top of the list.
 
 ### View
 
@@ -277,7 +280,7 @@ The scrollable area below the map has three tabs.
 ### <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> The Country List
 
 The default tab lists every country as a pill badge.
-The filter & sort panel controls which badges appear and in what order;
+The Control Panel controls which badges appear and in what order;
 the default sort is by [World Football Elo rating](https://www.eloratings.net/).
 
 A small carousel sits above the list, cycling through seven positions: **Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
@@ -286,7 +289,7 @@ A small carousel sits above the list, cycling through seven positions: **Group s
 - Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it.
 - Navigation is capped at the furthest stage the tournament has actually reached; later positions stay locked until real fixtures resolve into them.
 
-The carousel acts as an additional filter, layered on top of the filter & sort panel — you can, for example,
+The carousel acts as an additional filter, layered on top of the Control Panel — you can, for example,
 show only Round of 16 teams that are also exporters by advancing the carousel and unchecking the non-exporter column in the panel.
 It only filters the four **qualified** rows (importer / non-importer × exporter / non-exporter); the four **non-qualified** rows (FIFA / non-FIFA × exporter / non-exporter) are orthogonal to it and stay unaffected at every position — they have no tournament stage of their own to reach.
 
@@ -334,6 +337,13 @@ forming a chain of nationalities across the tournament.
 | [Wikipedia — List of FIFA country codes](https://en.wikipedia.org/wiki/List_of_FIFA_country_codes) | FIFA membership |
 | [Wikidata](https://www.wikidata.org/) | Birth countries |
 | [World Bank](https://data.worldbank.org/) | Country populations |
+
+**Elo ratings** work like the chess rating system they're named after: every match moves both teams'
+scores up or down depending on the result, the goal margin, and how strong the opponent was rated
+going in — beating a highly-rated team gains far more than beating a weak one. Unlike the official
+FIFA World Ranking, which only updates a handful of times a year, Elo recalculates after each match
+and reacts immediately to results, which is why [eloratings.net](https://www.eloratings.net/) is used
+as this site's country reference instead of FIFA's own list.
 
 **Birth country resolution** is the most delicate step in the pipeline.
 The Wikipedia squad page does not list where players were born — it only provides their names

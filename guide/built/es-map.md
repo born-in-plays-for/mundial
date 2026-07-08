@@ -12,20 +12,23 @@ ya sea que representen a ese país o a otro.
 ## Las citas
 
 El encabezado muestra un carrusel rotativo de 15 famosas citas literarias —
-de François Villon (1461) a Simone de Beauvoir (1949) — cada una reescrita con humor
-para sustituir la expresión clave original por un término de selección futbolística.
+de François Villon (1461) a Simone de Beauvoir (1949) — cada una convertida con humor
+en una frase futbolística.
 
-Navega entre las citas usando los chevrones orientados hacia la izquierda, o desliza hacia la izquierda / derecha en pantallas táctiles.
+Navega entre las citas usando los chevrones orientados hacia la izquierda, o desliza hacia la derecha en pantallas táctiles.
 Mantén presionado (o mantén el botón del ratón pulsado) sobre una cita para revelar la línea original; suelta para volver.
+
+Deslizar hacia la izquierda, en cambio, revela un panel completamente distinto — el panel de control,
+que rige cómo se filtran, ordenan y muestran los países.
 <!-- /i18n:quotes -->
 
 <!-- i18n:control_sidebar -->
-## El panel de filtros y orden
+## El panel de control
 
-El botón <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> en la esquina superior derecha de la cabecera abre el panel de filtros y orden,
+El botón <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> en la esquina superior derecha de la ventana abre el panel de control,
 que controla qué aparece en el mapa y en la lista de países.
 
-![Panel de filtros y orden](screenshots/control_sidebar-es.png)
+![Panel de control](screenshots/control_sidebar-es.png)
 
 El panel tiene cinco partes: una **barra de herramientas** arriba; **Ordenar** y **Ver** apiladas a la izquierda; la matriz de **Filtrar** a la derecha; y una **barra de información** abajo.
 
@@ -38,7 +41,7 @@ El panel tiene cinco partes: una **barra de herramientas** arriba; **Ordenar** y
 
 ### Ordenar
 
-Cuatro criterios reordenables — rango Elo, población, Δ (juega-por menos nacido-en), A–Z — más un botón de dirección (↓↑) para invertir ascendente/descendente. Solo los dos criterios superiores están realmente activos; al hacer clic en un criterio se mueve a la primera posición.
+Cuatro criterios reordenables — **la clasificación Elo** (una puntuación independiente que cambia después de cada partido según el resultado y la fuerza del rival — ver *Fuentes de datos*, abajo), **población**, **Δ** (delta juega-por menos nacido-en), **A–Z** — más un botón de dirección (↓↑) para invertir ascendente/descendente. Solo los dos criterios superiores están realmente activos; al hacer clic en un criterio se mueve a la primera posición.
 
 ### Ver
 
@@ -323,7 +326,7 @@ El área desplazable bajo el mapa tiene tres pestañas.
 ### <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> La lista de países
 
 La pestaña por defecto lista cada país como una insignia tipo píldora.
-El panel de filtros y orden controla qué insignias aparecen y en qué orden;
+El panel de control determina qué insignias aparecen y en qué orden;
 el orden por defecto es por [puntuación Elo mundial](https://www.eloratings.net/).
 
 Un pequeño carrusel se sitúa encima de la lista y recorre siete posiciones: **Fase de grupos → Dieciseisavos → Octavos → Cuartos → Semifinales → Final → Campeón**.
@@ -332,7 +335,7 @@ Un pequeño carrusel se sitúa encima de la lista y recorre siete posiciones: **
 - Cada posición filtra los países clasificados a los que han "alcanzado" esa fase — todavía en el torneo al principio, o ya campeones.
 - La navegación está limitada a la fase realmente alcanzada por el torneo; las posiciones posteriores permanecen bloqueadas hasta que se disputen los partidos correspondientes.
 
-El carrusel actúa como un filtro adicional, junto con el panel de filtros y orden — puedes, por ejemplo,
+El carrusel actúa como un filtro adicional, junto con el panel de control — puedes, por ejemplo,
 mostrar solo los equipos de octavos que también sean exportadores avanzando el carrusel y desactivando la columna de no exportador en el panel.
 Solo filtra las cuatro filas de **clasificados** (importador / no importador × exportador / no exportador); las cuatro filas de **no clasificados** (FIFA / no FIFA × exportador / no exportador) son independientes de esto y permanecen sin cambios en cada posición — no tienen una fase del torneo propia que alcanzar.
 
@@ -380,6 +383,15 @@ formando una cadena de nacionalidades a través del torneo.
 | [Wikipedia — códigos de países FIFA](https://en.wikipedia.org/wiki/List_of_FIFA_country_codes) | Membresía FIFA |
 | [Wikidata](https://www.wikidata.org/) | Países de nacimiento |
 | [Banco Mundial](https://data.worldbank.org/) | Poblaciones de los países |
+
+**Las clasificaciones Elo** funcionan como el sistema de puntuación del ajedrez del que toman su
+nombre: cada partido hace subir o bajar la puntuación de ambos equipos según el resultado, la
+diferencia de goles y la fuerza del rival en el momento del partido — vencer a un equipo muy bien
+clasificado vale mucho más que vencer a uno débil. A diferencia del ranking oficial de la FIFA, que
+solo se actualiza unas pocas veces al año, la clasificación Elo se recalcula después de cada partido
+y reacciona de inmediato a los resultados — por eso aquí se usa
+[eloratings.net](https://www.eloratings.net/) como referencia de países en lugar de la lista oficial
+de la FIFA.
 
 **La resolución del país de nacimiento** es el paso más delicado del pipeline.
 La página de convocatorias de Wikipedia no indica dónde nacieron los jugadores — solo proporciona sus nombres

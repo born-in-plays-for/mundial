@@ -12,20 +12,23 @@ qu'ils représentent ce pays ou un autre.
 ## Les citations
 
 L'en-tête affiche un carrousel de 15 citations littéraires célèbres —
-de François Villon (1461) à Simone de Beauvoir (1949) — chacune réécrite avec humour
-pour remplacer l'expression clé originale par un terme de sélection footballistique.
+de François Villon (1461) à Simone de Beauvoir (1949) — chacune détournée avec humour
+en citation footballistique.
 
-Naviguez entre les citations à l'aide des chevrons orientés vers la gauche, ou faites glisser vers la gauche / droite sur les écrans tactiles.
+Naviguez entre les citations à l'aide des chevrons orientés vers la gauche, ou faites glisser vers la droite sur les écrans tactiles.
 Maintenez appuyé (ou gardez le bouton de la souris enfoncé) sur une citation pour révéler la ligne originale ; relâchez pour revenir.
+
+Faire glisser vers la gauche, en revanche, révèle un tout autre panneau — le panneau de contrôle,
+qui régit le filtrage, le tri et l'affichage des pays.
 <!-- /i18n:quotes -->
 
 <!-- i18n:control_sidebar -->
-## Le panneau de filtre et de tri
+## Le panneau de contrôle
 
-Le bouton <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> dans le coin supérieur droit de l'en-tête ouvre le panneau de filtre et de tri,
+Le bouton <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> dans le coin supérieur droit de la fenêtre ouvre le panneau de contrôle,
 pour contrôler ce qui apparaît sur la carte et dans la liste des pays.
 
-![Panneau de filtre et de tri](screenshots/control_sidebar-fr.png)
+![Panneau de contrôle](screenshots/control_sidebar-fr.png)
 
 Le panneau comporte cinq parties : une **barre d'outils** en haut ; **tri** et **affichage** empilés à gauche ; la matrice de **filtre** à droite ; et une **barre d'info** en bas.
 
@@ -38,7 +41,7 @@ Le panneau comporte cinq parties : une **barre d'outils** en haut ; **tri** et *
 
 ### Tri
 
-Quatre critères réorganisables — classement Elo, population, Δ (joue-pour moins né-dans), A–Z — plus un bouton de sens (↓↑) pour inverser croissant/décroissant. Seuls les deux premiers critères sont réellement actifs ; cliquez sur un critère pour le placer en tête de liste.
+Quatre critères réorganisables — **le classement Elo** (une cote indépendante qui évolue après chaque match selon le résultat et la force de l'adversaire — voir *Sources des données*, plus bas), **population**, **Δ** (delta joue-pour moins né-dans), **A–Z** — plus un bouton de sens (↓↑) pour inverser croissant/décroissant. Seuls les deux premiers critères sont réellement actifs ; cliquez sur un critère pour le placer en tête de liste.
 
 ### Affichage
 
@@ -323,7 +326,7 @@ La zone défilante sous la carte comporte trois onglets.
 ### <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> La liste des pays
 
 L'onglet par défaut liste tous les pays sous forme de pastilles.
-Le panneau de filtre et de tri contrôle quelles pastilles apparaissent et dans quel ordre ;
+Le panneau de contrôle détermine quelles pastilles apparaissent et dans quel ordre ;
 le tri par défaut est par [classement Elo mondial](https://www.eloratings.net/).
 
 Un petit carrousel se trouve au-dessus de la liste, parcourant sept positions : **Phase de groupes → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur**.
@@ -332,7 +335,7 @@ Un petit carrousel se trouve au-dessus de la liste, parcourant sept positions : 
 - Chaque position filtre les pays qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée.
 - La navigation est limitée à la phase la plus avancée réellement atteinte par le tournoi ; les positions suivantes restent verrouillées tant que les matchs correspondants ne sont pas joués.
 
-Le carrousel agit comme un filtre supplémentaire, en plus du panneau de filtre et de tri — vous pouvez, par exemple,
+Le carrousel agit comme un filtre supplémentaire, en plus du panneau de contrôle — vous pouvez, par exemple,
 n'afficher que les équipes des 8es de finale qui sont aussi exportatrices en avançant le carrousel et en décochant la colonne non-exportateurs dans le panneau.
 Il ne filtre que les quatre lignes **qualifiés** (importateur / non-importateur × exportateur / non-exportateur) ; les quatre lignes **non qualifiés** (FIFA / non-FIFA × exportateur / non-exportateur) lui sont orthogonales et restent inchangées à toute position — elles n'ont pas de phase de tournoi propre à atteindre.
 
@@ -380,6 +383,14 @@ formant une chaîne de nationalités à travers le tournoi.
 | [Wikipedia — codes pays FIFA](https://en.wikipedia.org/wiki/List_of_FIFA_country_codes) | Appartenance à la FIFA |
 | [Wikidata](https://www.wikidata.org/) | Pays de naissance |
 | [Banque mondiale](https://data.worldbank.org/) | Populations des pays |
+
+**Le classement Elo** fonctionne comme le système d'échecs dont il tire son nom : chaque match fait
+monter ou descendre la cote des deux équipes selon le résultat, l'écart de buts, et la force de
+l'adversaire au moment du match — battre une équipe très bien classée rapporte bien plus que battre
+une équipe faible. Contrairement au classement officiel FIFA, mis à jour seulement quelques fois par an,
+le classement Elo est recalculé après chaque match et réagit immédiatement aux résultats — c'est
+pourquoi [eloratings.net](https://www.eloratings.net/) est utilisé ici comme référence des pays plutôt
+que la liste officielle de la FIFA.
 
 **La résolution du pays de naissance** est l'étape la plus délicate du pipeline.
 La page Wikipedia des effectifs n'indique pas où les joueurs sont nés — elle fournit seulement leurs noms
