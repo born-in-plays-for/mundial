@@ -257,13 +257,17 @@ Visibile solo in vista partite — vedi Vista squadre / partite, sopra.
 <!-- /i18n:tax_note_fixture --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-pair" style="display:inline-flex">
-    <span class="elo-item elo-item--qualified" style="flex-shrink:0">
-      <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
-      <span class="elo-name" data-id="504">Morocco</span>
+    <span class="elo-item-wrap">
+      <span class="elo-item elo-item--qualified" style="flex-shrink:0">
+        <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
+        <span class="elo-name" data-id="504">Morocco</span>
+      </span>
+    <span class="elo-item-wrap" style="display: none;">
+    </spam>
     </span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_won -->
-Segno di spunta verde sulla bandiera — ha vinto una partita decisa.
+Segno di spunta verde sulla pillola — ha vinto una partita decisa.
 <!-- /i18n:tax_desc_won --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">

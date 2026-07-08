@@ -214,12 +214,14 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 <div style="font-size:.8rem;color:#777;margin-bottom:6px"><!-- i18n:tax_note_fixture -->Only shown in match view — see Team / match view, above.<!-- /i18n:tax_note_fixture --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-pair" style="display:inline-flex">
-    <span class="elo-item elo-item--qualified" style="flex-shrink:0">
-      <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
-      <span class="elo-name" data-id="504">Morocco</span>
+    <span class="elo-item-wrap">
+      <span class="elo-item elo-item--qualified" style="flex-shrink:0">
+        <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
+        <span class="elo-name" data-id="504">Morocco</span>
+      </span>
     </span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_won -->Green check on flag — won a decided fixture.<!-- /i18n:tax_desc_won --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_won -->Green check on the pill — won a decided fixture.<!-- /i18n:tax_desc_won --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--lost" style="flex-shrink:0">

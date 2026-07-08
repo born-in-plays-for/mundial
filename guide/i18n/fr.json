@@ -375,5 +375,5 @@
   "tax_note_fixture": "Visible uniquement en vue matchs — voir Vue équipes / matchs, ci-dessus.",
   "tax_desc_pending": "Bordure ondulée — rencontre pas encore jouée.",
   "tax_desc_lost": "Drapeau en niveaux de gris — a perdu une rencontre décidée.",
-  "tax_desc_won": "Coche verte sur le drapeau — a gagné une rencontre décidée."
+  "tax_desc_won": "Coche verte sur la pastille — a gagné une rencontre décidée."
 }
