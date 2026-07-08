@@ -216,14 +216,16 @@
   text-align: right;
 }
 
-/* wc2026_countries.html header: title + #sidebar-host sit side by side (flex,
+/* Shared by any page whose header follows this pattern (currently wc2026_countries.html
+   and wc2026_players.html): title + #sidebar-host sit side by side (flex,
    justify-content:space-between) until they don't fit, at which point #sidebar-host
    wraps onto its own line and — being the sole item there — sticks to the line's
    start rather than centering. The wrap point depends on content width (title
    text length varies by locale, sidebar table width varies by filter state), so
    it's detected in JS by comparing offsetTop rather than guessed via a media
-   query breakpoint — see wc2026_countries.html's _syncHeaderLayout(). */
-#countries-header.stacked #sidebar-host {
+   query breakpoint — see each page's own _syncHeaderLayout(). */
+#countries-header.stacked #sidebar-host,
+#players-header.stacked #sidebar-host {
   width: 100%;
   display: flex;
   justify-content: center;

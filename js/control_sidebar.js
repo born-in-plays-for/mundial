@@ -4,7 +4,7 @@ import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage } from './qualified.js';
 
 const _STORAGE_KEY = 'mundial-control-sidebar-state';
 
-export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false }) {
+export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
   // 'team' (default) — flat list, unchanged. 'match' — teams grouped fixture-by-fixture
@@ -107,13 +107,21 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="text-muted" title="${T.csbTips.qe}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qe"  checked></label></td>
       <td class="text-muted" title="${T.csbTips.q}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-q"   checked></label></td>
     </tr>
-    <tr>
+    <!-- showNonQualified=false (e.g. wc2026_players.html, whose data only ever covers the 48
+         qualified squads' own rosters) hides these two rows via ?hidden instead of omitting
+         them from the template entirely, so #filter-ef/-of/-en/-on stay real, queryable
+         elements. catEloChecked below dereferences them unconditionally (_fltEF.checked etc.);
+         omitting the rows would make those null on a page that hides this group, and anything
+         that later reaches a non-qualified country id (sortAndFilter, a future filter feature)
+         would throw. A hidden row's checkboxes just never receive user input — cheaper than
+         guarding every read site against null. -->
+    <tr ?hidden=${!showNonQualified}>
       <td rowspan="2" class="csb-group" data-row="nq" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
       <td class="csb-row" data-row="nqf" title="${T.csbTips.fifa}"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
       <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-ef"></label></td>
       <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
     </tr>
-    <tr>
+    <tr ?hidden=${!showNonQualified}>
       <td class="csb-row" data-row="nqn" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
       <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-en"></label></td>
       <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
@@ -180,14 +188,32 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     eloMain.maxStage = _maxStage;
   };
 
+  // _stage is owned here, unconditionally — _setStage below is the sole authority that
+  // mutates it and runs the resulting filter/render cascade, whether or not eloMain is a real,
+  // connected <elo-ranking> (a page with no pill-list UI at all, e.g. wc2026_players.html,
+  // still needs stage filtering to work — see initSidebar's own doc comment). eloMain.stage=
+  // is a fire-and-forget "reflect this visually" command, not a round-trip dependency: a bare
+  // stand-in element silently no-ops it. This listener only matters when a user drags/clicks a
+  // *real* carousel directly — the guard below skips it when the event is just Bootstrap's own
+  // slide.bs.carousel echo of a programmatic _setStage call (already applied by the time it
+  // fires), so a real widget never runs the cascade twice for the same change.
   eloMain.addEventListener('stage-change', e => {
+    if (e.detail.stage === _stage) return;
     _stage = e.detail.stage;
     _updateCarouselTitle();
     callbacks.renderElo?.();
     applyFlagFilter();
     _saveState();
   });
-  const _setStage = idx => { if (idx !== _stage) eloMain.stage = idx; };
+  const _setStage = idx => {
+    if (idx === _stage) return;
+    _stage = idx;
+    eloMain.stage = idx;
+    _updateCarouselTitle();
+    callbacks.renderElo?.();
+    applyFlagFilter();
+    _saveState();
+  };
 
   const flagCat = id => {
     const qual = !!QUALIFIED_NAMES[id];
@@ -1057,6 +1083,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   return {
     get sortOrder() { return _sortOrder; },
     get sortDir() { return _sortDir; },
+    // Per-country comparators (elo/exp/imp/delta/pop/alpha), keyed the same as _sortOrder —
+    // exposed so other item kinds sharing the same country-level fields (rank/pop/expCount/
+    // impCount) can sort by "their country's standing" using identical semantics, instead of
+    // a second copy of this logic drifting out of sync over time. Each already reads in the
+    // app's own default/desc direction — callers still need to flip on sortDir === 'asc'
+    // themselves, same as sortAndFilter below does.
+    sortFns: _sortFns,
     catEloChecked,
     flagCat,
     isClickable,

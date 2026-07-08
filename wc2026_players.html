@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/player.css">
 <link rel="stylesheet" href="css/wc2026_players.css">
+<link rel="stylesheet" href="css/taxonomy.css">
+<link rel="stylesheet" href="css/control-sidebar.css">
 </head>
 <body>
 <script type="module" src="js/auth-bar.js"></script>
@@ -19,29 +21,88 @@
       <h1 class="fs-5 fw-semibold mb-1">World Cup 2026 · Players & Coaches</h1>
       <p class="sub mb-0" id="players-meta"></p>
     </div>
+    <div id="sidebar-host"></div>
   </div>
 </header>
-<div id="main-content" class="container pb-2">
+<div id="main-content" class="container pb-2 taxonomy">
   <div id="player-list"></div>
 </div>
 <script type="module">
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { wikiUrl, wikiUrlEn, loadWikiData, T } from './js/i18n.js';
+import { wikiUrl, wikiUrlEn, loadWikiData, T, countryName } from './js/i18n.js';
+import { QUALIFIED_BY_NAME, QUALIFIED_NAMES, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, buildEloItems, loadEloData } from './js/qualified.js';
+import { initSidebar } from './js/control_sidebar.js';
 
 const _header = document.getElementById('players-header');
 const _main   = document.getElementById('main-content');
-const _syncPaddingTop = () => { _main.style.paddingTop = (_header.getBoundingClientRect().bottom + 6) + 'px'; };
-requestAnimationFrame(_syncPaddingTop);
-window.addEventListener('resize', _syncPaddingTop);
+const _titleBlock = _header.querySelector('.d-flex > div:first-child');
+const _sidebarHost = document.getElementById('sidebar-host');
+// #sidebar-host wraps onto its own line once it no longer fits beside the title —
+// detected directly from layout (offsetTop diverging) rather than guessed via a
+// media query breakpoint, since the wrap point shifts with title text length
+// (locale-dependent) and the sidebar table's own width (filter-state-dependent).
+const _syncHeaderLayout = () => {
+  _main.style.paddingTop = (_header.getBoundingClientRect().bottom + 6) + 'px';
+  // .stacked forces #sidebar-host to width:100%, which by itself guarantees it no
+  // longer fits beside the title — checking offsetTop while that's still applied
+  // would always read "wrapped" and could never un-stack on a resize back to wide.
+  // Clear it first so the measurement reflects the natural (unforced) layout.
+  _header.classList.remove('stacked');
+  _header.classList.toggle('stacked', _sidebarHost.offsetTop > _titleBlock.offsetTop);
+};
+requestAnimationFrame(_syncHeaderLayout);
+window.addEventListener('resize', _syncHeaderLayout);
 
-const [mapData] = await Promise.all([
+const [{ eloData, statusByIso2 }, mapData, fixturesData] = await Promise.all([
+  loadEloData(),
   fetch('./data/v2/map.json').then(r => r.json()),
+  fetch('./data/fixtures.json').then(r => r.json()).catch(() => null),
   loadWikiData(),
 ]);
 
+const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
+const fifaMemberIds = new Set(eloData.rankings.filter(r => r.fifaMember).map(r => r.id));
+const importByCountry = buildImportByCountry(mapData, countryName);
+const nativeByCountry = {};
+Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
+  const nId = QUALIFIED_BY_NAME[name];
+  if (nId != null) nativeByCountry[nId] = players;
+});
+
+const app = { byId, importByCountry };
+// No <elo-ranking> on this page at all — a bare, disconnected element stands in for it.
+// initSidebar's every touchpoint on eloMain (.stage=, .maxStage=, .displayMode=,
+// addEventListener, querySelectorAll('.elo-item')) is satisfied by plain Element/EventTarget
+// behavior: property sets are harmless expando assignments, addEventListener/querySelectorAll
+// work natively and simply never fire/never find anything. rawItems (needed for
+// app.stageIndexById, the same data <elo-ranking> would otherwise compute internally) comes
+// straight from buildEloItems — the pure data function initEloRanking calls under the hood —
+// so no rendering machinery is needed to get it. No renderElo callback either: there's nothing
+// to render, and callbacks.renderElo?.() is already optional-chained everywhere in the sidebar.
+const el = document.createElement('div');
+
+const sidebarCallbacks = {};
+// showNonQualified: false — every player on this page belongs to one of the 48 qualified
+// squads by construction (mapData.data[]/natives only ever cover qualified rosters), so the
+// non-qualified filter row (FIFA/non-FIFA, exporter/non-exporter of countries not even in the
+// tournament) has nothing to filter here — hide it rather than show a control with no effect.
+const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true, showNonQualified: false });
+
+const rawItems = buildEloItems({ rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2 });
+// Keyed by country id — the same per-country fields (rank/pop/expCount/impCount) sidebar.sortFns'
+// comparators read, looked up per player via QUALIFIED_BY_NAME[p.nation].
+const rawById = new Map(rawItems.map(item => [item.id, item]));
+app.stageIndexById = new Map(rawItems.map(item => [item.id, item.visibleThroughIndex]));
+app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
+app.matchInfoByIso2 = buildMatchInfo(statusByIso2, fixturesData, buildNameByIso2(eloData.rankings, countryName));
+sidebar.updateStageTitle();
+
 // Every player and coach across the 48 qualified squads: exported entries (data[].players,
 // already tagged with the country they represent) plus natives (born and serving the same
-// country, listed separately under mapData.natives).
+// country, listed separately under mapData.natives). Sorted by name once up front purely as
+// a stable tie-break base — renderPlayers below re-sorts a copy by whatever criterion is
+// currently active every time it runs, and Array#sort is stable, so ties within that
+// re-sort naturally fall back to this alphabetical order rather than DOM/data order.
 const entries = [];
 for (const rec of mapData.data ?? []) {
   for (const p of rec.players ?? []) entries.push(p);
@@ -54,7 +115,7 @@ entries.sort((a, b) => a.name.localeCompare(b.name));
 const coachCount = entries.filter(p => p.role === 'coach').length;
 document.getElementById('players-meta').textContent =
   `${entries.length - coachCount} players · ${coachCount} coaches`;
-_syncPaddingTop();
+_syncHeaderLayout();
 
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : '';
 
@@ -66,13 +127,39 @@ const wikiLink = p => {
   return html`${p.name}${coachBadge(p)}`;
 };
 
-render(html`
-  ${entries.map(p => html`
-    <div class="pt-player-row d-flex justify-content-between align-items-center">
-      <span>${wikiLink(p)}</span>
-      <span class="pt-caps text-nowrap">${p.nation}</span>
-    </div>`)}
-`, document.getElementById('player-list'));
+// Reactive to the control panel's own Sort column via sidebarCallbacks.renderElo below — the
+// same hook <elo-ranking> pages assign their own render function to. 'alpha' sorts by the
+// player's own name (sidebar.sortFns.alpha compares *country* names, meant for the country
+// list — not what "A-Z" means for a list of players); every other key looks up each player's
+// own team via QUALIFIED_BY_NAME[p.nation] and reuses the sidebar's own comparator for that
+// team's standing, so player sort exactly matches how the same criterion orders countries.
+const renderPlayers = () => {
+  const key = sidebar.sortOrder[0];
+  const sorted = [...entries].sort((a, b) => {
+    if (key === 'alpha') return (sidebar.sortDir === 'asc' ? -1 : 1) * a.name.localeCompare(b.name);
+    const teamA = rawById.get(QUALIFIED_BY_NAME[a.nation]);
+    const teamB = rawById.get(QUALIFIED_BY_NAME[b.nation]);
+    let d = (!teamA || !teamB) ? 0 : sidebar.sortFns[key](teamA, teamB);
+    if (sidebar.sortDir === 'asc') d = -d;
+    // Ties are common (e.g. delta = expCount - impCount is 0 for any team exporting and
+    // importing the same count — several teams can land on the exact same value). Without
+    // a secondary key, Array#sort's stability would fall through to entries' original
+    // per-player name order, scattering a tied team's own players apart instead of keeping
+    // them together. Grouping by team name on a tie keeps every team's players bundled
+    // regardless of how many other teams share its value on the primary criterion.
+    return d !== 0 ? d : a.nation.localeCompare(b.nation);
+  });
+  render(html`
+    ${sorted.map(p => html`
+      <div class="pt-player-row d-flex justify-content-between align-items-center">
+        <span>${wikiLink(p)}</span>
+        <span class="pt-caps text-nowrap">${p.nation}</span>
+      </div>`)}
+  `, document.getElementById('player-list'));
+};
+sidebarCallbacks.renderElo = renderPlayers;
+renderPlayers();
+sidebar.applyParams(new URLSearchParams(location.search));
 </script>
 </body>
 </html>
