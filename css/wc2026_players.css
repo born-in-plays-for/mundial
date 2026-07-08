@@ -79,7 +79,7 @@
    (css/global.css), not tied to <elo-ranking> — mounting createStageCarousel()'s own .el
    here needs no extra rules beyond not letting it collide with the toolbar above it. No
    control-1 equivalent — its own carousel lives inside <elo-ranking>, not the sidebar itself. */
-#players-sidebar .psb-carousel-host { width: 340px; }
+#players-sidebar .psb-carousel-host { width: 320px; }
 
 /* Footer (visible/total count) — js/players_sidebar.js reuses control 1's own #elo-meta/
    #elo-meta-count ids directly (styled in css/control-sidebar.css) rather than a
