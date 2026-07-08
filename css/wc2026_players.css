@@ -6,12 +6,9 @@
    page's own dim-mode player list (css/player.css's .pt-player-row/.pt-country-header) groups
    players under a country header instead of one flat sortable row per player, a different
    enough shape that it isn't reused here. */
-.pt-table { font-size: 12px; }
-.pt-table thead th.pt-th { font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+.pt-table thead th.pt-th { color: var(--text-muted); cursor: pointer; user-select: none; white-space: nowrap; }
 .pt-table thead th.pt-th:hover { color: var(--color-default); }
 .pt-table thead th.pt-th-active { color: var(--color-default); }
-.pt-table td { vertical-align: middle; padding: 4px 8px; border-bottom: 1px solid #f8f5f2; }
-.pt-table td:first-child { padding-left: 4px; }
 .pt-flag { margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
 
 /* "born in"/"plays for" columns — same muted/11px look as .pt-caps (css/player.css) had on
