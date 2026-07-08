@@ -27,9 +27,24 @@ das steuert, was auf der Karte und in der Länderliste erscheint.
 
 ![Filter- und Sortierpanel](screenshots/control_sidebar-de.png)
 
-*Filtermatrix (rechts) — auf einen Zeilen- oder Spaltenkopf klicken, um eine ganze Gruppe auf einmal umzuschalten.*<br>*Sortierspalte (links) — nur die obersten zwei Kriterien sind aktiv; ein Klick auf ein Kriterium verschiebt es an die erste Stelle.*
+Das Panel hat fünf Teile: eine **Werkzeugleiste** oben; **Sortieren** und **Anzeigen** übereinander links; die **Filter**-Matrix rechts; und eine **Infoleiste** unten.
 
-### Die Filtermatrix
+### Werkzeugleiste
+
+- <img class="gp-icon" src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" alt="einklappen"> klappt das Panel wieder zu seiner ‹-Schaltfläche zusammen.
+- <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="Konföderation"> filtert die Liste auf eine einzelne FIFA-Konföderation — siehe *FIFA-Konföderationsfilter*, unten.
+- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="teilen"> kopiert eine URL, die die aktuelle Konfiguration des Panels wiedergibt.
+- <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="Parameter"> zeigt, welche URL-Parameter für den aktuellen Zustand aktiv sind — dasselbe Panel, das `?explain` bei jedem Seitenaufruf öffnet.
+
+### Sortieren
+
+Vier umsortierbare Kriterien — Elo-Rang, Bevölkerung, Δ (spielt-für minus geboren-in), A–Z — plus eine Richtungsschaltfläche (↓↑) zum Umkehren von auf-/absteigend. Nur die obersten zwei Kriterien sind tatsächlich aktiv; ein Klick auf ein Kriterium verschiebt es an die erste Stelle.
+
+### Anzeigen
+
+Wechselt die Länderliste zwischen **Teams** (eine Pille pro Land, Standard) und **Spielen** (eine Zeile pro Spielpaarung, Gegner nebeneinander) — siehe *Team-/Spiel-Ansicht*, unten.
+
+### Filter
 
 Die Matrix kreuzt zwei **Spalten** (Exporteur / Nicht-Exporteur) mit vier **Zeilen** in zwei Gruppen:
 
@@ -38,16 +53,18 @@ Die Matrix kreuzt zwei **Spalten** (Exporteur / Nicht-Exporteur) mit vier **Zeil
 
 Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf einen Zeilen- oder Spaltenkopf, um die gesamte Gruppe auf einmal umzuschalten.
 
-### Turnierphasenfilter
+### Infoleiste
 
-Ein kleines Karussell befindet sich im Zeilenkopf *Qualifiziert* und durchläuft sieben Positionen: **Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger**.
+Zeigt, wie viele Länder derzeit sichtbar sind (von der Gesamtzahl), sowie die Datenquelle (und das letzte Aktualisierungsdatum) für das jeweils oberste Kriterium in der Sortierspalte.
 
-- Verwenden Sie die Pfeile ‹ › oder wischen Sie auf Touchscreens nach links/rechts, um zwischen den Phasen zu wechseln.
-- Jede Position filtert qualifizierte Länder auf jene, die diese Phase „erreicht" haben — zu Beginn noch im Turnier, oder bereits Sieger. Nicht qualifizierte Exporteurländer sind nicht betroffen, unabhängig von der Phase sichtbar.
-- Die Navigation ist auf die vom Turnier tatsächlich erreichte Phase begrenzt; weitere Positionen bleiben gesperrt, bis die entsprechenden Spiele ausgetragen sind.
+### Team-/Spiel-Ansicht
 
-Das Karussell funktioniert in Kombination mit der restlichen Filtermatrix — Sie können beispielsweise
-nur Achtelfinal-Mannschaften anzeigen, die auch Exporteure sind, indem Sie das Karussell vorrücken und die Nicht-Exporteur-Spalte deaktivieren.
+Der Anzeigen-Schalter bewirkt erst etwas, sobald das Turnierphasen-Karussell — im Tab „Länderliste" unterhalb der Karte, nicht in diesem Panel; siehe *Das untere Panel*, unten — über die **Gruppenphase** hinaus fortgeschritten ist: Vor Beginn der K.-o.-Runden gibt es keine einzelne Spielpaarung, der ein Team zugeordnet werden könnte, daher bleibt er bis dahin deaktiviert.
+
+In der Spiele-Ansicht zeigt jede Zeile beide Teams zu beiden Seiten von Anstoßdatum/Ergebnis:
+
+- Noch nicht gespielt: das Anstoßdatum, und ein wellenförmiger oberer/unterer Rand auf beiden Pillen — ein „noch offen"-Look für ein Spiel, das noch in beide Richtungen ausgehen kann.
+- Gespielt: das Ergebnis (plus Elfmeterschießen-Resultat, falls es so weit kam) anstelle des Datums, und die Flagge des Verlierer-Teams ausgegraut.
 
 ### FIFA-Konföderationsfilter
 
@@ -57,7 +74,7 @@ Die Auswahl einer Konföderation hebt zudem ihre Außengrenze auf der Karte herv
 
 ### URL-Parameter
 
-Der Filter- und Sortierstatus kann auch direkt über die URL konfiguriert werden — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Fügen Sie `?explain` zu einer beliebigen URL hinzu, um ein Panel zu öffnen, das die aktiven Parameter erklärt. Die vollständige Referenz mit allen Zellcodes, Gruppenaliasen und Beispielen finden Sie im [Länderseiten-Guide](?guide=countries).
+Der Filter- und Sortierstatus kann auch direkt über die URL konfiguriert werden — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Fügen Sie `?explain` zu einer beliebigen URL hinzu, um ein Panel zu öffnen, das die aktiven Parameter erklärt. Die vollständige Referenz mit allen Zellcodes, Gruppenaliasen und Beispielen finden Sie im [Länderseiten-Guide](?guide=countries).
 
 ### Zur Länderreferenz
 
@@ -166,6 +183,39 @@ Spieler, die in einem anderen Land geboren wurden, spielen für dieses Land.
 Spieler aus anderen Ländern spielen für dieses Land, und Spieler aus diesem Land spielen für andere Länder.
 <!-- /i18n:tax_desc_both --></span>
 </div>
+<div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->
+Der Hintergrund der Pille ist selbst ein Verlauf von Rot (Importe) → Weiß (einheimisch) → Blau (Exporte) — je breiter das Band einer Farbe, desto größer der Anteil dieser Gruppe am gesamten Spielerkader des Landes.
+<!-- /i18n:tax_note_gradient --></div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(59,130,246); --imp-color: rgb(248,173,173); --imp-pivot: 2.8%; --native-pivot: 25.0%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" alt="">
+    <span class="elo-name" data-id="250">France</span>
+    <span class="elo-pts"><span class="elo-pts-primary">3 · 81</span></span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->
+Überwiegend blau — ein starker Exporteur (81) mit nur einer Handvoll Importen (3).
+<!-- /i18n:tax_desc_gradient_exp --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(155,193,250); --imp-color: rgb(248,167,167); --imp-pivot: 14.3%; --native-pivot: 72.8%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gb-eng.svg" alt="">
+    <span class="elo-name" data-id="8260">England</span>
+    <span class="elo-pts"><span class="elo-pts-primary">7 · 22</span></span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->
+Ein sichtbares rotes Band neben dem Blau — eine ausgewogenere Mischung aus Importen (7) und Exporten (22).
+<!-- /i18n:tax_desc_gradient_mixed --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--qualified elo-item--knocked-out elo-item--imp" style="--imp-color: rgb(239,68,68); --imp-pivot: 96.3%; --native-pivot: 100.0%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" alt="">
+    <span class="elo-name" data-id="531">Curaçao</span>
+    <span class="elo-pts"><span class="elo-pts-primary">26</span></span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_imp -->
+Fast vollständig rot — fast der gesamte Kader (26) wurde anderswo geboren.
+<!-- /i18n:tax_desc_gradient_imp --></span>
+</div>
 </div>
 
 <div>
@@ -195,6 +245,35 @@ Ebenso, hier kombiniert mit Nicht-FIFA.
 </div>
 </div>
 
+<div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555"><!-- i18n:tax_label_fixture -->
+Spielpaarungen (Spiele-Ansicht)
+<!-- /i18n:tax_label_fixture --></div>
+<div style="font-size:.8rem;color:#777;margin-bottom:6px"><!-- i18n:tax_note_fixture -->
+Nur in der Spiele-Ansicht sichtbar — siehe Team-/Spiel-Ansicht, oben.
+<!-- /i18n:tax_note_fixture --></div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-viz--match" style="display:inline-flex">
+    <span class="elo-item elo-item--qualified elo-item--pending" style="flex-shrink:0">
+      <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/de.svg" alt="">
+      <span class="elo-name" data-id="276">Germany</span>
+    </span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_pending -->
+Wellenförmiger Rand, verblasster Name — Spiel noch nicht ausgetragen.
+<!-- /i18n:tax_desc_pending --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--qualified elo-item--lost" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/br.svg" alt="">
+    <span class="elo-name" data-id="76">Brazil</span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->
+Verblasste Flagge — hat ein entschiedenes Spiel verloren.
+<!-- /i18n:tax_desc_lost --></span>
+</div>
+</div>
+
 </div>
 
 <!-- i18n:map -->
@@ -202,20 +281,30 @@ Ebenso, hier kombiniert mit Nicht-FIFA.
 
 ### Choropleth und Flaggen
 
-Jedes Land ist entsprechend der Gesamtzahl der dort geborenen WM-Spieler eingefärbt —
-je dunkler der Farbton, desto mehr Spieler. Länder, in denen keine Spieler geboren wurden, erscheinen in einem neutralen hellen Ton.
+Jedes Land ist entsprechend der Kennzahl des aktiven Farbthemas eingefärbt (siehe *Die Legende*, unten) —
+je dunkler der Farbton, desto höher der Wert. Länder ohne Daten zu dieser Kennzahl erscheinen in einem neutralen hellen Ton.
 Länder, die derzeit im Filter enthalten sind, zeigen eine kreisförmige Flaggenmarkierung.
 
 ### Zoom und Navigation
 
-Scrollen (oder kneifen) zum Zoomen · ziehen zum Verschieben. Die Schaltfläche <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="zurücksetzen"> zoomt heraus, um alle Länder in die Ansicht zu passen.
-Wenn ein Land ausgewählt ist, zoomt die Schaltfläche <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="anpassen"> und verschiebt, um alle hervorgehobenen Länder auf einmal zu zeigen.
+Scrollen (oder kneifen) zum Zoomen · ziehen zum Verschieben. Drei runde Schaltflächen schweben in der unteren linken Ecke der Karte:
+
+- <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="zurücksetzen"> zoomt heraus, um alle Länder in die Ansicht zu passen.
+- <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="anpassen"> — wenn ein Land ausgewählt ist, zoomt und verschiebt, um alle hervorgehobenen Länder auf einmal zu zeigen.
+- Eine kleine runde Farbpalette wechselt das Farbthema der Karte — siehe *Die Legende*, unten.
 
 ### Die Legende
 
-Die Farbbalken am unteren Rand der Kopfzeile verlaufen von dunkel nach hell von links nach rechts,
-mit den Referenzwerten **66 · 55 · 35 · 15 · 0**.
-Frankreich (**99**, weit außerhalb der Skala) wird als eigenständiger schwarzer Punkt links der Leiste dargestellt.
+Die Karte bietet drei Farbthemen, durchlaufen über die oben in *Zoom und Navigation* beschriebene Palettenschaltfläche — jedes färbt Länder nach einer anderen Kennzahl ein:
+
+| Thema | Färbt nach |
+|---|---|
+| **Divergierend** (Standard) | Netto-Talentbilanz — hausgemachter Beitrag (Exporte + einheimische Spieler) minus Importe. Netto-Exporteure und Netto-Importeure erscheinen in zwei unterschiedlichen Farben zu beiden Seiten eines neutralen Mittelpunkts. |
+| **Wald** | Exportanzahl — hier geborene Spieler, die jetzt anderswo spielen. |
+| **Erdig** | Importanzahl — anderswo geborene Spieler, die jetzt hier spielen. |
+
+Bei **Divergierend** liest sich der Farbbalken am unteren Rand der Kopfzeile von links nach rechts wie ein Zahlenstrahl — negatives Extrem, neutrale 0 in der Mitte, positives Extrem — mit einer Referenzmarke an jedem Ende und in der Mitte, sowie einem eigenständigen Punkt *an jedem Ende* für das Land, das auf dieser Seite am weitesten außerhalb der Skala liegt (größter Netto-Importeur, größter Netto-Exporteur). Bei **Wald** und **Erdig** verläuft der Balken stattdessen von dunkel nach hell von links nach rechts, mit einem einzigen eigenständigen Punkt für das eine Land, das am weitesten außerhalb der Skala liegt.
+Das gewählte Thema bleibt über Besuche hinweg erhalten.
 
 ### Tooltips
 
@@ -237,6 +326,16 @@ Die Standardregisterkarte listet jedes Land als Pill-Badge auf.
 Das Filter- und Sortierpanel steuert, welche Badges erscheinen und in welcher Reihenfolge;
 die Standardsortierung erfolgt nach [Welt-Elo-Bewertung](https://www.eloratings.net/).
 
+Ein kleines Karussell befindet sich über der Liste und durchläuft sieben Positionen: **Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger**.
+
+- Verwenden Sie die Pfeile ‹ › oder wischen Sie auf Touchscreens nach links/rechts, um zwischen den Phasen zu wechseln.
+- Jede Position filtert qualifizierte Länder auf jene, die diese Phase „erreicht" haben — zu Beginn noch im Turnier, oder bereits Sieger.
+- Die Navigation ist auf die vom Turnier tatsächlich erreichte Phase begrenzt; weitere Positionen bleiben gesperrt, bis die entsprechenden Spiele ausgetragen sind.
+
+Das Karussell wirkt als zusätzlicher Filter, zusätzlich zum Filter- und Sortierpanel — Sie können beispielsweise
+nur Achtelfinal-Mannschaften anzeigen, die auch Exporteure sind, indem Sie das Karussell vorrücken und die Nicht-Exporteur-Spalte im Panel deaktivieren.
+Es filtert nur die vier **qualifizierten** Zeilen (Importeur / Nicht-Importeur × Exporteur / Nicht-Exporteur); die vier **nicht qualifizierten** Zeilen (FIFA / Nicht-FIFA × Exporteur / Nicht-Exporteur) sind davon unabhängig und bleiben bei jeder Position unverändert — sie haben keine eigene Turnierphase zu erreichen.
+
 Ein Klick auf ein Badge wählt dieses Land aus und zoomt die Karte darauf.
 
 Für Länder mit **geboren hier / spielt für**-Verbindungen erscheinen auch farbige Pfeile auf der Karte:
@@ -247,6 +346,7 @@ Für Länder mit **geboren hier / spielt für**-Verbindungen erscheinen auch far
 *Die Pfeilstärke ist proportional zur Anzahl der Spieler.*
 
 Die Schaltfläche <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="anpassen"> passt dann alle verbundenen Länder in die Ansicht.
+Die Schaltfläche <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="zurücksetzen"> stellt den ursprünglichen Zoom/Ausschnitt wieder her, optimiert, um alle Länder in die Ansicht zu passen.
 
 Klicken Sie erneut auf das aktive Badge, klicken Sie woanders auf die Karte oder drücken Sie **Esc**, um die Auswahl aufzuheben.
 

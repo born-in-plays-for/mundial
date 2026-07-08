@@ -20,52 +20,69 @@ Mantén presionado (o mantén el botón del ratón pulsado) sobre una cita para 
 <!-- /i18n:quotes -->
 
 <!-- i18n:control_sidebar -->
-## El panel de filtro y ordenación
+## El panel de filtros y orden
 
-El botón <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> en la esquina superior derecha del encabezado abre el panel de filtro y ordenación,
-para controlar lo que aparece en el mapa y en la lista de países.
+El botón <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> en la esquina superior derecha de la cabecera abre el panel de filtros y orden,
+que controla qué aparece en el mapa y en la lista de países.
 
-![Panel de filtro y ordenación](screenshots/control_sidebar-es.png)
+![Panel de filtros y orden](screenshots/control_sidebar-es.png)
 
-*Matriz de filtro (derecha) — haz clic en un encabezado de fila o columna para alternar todo un grupo a la vez.*<br>*Columna de ordenación (izquierda) — solo los dos primeros criterios están activos; hacer clic en un criterio lo mueve al inicio de la lista.*
+El panel tiene cinco partes: una **barra de herramientas** arriba; **Ordenar** y **Ver** apiladas a la izquierda; la matriz de **Filtrar** a la derecha; y una **barra de información** abajo.
 
-### La matriz de filtro
+### Barra de herramientas
+
+- <img class="gp-icon" src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" alt="colapsar"> vuelve a colapsar el panel a su botón ‹.
+- <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederación"> filtra la lista a una sola confederación FIFA — ver *Filtro por confederación FIFA*, abajo.
+- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="compartir"> copia una URL que reproduce la configuración actual del panel.
+- <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="parámetros"> muestra qué parámetros de URL están activos para el estado actual — el mismo panel que abre `?explain` en cada carga de página.
+
+### Ordenar
+
+Cuatro criterios reordenables — rango Elo, población, Δ (juega-por menos nacido-en), A–Z — más un botón de dirección (↓↑) para invertir ascendente/descendente. Solo los dos criterios superiores están realmente activos; al hacer clic en un criterio se mueve a la primera posición.
+
+### Ver
+
+Cambia la lista de países entre **Equipos** (una insignia por país, por defecto) y **Partidos** (una fila por enfrentamiento, rivales uno junto al otro) — ver *Vista equipos / partidos*, abajo.
+
+### Filtrar
 
 La matriz cruza dos **columnas** (exportador / no exportador) con cuatro **filas** en dos grupos:
 
-- **Clasificados** — según si el país importa jugadores o no
-- **No clasificados** — según la membresía FIFA
+- **Clasificados** — divididos según si el país importa jugadores o no
+- **No clasificados** — divididos por pertenencia a la FIFA
 
-Desmarca una celda para ocultar esa categoría. Haz clic en un encabezado de fila o columna para alternar todo el grupo a la vez.
+Desactiva una celda para ocultar esa categoría. Haz clic en un encabezado de fila o columna para alternar todo el grupo a la vez.
 
-### Filtro de fase del torneo
+### Barra de información
 
-Un pequeño carrusel se encuentra en el encabezado de la fila *clasificados*, recorriendo siete posiciones: **Fase de grupos → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón**.
+Muestra cuántos países son visibles actualmente (del total), y la fuente de datos (y la fecha de última actualización) para el criterio situado más arriba en la columna de orden.
 
-- Usa las flechas ‹ ›, o desliza hacia la izquierda/derecha en pantallas táctiles, para cambiar de fase.
-- Cada posición filtra los países clasificados hasta aquellos que «alcanzaron» esa fase — aún en juego al inicio de la misma, o ya campeones. Los países exportadores no clasificados no se ven afectados, mostrados independientemente de la fase.
-- La navegación está limitada a la fase que el torneo ha alcanzado realmente; las posiciones siguientes permanecen bloqueadas hasta que se disputen los partidos correspondientes.
+### Vista equipos / partidos
 
-El carrusel funciona en combinación con el resto de la matriz de filtro — puedes, por ejemplo,
-mostrar solo equipos de los octavos de final que también sean exportadores avanzando el carrusel y desmarcando la columna de no exportadores.
+El interruptor Ver no tiene efecto hasta que el carrusel de fases del torneo — en la pestaña "Lista de países" debajo del mapa, no en este panel; ver *El panel inferior*, abajo — avanza más allá de la **Fase de grupos**: antes de que comiencen las eliminatorias no existe un único enfrentamiento al que se pueda asociar un equipo, así que hasta entonces permanece desactivado.
 
-### Filtro de confederaciones FIFA
+En la vista de partidos, cada fila muestra ambos equipos a los dos lados de la fecha/resultado:
 
-El botón <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederación"> junto a la fila **FIFA** abre un menú desplegable para filtrar la lista a una sola confederación. Los países no-FIFA no se ven afectados — permanecen visibles u ocultos según el resto de la matriz de filtro.
+- Aún no jugado: la fecha del partido, y un borde superior/inferior ondulado en ambas insignias — un aspecto "pendiente" para un partido que aún puede resolverse en cualquier dirección.
+- Jugado: el resultado (más el resultado de penaltis, si se llegó a eso) en lugar de la fecha, y la bandera del equipo perdedor atenuada.
 
-Al seleccionar una confederación también se resalta su límite externo en el mapa y se hace zoom para encuadrarla. Selecciona **Todas las confederaciones FIFA** para borrar el filtro.
+### Filtro por confederación FIFA
+
+El botón <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederación"> junto a la fila **FIFA** abre un menú desplegable para filtrar la lista a una sola confederación. Los países no FIFA no se ven afectados — permanecen visibles u ocultos según el resto de la matriz de filtros.
+
+Seleccionar una confederación también resalta su frontera exterior en el mapa y hace zoom sobre ella. Selecciona **Todas las confederaciones FIFA** para quitar el filtro.
 
 ### Parámetros de URL
 
-El estado del filtro y la ordenación también se puede configurar directamente desde la URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Añade `?explain` a cualquier URL para abrir un panel que describe lo que hacen los parámetros activos. La referencia completa con todos los códigos de celda, alias de grupo y ejemplos está en la [guía de la página de Países](?guide=countries).
+El estado de filtro y orden también puede configurarse directamente mediante la URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Añade `?explain` a cualquier URL para abrir un panel que explica los parámetros activos. La referencia completa con todos los códigos de celda, alias de grupo y ejemplos está en la [guía de páginas de país](?guide=countries).
 
 ### Sobre la referencia de países
 
 El mapa y la lista usan [eloratings.net](https://www.eloratings.net/) como fuente de países —
-no la lista de miembros de la FIFA. Esto significa que la lista incluye territorios no-FIFA como Groenlandia,
-pero también casos especiales como las cuatro naciones del Reino Unido — entidades sub-nacionales
-con su propia membresía FIFA, reconocidas por separado tanto por la FIFA como por Elo.
-El orden predeterminado es por clasificación Elo; otros criterios de ordenación están disponibles en la columna de ordenación.
+no la lista de miembros de la FIFA. Esto significa que la lista incluye territorios no pertenecientes a la FIFA como Groenlandia,
+pero también casos especiales como las cuatro naciones constituyentes del Reino Unido — entidades subnacionales
+con membresía FIFA propia, reconocidas por separado por la FIFA y por Elo.
+El orden por defecto es por puntuación Elo; otros criterios de orden están disponibles en la columna de orden.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:tax_heading -->
@@ -166,6 +183,39 @@ Jugadores nacidos en otro país juegan para este país.
 Jugadores nacidos en otro país juegan para este país, y jugadores nacidos aquí juegan para otros países.
 <!-- /i18n:tax_desc_both --></span>
 </div>
+<div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->
+El fondo de la píldora es a su vez un degradado rojo (importaciones) → blanco (nativos) → azul (exportaciones) — cuanto más ancha la banda de un color, mayor la proporción de ese grupo en la plantilla total del país.
+<!-- /i18n:tax_note_gradient --></div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(59,130,246); --imp-color: rgb(248,173,173); --imp-pivot: 2.8%; --native-pivot: 25.0%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" alt="">
+    <span class="elo-name" data-id="250">France</span>
+    <span class="elo-pts"><span class="elo-pts-primary">3 · 81</span></span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->
+Predominantemente azul — un gran exportador (81) con solo un puñado de importaciones (3).
+<!-- /i18n:tax_desc_gradient_exp --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(155,193,250); --imp-color: rgb(248,167,167); --imp-pivot: 14.3%; --native-pivot: 72.8%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gb-eng.svg" alt="">
+    <span class="elo-name" data-id="8260">England</span>
+    <span class="elo-pts"><span class="elo-pts-primary">7 · 22</span></span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->
+Una banda roja visible junto al azul — una mezcla más equilibrada de importaciones (7) y exportaciones (22).
+<!-- /i18n:tax_desc_gradient_mixed --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--qualified elo-item--knocked-out elo-item--imp" style="--imp-color: rgb(239,68,68); --imp-pivot: 96.3%; --native-pivot: 100.0%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" alt="">
+    <span class="elo-name" data-id="531">Curaçao</span>
+    <span class="elo-pts"><span class="elo-pts-primary">26</span></span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_imp -->
+Casi enteramente rojo — casi toda la plantilla (26) nació en otro lugar.
+<!-- /i18n:tax_desc_gradient_imp --></span>
+</div>
 </div>
 
 <div>
@@ -195,35 +245,74 @@ Nombre en <em>cursiva</em> y bandera atenuada — demasiado pequeño para aparec
 </div>
 </div>
 
+<div>
+<div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555"><!-- i18n:tax_label_fixture -->
+Enfrentamientos (vista de partidos)
+<!-- /i18n:tax_label_fixture --></div>
+<div style="font-size:.8rem;color:#777;margin-bottom:6px"><!-- i18n:tax_note_fixture -->
+Visible solo en la vista de partidos — ver Vista equipos / partidos, arriba.
+<!-- /i18n:tax_note_fixture --></div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+  <span class="elo-viz--match" style="display:inline-flex">
+    <span class="elo-item elo-item--qualified elo-item--pending" style="flex-shrink:0">
+      <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/de.svg" alt="">
+      <span class="elo-name" data-id="276">Germany</span>
+    </span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_pending -->
+Borde ondulado, nombre atenuado — partido aún no jugado.
+<!-- /i18n:tax_desc_pending --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-item elo-item--qualified elo-item--lost" style="flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/br.svg" alt="">
+    <span class="elo-name" data-id="76">Brazil</span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->
+Bandera atenuada — perdió un partido decidido.
+<!-- /i18n:tax_desc_lost --></span>
+</div>
+</div>
+
 </div>
 
 <!-- i18n:map -->
 ## El mapa
 
-### Coropleta y banderas
+### Coropletas y banderas
 
-Cada país se colorea según el número total de jugadores del Mundial nacidos allí —
-cuanto más oscuro el tono, más jugadores. Los países donde no nació ningún jugador aparecen en un tono pálido neutro.
+Cada país está coloreado según la métrica del tema de color activo (ver *La leyenda*, abajo) —
+cuanto más oscuro el tono, mayor el valor. Los países sin datos para esa métrica aparecen en un tono claro neutro.
 Los países actualmente incluidos en el filtro muestran un marcador de bandera circular.
 
 ### Zoom y desplazamiento
 
-Desplaza (o pellizca) para hacer zoom · arrastra para mover. El botón <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="restablecer"> aleja el zoom para que quepan todos los países en la vista.
-Cuando hay un país seleccionado, el botón <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="ajustar"> hace zoom y desplaza para mostrar todos los países resaltados a la vez.
+Desplázate (o pellizca) para hacer zoom · arrastra para desplazar la vista. Tres botones redondos flotan en la esquina inferior izquierda del mapa:
+
+- <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="restablecer"> aleja el zoom para encajar todos los países en la vista.
+- <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="ajustar"> — cuando hay un país seleccionado, hace zoom y desplaza la vista para mostrar todos los países resaltados a la vez.
+- Una pequeña paleta redonda cambia el tema de color del mapa — ver *La leyenda*, abajo.
 
 ### La leyenda
 
-La barra de color en la parte inferior del encabezado va de oscuro a pálido de izquierda a derecha,
-con los valores de referencia **66 · 55 · 35 · 15 · 0**.
-Francia (**99**, muy fuera de escala) se muestra como un punto negro independiente a la izquierda de la barra.
+El mapa ofrece tres temas de color, recorribles mediante el botón de paleta descrito arriba en *Zoom y desplazamiento* — cada uno colorea los países según una métrica distinta:
+
+| Tema | Colorea por |
+|---|---|
+| **Divergente** (por defecto) | Balance neto de talento — contribución local (exportaciones + jugadores nativos) menos importaciones. Exportadores netos e importadores netos aparecen en dos colores distintos a cada lado de un punto neutro central. |
+| **Bosque** | Número de exportaciones — jugadores nacidos aquí que ahora juegan en otro lugar. |
+| **Tierra** | Número de importaciones — jugadores nacidos en otro lugar que ahora juegan aquí. |
+
+Con **Divergente**, la barra de color en la parte inferior de la cabecera se lee de izquierda a derecha como una recta numérica — extremo negativo, cero neutro en el centro, extremo positivo — con una marca de referencia en cada extremo y en el centro, más un punto independiente *en cada extremo* para el país más fuera de escala de ese lado (el mayor importador neto, el mayor exportador neto). Con **Bosque** y **Tierra**, la barra va en cambio de oscuro a claro de izquierda a derecha, con un único punto independiente para el único país más fuera de escala.
+El tema elegido se mantiene entre visitas.
 
 ### Información emergente
 
-Pasa el cursor sobre cualquier país para ver los detalles. La información emergente no se muestra en móviles.
+Pasa el ratón sobre un país para ver detalles. Las ventanas emergentes no se muestran en dispositivos móviles.
 
-- **Países de nacimiento**: recuento de exportaciones y mejores jugadores, cada uno con su bandera de destino
-- **Países clasificados que también reclutan**: una columna derecha añade el lado de importación
-- **Países de nacimiento no clasificados**: un distintivo *no clasificado* reemplaza el panel de convocatoria
+- **Países de nacimiento**: número de exportaciones y mejores jugadores, cada uno con su bandera de destino
+- **Países clasificados que también reclutan**: una columna derecha añade el lado de las importaciones
+- **Países de nacimiento no clasificados**: una insignia *no clasificado* sustituye al panel de la plantilla
 <!-- /i18n:map -->
 
 <!-- i18n:bottom_panel -->
@@ -233,22 +322,33 @@ El área desplazable bajo el mapa tiene tres pestañas.
 
 ### <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> La lista de países
 
-La pestaña predeterminada muestra todos los países como pastillas.
-El panel de filtro y ordenación controla qué pastillas aparecen y en qué orden;
-el orden predeterminado es por [clasificación Elo mundial](https://www.eloratings.net/).
+La pestaña por defecto lista cada país como una insignia tipo píldora.
+El panel de filtros y orden controla qué insignias aparecen y en qué orden;
+el orden por defecto es por [puntuación Elo mundial](https://www.eloratings.net/).
 
-Hacer clic en una pastilla selecciona ese país y hace zoom en el mapa.
+Un pequeño carrusel se sitúa encima de la lista y recorre siete posiciones: **Fase de grupos → Dieciseisavos → Octavos → Cuartos → Semifinales → Final → Campeón**.
 
-Para países con conexiones **nacido aquí / juega para**, también aparecen flechas de colores en el mapa:
+- Usa las flechas ‹ › o desliza a izquierda/derecha en pantallas táctiles para cambiar de fase.
+- Cada posición filtra los países clasificados a los que han "alcanzado" esa fase — todavía en el torneo al principio, o ya campeones.
+- La navegación está limitada a la fase realmente alcanzada por el torneo; las posiciones posteriores permanecen bloqueadas hasta que se disputen los partidos correspondientes.
 
-- {{ARROW_BLUE}} **flechas azules**: selecciones que incluyen jugadores nacidos en el país seleccionado
-- {{ARROW_RED}} **flechas rojas**: países donde jugadores nacidos en otro lugar juegan para esta selección
+El carrusel actúa como un filtro adicional, junto con el panel de filtros y orden — puedes, por ejemplo,
+mostrar solo los equipos de octavos que también sean exportadores avanzando el carrusel y desactivando la columna de no exportador en el panel.
+Solo filtra las cuatro filas de **clasificados** (importador / no importador × exportador / no exportador); las cuatro filas de **no clasificados** (FIFA / no FIFA × exportador / no exportador) son independientes de esto y permanecen sin cambios en cada posición — no tienen una fase del torneo propia que alcanzar.
 
-*El grosor de las flechas es proporcional al número de jugadores.*
+Haz clic en una insignia para seleccionar ese país y hacer zoom en el mapa sobre él.
 
-El botón <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="ajustar"> ajusta entonces todos los países conectados en la vista.
+Para países con vínculos **nacido aquí / juega por**, también aparecen flechas de colores en el mapa:
 
-Haz clic de nuevo en la pastilla activa, haz clic en otro lugar del mapa, o pulsa **Esc** para deseleccionar.
+- {{ARROW_BLUE}} **flechas azules**: plantillas que incluyen jugadores nacidos en el país seleccionado
+- {{ARROW_RED}} **flechas rojas**: países donde jugadores nacidos en otro lugar juegan para esta plantilla
+
+*El grosor de la flecha es proporcional al número de jugadores.*
+
+El botón <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="ajustar"> ajusta entonces la vista a todos los países vinculados a la vez.
+El botón <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="restablecer"> restablece el zoom/desplazamiento inicial, optimizado para encajar todos los países en la vista.
+
+Haz clic de nuevo en la insignia activa, haz clic en otro lugar del mapa, o pulsa **Esc** para deseleccionar.
 
 ### La tabla de jugadores
 
@@ -256,17 +356,17 @@ Cuando hay un país seleccionado, la tabla de jugadores muestra tres secciones:
 
 | Sección | Contenido |
 |---|---|
-| **Nacido aquí / juega para otro** | Jugadores nacidos en este país, agrupados por la selección que representan |
-| **Nacido aquí / juega para este país** | Jugadores nacidos aquí que también representan a este país |
-| **Nacido en otro lugar / juega para este país** | Jugadores nacidos en otro país que representan a esta selección, agrupados por país de nacimiento |
+| **Nacidos aquí / juegan por otro país** | Jugadores nacidos en este país, agrupados por la plantilla que representan |
+| **Nacidos aquí / juegan por este país** | Jugadores nacidos aquí que también representan a este país |
+| **Nacidos en otro lugar / juegan por este país** | Jugadores nacidos en otro país que juegan para esta plantilla, agrupados por país de nacimiento |
 
-Los nombres de los jugadores enlazan a su página de Wikipedia en el idioma de la interfaz cuando está disponible.
+Los nombres de los jugadores enlazan a su página de Wikipedia en el idioma de la interfaz actual, cuando está disponible.
 
 ### <img class="gp-icon" src="images/wc2026.svg" alt=""> Cadenas
 
-La pestaña de cadenas muestra secuencias de países vinculados por conexiones nacido-aquí / juega-para:
-un jugador nacido en A juega para B, un jugador nacido en B juega para C — y así sucesivamente,
-formando una cadena de nacionalidades a lo largo del torneo.
+La pestaña Cadenas muestra secuencias de países vinculados por relaciones nacido-aquí / juega-por:
+un jugador nacido en A juega por B, un jugador nacido en B juega por C — y así sucesivamente,
+formando una cadena de nacionalidades a través del torneo.
 <!-- /i18n:bottom_panel -->
 
 <!-- i18n:data_sources -->
