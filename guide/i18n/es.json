@@ -374,6 +374,7 @@
   "tax_desc_gradient_imp": "Casi enteramente rojo — casi toda la plantilla (26) nació en otro lugar.",
   "tax_label_fixture": "Enfrentamientos (vista de partidos)",
   "tax_note_fixture": "Visible solo en la vista de partidos — ver Vista equipos / partidos, arriba.",
-  "tax_desc_pending": "Borde ondulado, nombre atenuado — partido aún no jugado.",
-  "tax_desc_lost": "Bandera en escala de grises — perdió un partido decidido."
+  "tax_desc_pending": "Borde ondulado — partido aún no jugado.",
+  "tax_desc_lost": "Bandera en escala de grises — perdió un partido decidido.",
+  "tax_desc_won": "Marca verde en la bandera — ganó un partido decidido."
 }

@@ -256,17 +256,17 @@ Enfrentamientos (vista de partidos)
 Visible solo en la vista de partidos — ver Vista equipos / partidos, arriba.
 <!-- /i18n:tax_note_fixture --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-viz--match" style="display:inline-flex">
-    <span class="elo-item elo-item--qualified elo-item--pending" style="flex-shrink:0">
-      <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/de.svg" alt="">
-      <span class="elo-name" data-id="276">Germany</span>
+  <span class="elo-pair" style="display:inline-flex">
+    <span class="elo-item elo-item--qualified" style="flex-shrink:0">
+      <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
+      <span class="elo-name" data-id="504">Morocco</span>
     </span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_pending -->
-Borde ondulado, nombre atenuado — partido aún no jugado.
-<!-- /i18n:tax_desc_pending --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_won -->
+Marca verde en la bandera — ganó un partido decidido.
+<!-- /i18n:tax_desc_won --></span>
 </div>
-<div style="display:flex;align-items:center;gap:12px">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--lost" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/br.svg" alt="">
     <span class="elo-name" data-id="76">Brazil</span>
@@ -274,6 +274,17 @@ Borde ondulado, nombre atenuado — partido aún no jugado.
   <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->
 Bandera en escala de grises — perdió un partido decidido.
 <!-- /i18n:tax_desc_lost --></span>
+</div>
+<div style="display:flex;align-items:center;gap:12px">
+  <span class="elo-viz--match" style="display:inline-flex">
+    <span class="elo-item elo-item--qualified elo-item--pending" style="flex-shrink:0">
+      <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/de.svg" alt="">
+      <span class="elo-name" data-id="276">Germany</span>
+    </span>
+  </span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_pending -->
+Borde ondulado — partido aún no jugado.
+<!-- /i18n:tax_desc_pending --></span>
 </div>
 </div>
 

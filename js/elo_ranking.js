@@ -55,7 +55,7 @@ export const pillStyle = ({ expColor = null, impColor = null, impPivot = null, n
   ].filter(Boolean).join(';');
 
 export const pillContent = ({ iso2, name, pts = null } = {}) => html`
-  ${iso2 ? html`<img class="elo-flag" src="${_CDN(iso2)}" alt="">` : nothing}
+  ${iso2 ? html`<span class="elo-flag-wrap"><img class="elo-flag" src="${_CDN(iso2)}" alt=""></span>` : nothing}
   <span class="elo-name">${name}</span>
   ${pts != null ? html`<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : nothing}`;
 

@@ -62,7 +62,7 @@
   mask-repeat: repeat-x;
   mask-size: 12px 29px;
 }
-.elo-viz--match .elo-item--pending .elo-name { color: var(--light-text); }
+/* .elo-viz--match .elo-item--pending .elo-name { color: var(--light-text); } */
 
 /* Non-FIFA: light text */
 .taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
@@ -92,6 +92,38 @@
 
 /* Match-display mode: lost a decided fixture — grey out the flag, name stays legible */
 .taxonomy .elo-item--lost .elo-flag { filter: grayscale(1); opacity: 0.75; }
+
+/* Match-display mode: winner of a decided fixture gets a green check on its flag's
+   bottom-right corner — just the mark, no badge/background. Scoped to .elo-pair (never
+   .elo-solo — a lone/unpaired row has no opponent to have won against) and
+   :not(.elo-pair--pending) (undecided fixtures have no winner yet, and neither side carries
+   --lost, so both would otherwise qualify).
+   images/check-svgrepo-com.svg masked (not background-image'd) so its own dark stroke
+   (#292929) can be recolored to green — same technique .elo-item--pending's wavy border
+   uses above for an external SVG that needs a color CSS itself controls. A half-transparent
+   white circle sits behind it (::before, a plain round backdrop — not a masked copy of the
+   check shape itself) for contrast against whatever flag color is underneath. */
+.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item:not(.elo-item--lost) .elo-flag-wrap::before {
+  content: '';
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.667);
+}
+.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item:not(.elo-item--lost) .elo-flag-wrap::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 12px;
+  height: 12px;
+  background-color: #4caf50;
+  -webkit-mask: url('../images/check-svgrepo-com.svg') no-repeat center / contain;
+  mask: url('../images/check-svgrepo-com.svg') no-repeat center / contain;
+}
 
 /* Dots via pseudo-elements — both on the right of the name. Fixed accent colors (not
    count-scaled — the pill's gradient background already carries that signal). */
