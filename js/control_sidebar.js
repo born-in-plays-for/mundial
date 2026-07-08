@@ -24,12 +24,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const _sidebarHost = document.getElementById('sidebar-host');
   const _sortLabel = html`<span class="cbs-header-label">${T.sortLabels.action}</span>`;
-  render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
+  render(html`<div id="control-sidebar" class="csb-panel ${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
   <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-2">
     <div class="csb-toolbar d-flex align-items-center gap-2">
       ${alwaysOpen ? nothing : html`<button id="csb-close" class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><kbd class="csb-esc-kbd">ESC</kbd></button>`}
-      <div class="dropdown dropend" id="zoom-conf-dropdown">
+      <div class="dropdown dropend csb-conf-dropdown" id="zoom-conf-dropdown">
         <button type="button" class="csb-conf-btn dropdown-toggle pe-2" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
           <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
         </button>
@@ -44,7 +44,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> ${T.csbParams.confNames.ofc}</label></li>
         </ul>
       </div>
-      <span id="zoom-conf-label" class="cbs-header-label"></span>
+      <span id="zoom-conf-label" class="cbs-header-label csb-conf-label"></span>
       <button id="csb-share" class="csb-icon-btn csb-share ms-auto" title="${T.csbParams.share}"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
       <button id="params-badge" class="csb-icon-btn csb-params-badge" title="${T.csbParams.badge}"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
     </div>

@@ -37,11 +37,23 @@
 
 /* ── Container ─────────────────────────────────────────────────────────── */
 
+/* .csb-panel — shared by #control-sidebar (this file) and #players-sidebar
+   (css/wc2026_players.css, js/players_sidebar.js): both roots carry this class so the pieces
+   that are genuinely identical between the two sidebars (font-size, background, .csb-content/
+   .csb-inset/.csb-table basics, .csb-row, .csb-sort-item, .csb-sort-dir, .csb-header,
+   --sort-extra-pad) live here exactly once instead of two id-scoped copies drifting apart.
+   Stays a class (not merged onto the ids themselves) specifically so it can't silently
+   outrank #control-sidebar's own more specific rules below (an id always wins over any number
+   of classes — see .csb-body's own note) — anything below that needs id-level priority over a
+   .csb-panel rule keeps its #control-sidebar/#players-sidebar prefix. */
+.csb-panel {
+  font-size: 11px;
+  background-color: rgba(256,256,256,.667);
+}
+
 #control-sidebar {
   display: flex; flex-direction: row-reverse; align-items: flex-start;
   position: relative;
-  font-size: 11px;
-  background-color: rgba(256,256,256,.667);
 }
 
 /* No second flex item to space out from once the body has collapsed to nothing —
@@ -49,7 +61,13 @@
 #control-sidebar.collapsed { gap: 0; }
 #control-sidebar.collapsed .csb-body { max-width: 0; pointer-events: none;}
 
-/* Always-open variant (countries page) — no toggle, transparent bg, natural height */
+/* Always-open variant (countries page) — no toggle, transparent bg, natural height. Stays
+   #control-sidebar-scoped rather than generalized to .csb-always-open: its specificity
+   (id+class) has to beat #control-sidebar .csb-body's own (id+class) base rule below via
+   source order, which a bare .csb-always-open (class+class) couldn't do regardless of order —
+   an id always outranks any number of classes. #players-sidebar has no competing base .csb-body
+   rule to out-rank, so its own equivalent (css/wc2026_players.css) can stay a plain, lower-
+   specificity rule without needing this same guard. */
 #control-sidebar.csb-always-open { margin-top: 0; }
 #control-sidebar.csb-always-open .csb-body { background: transparent; height: auto; max-width: none; }
 
@@ -99,7 +117,7 @@
    offsetHeight, padding included. So the extra .5rem here automatically grows *both* boxes
    by the same amount, with .csb-content's real content sitting centered within it (equal
    padding top/bottom) — no separate height recalculation needed anywhere else. */
-#control-sidebar .csb-content {
+.csb-panel .csb-content {
   width: 100%;
   /* padding-block: .25rem; */
 }
@@ -109,7 +127,7 @@
    control_sidebar.js reads *this* element's rendered box (not .csb-content's) for --csb-h,
    so it stays correct no matter what border/padding/margin ends up here.
    TODO: replace debug border with the real design. */
-#control-sidebar .csb-inset {
+.csb-panel .csb-inset {
   /* border: 2px red solid; */
   padding: .25rem;
 }
@@ -118,7 +136,7 @@
    and the confederation-dropdown rules further down for their own styling. Same background
    as .csb-table's cells, so it reads as one of the sidebar's top-level blocks rather than
    bare on .csb-body's background. */
-#control-sidebar .csb-toolbar {
+.csb-toolbar {
   width: 100%;
   padding: 2px 6px;
   background: var(--bg-hover);
@@ -128,7 +146,7 @@
    from here instead, same recipe as .csb-toolbar (including its background/gap —
    no negative margin here anymore, so it now spaces from .csb-layout the same
    way .csb-toolbar does above it). */
-#control-sidebar .csb-footer {
+.csb-footer {
   width: 100%;
   background: var(--bg-hover);
   padding: 0 6px;
@@ -137,6 +155,7 @@
      means that first measurement already gets the right --csb-h, instead of a second,
      visible resize once the real text arrives and pushes .csb-toggle taller. */
   min-height: 22px;
+  align-content: center;
 }
 
 /* #elo-meta-count (e.g. "66/236 Countries") left, #elo-meta-source (source
@@ -163,26 +182,25 @@
 
 /* ── Table ─────────────────────────────────────────────────────────────── */
 
-#control-sidebar .csb-table {
+.csb-panel .csb-table {
   border-collapse: collapse; margin: 0;
   --sort-extra-pad: 26px;
 }
-#control-sidebar .csb-table td { padding: 2px 6px; background: var(--bg-hover); text-align: right; }
+.csb-panel .csb-table td { padding: 2px 6px; background: var(--bg-hover); text-align: right; }
 
 /* Strip each table's outer perimeter, keep Bootstrap's .table-bordered grid lines between
    cells. With border-collapse, Bootstrap's top/bottom border-width lives on the <tr> and
    left/right on the <td> — the override has to land on that same box, since a collapsed
    border is resolved by comparing widths across all contributing boxes (widest wins), not
    by normal cascade specificity alone. */
-#control-sidebar .csb-table tr:first-child { border-top: 0; }
-#control-sidebar .csb-table tr:last-child  { border-bottom: 0; }
-#control-sidebar .csb-table tr > td:last-child { border-right: 0; }
-/* Left edge: .csb-sort-table/.csb-display-table are single-column, so every cell is the
-   left edge. .csb-filter-table's left column only ever has a cell — via rowspan/colspan —
-   on its genuine edge rows (header/q/nq); qni/nqn have no cell of their own in that column
-   (covered by the rowspan above), so their own first cell is really the *second* visual
-   column and must keep its left border (an inner divider, not the perimeter). */
-#control-sidebar .csb-sort-table td,
+.csb-panel .csb-table tr:first-child { border-top: 0; }
+.csb-panel .csb-table tr:last-child  { border-bottom: 0; }
+.csb-panel .csb-table tr > td:last-child { border-right: 0; }
+/* .csb-sort-table is single-column on both sidebars, so every cell is the left edge — shared.
+   The rest of the left-edge story diverges per sidebar (control 1's .csb-display-table/
+   rowspan-colspan .csb-filter-table vs. control 2's simpler :first-child .csb-filter-table,
+   see css/wc2026_players.css), so only this common piece lives here. */
+.csb-panel .csb-sort-table td { border-left: 0; }
 #control-sidebar .csb-display-table td,
 #control-sidebar .csb-filter-table td[rowspan],
 #control-sidebar .csb-filter-table td[colspan] {
@@ -237,21 +255,25 @@
 
 /* ── Column / group / row headers — colors from taxonomy.css ──────────── */
 
+/* .csb-row itself is shared (.csb-panel below); .csb-col/.csb-group have no players-sidebar
+   equivalent (no country-shaped filter matrix there) and stay control-1-only. */
 #control-sidebar .csb-col,
-#control-sidebar .csb-group,
-#control-sidebar .csb-row { cursor: pointer; white-space: nowrap; }
+#control-sidebar .csb-group { cursor: pointer; white-space: nowrap; }
+.csb-panel .csb-row { cursor: pointer; white-space: nowrap; }
 #control-sidebar .csb-group { text-align: center; vertical-align: middle; }
 #control-sidebar .csb-col:hover,
-#control-sidebar .csb-group:hover,
-#control-sidebar .csb-row:hover {
+#control-sidebar .csb-group:hover {
+  background: var(--bg-hover); border-radius: 3px; color: var(--text-muted);
+}
+.csb-panel .csb-row:hover {
   background: var(--bg-hover); border-radius: 3px; color: var(--text-muted);
 }
 
 /* ── Sort column ───────────────────────────────────────────────────────── */
 
-#control-sidebar .csb-header { text-align: left !important; }
+.csb-panel .csb-header { text-align: left !important; }
 #control-sidebar .csb-header[data-col] { cursor: pointer; }
-#control-sidebar .csb-table td.csb-sort-col {
+.csb-panel .csb-table td.csb-sort-col {
   padding: 0 var(--sort-extra-pad);
   vertical-align: top;
   width: 1px;
@@ -261,16 +283,17 @@
    --sort-extra-pad gutter reserved for .csb-sort-col's csb-sort-dir icon, or the
    position:absolute centering trick .csb-display-toggle used to need (see below):
    normal flow + text-align:center, with the shared .csb-table td padding for
-   breathing room from the cell border. */
+   breathing room from the cell border. Control-1-only — players has no team/match toggle. */
 #control-sidebar .csb-table td.csb-toggle-col { text-align: center; }
-#control-sidebar .csb-sort-item { cursor: pointer; padding: 0; }
+.csb-panel .csb-sort-item { cursor: pointer; padding: 0; }
 /* #control-sidebar .csb-sort-item:first-of-type { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }*/
 /* Groups elo+pop visually (was a '}' glyph via .csb-sort-list::after) — a plain vertical
    line instead, centered in the --sort-extra-pad gutter rather than flush against the
    item's own edge. One element on .csb-sort-list itself (not per-item) so there's no seam:
    two independently-positioned 1px borders meeting at a flex-item boundary can show a
    hairline gap from sub-pixel rounding. height:50% assumes exactly 4 equal-flex-grow items
-   with elo+pop as the first two — update if that count ever changes. */
+   with elo+pop as the first two — update if that count ever changes. Control-1-only: players'
+   own 4-item list has no such elo/pop grouping to call out. */
 #control-sidebar .csb-sort-list::after {
   content: '';
   position: absolute;
@@ -279,11 +302,14 @@
   right: calc(var(--sort-extra-pad) / -2);
   border-right: 1px solid #999;
 }
-#control-sidebar .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
+.csb-panel .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
+/* Control-1-only — players' equivalent is .csb-sort-item--active (always clickable, never
+   disabled; see css/wc2026_players.css's own comment for why the two controls' semantics
+   diverge here). */
 #control-sidebar .csb-sort-item--disabled { opacity: 0.3; pointer-events: none; }
 .cbs-header-label {
   font-style: italic;
-  color:#999;
+  color:#777;
 }
 /* ── Team/match display switch (bottom of the sort column) ───────────────
    Not a sort criterion (see control_sidebar.js's _displayMode) — a persistent two-state
@@ -306,13 +332,13 @@
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
 
-#control-sidebar .csb-sort-dir {
+.csb-panel .csb-sort-dir {
   position: absolute; top: 1px; left: calc((18px - var(--sort-extra-pad)) / 2 - 18px); width: 18px; height: 18px;
   background: url('../images/sort-vertical-svgrepo-com.svg') no-repeat center / 18px 18px;
   border: none; padding: 0; cursor: pointer; opacity: 0.75;
 }
-#control-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
-#control-sidebar .csb-sort-dir:hover { opacity: 1; }
+.csb-panel .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
+.csb-panel .csb-sort-dir:hover { opacity: 1; }
 
 /* ── Icon button (shared recipe) ───────────────────────────────────────────
    18×18, own SVG (not Bootstrap's stock .btn-close, whose hardcoded black
@@ -371,23 +397,28 @@
 .csb-check { display: flex; align-items: center; justify-content: center; height: 100%; cursor: pointer; }
 
 /* ── Confederation dropdown ─────────────────────────────────────────────── */
+/* .csb-conf-dropdown/.csb-conf-label are shared classes — #zoom-conf-dropdown/#zoom-conf-label
+   (this file) and #players-conf-dropdown/#players-conf-label (css/wc2026_players.css) each
+   keep their own id too, purely as JS query hooks / Bootstrap data-bs-target anchors; the ids
+   were never what made these two pairs look identical, so styling now targets the class both
+   elements actually share instead of duplicating the same declarations under two ids. */
 
 /* Lives in .csb-toolbar now (flex item, normal flow) — the "nqf" row itself only
    shows the plain "FIFA" label; picking a confederation is a global zoom action,
    not scoped to that one filter row. */
-#zoom-conf-dropdown { display: inline-flex; z-index: 2000; }
+.csb-conf-dropdown { display: inline-flex; z-index: 2000; }
 /* Bootstrap's .dropdown-menu sets its own font-size — same fix as .elo-name/.btn above */
-#zoom-conf-dropdown .dropdown-menu { font-size: 11px; }
+.csb-conf-dropdown .dropdown-menu { font-size: 11px; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
 .csb-conf-btn:hover { opacity: 1; }
 
 /* Plain Bootstrap radio look (unlike .csb-check's custom □/▣ glyphs elsewhere in the
    sidebar) — .form-check-input renders natively here, just laid out inline with its label. */
-#zoom-conf-dropdown .dropdown-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.csb-conf-dropdown .dropdown-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 
-/* Truncates instead of pushing .csb-share/.csb-params-badge out of the toolbar on a long
+/* Truncates instead of pushing whatever sits after it in .csb-toolbar out of shape on a long
    confederation name — min-width:0 overrides the flex-item default (min-width:auto, which
    blocks shrinking below content size and would otherwise make text-overflow a no-op here). */
-#zoom-conf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.csb-conf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
  

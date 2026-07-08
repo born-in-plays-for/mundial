@@ -32,88 +32,56 @@
 
 /* Players sidebar (control 2 — js/players_sidebar.js)
  *
- * Own id, own rules — deliberately not sharing #control-sidebar's id/CSS (see
- * css/control-sidebar.css's own header comment). Bare, unscoped classes control-sidebar.css
- * already defines (.csb-conf-btn, .cbs-header-label, .csb-table [data-col] hover, .elo-item,
- * the Bootstrap .btn-check pattern) apply here for free — only the id-scoped rules (container
- * chrome, table borders, sort list/dir button, checkbox glyph, confederation dropdown sizing)
- * need a #players-sidebar-scoped equivalent, written fresh for this simpler 2-row filter shape
- * (no rowspan/colspan grid, no --sort-extra-pad divider math tied to control 1's 4×2 matrix).
+ * #players-sidebar carries the shared .csb-panel/.csb-always-open classes (see
+ * css/control-sidebar.css's own header comment for what .csb-panel covers: font-size,
+ * background, .csb-content/.csb-inset/.csb-table basics, .csb-row, .csb-sort-item,
+ * .csb-sort-dir, .csb-header, --sort-extra-pad) — everything below is genuinely specific to
+ * this sidebar's simpler 2-row filter shape (no rowspan/colspan grid, no elo/pop-grouping
+ * divider tied to control 1's 4×2 matrix) or has no control-1 equivalent at all.
  */
 
-#players-sidebar {
-  font-size: 11px;
-  background-color: rgba(256,256,256,.667);
-}
+/* .csb-always-open sets .csb-body's background/height/width for #control-sidebar (this class
+   is shared with it — css/control-sidebar.css) but stays #control-sidebar-scoped there for a
+   specificity reason (see that file's own comment) — #players-sidebar has no competing base
+   .csb-body rule to out-rank, so it just needs this on its own, unconditionally. */
 #players-sidebar .csb-body { background: transparent; }
-#players-sidebar .csb-content { width: 100%; }
-#players-sidebar .csb-inset { padding: .25rem; }
-#players-sidebar .csb-toolbar { width: 100%; padding: 2px 6px; background: var(--bg-hover); }
 
-#players-sidebar .csb-table { border-collapse: collapse; margin: 0; }
-#players-sidebar .csb-table td { padding: 2px 6px; background: var(--bg-hover); text-align: right; }
-#players-sidebar .csb-table tr:first-child { border-top: 0; }
-#players-sidebar .csb-table tr:last-child  { border-bottom: 0; }
-#players-sidebar .csb-table tr > td:last-child { border-right: 0; }
-#players-sidebar .csb-sort-table td,
+/* .csb-sort-table's own border-left:0 is shared (.csb-panel, control-sidebar.css) — this is
+   just the remainder for control 2's simpler, rowspan/colspan-free filter table shape. */
 #players-sidebar .csb-filter-table td:first-child { border-left: 0; }
-#players-sidebar .csb-header { text-align: left !important; }
 
 /* Every Bootstrap .btn in this sidebar (native/moved toggles, .psb-conf-scope) — Bootstrap's
    own default padding (~0.375rem 0.75rem) is sized for full-scale UI, oversized next to this
    sidebar's 11px/compact everything-else. */
-#players-sidebar .btn { padding: 0.15rem 0.3rem; }
+#players-sidebar .btn { padding: 0.15rem 0.3rem; font-size: 11px; }
 
-#players-sidebar .csb-row { cursor: pointer; white-space: nowrap; }
-#players-sidebar .csb-row:hover { background: var(--bg-hover); border-radius: 3px; color: var(--text-muted); }
 /* Filter rows (native/moved) — standard Bootstrap btn-check toggle buttons (same pattern as
    .psb-conf-scope), so on/off state and the click target are both Bootstrap's own; this only
    needs to override .csb-table td's default right-align (meant for a column that sits next to
    a separate checkbox column, which these rows don't have). */
 #players-sidebar .csb-filter-table .csb-row { text-align: left; }
 
-/* ── Sort column — same recipe as #control-sidebar's (fixed 4-item reorderable list +
-   absolutely-positioned dir button), just without the elo/pop-grouping divider (::after),
-   which was tied to control 1's specific 4-key order/meaning. */
-#players-sidebar { --sort-extra-pad: 26px; }
-#players-sidebar .csb-table td.csb-sort-col { padding: 0 var(--sort-extra-pad); vertical-align: top; width: 1px; height: 1px; }
-#players-sidebar .csb-sort-item { cursor: pointer; padding: 0; }
-#players-sidebar .csb-sort-item:hover { background: var(--bg-hover); color: #555; }
 /* Marks which criterion is currently leading the "plays for" column's team sort — every item
    stays clickable regardless (see js/players_sidebar.js's sort-list click handler, which
    switches into team mode itself rather than requiring it first), so unlike control 1's
-   .csb-sort-item--disabled this never dims/disables, just highlights the active one. */
+   .csb-sort-item--disabled this never dims/disables, just highlights the active one. No
+   control-1 equivalent (its own .csb-sort-item--disabled means something else entirely). */
 #players-sidebar .csb-sort-item--active { background: var(--bg-hover); font-weight: 600; }
-#players-sidebar .csb-sort-dir {
-  position: absolute; top: 1px; left: calc((18px - var(--sort-extra-pad)) / 2 - 18px); width: 18px; height: 18px;
-  background: url('../images/sort-vertical-svgrepo-com.svg') no-repeat center / 18px 18px;
-  border: none; padding: 0; cursor: pointer; opacity: 0.75;
-}
-#players-sidebar .csb-sort-dir[data-dir="asc"] { background-image: url('../images/sort-vertical-asc.svg'); }
-#players-sidebar .csb-sort-dir:hover { opacity: 1; }
 
-/* ── Confederation dropdown — own id, same sizing fix as #zoom-conf-dropdown. ── */
-#players-conf-dropdown { display: inline-flex; z-index: 2000; }
-#players-conf-dropdown .dropdown-menu { font-size: 11px; }
-/* Truncates instead of forcing the toolbar wider on a long confederation name — min-width:0
-   overrides the flex-item default (min-width:auto, which blocks shrinking below content size
-   and would otherwise make text-overflow a no-op here). Same recipe as #zoom-conf-label. */
-#players-conf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 /* Which country the confederation dropdown checks (team vs. birth) — standard Bootstrap
    btn-check radio-toggle pair (getbootstrap.com/docs/5.3/forms/checks-radios/#checkbox-toggle-
    buttons), ms-auto right-aligns it within .csb-toolbar. flex-shrink:0 keeps it full width even
-   as #players-conf-label shrinks/truncates next to it. */
+   as .csb-conf-label (control-sidebar.css) shrinks/truncates next to it. No control-1
+   equivalent — control 1's own .csb-display-toggle is a different concept (team/match view). */
 .psb-conf-scope { display: flex; flex-shrink: 0; white-space: nowrap; }
 
 /* ── Stage carousel host — .elo-viz/.elo-stage-carousel/.carousel-* are all global
    (css/global.css), not tied to <elo-ranking> — mounting createStageCarousel()'s own .el
-   here needs no extra rules beyond not letting it collide with the toolbar above it. */
+   here needs no extra rules beyond not letting it collide with the toolbar above it. No
+   control-1 equivalent — its own carousel lives inside <elo-ranking>, not the sidebar itself. */
 #players-sidebar .psb-carousel-host { width: 100%; }
 
-/* ── Footer (visible/total count) — same recipe as #control-sidebar's #elo-meta, own id since
-   #elo-meta/#elo-meta-count are plain (unscoped) ids in control-sidebar.css and this page has
-   no <elo-ranking> to own them. */
-#players-sidebar .csb-footer { width: 100%; background: var(--bg-hover); padding: 0 6px; min-height: 22px; }
-#psb-meta { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; overflow-x: hidden; white-space: nowrap; }
-#psb-meta-count { flex-shrink: 0; }
-
+/* Footer (visible/total count) — js/players_sidebar.js reuses control 1's own #elo-meta/
+   #elo-meta-count ids directly (styled in css/control-sidebar.css) rather than a
+   players-specific id: the two sidebars never coexist on the same page, and the concept
+   (a count line in the footer) is identical, so there's nothing here to restate. */

@@ -43,9 +43,9 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   const _stageIndexById = new Map(_qualifiedIds.map(id => [id, rawById.get(id)?.visibleThroughIndex]));
 
   const _sidebarHost = document.getElementById('sidebar-host');
-  render(html`<div id="players-sidebar" class="taxonomy"><div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-2">
+  render(html`<div id="players-sidebar" class="csb-panel csb-always-open taxonomy"><div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-2">
     <div class="csb-toolbar d-flex align-items-center gap-2">
-      <div class="dropdown dropend" id="players-conf-dropdown">
+      <div class="dropdown dropend csb-conf-dropdown" id="players-conf-dropdown">
         <button type="button" class="csb-conf-btn dropdown-toggle pe-2" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
           <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
         </button>
@@ -56,7 +56,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
           <li><label class="dropdown-item"><input type="radio" name="psb-conf" class="form-check-input" data-conf="${key}"> ${label}</label></li>`)}
         </ul>
       </div>
-      <span id="players-conf-label" class="cbs-header-label"></span>
+      <span id="players-conf-label" class="cbs-header-label csb-conf-label"></span>
       <div class="psb-conf-scope ms-auto" title="${T.psbLabels.confScopeTip}">
         <input type="radio" class="btn-check" name="psb-conf-scope" id="psb-conf-scope-playsFor" autocomplete="off" data-scope="playsFor" checked>
         <label class="btn" for="psb-conf-scope-playsFor">${T.psbLabels.confScopeTeam}</label>
@@ -96,13 +96,13 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
         </tr>
       </tbody></table>
     </div>
-    <div class="csb-footer"><div id="psb-meta" class="elo-meta"><span id="psb-meta-count"></span></div></div>
+    <div class="csb-footer"><div id="elo-meta"><span id="elo-meta-count"></span></div></div>
   </div></div></div></div>`, _sidebarHost);
 
   const _el = document.getElementById('players-sidebar');
   const _body = _el.querySelector('.csb-body');
   const _panel = _body;
-  const _metaCountEl = _panel.querySelector('#psb-meta-count');
+  const _metaCountEl = _panel.querySelector('#elo-meta-count');
 
   // ── Stage carousel — the real widget (js/stage_carousel.js), same factory <elo-ranking> uses.
   const _carousel = createStageCarousel(T);
