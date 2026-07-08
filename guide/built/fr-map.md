@@ -34,9 +34,9 @@ Le panneau comporte cinq parties : une **barre d'outils** en haut ; **tri** et *
 
 ### Barre d'outils
 
-- <img class="gp-icon" src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" alt="réduire"> réduit le panneau et le ramène à son bouton ‹.
+- <kbd style="font-size:.68em;font-family:var(--bs-font-monospace,ui-monospace,monospace);background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:#1C274C;border-radius:3px;padding:2px 4px;vertical-align:middle">ESC</kbd> réduit le panneau et le ramène à son bouton ‹.
 - <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confédération"> filtre la liste sur une seule confédération FIFA — voir *Filtre confédérations FIFA*, ci-dessous.
-- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="partager"> copie une URL reproduisant la configuration actuelle du panneau.
+- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="partager"> copie dans le presse-papiers une URL reproduisant la configuration actuelle du panneau.
 - <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="paramètres"> affiche les paramètres d'URL actifs pour l'état actuel — le même panneau que `?explain` ouvre au chargement de la page.
 
 ### Tri

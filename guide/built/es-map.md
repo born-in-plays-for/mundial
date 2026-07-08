@@ -34,9 +34,9 @@ El panel tiene cinco partes: una **barra de herramientas** arriba; **Ordenar** y
 
 ### Barra de herramientas
 
-- <img class="gp-icon" src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" alt="colapsar"> vuelve a colapsar el panel a su botón ‹.
+- <kbd style="font-size:.68em;font-family:var(--bs-font-monospace,ui-monospace,monospace);background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:#1C274C;border-radius:3px;padding:2px 4px;vertical-align:middle">ESC</kbd> vuelve a colapsar el panel a su botón ‹.
 - <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederación"> filtra la lista a una sola confederación FIFA — ver *Filtro por confederación FIFA*, abajo.
-- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="compartir"> copia una URL que reproduce la configuración actual del panel.
+- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="compartir"> copia al portapapeles una URL que reproduce la configuración actual del panel.
 - <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="parámetros"> muestra qué parámetros de URL están activos para el estado actual — el mismo panel que abre `?explain` en cada carga de página.
 
 ### Ordenar

@@ -11,11 +11,13 @@ Tous les pays de l'écosystème de la Coupe du Monde 2026 — équipes qualifié
 
 Les pages Pays et Carte acceptent des paramètres d'URL pour préconfigurer le panneau de filtre et de tri au chargement. Tous les paramètres sont optionnels et indépendants ; les paramètres omis conservent les valeurs par défaut du panneau.
 
-### `?explain` — aide au débogage
+### `?explain` — inspecter la configuration actuelle
 
-Ajoutez `?explain` à n'importe quelle URL pour ouvrir au chargement un panneau d'explication qui traduit chaque paramètre actif en langage clair, avec un décompte des pays visibles. Le même panneau peut être basculé à tout moment via le badge `?` qui apparaît dans le coin de l'en-tête de filtre dès que des paramètres non par défaut sont actifs. Fermez-le en cliquant à nouveau sur `?`, sur `×`, ou en appuyant sur Échap.
+Le bouton `?` de la barre d'outils du filtre ouvre un panneau décrivant les **réglages actuels** du panneau — tri, direction, étape, cellules de filtre, confédération, mode d'affichage — en langage clair, avec un décompte des pays visibles. Ajoutez `?explain` à n'importe quelle URL pour qu'il s'ouvre automatiquement au chargement.
 
-Tous les paramètres actifs sont toujours journalisés dans la console du navigateur, indépendamment de `?explain`.
+Ce panneau décrit le panneau tel qu'il est en direct, pas l'URL : il a exactement le même aspect qu'un réglage provienne d'un paramètre d'URL, d'une session restaurée, ou d'un simple clic dans le panneau. Rien, dans le panneau lui-même, ne permet de distinguer l'un de l'autre — c'est voulu, puisque ce qui compte est ce qui s'affiche à l'écran en ce moment. Fermez-le en cliquant à nouveau sur `?`, sur `×`, ou en appuyant sur Échap.
+
+Dès qu'une URL contient un paramètre du panneau, les mêmes réglages actuels sont aussi journalisés dans la console du navigateur, indépendamment de `?explain`.
 
 ```
 ?stage=r16&show=qual&explain    → ouvre le panneau au chargement, reste ouvert pour consultation

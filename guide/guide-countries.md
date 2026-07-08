@@ -11,11 +11,13 @@ All countries in the World Cup 2026 ecosystem — qualified squads and the broad
 
 Both the Countries page and the Map page support URL query parameters to pre-configure the filter and sort sidebar on load. All parameters are optional and independent; omitted parameters keep the sidebar defaults.
 
-### `?explain` — debugging aid
+### `?explain` — inspect the current configuration
 
-Add `?explain` to any URL to open an explanation panel on load that translates every active parameter into plain English, alongside a count of visible countries. The same panel can be toggled at any time via the `?` badge that appears in the filter header corner whenever non-default parameters are active. Dismiss it by clicking `?` again, clicking `×`, or pressing Esc.
+The `?` button in the filter toolbar opens a panel describing the sidebar's **current settings** — sort, direction, stage, filter cells, confederation, display mode — in plain English, alongside a count of visible countries. Add `?explain` to any URL to have it open automatically on load.
 
-All active parameters are always logged to the browser console, regardless of `?explain`.
+This panel describes the live sidebar, not the URL: it looks exactly the same whether a setting came from a URL parameter, a restored session, or a plain click in the panel. There's no way to tell, from the panel itself, which one happened — that's by design, since what matters is what's showing on screen right now. Dismiss it by clicking `?` again, clicking `×`, or pressing Esc.
+
+Whenever a URL carries any sidebar parameter, the same current settings are also logged to the browser console, regardless of `?explain`.
 
 ```
 ?stage=r16&show=qual&explain    → opens the panel on load, stays open for review

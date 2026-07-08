@@ -34,10 +34,9 @@ The panel has five parts: a **toolbar** across the top; **sort** and **view** st
 
 ### Toolbar
 
-- <img class="gp-icon" src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" alt="collapse"> collapses the panel back to its ‹ button.
+- <kbd style="font-size:.68em;font-family:var(--bs-font-monospace,ui-monospace,monospace);background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:#1C274C;border-radius:3px;padding:2px 4px;vertical-align:middle">ESC</kbd> collapses the panel back to its ‹ button.
 - <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederation"> filters the list to a single FIFA confederation — see *FIFA confederation filter*, below.
-- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="share"> copies a URL reproducing the panel's current configuration.
-- <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="params"> shows which URL parameters are active for the current state — the same panel `?explain` opens on any page load.
+- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="share"> and <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="params"> form a pair: **share** copies to the clipboard a URL that reproduces the panel's exact current configuration, ready to paste into another device or send to someone else; **params** opens a plain-English summary of those same current settings — sort, filters, stage, and more — the same panel `?explain` opens on any page load (see *URL query parameters*, below).
 
 ### Sort
 
@@ -77,7 +76,7 @@ Selecting a confederation also highlights its external boundary on the map and z
 
 ### URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Add `?explain` to any URL to open a panel describing what the active parameters do. The full reference with all cell codes, group aliases and examples is in the [Countries page guide](?guide=countries).
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* in the [Countries page guide](?guide=countries) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
 
 ### About the country reference
 

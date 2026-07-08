@@ -11,11 +11,13 @@ Todos los países del ecosistema del Mundial 2026 — selecciones clasificadas y
 
 Las páginas Países y Mapa admiten parámetros de URL para preconfigurar el panel de filtro y ordenación al cargarse. Todos los parámetros son opcionales e independientes; los parámetros omitidos mantienen los valores predeterminados del panel.
 
-### `?explain` — ayuda de depuración
+### `?explain` — inspeccionar la configuración actual
 
-Añade `?explain` a cualquier URL para abrir al cargarse un panel de explicación que traduce cada parámetro activo a lenguaje claro, junto con un recuento de países visibles. El mismo panel puede activarse en cualquier momento mediante el badge `?` que aparece en la esquina del encabezado del filtro cuando hay parámetros no predeterminados activos. Ciérralo volviendo a hacer clic en `?`, en `×`, o pulsando Esc.
+El botón `?` de la barra de herramientas del filtro abre un panel que describe los **ajustes actuales** del panel — orden, dirección, fase, celdas de filtro, confederación, modo de visualización — en lenguaje claro, junto con un recuento de países visibles. Añade `?explain` a cualquier URL para que se abra automáticamente al cargar.
 
-Todos los parámetros activos se registran siempre en la consola del navegador, independientemente de `?explain`.
+Este panel describe el panel tal como está en vivo, no la URL: tiene exactamente el mismo aspecto tanto si un ajuste procede de un parámetro de URL, de una sesión restaurada, o de un simple clic en el panel. No hay forma de distinguir, desde el propio panel, cuál de ellos ocurrió — es intencionado, ya que lo que importa es lo que se ve en pantalla en este momento. Ciérralo volviendo a hacer clic en `?`, en `×`, o pulsando Esc.
+
+Siempre que una URL contenga algún parámetro del panel, los mismos ajustes actuales también se registran en la consola del navegador, independientemente de `?explain`.
 
 ```
 ?stage=r16&show=qual&explain    → abre el panel al cargar, permanece abierto para revisión

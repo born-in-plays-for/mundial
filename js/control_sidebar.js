@@ -739,13 +739,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
   const _CELL_MAP   = { qie:_fltQIE, qi:_fltQI, qe:_fltQE, q:_fltQ, ef:_fltEF, en:_fltEN, of:_fltOF, on:_fltON };
   // Collapses a raw cell-key list back down to _ALIASES names for succinct display —
-  // e.g. ['qie','qi','qe','q'] -> 'qual' instead of 'qie,qi,qe,q'. Only used for the
-  // "implied" (not-in-URL) section of _buildStateLines below; an explicit ?show= value
-  // already present in the URL is always echoed verbatim in the "inUrl" section, never
-  // rewritten, since that's what the user actually typed. Largest alias first so 'all'
-  // wins outright over reconstructing it from 'exp'+'nexp'; leftover cells with no
-  // matching alias are appended as-is. Round-trips fine either way — _ALIASES expansion
-  // happens on read for both the raw and the aliased form.
+  // e.g. ['qie','qi','qe','q'] -> 'qual' instead of 'qie,qi,qe,q'. Used by _buildStateLines
+  // below for the explain panel / share link. Largest alias first so 'all' wins outright
+  // over reconstructing it from 'exp'+'nexp'; leftover cells with no matching alias are
+  // appended as-is. Round-trips fine either way — _ALIASES expansion happens on read for
+  // both the raw and the aliased form.
   const _describeCells = cells => {
     const remaining = new Set(cells);
     const parts = [];
@@ -759,123 +757,50 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     return parts.join(',');
   };
 
-  // ── URL params debug (badge · panel · console) ─────────────────────────
+  // ── Explain panel (badge · panel · console) ─────────────────────────────
 
   // Fuller descriptive names for the explain panel — T.csbParams.{sortNames,displayNames,
   // confNames} — distinct from T.sortLabels/T.stageLabels' terse column/pill labels.
   // Stage names reuse T.stageLabels directly (same wording the carousel pill itself shows).
-  const _KNOWN_PARAMS = new Set(['sort', 'dir', 'stage', 'show', 'fifaconf', 'display', 'explain']);
   const _badge = _el.querySelector('#params-badge');
   let _panelEl = null;
 
-  const _countVisible = () =>
-    [...eloMain.querySelectorAll('.elo-item')].filter(el => el.style.display !== 'none').length;
+  // Reuses the infobar's own count (elo_ranking.js's initEloRanking sets #elo-meta-count's
+  // text from sortAndFilter(...).length, the actual authoritative computation) rather than
+  // re-deriving it here — a prior version re-scanned .elo-item for style.display, which
+  // doesn't match how filtered-out items actually get hidden and under/over-counted.
+  const _countVisible = () => {
+    const n = parseInt(document.getElementById('elo-meta-count')?.textContent ?? '', 10);
+    return Number.isNaN(n) ? 0 : n;
+  };
 
-  // Splits the full explain content into two sections, per key:
-  //  - inUrl: the param is actually present in `sp` — echoed verbatim (raw value, "?key="
-  //    prefix), same as the user typed it, never rewritten/optimized.
-  //  - implied: the param is ABSENT from `sp` but needed to fully reconstruct the current
-  //    live state (default or restored) — described from the live state variables instead,
-  //    no "?" prefix (it isn't actually in the URL). _describeCells' alias-optimization
-  //    (e.g. 'qual' instead of 'qie,qi,qe,q') only ever applies here, never to an inUrl
-  //    echo — an explicit URL value is always shown exactly as given.
-  // The Share button calls this with an empty URLSearchParams, so every key lands in
-  // `implied` — i.e. "the full state, as params" — which is exactly what it needs.
-  // Every key always produces exactly one line, in one section or the other — stage/fifa/
-  // display push their at-rest default value (tagged "(default)") rather than being
-  // omitted, so `implied` is always a complete, reconstructable snapshot of the live state,
-  // not just what's changed from default.
-  const _buildStateLines = (sp) => {
-    const inUrl = [], implied = [];
-
+  // The explain panel describes the live control-sidebar state only — it doesn't care
+  // whether a given setting arrived via a URL param, a restored localStorage snapshot, or
+  // a plain click. One line per key, always sourced from the same live state variables the
+  // rest of this module reads/writes (_sortOrder, _sortDir, _stage, _CELL_MAP, _confKey,
+  // _displayMode) — so it can never drift from what's actually on screen. The Share button
+  // reuses this same list to build its URL, so the two can never drift from each other either.
+  const _buildStateLines = () => {
     const P = T.csbParams;
-
-    if (sp.has('stage')) {
-      const stageParam = sp.get('stage');
-      const idx = CAROUSEL_STAGES.indexOf(stageParam);
-      inUrl.push(idx >= 0
-        ? { param: `?stage=${stageParam}`, desc: P.stageDesc(T.stageLabels[idx]) }
-        : { param: `?stage=${stageParam}`, desc: P.stageUnknown(CAROUSEL_STAGES.join(' ')) });
-    } else {
-      implied.push(_stage > 0
+    return [
+      _stage > 0
         ? { param: `stage=${CAROUSEL_STAGES[_stage]}`, desc: P.stageDesc(T.stageLabels[_stage]) }
-        : { param: `stage=${CAROUSEL_STAGES[0]}`, desc: P.stageDefault(T.stageLabels[0]) });
-    }
-
-    if (sp.has('sort')) {
-      const sortRaw = sp.get('sort');
-      let keys = sortRaw.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
-      // Mirror applyParams' bare imp/exp auto-pairing so the explain panel describes what
-      // actually gets applied, not a literal 1-key read.
-      if (keys.length === 1 && _SORT_PAIR[keys[0]]) keys = [keys[0], _SORT_PAIR[keys[0]]];
-      // Only the first 2 keys ever affect the actual sort (see sortAndFilter) — call that
-      // out here since the URL explicitly asked for more; the implied branch below never
-      // needs this note, it's always exactly 2, nothing to explain.
-      const extra = keys.length - 2;
-      inUrl.push(keys.length
-        ? { param: `?sort=${sortRaw.trim()}`, desc: P.sortDesc(keys.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) + (extra > 0 ? P.sortIgnored(extra) : '') }
-        : { param: `?sort=${sortRaw.trim()}`, desc: P.sortInvalid });
-    } else {
-      implied.push({ param: `sort=${_sortOrder.slice(0, 2).join(',')}`, desc: P.sortDesc(_sortOrder.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) });
-    }
-
-    if (sp.has('dir')) {
-      const dir = sp.get('dir');
-      if      (dir === 'asc')  inUrl.push({ param: '?dir=asc',  desc: P.dirAsc });
-      else if (dir === 'desc') inUrl.push({ param: '?dir=desc', desc: P.dirDesc });
-      else                     inUrl.push({ param: `?dir=${dir}`, desc: P.dirInvalid });
-    } else {
-      implied.push({ param: `dir=${_sortDir}`, desc: _sortDir === 'asc' ? P.dirAsc : P.dirDesc });
-    }
-
-    if (sp.has('show')) {
-      const show = sp.get('show');
-      const cells = new Set(), unknown = [];
-      show.split(',').forEach(t => {
-        const k = t.trim();
-        const expanded = (_ALIASES[k] ?? [k]).filter(c => _CELL_MAP[c]);
-        expanded.length ? expanded.forEach(c => cells.add(c)) : unknown.push(k);
-      });
-      const valid = [...cells];
-      const suffix = unknown.length ? P.cellsUnknown(unknown.join(', ')) : '';
-      inUrl.push(valid.length
-        ? { param: `?show=${show}`, desc: P.cellsDesc(valid.join(' · ')) + suffix }
-        : { param: `?show=${show}`, desc: P.cellsInvalid(suffix) });
-    } else {
-      const cells = Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k);
-      implied.push(cells.length
-        ? { param: `show=${_describeCells(cells)}`, desc: P.cellsDesc(cells.join(' · ')) }
-        : { param: 'show=', desc: P.cellsNone });
-    }
-
-    if (sp.has('fifaconf')) {
-      const conf = sp.get('fifaconf');
-      inUrl.push(P.confNames[conf]
-        ? { param: `?fifaconf=${conf}`, desc: P.confDesc(P.confNames[conf]) }
-        : { param: `?fifaconf=${conf}`, desc: P.confUnknown(Object.keys(P.confNames).join(' ')) });
-    } else {
-      implied.push(_confKey
+        : { param: `stage=${CAROUSEL_STAGES[0]}`, desc: P.stageDefault(T.stageLabels[0]) },
+      { param: `sort=${_sortOrder.slice(0, 2).join(',')}`, desc: P.sortDesc(_sortOrder.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) },
+      { param: `dir=${_sortDir}`, desc: _sortDir === 'asc' ? P.dirAsc : P.dirDesc },
+      (() => {
+        const cells = Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k);
+        return cells.length
+          ? { param: `show=${_describeCells(cells)}`, desc: P.cellsDesc(cells.join(' · ')) }
+          : { param: 'show=', desc: P.cellsNone };
+      })(),
+      _confKey
         ? { param: `fifaconf=${_confKey}`, desc: P.confDesc(P.confNames[_confKey] ?? _confKey) }
-        : { param: 'fifaconf=', desc: P.confDefault });
-    }
-
-    if (sp.has('display')) {
-      const display = sp.get('display');
-      inUrl.push(P.displayNames[display]
-        ? { param: `?display=${display}`, desc: P.displayDesc(P.displayNames[display]) }
-        : { param: `?display=${display}`, desc: P.displayUnknown });
-    } else {
-      implied.push(_displayMode === 'match'
+        : { param: 'fifaconf=', desc: P.confDefault },
+      _displayMode === 'match'
         ? { param: 'display=match', desc: P.displayDesc(P.displayNames.match) }
-        : { param: 'display=team', desc: P.displayDefault(P.displayNames.team) });
-    }
-
-    // Unrecognized keys are a URL-only concept — no live-state equivalent to imply.
-    for (const k of sp.keys()) {
-      if (!_KNOWN_PARAMS.has(k)) inUrl.push({ param: `?${k}`, desc: P.unrecognized });
-    }
-
-    return { inUrl, implied };
+        : { param: 'display=team', desc: P.displayDefault(P.displayNames.team) },
+    ];
   };
 
   // Classic Bootstrap modal (bootstrap.bundle.js is already loaded on every page that
@@ -884,13 +809,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // state just mirrors the modal's own shown/hidden events, however it gets closed.
   let _panelShown = false;
   const _closeExplainPanel = () => bootstrap.Modal.getInstance(_panelEl)?.hide();
-  const _renderSection = (title, lines, emptyMessage) => html`
-    <h6 class="text-uppercase text-body-secondary fw-semibold mb-1">${title}</h6>
-    ${lines.length ? html`
-      <ul class="list-unstyled mb-2">
-        ${lines.map(l => html`<li class="mb-1"><code class="bg-body-secondary rounded px-1">${l.param}</code> — ${l.desc}</li>`)}
-      </ul>` : html`<p class="fst-italic mb-2">${emptyMessage}</p>`}`;
-  const _openExplainPanel  = (inUrl, implied, visible) => {
+  const _openExplainPanel  = (lines, visible) => {
     if (!_panelEl) {
       _panelEl = document.createElement('div');
       _panelEl.id = 'params-panel';
@@ -908,8 +827,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="${T.csbParams.close}"></button>
           </div>
           <div class="modal-body small">
-            ${_renderSection(T.csbParams.inUrl, inUrl, T.csbParams.inUrlEmpty)}
-            ${_renderSection(T.csbParams.notInUrl, implied, T.csbParams.notInUrlEmpty)}
+            <ul class="list-unstyled mb-2">
+              ${lines.map(l => html`<li class="mb-1"><code class="bg-body-secondary rounded px-1">${l.param}</code> — ${l.desc}</li>`)}
+            </ul>
             <p class="text-muted border-top pt-2 mb-0">${T.csbParams.visible(visible)}</p>
           </div>
         </div>
@@ -920,11 +840,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _badge?.addEventListener('click', e => {
     e.stopPropagation();
     if (_panelShown) { _closeExplainPanel(); return; }
-    // Always recomputed fresh from the live URL + live state — most sidebar interactions
-    // (checkboxes, sort clicks, carousel...) never touch the URL, so a cached snapshot
-    // from page-load would go stale the moment the user touches anything.
-    const { inUrl, implied } = _buildStateLines(new URLSearchParams(location.search));
-    _openExplainPanel(inUrl, implied, _countVisible());
+    // Always recomputed fresh from live state — a cached snapshot from page-load would go
+    // stale the moment the user touches anything (checkboxes, sort clicks, carousel...).
+    _openExplainPanel(_buildStateLines(), _countVisible());
   });
 
   // ── Persistence (localStorage) ──────────────────────────────────────────
@@ -1002,10 +920,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
 
   // ── Share button (#csb-share) — builds a URL that reproduces this exact sidebar
-  // configuration on another app instance. Calls _buildStateLines with an empty
-  // URLSearchParams, so every key lands in `implied` (the full live state, as
-  // params) — the very same description/optimization (_describeCells etc.) the
-  // explain panel's "current state" section uses, so the two can never drift apart.
+  // configuration on another app instance. Reuses _buildStateLines' full live-state
+  // snapshot — the very same description/optimization (_describeCells etc.) the explain
+  // panel uses, so the two can never drift apart.
   const _shareBtn = _el.querySelector('#csb-share');
   // Classic Bootstrap toast — bootstrap.Toast owns the fade transition and the
   // auto-hide timer, so there's no bespoke CSS/setTimeout bookkeeping to maintain.
@@ -1032,7 +949,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _shareBtn?.addEventListener('click', async e => {
     e.stopPropagation(); // harmless now that [data-col="all"] lives on the "all" <span class="cbs-header-label"> itself (a sibling, not an ancestor) — kept defensively in case that scoping ever changes back
     const sp = new URLSearchParams();
-    _buildStateLines(new URLSearchParams()).implied.forEach(({ param }) => {
+    _buildStateLines().forEach(({ param }) => {
       const eq = param.indexOf('=');
       sp.set(param.slice(0, eq), param.slice(eq + 1));
     });
@@ -1052,14 +969,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // No control-sidebar params in the URL — restore the persisted state instead.
       const restored = _restoreState();
       if (sp.has('explain')) {
-        const { inUrl, implied } = _buildStateLines(sp);
-        if (restored) implied.unshift({ param: '(restored)', desc: 'settings restored from your last visit' });
+        const lines = _buildStateLines();
+        if (restored) lines.unshift({ param: '(restored)', desc: 'settings restored from your last visit' });
         if (!alwaysOpen && _el.classList.contains('collapsed')) {
           _el.classList.remove('collapsed');
           if (_toggle) _toggle.textContent = '›';
           callbacks.onSidebarToggle?.();
         }
-        _openExplainPanel(inUrl, implied, _countVisible());
+        _openExplainPanel(lines, _countVisible());
       }
       return;
     }
@@ -1114,17 +1031,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       document.dispatchEvent(new CustomEvent('mundial-conf-changed', { detail: { conf, ids: CONF_IDS[conf] } }));
     }
 
-    const { inUrl, implied } = _buildStateLines(sp);
+    const lines = _buildStateLines();
     const _visible = _countVisible();
-    // inUrl is guaranteed non-empty here — this branch only runs when at least one
-    // _CS_PARAM_KEYS key is present in sp (see the guard above).
-    console.info('[params]\n' + [...inUrl, ...implied].map(l => `  ${l.param} → ${l.desc}`).join('\n') + `\n  ${T.csbParams.visible(_visible)}`);
+    console.info('[params]\n' + lines.map(l => `  ${l.param} → ${l.desc}`).join('\n') + `\n  ${T.csbParams.visible(_visible)}`);
     if (!alwaysOpen && _el.classList.contains('collapsed')) {
       _el.classList.remove('collapsed');
       if (_toggle) _toggle.textContent = '›';
       callbacks.onSidebarToggle?.();
     }
-    if (sp.has('explain')) _openExplainPanel(inUrl, implied, _visible);
+    if (sp.has('explain')) _openExplainPanel(lines, _visible);
 
     _saveState();
   };

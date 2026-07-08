@@ -34,9 +34,9 @@ Das Panel hat fünf Teile: eine **Werkzeugleiste** oben; **Sortieren** und **Anz
 
 ### Werkzeugleiste
 
-- <img class="gp-icon" src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" alt="einklappen"> klappt das Panel wieder zu seiner ‹-Schaltfläche zusammen.
+- <kbd style="font-size:.68em;font-family:var(--bs-font-monospace,ui-monospace,monospace);background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:#1C274C;border-radius:3px;padding:2px 4px;vertical-align:middle">ESC</kbd> klappt das Panel wieder zu seiner ‹-Schaltfläche zusammen.
 - <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="Konföderation"> filtert die Liste auf eine einzelne FIFA-Konföderation — siehe *FIFA-Konföderationsfilter*, unten.
-- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="teilen"> kopiert eine URL, die die aktuelle Konfiguration des Panels wiedergibt.
+- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="teilen"> kopiert eine URL, die die aktuelle Konfiguration des Panels wiedergibt, in die Zwischenablage.
 - <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="Parameter"> zeigt, welche URL-Parameter für den aktuellen Zustand aktiv sind — dasselbe Panel, das `?explain` bei jedem Seitenaufruf öffnet.
 
 ### Sortieren

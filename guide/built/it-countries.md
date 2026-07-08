@@ -11,11 +11,13 @@ Tutti i paesi dell'ecosistema dei Mondiali 2026 — squadre qualificate e il pi�
 
 Le pagine Paesi e Mappa supportano parametri URL per preconfigurare il pannello di filtro e ordinamento al caricamento. Tutti i parametri sono facoltativi e indipendenti; i parametri omessi mantengono i valori predefiniti del pannello.
 
-### `?explain` — aiuto al debug
+### `?explain` — controlla la configurazione attuale
 
-Aggiungi `?explain` a qualsiasi URL per aprire al caricamento un pannello esplicativo che traduce ogni parametro attivo in linguaggio chiaro, insieme a un conteggio dei paesi visibili. Lo stesso pannello può essere attivato in qualsiasi momento tramite il badge `?` che appare nell'angolo dell'intestazione del filtro quando sono attivi parametri non predefiniti. Chiudilo cliccando di nuovo su `?`, su `×`, o premendo Esc.
+Il pulsante `?` nella barra degli strumenti del filtro apre un pannello che descrive le **impostazioni attuali** del pannello — ordinamento, direzione, fase, celle di filtro, confederazione, modalità di visualizzazione — in linguaggio chiaro, insieme a un conteggio dei paesi visibili. Aggiungi `?explain` a qualsiasi URL perché si apra automaticamente al caricamento.
 
-Tutti i parametri attivi vengono sempre registrati nella console del browser, indipendentemente da `?explain`.
+Questo pannello descrive il pannello così com'è dal vivo, non l'URL: ha esattamente lo stesso aspetto sia che un'impostazione provenga da un parametro URL, da una sessione ripristinata o da un semplice clic nel pannello. Dal pannello stesso non si può distinguere l'uno dall'altro — è voluto, perché ciò che conta è cosa si vede a schermo in questo momento. Chiudilo cliccando di nuovo su `?`, su `×`, o premendo Esc.
+
+Ogni volta che un URL contiene un parametro del pannello, le stesse impostazioni attuali vengono registrate anche nella console del browser, indipendentemente da `?explain`.
 
 ```
 ?stage=r16&show=qual&explain    → apre il pannello al caricamento, rimane aperto per la revisione

@@ -34,9 +34,9 @@ Il pannello ha cinque parti: una **barra degli strumenti** in alto; **Ordina** e
 
 ### Barra degli strumenti
 
-- <img class="gp-icon" src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" alt="richiudi"> richiude il pannello nel suo pulsante ‹.
+- <kbd style="font-size:.68em;font-family:var(--bs-font-monospace,ui-monospace,monospace);background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:#1C274C;border-radius:3px;padding:2px 4px;vertical-align:middle">ESC</kbd> richiude il pannello nel suo pulsante ‹.
 - <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederazione"> filtra l'elenco su una singola confederazione FIFA — vedi *Filtro per confederazione FIFA*, sotto.
-- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="condividi"> copia un URL che riproduce la configurazione corrente del pannello.
+- <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="condividi"> copia negli appunti un URL che riproduce la configurazione corrente del pannello.
 - <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="parametri"> mostra quali parametri URL sono attivi per lo stato corrente — lo stesso pannello che `?explain` apre a ogni caricamento di pagina.
 
 ### Ordina

@@ -11,11 +11,13 @@ Alle Länder im Ökosystem der WM 2026 — qualifizierte Mannschaften und die we
 
 Die Seiten Länder und Karte unterstützen URL-Parameter, um das Filter- und Sortierpanel beim Laden vorzukonfigurieren. Alle Parameter sind optional und unabhängig voneinander; fehlende Parameter behalten die Panel-Standardwerte.
 
-### `?explain` — Debugging-Hilfe
+### `?explain` — die aktuelle Konfiguration einsehen
 
-Fügen Sie `?explain` zu einer beliebigen URL hinzu, um beim Laden ein Erklärungspanel zu öffnen, das jeden aktiven Parameter in einfache Sprache übersetzt, zusammen mit einer Anzahl sichtbarer Länder. Das gleiche Panel kann jederzeit über das `?`-Badge umgeschaltet werden, das in der Ecke des Filter-Headers erscheint, wenn nicht standardmäßige Parameter aktiv sind. Schließen Sie es durch erneutes Klicken auf `?`, auf `×` oder durch Drücken von Esc.
+Die `?`-Schaltfläche in der Filter-Werkzeugleiste öffnet ein Panel, das die **aktuellen Einstellungen** des Panels — Sortierung, Richtung, Phase, Filterzellen, Konföderation, Anzeigemodus — in einfacher Sprache beschreibt, zusammen mit einer Anzahl sichtbarer Länder. Fügen Sie `?explain` zu einer beliebigen URL hinzu, damit es sich beim Laden automatisch öffnet.
 
-Alle aktiven Parameter werden immer in der Browser-Konsole protokolliert, unabhängig von `?explain`.
+Dieses Panel beschreibt das Panel, wie es live ist, nicht die URL: Es sieht genau gleich aus, egal ob eine Einstellung von einem URL-Parameter, einer wiederhergestellten Sitzung oder einem einfachen Klick im Panel stammt. Am Panel selbst lässt sich nicht ablesen, welcher Fall zutrifft — das ist Absicht, denn entscheidend ist, was gerade auf dem Bildschirm zu sehen ist. Schließen Sie es durch erneutes Klicken auf `?`, auf `×` oder durch Drücken von Esc.
+
+Sobald eine URL einen Sidebar-Parameter enthält, werden dieselben aktuellen Einstellungen auch in der Browser-Konsole protokolliert, unabhängig von `?explain`.
 
 ```
 ?stage=r16&show=qual&explain    → öffnet das Panel beim Laden, bleibt zur Ansicht geöffnet
