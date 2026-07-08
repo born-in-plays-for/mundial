@@ -2,8 +2,7 @@ import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/l
 import { CONF_IDS } from './conf.js';
 import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './qualified.js';
 import { maxReachableStage } from './stage_carousel.js';
-
-const _STORAGE_KEY = 'mundial-control-sidebar-state';
+import { loadSlice, saveSlice } from './persist.js';
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
@@ -881,40 +880,44 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // saving mid-restore anyway — everything being applied already came from localStorage.
   let _restoringState = false;
 
+  // 'shared' (order/dir/stage/conf) round-trips with players_sidebar.js — same meaning, same
+  // value domain on both pages (see js/persist.js's own comment), so e.g. picking a
+  // confederation here is still selected next time the players page loads, and vice versa.
+  // 'countries' (checks/display) has no players-page equivalent — stays private to this page.
   const _saveState = () => {
     if (_restoringState) return;
-    try {
-      localStorage.setItem(_STORAGE_KEY, JSON.stringify({
-        sortOrder: _sortOrder,
-        sortDir: _sortDir,
-        stage: CAROUSEL_STAGES[_stage],
-        checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
-        conf: _confKey,
-        display: _displayMode,
-      }));
-    } catch { /* storage unavailable (private mode, quota, etc.) — ignore */ }
+    saveSlice('shared', {
+      order: _sortOrder,
+      dir: _sortDir,
+      stage: CAROUSEL_STAGES[_stage],
+      conf: _confKey,
+    });
+    saveSlice('countries', {
+      checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
+      display: _displayMode,
+    });
   };
 
   const _restoreState = () => {
-    let saved;
-    try { saved = JSON.parse(localStorage.getItem(_STORAGE_KEY)); } catch { saved = null; }
-    if (!saved) return false;
+    const shared = loadSlice('shared');
+    const countries = loadSlice('countries');
+    if (!shared && !countries) return false;
 
-    if (Array.isArray(saved.sortOrder) && saved.sortOrder.length === _sortOrder.length && saved.sortOrder.every(k => _SORT_KEYS.has(k))) {
-      _sortOrder = [...new Set(saved.sortOrder)];
-      _updateSortCol();
+    if (Array.isArray(shared?.order)) {
+      const keys = shared.order.filter(k => _SORT_KEYS.has(k));
+      if (keys.length) { _sortOrder = [...new Set([...keys, ..._sortOrder])].slice(0, _sortOrder.length); _updateSortCol(); }
     }
-    if (saved.sortDir === 'asc' || saved.sortDir === 'desc') {
-      _sortDir = saved.sortDir;
+    if (shared?.dir === 'asc' || shared?.dir === 'desc') {
+      _sortDir = shared.dir;
       _sortDirBtn.dataset.dir = _sortDir;
       _updateAlphaLabel();
     }
-    if (saved.checks) {
-      Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el && k in saved.checks) el.checked = !!saved.checks[k]; });
+    if (countries?.checks) {
+      Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el && k in countries.checks) el.checked = !!countries.checks[k]; });
     }
-    if (saved.conf && CONF_IDS[saved.conf]) {
-      _confKey = saved.conf;
-      _confIds = CONF_IDS[saved.conf];
+    if (shared?.conf && CONF_IDS[shared.conf]) {
+      _confKey = shared.conf;
+      _confIds = CONF_IDS[shared.conf];
     }
     _syncConfRadio();
 
@@ -926,13 +929,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // user-driven-click path) — left unsuppressed, that would fire before _displayMode is set
     // below and re-persist the stale pre-restore value, undoing the very thing being restored.
     _restoringState = true;
-    if (typeof saved.stage === 'string') {
-      const idx = CAROUSEL_STAGES.indexOf(saved.stage);
+    if (typeof shared?.stage === 'string') {
+      const idx = CAROUSEL_STAGES.indexOf(shared.stage);
       if (idx >= 0) _setStage(idx);
     }
     _restoringState = false;
 
-    if (saved.display === 'team' || saved.display === 'match') _setDisplayMode(saved.display);
+    if (countries?.display === 'team' || countries?.display === 'match') _setDisplayMode(countries.display);
 
     callbacks.renderElo?.();
     applyFlagFilter();

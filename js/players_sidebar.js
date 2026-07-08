@@ -2,9 +2,8 @@ import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.j
 import { CONF_IDS } from './conf.js';
 import { CAROUSEL_STAGES, QUALIFIED_NAMES, QUALIFIED_BY_NAME, reachesStage, teamComparators } from './qualified.js';
 import { createStageCarousel, maxReachableStage } from './stage_carousel.js';
-import { loadJSON, saveJSON } from './persist.js';
+import { loadSlice, saveSlice } from './persist.js';
 
-const _STORAGE_KEY = 'mundial-players-sidebar-state';
 const _TEAM_SORT_KEYS = ['elo', 'pop', 'delta', 'alpha'];
 const _PARAM_KEYS = ['psort', 'pdir', 'pstage', 'pshow', 'pfifaconf'];
 
@@ -13,8 +12,9 @@ const _PARAM_KEYS = ['psort', 'pdir', 'pstage', 'pshow', 'pfifaconf'];
 // object than a country, so this owns its own state shape rather than coercing player concepts
 // (native/moved, name-vs-team sort) into control 1's country-shaped matrix. Shares the data
 // layer with control 1 (teamComparators/CAROUSEL_STAGES/reachesStage from qualified.js,
-// createStageCarousel/maxReachableStage from stage_carousel.js, loadJSON/saveJSON from
-// persist.js) so the two can't silently drift on logic they both need.
+// createStageCarousel/maxReachableStage from stage_carousel.js, loadSlice/saveSlice from
+// persist.js — the two controls even share a chunk of *persisted state*, see persist.js's own
+// comment) so the two can't silently drift on logic they both need.
 //
 // rawById: Map<countryId, buildEloItems() item> — "team standing" lookups (sort-by-team,
 // stage reachability) for whichever qualified country a player's own `.nation` resolves to via
@@ -267,36 +267,45 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   // fire (and persist) before the rest of the restored snapshot has been applied.
   let _restoringState = false;
 
+  // 'shared' (order/dir/stage/conf) round-trips with control_sidebar.js — same meaning, same
+  // value domain on both pages (see js/persist.js's own comment), so e.g. picking a
+  // confederation here is still selected next time the countries/map page loads, and vice
+  // versa. 'players' (mode/native/moved) has no country-page equivalent — stays private here.
   const _saveState = () => {
     if (_restoringState) return;
-    saveJSON(_STORAGE_KEY, {
-      mode: _mode,
-      teamOrder: _teamOrder,
+    saveSlice('shared', {
+      order: _teamOrder,
       dir: _dir,
-      native: _fltNative.checked,
-      moved: _fltMoved.checked,
       stage: CAROUSEL_STAGES[_stage],
       conf: _confKey,
+    });
+    saveSlice('players', {
+      mode: _mode,
+      native: _fltNative.checked,
+      moved: _fltMoved.checked,
     });
   };
 
   const _restoreState = () => {
-    const saved = loadJSON(_STORAGE_KEY);
-    if (!saved) return false;
-    if (saved.mode === 'team' || saved.mode === 'player' || saved.mode === 'birth') _mode = saved.mode;
-    if (Array.isArray(saved.teamOrder) && saved.teamOrder.length === _teamOrder.length && saved.teamOrder.every(k => _TEAM_SORT_KEYS.includes(k))) {
-      _teamOrder = [...new Set(saved.teamOrder)];
+    const shared = loadSlice('shared');
+    const players = loadSlice('players');
+    if (!shared && !players) return false;
+
+    if (players?.mode === 'team' || players?.mode === 'player' || players?.mode === 'birth') _mode = players.mode;
+    if (Array.isArray(shared?.order)) {
+      const keys = shared.order.filter(k => _TEAM_SORT_KEYS.includes(k));
+      if (keys.length) _teamOrder = [...new Set([...keys, ..._teamOrder])].slice(0, _teamOrder.length);
     }
-    if (saved.dir === 'asc' || saved.dir === 'desc') _dir = saved.dir;
-    if (typeof saved.native === 'boolean') _fltNative.checked = saved.native;
-    if (typeof saved.moved === 'boolean') _fltMoved.checked = saved.moved;
+    if (shared?.dir === 'asc' || shared?.dir === 'desc') _dir = shared.dir;
+    if (typeof players?.native === 'boolean') _fltNative.checked = players.native;
+    if (typeof players?.moved === 'boolean') _fltMoved.checked = players.moved;
     _syncSortUI();
     _updateSortList();
-    if (saved.conf && confIdsOverride[saved.conf]) { _confIds = confIdsOverride[saved.conf]; _confKey = saved.conf; _syncConfRadio(); }
+    if (shared?.conf && confIdsOverride[shared.conf]) { _confIds = confIdsOverride[shared.conf]; _confKey = shared.conf; _syncConfRadio(); }
 
     _restoringState = true;
-    if (typeof saved.stage === 'string') {
-      const idx = CAROUSEL_STAGES.indexOf(saved.stage);
+    if (typeof shared?.stage === 'string') {
+      const idx = CAROUSEL_STAGES.indexOf(shared.stage);
       if (idx >= 0) _setStage(idx);
     }
     _restoringState = false;
