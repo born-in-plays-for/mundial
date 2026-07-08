@@ -385,4 +385,9 @@
    sidebar) — .form-check-input renders natively here, just laid out inline with its label. */
 #zoom-conf-dropdown .dropdown-item { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 
+/* Truncates instead of pushing .csb-share/.csb-params-badge out of the toolbar on a long
+   confederation name — min-width:0 overrides the flex-item default (min-width:auto, which
+   blocks shrinking below content size and would otherwise make text-overflow a no-op here). */
+#zoom-conf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
  

@@ -45,6 +45,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           <li><label class="dropdown-item"><input type="radio" name="csb-conf" class="form-check-input" data-conf="ofc"> ${T.csbParams.confNames.ofc}</label></li>
         </ul>
       </div>
+      <span id="zoom-conf-label" class="cbs-header-label"></span>
       <button id="csb-share" class="csb-icon-btn csb-share ms-auto" title="${T.csbParams.share}"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
       <button id="params-badge" class="csb-icon-btn csb-params-badge" title="${T.csbParams.badge}"><img src="images/solar_linear/question-circle-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
     </div>
@@ -293,7 +294,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _panel.querySelector('[data-row="nqf"]' ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF]));
   const _confDropdown = _panel.querySelector('#zoom-conf-dropdown');
   const _confRadios = _confDropdown?.querySelectorAll('input[data-conf]');
-  const _syncConfRadio = () => { _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); }); };
+  // Fills the toolbar's own slack space (between the dropdown and .ms-auto's share/params-badge
+  // pair) with the active filter's name, instead of only revealing it by opening the dropdown.
+  const _confLabelEl = _panel.querySelector('#zoom-conf-label');
+  const _syncConfRadio = () => {
+    _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); });
+    if (_confLabelEl) _confLabelEl.textContent = _confKey ? (T.csbParams.confNames[_confKey] ?? _confKey) : T.csbParams.confAll;
+  };
+  _syncConfRadio();
   _confDropdown?.addEventListener('show.bs.dropdown',   () => { _body.style.overflow = 'visible'; });
   _confDropdown?.addEventListener('hidden.bs.dropdown', () => { _body.style.overflow = ''; });
   _confDropdown?.addEventListener('click', e => {

@@ -95,6 +95,10 @@
 /* ── Confederation dropdown — own id, same sizing fix as #zoom-conf-dropdown. ── */
 #players-conf-dropdown { display: inline-flex; z-index: 2000; }
 #players-conf-dropdown .dropdown-menu { font-size: 11px; }
+/* Truncates instead of forcing the toolbar wider on a long confederation name — min-width:0
+   overrides the flex-item default (min-width:auto, which blocks shrinking below content size
+   and would otherwise make text-overflow a no-op here). Same recipe as #zoom-conf-label. */
+#players-conf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
 /* ── Stage carousel host — .elo-viz/.elo-stage-carousel/.carousel-* are all global
    (css/global.css), not tied to <elo-ranking> — mounting createStageCarousel()'s own .el
