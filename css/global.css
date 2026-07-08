@@ -140,9 +140,19 @@ body { background: #f5f2ec; color: var(--color-default); }
    flag-first, which would put it at the outer/left edge of the row once the pill itself is
    pushed flush right via justify-self:end. Reversing just this pill's internal order puts
    its flag last instead, i.e. innermost — right next to the separator, mirroring the right
-   team's pill (unreversed, so its flag — already first — sits adjacent on its own side). */
-.elo-pairs > li.elo-pair > .elo-item:first-child { justify-self: end; flex-direction: row-reverse; }
-.elo-pairs > li.elo-pair > .elo-item:last-child { justify-self: start; }
+   team's pill (unreversed, so its flag — already first — sits adjacent on its own side).
+   .elo-item-wrap (js/elo_ranking.js) sits between li.elo-pair and .elo-item now — solely so a
+   decoration anchored to it can escape .elo-item's own overflow:hidden below (a sibling of a
+   clipped element isn't clipped by it; a pseudo-element on the clipped element itself always
+   would be). justify-self is a grid property and must stay on the actual grid item (the
+   wrapper, still li.elo-pair's direct child); flex-direction reorders .elo-item's own
+   children, so it has to reach one level deeper. :first-child/:last-child are left anonymous
+   (not .elo-item-wrap:first-child) since exactly one wrapper sits between li.elo-pair and
+   .elo-item — whichever element is first/last among the row's children *is* that side's
+   wrapper, so naming it isn't necessary to disambiguate left from right. */
+.elo-pairs > li.elo-pair > :first-child { justify-self: end; }
+.elo-pairs > li.elo-pair > :last-child { justify-self: start; }
+.elo-pairs > li.elo-pair :first-child .elo-item { flex-direction: row-reverse; }
 .elo-pairs > li.elo-pair > .elo-pair-sep { justify-self: center; }
 /* Clip instead of stretch: max-width:100% caps each pill at its minmax(0,1fr) column's actual
    width (grid items otherwise size to content regardless of the column, per justify-self's own
@@ -150,8 +160,8 @@ body { background: #f5f2ec; color: var(--color-default); }
    the left pill this crops from its own left edge (already right-aligned via justify-self:end
    above, so it reads as "outer edge clipped, inner/flag edge intact"); the right pill crops
    symmetrically from its right edge. */
-.elo-pairs > li.elo-pair > .elo-item:first-child,
-.elo-pairs > li.elo-pair > .elo-item:last-child {
+.elo-pairs > li.elo-pair :first-child .elo-item,
+.elo-pairs > li.elo-pair :last-child .elo-item {
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
@@ -161,7 +171,7 @@ body { background: #f5f2ec; color: var(--color-default); }
    clipped by the rule above. min-width:0 overrides flex's own default content-based minimum
    (the standard "flex child won't shrink below its content" gotcha), which is what lets
    text-overflow:ellipsis engage at all instead of the browser just refusing to shrink the box. */
-.elo-pairs > li.elo-pair > .elo-item .elo-name {
+.elo-pairs > li.elo-pair .elo-item .elo-name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

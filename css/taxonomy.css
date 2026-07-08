@@ -93,36 +93,40 @@
 /* Match-display mode: lost a decided fixture — grey out the flag, name stays legible */
 .taxonomy .elo-item--lost .elo-flag { filter: grayscale(1); opacity: 0.75; }
 
-/* Match-display mode: winner of a decided fixture gets a green check on its flag's
+/* Match-display mode: winner of a decided fixture gets a green check on the pill's own
    bottom-right corner — just the mark, no badge/background. Scoped to .elo-pair (never
    .elo-solo — a lone/unpaired row has no opponent to have won against) and
    :not(.elo-pair--pending) (undecided fixtures have no winner yet, and neither side carries
    --lost, so both would otherwise qualify).
-   images/check-svgrepo-com.svg masked (not background-image'd) so its own dark stroke
-   (#292929) can be recolored to green — same technique .elo-item--pending's wavy border
-   uses above for an external SVG that needs a color CSS itself controls. A half-transparent
-   white circle sits behind it (::before, a plain round backdrop — not a masked copy of the
-   check shape itself) for contrast against whatever flag color is underneath. */
-.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item:not(.elo-item--lost) .elo-flag-wrap::before {
-  content: '';
-  position: absolute;
-  right: -3px;
-  bottom: -3px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.667);
+   images/green-check-mark-icon.svg masked (not background-image'd) so its color is CSS's
+   own to control — same technique .elo-item--pending's wavy border uses above for an
+   external SVG that needs a color CSS itself controls.
+   Anchored to .elo-item-wrap (js/elo_ranking.js), not .elo-item itself — .elo-item carries
+   overflow:hidden for width-clamping (global.css) and would clip a pseudo-element poking
+   past its own edge; the wrapper is a sibling of that clipped box, not a descendant of it,
+   so it isn't. */
+.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item-wrap:has(> .elo-item:not(.elo-item--lost)) {
+  position: relative;
 }
-.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item:not(.elo-item--lost) .elo-flag-wrap::after {
+.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item-wrap:has(> .elo-item:not(.elo-item--lost))::after {
   content: '';
   position: absolute;
-  right: -3px;
-  bottom: -3px;
-  width: 12px;
-  height: 12px;
-  background-color: #4caf50;
-  -webkit-mask: url('../images/check-svgrepo-com.svg') no-repeat center / contain;
-  mask: url('../images/check-svgrepo-com.svg') no-repeat center / contain;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  background-color: #22c55e;
+  -webkit-mask: url('../images/green-check-mark-icon.svg') no-repeat center / contain;
+  mask: url('../images/green-check-mark-icon.svg') no-repeat center / contain;
+}
+/* Left pill (first-child) sits flush against its own right edge — near the separator, same
+   side as before. Right pill (last-child) mirrors it: left-aligned instead, since a
+   right-aligned check there would land away from the separator/its flag, off on the pts side. */
+.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item-wrap:first-child:has(> .elo-item:not(.elo-item--lost))::after {
+  right: -7px;
+}
+.taxonomy .elo-pair:not(.elo-pair--pending) .elo-item-wrap:last-child:has(> .elo-item:not(.elo-item--lost))::after {
+  left: -7px;
 }
 
 /* Dots via pseudo-elements — both on the right of the name. Fixed accent colors (not
@@ -143,15 +147,18 @@
    innermost, next to the separator — which also flips this dot to the inner/separator side as
    an unwanted side effect (::after is generated content inside .elo-name itself, unaffected by
    the parent's flex-direction: row-reverse). Swapping to ::before with a mirrored margin here
-   keeps it on the outer side instead, matching the right team's (unreversed) dot. */
-.elo-pairs > li.elo-pair > .elo-item:first-child .elo-name::after { content: none; }
-.elo-pairs > li.elo-pair > .elo-item--exp:first-child:not(.elo-item--imp) .elo-name::before {
+   keeps it on the outer side instead, matching the right team's (unreversed) dot.
+   Anonymous :first-child (not .elo-item-wrap:first-child) — see js/elo_ranking.js's
+   .elo-item-wrap comment: exactly one wrapper sits between li.elo-pair and .elo-item, so
+   whichever element is first-child of the row *is* the left side's wrapper. */
+.elo-pairs > li.elo-pair :first-child .elo-item .elo-name::after { content: none; }
+.elo-pairs > li.elo-pair :first-child .elo-item--exp:not(.elo-item--imp) .elo-name::before {
   content: '▶'; color: var(--exp-accent); font-size: 14px; margin-right: 2px;
 }
-.elo-pairs > li.elo-pair > .elo-item--imp:first-child:not(.elo-item--exp) .elo-name::before {
+.elo-pairs > li.elo-pair :first-child .elo-item--imp:not(.elo-item--exp) .elo-name::before {
   content: '◀'; color: var(--imp-accent); font-size: 14px; margin-right: 2px;
 }
-.elo-pairs > li.elo-pair > .elo-item--exp.elo-item--imp:first-child .elo-name::before {
+.elo-pairs > li.elo-pair :first-child .elo-item--exp.elo-item--imp .elo-name::before {
   content: '◀▶'; font-size: 14px; margin-right: 2px;
   background: linear-gradient(90deg, var(--imp-accent) 45%, var(--exp-accent) 55%);
   -webkit-background-clip: text; background-clip: text; color: transparent;

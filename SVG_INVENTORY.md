@@ -95,22 +95,27 @@ Custom geometric shapes, no source file.
 
 ---
 
+## 10. CSS mask — `css/taxonomy.css`
+
+| Selector | Source file | Description |
+|---|---|---|
+| `.elo-flag-wrap::after` (fixture winner) | `images/green-check-mark-icon.svg` | Green check — masked, not background-image'd, so CSS controls the color |
+
+---
+
 ## Source files not currently referenced in UI
 
-These files exist in `images/` but are not used by any HTML, JS, or CSS:
+`images/root-level` unused files were removed (2026-07-08) — `api_sports_svgo-ed.svg`, `chain_tab_icon.svg`,
+`check-svgrepo-com.svg` (superseded by `green-check-mark-icon.svg`), `elo_tab_color_icon.svg`, `elo_tab_icon.svg`,
+`empty_tab_icon.svg`, `france-vector-svgrepo-com.svg`, `home-4-svgrepo-com.svg`, `info-circle-svgrepo-com2.svg`,
+`Schrödinger.avif`, `tombstone-svgrepo-com.svg`, `world-cup-svgrepo-com.svg`, `zoom-svgrepo-com.svg`. (This
+inventory had incorrectly listed `shield-warning-svgrepo-com.svg`'s root copy as unused — it's actually
+referenced directly by filename in `wc2026_live.html`'s `setBadge()` calls.)
+
+`solar_linear/` unused files were intentionally left as-is (kept for the icon collection's own sake):
 
 | File | Description |
 |---|---|
-| `images/world-cup-svgrepo-com.svg` | World Cup trophy (variant) |
-| `images/shield-warning-svgrepo-com.svg` | Warning shield (root-level copy; solar_linear version is used instead) |
-| `images/elo_tab_color_icon.svg` | Colored Elo icon |
-| `images/elo_tab_icon.svg` | Elo icon (basic) |
-| `images/empty_tab_icon.svg` | Empty/placeholder tab icon |
-| `images/home-4-svgrepo-com.svg` | Home icon (variant) |
-| `images/chain_tab_icon.svg` | Chain icon |
-| `images/info-circle-svgrepo-com2.svg` | Info circle |
-| `images/zoom-svgrepo-com.svg` | Magnifier |
-| `images/france-vector-svgrepo-com.svg` | France silhouette (vector) |
 | `solar_linear/settings-svgrepo-com.svg` | Settings gear |
 | `solar_linear/login-2-svgrepo-com.svg` | Login (variant 2) |
 | `solar_linear/power-svgrepo-com.svg` | Power button |

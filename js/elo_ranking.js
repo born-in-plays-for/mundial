@@ -262,6 +262,15 @@ class EloRanking extends HTMLElement {
     this.#ul.innerHTML = ''; // clears old row wrappers only — pills persist via #itemById
     let pairsWrap = null;
 
+    // .elo-item-wrap: a fresh (never reused, rebuilt every render like the row wrappers
+    // themselves) span around each pill. Exists solely so a decoration anchored to it (see
+    // taxonomy.css's fixture-winner check mark) can escape .elo-item's own overflow:hidden
+    // (global.css's width-clamp on paired pills) — a sibling of the clipped element isn't
+    // clipped by it, whereas a pseudo-element on .elo-item itself always would be. Several
+    // selectors in global.css/taxonomy.css that used to read `li.elo-pair > .elo-item:first-
+    // child` now go through an anonymous `li.elo-pair :first-child .elo-item` instead, since
+    // .elo-item is no longer li.elo-pair's direct child — :first-child there matches whichever
+    // element (the wrapper) actually sits first among the row's children.
     const place = (row, { id, pts, pending, _lost }) => {
       const pill = this.#itemById.get(id);
       const data = this.#itemDataById.get(id);
@@ -270,7 +279,10 @@ class EloRanking extends HTMLElement {
       pill.classList.toggle('elo-item--zoomable', this.#onCountryClick != null && this.#isZoomable != null && this.#isZoomable(id) && !(this.#isClickable == null || this.#isClickable(id)));
       pill.classList.toggle('elo-item--pending', !!pending);
       pill.classList.toggle('elo-item--lost', !!_lost);
-      row.appendChild(pill);
+      const wrap = document.createElement('span');
+      wrap.className = 'elo-item-wrap';
+      wrap.appendChild(pill);
+      row.appendChild(wrap);
       data.pts = pts;
       render(pillContent(data), pill);
     };
