@@ -1,12 +1,27 @@
 /* players page fixed header — auth-bar _offsetSibling() sets top:32px automatically */
 #players-header { position: fixed; left: 0; right: 0; z-index: 100; background: var(--fixed-element-bg); }
-#main-content { overflow-x: hidden; }
+/* #main-content used to have overflow-x:hidden here, which broke .pt-th's position:sticky
+   (below): setting overflow-x to anything but visible forces overflow-y to compute to 'auto'
+   too (CSS Overflow spec), turning #main-content into an unintended scroll container — sticky
+   positions relative to its nearest scroll-container ancestor, not the viewport, so the header
+   stopped tracking the real page scroll and could resolve off-screen. Dropped entirely; nothing
+   here actually overflows horizontally (Bootstrap's own .container already caps width). */
 
 /* Players table — a genuine <table> (name | born in | plays for), page-specific: the map
    page's own dim-mode player list (css/player.css's .pt-player-row/.pt-country-header) groups
    players under a country header instead of one flat sortable row per player, a different
    enough shape that it isn't reused here. */
-.pt-table thead th.pt-th { color: var(--text-muted); cursor: pointer; user-select: none; white-space: nowrap; }
+.pt-table thead th.pt-th {
+  color: var(--text-muted); cursor: pointer; user-select: none; white-space: nowrap;
+  /* Sticks right below the fixed #players-header — --players-header-h is that header's own
+     measured bottom edge (wc2026_players.html's _syncHeaderLayout, same value driving
+     #main-content's padding-top), so this tracks it exactly whether the header is title-only
+     or stacked (sidebar wrapped beneath the title on narrow screens). Needs its own opaque
+     background (table-striped/table-hover only paint tbody rows, not thead) so scrolled-past
+     rows don't show through underneath while stuck. */
+  position: sticky; top: var(--players-header-h, 0px); z-index: 2;
+  background: var(--fixed-element-bg);
+}
 .pt-table thead th.pt-th:hover { color: var(--color-default); }
 .pt-table thead th.pt-th-active { color: var(--color-default); }
 .pt-flag { margin-right: 5px; border-radius: 2px; vertical-align: -1px; }

@@ -47,7 +47,13 @@ const _sidebarHost = document.getElementById('sidebar-host');
 // media query breakpoint, since the wrap point shifts with title text length
 // (locale-dependent) and the sidebar table's own width (filter-state-dependent).
 const _syncHeaderLayout = () => {
-  _main.style.paddingTop = (_header.getBoundingClientRect().bottom + 6) + 'px';
+  const headerBottom = _header.getBoundingClientRect().bottom;
+  _main.style.paddingTop = (headerBottom + 6) + 'px';
+  // Same measured value drives the sticky table header's own offset (see .pt-th's
+  // position:sticky in css/wc2026_players.css) — it needs to stick right below the fixed
+  // #players-header, whatever that header's current height is (title-only vs. stacked with
+  // the sidebar wrapped beneath it).
+  document.documentElement.style.setProperty('--players-header-h', headerBottom + 'px');
   // .stacked forces #sidebar-host to width:100%, which by itself guarantees it no
   // longer fits beside the title — checking offsetTop while that's still applied
   // would always read "wrapped" and could never un-stack on a resize back to wide.
