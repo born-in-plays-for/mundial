@@ -25,9 +25,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _sortLabel = html`<span class="cbs-header-label">${T.sortLabels.action}</span>`;
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
-  <div class="csb-body"><div class="csb-content d-flex flex-column gap-1">
+  <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-1">
     <div class="csb-toolbar d-flex align-items-center gap-1">
-      ${alwaysOpen ? nothing : html`<button id="csb-close" class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><img src="images/solar_linear/alt-arrow-right-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>`}
+      ${alwaysOpen ? nothing : html`<button id="csb-close" class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><kbd class="csb-esc-kbd">ESC</kbd></button>`}
       <div class="dropdown" id="zoom-conf-dropdown">
         <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
           <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
@@ -120,7 +120,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   </tbody></table>
   </div>
     <div class="csb-footer"><div id="elo-meta" class="elo-meta"></div></div>
-  </div></div>
+  </div></div></div>
 </div>`, _sidebarHost);
 
   const _el = document.getElementById('control-sidebar');
@@ -387,6 +387,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _toggle.textContent = collapsed ? '‹' : '›';
     callbacks.onSidebarToggle?.();
   });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || _el.classList.contains('collapsed')) return;
+    _el.classList.add('collapsed');
+    _toggle.textContent = '‹';
+    callbacks.onSidebarToggle?.();
+  });
   } // end !alwaysOpen
 
   // ── Swipe-to-reveal / swipe-to-hide drawer gesture (map page only) ──
@@ -542,8 +549,17 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _el.classList.remove('collapsed');
     _body.style.maxWidth = 'none';
     _body.style.width = 'max-content';
+    // .csb-inset (not .csb-content) is what actually determines the panel's rendered
+    // extent — measuring .csb-content's own offsetHeight ignored any border/padding
+    // added on the wrapper between it and .csb-body, undersizing --csb-h. getBoundingClientRect
+    // already includes border+padding (it's always the border box); margin is added by
+    // hand since neither getBoundingClientRect nor offsetHeight account for it.
+    const _inset = _panel.querySelector('.csb-inset');
+    const _insetCs = getComputedStyle(_inset);
+    const _insetH = _inset.getBoundingClientRect().height
+      + parseFloat(_insetCs.marginTop) + parseFloat(_insetCs.marginBottom);
     document.documentElement.style.setProperty('--csb-w', _body.offsetWidth + 'px');
-    document.documentElement.style.setProperty('--csb-h', _panel.querySelector('.csb-content').offsetHeight + 'px');
+    document.documentElement.style.setProperty('--csb-h', _insetH + 'px');
     _body.style.maxWidth = '';
     _body.style.width = '';
     if (wasCollapsed) _el.classList.add('collapsed');

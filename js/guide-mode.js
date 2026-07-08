@@ -9,6 +9,7 @@ let _showingId = null;
 let _pageId = null;
 let _panel = null;
 let _navHandler = null;
+let _escHandler = null;
 
 const _WIP_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
   <div class="gp-wip-title">WORK IN PROGRESS</div>
@@ -235,12 +236,23 @@ function _installHandler() {
     _showSection(_showingId);
   };
   document.addEventListener('click', _navHandler, true);
+
+  _escHandler = (e) => {
+    if (e.key !== 'Escape') return;
+    if (authBar) authBar._guideActive = false;
+    toggleGuide(authBar);
+  };
+  document.addEventListener('keydown', _escHandler);
 }
 
 function _uninstallHandler() {
   if (_navHandler) {
     document.removeEventListener('click', _navHandler, true);
     _navHandler = null;
+  }
+  if (_escHandler) {
+    document.removeEventListener('keydown', _escHandler);
+    _escHandler = null;
   }
   const authBar = document.querySelector('mundial-auth-bar');
   if (authBar) {

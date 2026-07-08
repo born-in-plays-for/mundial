@@ -3,6 +3,8 @@
  * #control-sidebar     — conteneur principal (grid dans #page-header)
  * .csb-toggle           — bouton ‹/› latéral
  * .csb-body             — corps collapsible
+ * .csb-inset            — pad/bordure uniforme autour de .csb-content (mesuré par
+ *                         measureControlSidebar() pour --csb-h, pas .csb-content lui-même)
  * .csb-content          — flex column: toolbar + layout + footer, stacked, gap between them
  * .csb-toolbar          — full-width row above .csb-layout: collapse, share, confederation
  *                         dropdown, params badge — all four icon controls in one place
@@ -42,8 +44,8 @@
   /* Same gap as .csb-layout/.csb-sort-stack between the sort-stack and filter
      table — between .csb-body's content and .csb-toggle, when the toggle exists
      (alwaysOpen mode renders no .csb-toggle at all, so this is simply unused then). */
-  gap: .25rem !important;
-  /* margin-top: 0.4rem; */
+  /* gap: .25rem !important;
+  padding-left: .25rem; */
 }
 
 /* No second flex item to space out from once the body has collapsed to nothing —
@@ -103,7 +105,17 @@
    padding top/bottom) — no separate height recalculation needed anywhere else. */
 #control-sidebar .csb-content {
   width: 100%;
-  padding-block: .25rem;
+  /* padding-block: .25rem; */
+}
+
+/* Sits between .csb-body and .csb-content — the single place for a uniform pad/border
+   around the whole toolbar+layout+footer stack. measureControlSidebar() in
+   control_sidebar.js reads *this* element's rendered box (not .csb-content's) for --csb-h,
+   so it stays correct no matter what border/padding/margin ends up here.
+   TODO: replace debug border with the real design. */
+#control-sidebar .csb-inset {
+  /* border: 2px red solid; */
+  padding: .25rem;
 }
 
 /* Houses .csb-collapse/#zoom-conf-dropdown/.csb-share/.csb-params-badge — see .csb-icon-btn
@@ -320,6 +332,19 @@
 #control-sidebar .csb-icon-btn:hover { opacity: 1; }
 #control-sidebar .csb-icon-btn img { width: 100%; height: 100%; }
 
+/* .csb-collapse swaps the shared 18×18 square for an auto-width "ESC" kbd hint —
+   overrides the fixed square from the shared recipe above. */
+#control-sidebar .csb-collapse { width: auto; }
+#control-sidebar .csb-esc-kbd {
+  font: 9px/1 var(--bs-font-monospace, ui-monospace, monospace);
+  letter-spacing: .03em;
+  padding: 3px 4px 2px;
+  border: 1px solid var(--border, #e4e0d8);
+  border-radius: 3px;
+  background: var(--bg-hover);
+  color: var(--text-muted, #999);
+}
+
 /* ── Share button (copies a URL reproducing the current sidebar config) ──
    Normal flex item of .csb-toolbar — nothing to add beyond the shared recipe. */
 
@@ -351,7 +376,7 @@
 /* Lives in .csb-toolbar now (flex item, normal flow) — the "nqf" row itself only
    shows the plain "FIFA" label; picking a confederation is a global zoom action,
    not scoped to that one filter row. */
-#zoom-conf-dropdown { display: inline-flex; z-index: 2000; }
+#zoom-conf-dropdown { display: inline-flex; z-index: 2000; direction: rtl; }
 /* Bootstrap's .dropdown-menu sets its own font-size — same fix as .elo-name/.btn above */
 #zoom-conf-dropdown .dropdown-menu { font-size: 11px; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
