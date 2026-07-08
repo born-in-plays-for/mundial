@@ -25,11 +25,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _sortLabel = html`<span class="cbs-header-label">${T.sortLabels.action}</span>`;
   render(html`<div id="control-sidebar" class="${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
-  <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-1">
-    <div class="csb-toolbar d-flex align-items-center gap-1">
+  <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-2">
+    <div class="csb-toolbar d-flex align-items-center gap-2">
       ${alwaysOpen ? nothing : html`<button id="csb-close" class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><kbd class="csb-esc-kbd">ESC</kbd></button>`}
-      <div class="dropdown" id="zoom-conf-dropdown">
-        <button type="button" class="csb-conf-btn dropdown-toggle" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
+      <div class="dropdown dropend" id="zoom-conf-dropdown">
+        <button type="button" class="csb-conf-btn dropdown-toggle pe-2" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
           <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
