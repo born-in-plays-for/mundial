@@ -38,7 +38,7 @@ body { background: #f5f2ec; color: var(--color-default); }
    indicators sit below the caption in normal flow, above the list. See js/elo_ranking.js's
    EloRanking.connectedCallback(). Overrides below undo Bootstrap's full-bleed-image-carousel
    defaults (wide dark gradient buttons, large rectangular indicators) for this compact look. */
-.elo-viz { position: relative; padding-top: 8px; padding-bottom: 8px; }
+.elo-viz { position: relative; padding-top: 8px; padding-bottom: 8px; min-width: 320px; }
 /* .elo-viz--match (js/elo_ranking.js's `set displayMode`, driven by control_sidebar.js's
    _displayMode) marks match-display mode itself, independent of the currently rendered stage's
    actual content — a `:has(.elo-list > li.elo-pair)` selector would react to *that* instead,
