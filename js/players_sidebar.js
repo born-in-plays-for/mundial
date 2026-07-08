@@ -49,6 +49,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
           <li><label class="dropdown-item"><input type="radio" name="psb-conf" class="form-check-input" data-conf="${key}"> ${label}</label></li>`)}
         </ul>
       </div>
+      <span id="players-conf-label" class="cbs-header-label"></span>
     </div>
     <div class="psb-carousel-host"></div>
     <div class="csb-layout d-inline-flex align-items-stretch gap-1">
@@ -129,7 +130,15 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   // ── Confederation dropdown — same markup/behavior as control 1's, own id/instance. ──
   const _confDropdown = _panel.querySelector('#players-conf-dropdown');
   const _confRadios = _confDropdown?.querySelectorAll('input[data-conf]');
-  const _syncConfRadio = () => { _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); }); };
+  // Own toolbar has room the dropdown icon doesn't use on its own (unlike control 1's, which
+  // is already crowded with collapse/share/params-badge) — shows the active filter at a
+  // glance instead of only revealing it by opening the dropdown.
+  const _confLabelEl = _panel.querySelector('#players-conf-label');
+  const _syncConfRadio = () => {
+    _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); });
+    if (_confLabelEl) _confLabelEl.textContent = _confKey ? (T.csbParams.confNames[_confKey] ?? _confKey) : T.csbParams.confAll;
+  };
+  _syncConfRadio();
   _confDropdown?.addEventListener('show.bs.dropdown',   () => { _body.style.overflow = 'visible'; });
   _confDropdown?.addEventListener('hidden.bs.dropdown', () => { _body.style.overflow = ''; });
   _confDropdown?.addEventListener('click', e => {
