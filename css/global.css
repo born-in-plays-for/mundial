@@ -112,11 +112,14 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-list > li { display: inline-flex; align-items: center; white-space: nowrap; }
 /* .elo-pairs is one flex-wrap item, exactly the way each .elo-pair row used to claim its own
    line individually — pushing whatever solos come after it onto a fresh line below the whole
-   fixture block, never interleaved with it. Column (not row) flex internally, stacking its own
-   .elo-pair children with the same gap .elo-list uses between its own flex-wrap lines, for a
-   consistent rhythm whether a gap is between two fixture rows or between the fixture block and
-   the first solo row. */
-.elo-pairs { flex: 0 0 100%; display: flex; flex-direction: column; gap: 6px; }
+   fixture block, never interleaved with it. flex:0 0 100% (its role as a flex *item* within
+   .elo-list) and display:grid (its role as a grid *container* for its own .elo-pair rows) are
+   independent — an element can be both at once. The grid's 3 columns are what every row below
+   subgrids into (see .elo-pairs > li.elo-pair) so the separator column sizes to the widest
+   .elo-pair-sep across *all* rows, not just its own — gap: 6px 4px carries over the original
+   6px between fixture rows (row-gap) and 4px between each row's own 3 columns (column-gap,
+   inherited by every subgridded row from here). */
+.elo-pairs { flex: 0 0 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 6px 4px; }
 /* Only meaningfully different once match-display mode actually has fixtures: .elo-pairs is
    always flex-basis:100%, so .elo-list's own justify-content never affects it either way — but
    it does affect .elo-solo rows (lone, unpaired teams), which always render after .elo-pairs.
@@ -124,17 +127,19 @@ body { background: #f5f2ec; color: var(--color-default); }
    ask this rule was added for); match-display mode's trailing solos should instead read as a
    plain left-aligned overflow list underneath the fixture grid, not re-centered on their own. */
 .elo-viz--match .elo-list { justify-content: flex-start; }
-/* grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) (not a bare 1fr) is what keeps the
-   separator aligned row to row: a bare 1fr track still grows past its "fair" share to fit a
-   long pill's content (grid tracks default to a content-based minimum), so on a narrow
-   (mobile) screen a row with e.g. "Netherlands" pushes its column wider than a row with
-   "Norway", and the separator — centered within whatever's left over — drifts row to row.
-   minmax(0, 1fr) caps each side column at its fair half-share no matter what; overflowing pill
-   content is clipped (below) instead of stretching the column. */
+/* subgrid (not each row re-declaring its own minmax(0,1fr) auto minmax(0,1fr)) is what makes
+   the separator column genuinely align row to row: every row shares .elo-pairs' own 3 column
+   tracks instead of computing its own independent auto width, so the middle column sizes to
+   fit the widest .elo-pair-sep across *all* rows, and every row's separator gets that same
+   shared width — not just whatever its own content happened to need. minmax(0,1fr) on the
+   outer two (still set on .elo-pairs itself) caps each pill's column at its fair half-share of
+   whatever's left after the separator column, same as before; overflowing pill content is
+   clipped (below) instead of stretching the column. grid-column:1/-1 makes each row span all 3
+   inherited tracks rather than collapsing into just the first one. */
 .elo-pairs > li.elo-pair {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 4px;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
 }
 /* Left team's pill content (flag, name, pts — see pillContent in elo_ranking.js) renders
    flag-first, which would put it at the outer/left edge of the row once the pill itself is
@@ -181,10 +186,10 @@ body { background: #f5f2ec; color: var(--color-default); }
    row for the penalty shootout tally when the fixture went to penalties — see
    js/elo_ranking.js's EloRanking.show(). */
 .elo-pair-sep { font-size: 10px; color: var(--border-strong); display: inline-flex; flex-direction: column; align-items: center; line-height: 1.15; }
-/* Decided fixture (date + score + optional penalty rows): pinned to a fixed width regardless of
-   content length (e.g. "4-3 pen." vs a plain score) so the separator column never pushes the
-   team pills around row to row — overflow is clipped rather than wrapped or shrinking the font. */
-.elo-pair-sep.elo-pair-sep--score { width: 45px; white-space: nowrap; overflow-x: hidden; }
+/* No fixed width here anymore — the shared subgrid column (.elo-pairs above) already sizes
+   itself to the widest .elo-pair-sep across every row, decided or not, so this only needs to
+   stop its own multi-line content (date/score/pens) from wrapping mid-word. */
+.elo-pair-sep.elo-pair-sep--score { white-space: nowrap; }
 /* --color-default (body's own default text color) — both the kickoff date and the score are
    real match information, not a muted secondary cue. */
 .elo-pair-sep-date { font-size: 9px; color: var(--color-default); }
