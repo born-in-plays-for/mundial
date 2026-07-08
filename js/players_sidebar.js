@@ -5,7 +5,7 @@ import { createStageCarousel, maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
 
 const _TEAM_SORT_KEYS = ['elo', 'pop', 'delta', 'alpha'];
-const _PARAM_KEYS = ['psort', 'pdir', 'pstage', 'pshow', 'pfifaconf'];
+const _PARAM_KEYS = ['psort', 'pdir', 'pstage', 'pshow', 'pfifaconf', 'pconfscope'];
 
 // Control 2 (see js/control_sidebar.js's own header comment for the 3-layer split this and
 // that module both sit under). Purpose-built for wc2026_players.html — a player is a different
@@ -35,6 +35,9 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   let _maxStage = CAROUSEL_STAGES.length - 1;
   let _confIds = null;
   let _confKey = null;
+  // Which country the confederation filter checks — independent of sort mode (you might sort
+  // by name but still want to filter confederation by birth country, or vice versa).
+  let _confScope = 'playsFor';
 
   const _qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
   const _stageIndexById = new Map(_qualifiedIds.map(id => [id, rawById.get(id)?.visibleThroughIndex]));
@@ -54,6 +57,12 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
         </ul>
       </div>
       <span id="players-conf-label" class="cbs-header-label"></span>
+      <div class="psb-conf-scope ms-auto" title="${T.psbLabels.confScopeTip}">
+        <input type="radio" class="btn-check" name="psb-conf-scope" id="psb-conf-scope-playsFor" autocomplete="off" data-scope="playsFor" checked>
+        <label class="btn" for="psb-conf-scope-playsFor">${T.psbLabels.confScopeTeam}</label>
+        <input type="radio" class="btn-check" name="psb-conf-scope" id="psb-conf-scope-bornIn" autocomplete="off" data-scope="bornIn">
+        <label class="btn" for="psb-conf-scope-bornIn">${T.psbLabels.confScopeBirth}</label>
+      </div>
     </div>
     <div class="psb-carousel-host"></div>
     <div class="csb-layout d-inline-flex align-items-stretch gap-1">
@@ -75,14 +84,14 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
         <tr><td class="csb-header text-muted ps-1" style="vertical-align: middle;"><span class="cbs-header-label">${T.filterLabels.action}</span></td></tr>
         <tr>
           <td class="csb-row" data-row="native" title="${T.psbLabels.nativeTip}">
-            <span class="elo-item"><span class="elo-name">${T.psbLabels.native}</span></span>
-            <input type="checkbox" class="form-check-input" id="psb-filter-native" checked>
+            <input type="checkbox" class="btn-check" id="psb-filter-native" autocomplete="off" checked>
+            <label class="btn" for="psb-filter-native">${T.psbLabels.native}</label>
           </td>
         </tr>
         <tr>
           <td class="csb-row" data-row="moved" title="${T.psbLabels.movedTip}">
-            <span class="elo-item"><span class="elo-name">${T.psbLabels.moved}</span></span>
-            <input type="checkbox" class="form-check-input" id="psb-filter-moved" checked>
+            <input type="checkbox" class="btn-check" id="psb-filter-moved" autocomplete="off" checked>
+            <label class="btn" for="psb-filter-moved">${T.psbLabels.moved}</label>
           </td>
         </tr>
       </tbody></table>
@@ -124,12 +133,15 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   });
   _refreshCarouselBounds();
 
-  // ── Filter checkboxes — the DOM inputs are the state (no shadow JS vars to drift). ──
+  // ── Filter checkboxes — the DOM inputs are the state (no shadow JS vars to drift). Standard
+  // Bootstrap btn-check pattern now (see .psb-conf-scope's own comment) — clicking the label
+  // already toggles the input natively, so this listens for 'change' rather than manually
+  // flipping .checked on a row click (which would double-toggle against the native behavior). ──
   const _fltNative = _panel.querySelector('#psb-filter-native');
   const _fltMoved  = _panel.querySelector('#psb-filter-moved');
   const _onFilterChange = () => { callbacks.onChange?.(); _saveState(); };
-  _panel.querySelector('[data-row="native"]').addEventListener('click', () => { _fltNative.checked = !_fltNative.checked; _onFilterChange(); });
-  _panel.querySelector('[data-row="moved"]' ).addEventListener('click', () => { _fltMoved.checked  = !_fltMoved.checked;  _onFilterChange(); });
+  _fltNative.addEventListener('change', _onFilterChange);
+  _fltMoved.addEventListener('change', _onFilterChange);
 
   // ── Confederation dropdown — same markup/behavior as control 1's, own id/instance. ──
   const _confDropdown = _panel.querySelector('#players-conf-dropdown');
@@ -151,6 +163,22 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     e.stopPropagation();
     const conf = item.dataset.conf;
     setConfFilter(conf ? (confIdsOverride[conf] ?? null) : null, conf || null);
+  });
+
+  // Which country the confederation dropdown checks — CONF_IDS covers arbitrary countries, not
+  // just the 48 qualified teams, so a birth country resolves the exact same way a plays-for
+  // team does (js/conf.js's own id sets, no separate table needed).
+  const _confScopeEl = _panel.querySelector('.psb-conf-scope');
+  const _syncConfScope = () => {
+    _confScopeEl?.querySelectorAll('input[data-scope]').forEach(r => { r.checked = r.dataset.scope === _confScope; });
+  };
+  _syncConfScope();
+  _confScopeEl?.addEventListener('change', e => {
+    const radio = e.target.closest('input[name="psb-conf-scope"]');
+    if (!radio) return;
+    _confScope = radio.dataset.scope;
+    callbacks.onChange?.();
+    _saveState();
   });
 
   // ── Sort controls ──
@@ -237,8 +265,13 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   const sortPlayers = list => {
     const filtered = list.filter(p => {
       if (p.native ? !_fltNative.checked : !_fltMoved.checked) return false;
+      if (_confIds) {
+        const scopeId = _confScope === 'bornIn' ? p.birthCountryId : QUALIFIED_BY_NAME[p.nation];
+        if (scopeId == null || !_confIds.has(scopeId)) return false;
+      }
+      // Stage reachability is always about the plays-for team's own tournament progress,
+      // independent of _confScope — a player's birth country isn't "in" the tournament.
       const teamId = QUALIFIED_BY_NAME[p.nation];
-      if (_confIds && (teamId == null || !_confIds.has(teamId))) return false;
       const team = teamId != null ? rawById.get(teamId) : null;
       if (team && !reachesStage(team.visibleThroughIndex, _stage)) return false;
       return true;
@@ -294,6 +327,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
       mode: _mode,
       native: _fltNative.checked,
       moved: _fltMoved.checked,
+      confScope: _confScope,
     });
   };
 
@@ -310,6 +344,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     if (shared?.dir === 'asc' || shared?.dir === 'desc') _dir = shared.dir;
     if (typeof players?.native === 'boolean') _fltNative.checked = players.native;
     if (typeof players?.moved === 'boolean') _fltMoved.checked = players.moved;
+    if (players?.confScope === 'playsFor' || players?.confScope === 'bornIn') { _confScope = players.confScope; _syncConfScope(); }
     _syncSortUI();
     _updateSortList();
     if (shared?.conf && confIdsOverride[shared.conf]) { _confIds = confIdsOverride[shared.conf]; _confKey = shared.conf; _syncConfRadio(); }
@@ -357,6 +392,9 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
 
     const pconf = sp.get('pfifaconf');
     if (pconf !== null) setConfFilter(confIdsOverride[pconf] ?? null, pconf || null);
+
+    const pconfscope = sp.get('pconfscope');
+    if (pconfscope === 'playsFor' || pconfscope === 'bornIn') { _confScope = pconfscope; _syncConfScope(); }
 
     const pstage = sp.get('pstage');
     if (pstage) {
