@@ -97,26 +97,6 @@ export function createStageCarousel(T) {
   });
   _refreshBounds();
 
-  // Stabilize the carousel's own width across slides. Bootstrap hides every non-active
-  // .carousel-item (display:none), so only the current slide's caption participates in
-  // layout — left alone, the carousel's width follows whichever stage label is showing, and
-  // locale-dependent length differences ("Winner"/"Vainqueur" vs "Quarter-finals"/"Quarts de
-  // finale") make the whole thing visibly resize on every navigation. Most noticeable in a
-  // narrow host like the players sidebar, but real on the map's <elo-ranking> too. Deferred one
-  // frame: `el` isn't attached to the document yet at this point (the caller appends it right
-  // after createStageCarousel returns), and measuring needs real layout.
-  requestAnimationFrame(() => {
-    const items = Array.from(inner.children);
-    // Inline style wins over the stylesheet's class-based display:none, without ever actually
-    // being visible (visibility:hidden) or affecting other items (position:absolute takes it
-    // out of flow; width:auto/margin:0 override the class rules that would otherwise force it
-    // to the carousel's own current width instead of its natural content width).
-    items.forEach(item => { item.style.cssText = 'position:absolute; visibility:hidden; display:block; width:auto; margin:0;'; });
-    const widest = Math.max(0, ...items.map(item => item.querySelector('.stage-caption')?.scrollWidth ?? 0));
-    items.forEach(item => { item.style.cssText = ''; });
-    if (widest > 0) inner.style.minWidth = `${widest}px`;
-  });
-
   return {
     el: carousel,
     // The tournament hasn't reached every stage yet — a caller computes the furthest stage that
