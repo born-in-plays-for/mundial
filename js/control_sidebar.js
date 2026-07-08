@@ -8,11 +8,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
   // 'team' (default) — flat list, unchanged. 'match' — teams grouped fixture-by-fixture
-  // (one row per couple, non-breakable — see .elo-pair in css/global.css), and the active
-  // sort criteria compare couples by the SUM of both members' values instead of one team's
-  // own. Not itself a sort criterion — a display-mode switch alongside the sort column,
-  // gated the same way the old "match" sort-item was: no fixtures to group by at the
-  // 'group' stage, so switching to 'match' there is a no-op (forced back to 'team').
+  // (one row per couple, non-breakable — see .elo-pair in css/global.css), sorted purely
+  // chronologically by kickoff time (see sortAndFilter below) — the active sort criteria
+  // don't apply to fixture couples at all, only to any lone/unpaired row. Not itself a sort
+  // criterion — a display-mode switch alongside the sort column, gated the same way the old
+  // "match" sort-item was: no fixtures to group by at the 'group' stage, so switching to
+  // 'match' there is a no-op (forced back to 'team').
   let _displayMode = 'team';
   // Set only when _updateCarouselTitle auto-forces 'match' back to 'team' because the carousel
   // dropped to stage 0 (see below) — remembers that this was NOT the user's own choice, so

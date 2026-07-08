@@ -24,10 +24,8 @@
 .taxonomy .elo-item--qualified:not(.elo-item--knocked-out) { border-width: 1.5px;} 
 .taxonomy .elo-item:not(.elo-item--qualified) { border: none; }
 
-/* Qualified but knocked out: dashed border + lighter (less dark) name, same treatment as
-   pending/non-FIFA pills — signals "no longer alive" alongside the border. */
+/* Qualified but knocked out: dashed border only — signals "no longer alive". */
 .taxonomy .elo-item--qualified.elo-item--knocked-out { border-style: dashed; }
-.taxonomy .elo-item--knocked-out .elo-name { color: var(--light-text); }
 
 /* Schrödinger's team: fixture for the currently-viewed stage hasn't been played yet — could
    still go either way. Wavy top AND bottom edges (sides keep the pill's own normal border
@@ -93,7 +91,7 @@
 .taxonomy .elo-item--no-map .elo-flag { opacity: 0.35; }
 
 /* Match-display mode: lost a decided fixture — grey out the flag, name stays legible */
-.taxonomy .elo-item--lost .elo-flag { filter: grayscale(1); opacity: 0.5; }
+.taxonomy .elo-item--lost .elo-flag { filter: grayscale(1); opacity: 0.75; }
 
 /* Dots via pseudo-elements — both on the right of the name. Fixed accent colors (not
    count-scaled — the pill's gradient background already carries that signal). */

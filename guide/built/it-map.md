@@ -272,7 +272,7 @@ Bordo ondulato, nome sbiadito — partita non ancora giocata.
     <span class="elo-name" data-id="76">Brazil</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->
-Bandiera sbiadita — ha perso una partita decisa.
+Bandiera in scala di grigi — ha perso una partita decisa.
 <!-- /i18n:tax_desc_lost --></span>
 </div>
 </div>

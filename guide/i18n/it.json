@@ -374,5 +374,5 @@
   "tax_label_fixture": "Accoppiamenti (vista partite)",
   "tax_note_fixture": "Visibile solo in vista partite — vedi Vista squadre / partite, sopra.",
   "tax_desc_pending": "Bordo ondulato, nome sbiadito — partita non ancora giocata.",
-  "tax_desc_lost": "Bandiera sbiadita — ha perso una partita decisa."
+  "tax_desc_lost": "Bandiera in scala di grigi — ha perso una partita decisa."
 }

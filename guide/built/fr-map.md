@@ -272,7 +272,7 @@ Bordure ondulée, nom atténué — rencontre pas encore jouée.
     <span class="elo-name" data-id="76">Brazil</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->
-Drapeau atténué — a perdu une rencontre décidée.
+Drapeau en niveaux de gris — a perdu une rencontre décidée.
 <!-- /i18n:tax_desc_lost --></span>
 </div>
 </div>

@@ -272,7 +272,7 @@ Borde ondulado, nombre atenuado — partido aún no jugado.
     <span class="elo-name" data-id="76">Brazil</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->
-Bandera atenuada — perdió un partido decidido.
+Bandera en escala de grises — perdió un partido decidido.
 <!-- /i18n:tax_desc_lost --></span>
 </div>
 </div>

@@ -374,5 +374,5 @@
   "tax_label_fixture": "Rencontres (vue matchs)",
   "tax_note_fixture": "Visible uniquement en vue matchs — voir Vue équipes / matchs, ci-dessus.",
   "tax_desc_pending": "Bordure ondulée, nom atténué — rencontre pas encore jouée.",
-  "tax_desc_lost": "Drapeau atténué — a perdu une rencontre décidée."
+  "tax_desc_lost": "Drapeau en niveaux de gris — a perdu une rencontre décidée."
 }

@@ -111,7 +111,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" alt="">
     <span class="elo-name" data-id="364">Iran</span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_dashed -->Dashed border, dimmed name — qualified but knocked out.<!-- /i18n:tax_desc_border_dashed --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_border_dashed -->Dashed border — qualified but knocked out.<!-- /i18n:tax_desc_border_dashed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item" style="flex-shrink:0">
@@ -226,7 +226,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/br.svg" alt="">
     <span class="elo-name" data-id="76">Brazil</span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->Dimmed flag — lost a decided fixture.<!-- /i18n:tax_desc_lost --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->Grayed flag — lost a decided fixture.<!-- /i18n:tax_desc_lost --></span>
 </div>
 </div>
 

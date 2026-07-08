@@ -272,7 +272,7 @@ Wellenförmiger Rand, verblasster Name — Spiel noch nicht ausgetragen.
     <span class="elo-name" data-id="76">Brazil</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_lost -->
-Verblasste Flagge — hat ein entschiedenes Spiel verloren.
+Flagge in Graustufen — hat ein entschiedenes Spiel verloren.
 <!-- /i18n:tax_desc_lost --></span>
 </div>
 </div>

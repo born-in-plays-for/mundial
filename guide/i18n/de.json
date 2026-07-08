@@ -375,5 +375,5 @@
   "tax_label_fixture": "Spielpaarungen (Spiele-Ansicht)",
   "tax_note_fixture": "Nur in der Spiele-Ansicht sichtbar — siehe Team-/Spiel-Ansicht, oben.",
   "tax_desc_pending": "Wellenförmiger Rand, verblasster Name — Spiel noch nicht ausgetragen.",
-  "tax_desc_lost": "Verblasste Flagge — hat ein entschiedenes Spiel verloren."
+  "tax_desc_lost": "Flagge in Graustufen — hat ein entschiedenes Spiel verloren."
 }

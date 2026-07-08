@@ -39,7 +39,8 @@ body {
 }
 
 /* paragraph */
-#guide-body p:not(.taxonomy *) {
+#guide-body p:not(.taxonomy *),
+#guide-body li:not(.taxonomy *) {
   font-size: .925rem;
   line-height: 1.7;
   color: #333;

@@ -123,7 +123,8 @@ function _injectStyles() {
 #mundial-guide-panel .gp-body h1{font-size:1.5rem;font-weight:700;margin-bottom:2rem;padding-bottom:.5rem;border-bottom:2px solid var(--border,#e4e0d8);overflow:hidden}
 #mundial-guide-panel .gp-body h2{font-size:1.05rem;font-weight:600;margin-top:2.5rem;margin-bottom:.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--border,#e4e0d8)}
 #mundial-guide-panel .gp-body h3{font-size:.9rem;font-weight:600;margin-top:1.4rem;margin-bottom:.4rem;color:#555}
-#mundial-guide-panel .gp-body p:not(.taxonomy *){font-size:.925rem;line-height:1.7;color:#333}
+#mundial-guide-panel .gp-body p:not(.taxonomy *),
+#mundial-guide-panel .gp-body li:not(.taxonomy *){font-size:.925rem;line-height:1.7;color:#333}
 #mundial-guide-panel .gp-body code:not(.taxonomy *){font-size:.82em;background:var(--bg-hover,#f0ede8);padding:.1em .38em;border-radius:3px;color:var(--color-default,#171715)}
 #mundial-guide-panel .gp-body pre:not(.taxonomy *){background:var(--bg-hover,#f0ede8);border-radius:3px;overflow-x:auto}
 #mundial-guide-panel .gp-body pre code:not(.taxonomy *){padding:0;background:transparent;border-radius:0;font-size:inherit}
