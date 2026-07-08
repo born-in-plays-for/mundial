@@ -20,11 +20,15 @@ const _PARAM_KEYS = ['psort', 'pdir', 'pstage', 'pshow', 'pfifaconf'];
 // stage reachability) for whichever qualified country a player's own `.nation` resolves to via
 // QUALIFIED_BY_NAME. confIds: same shape as js/conf.js's CONF_IDS, overridable for tests.
 export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confIdsOverride = CONF_IDS }) {
-  // 'team' (sort by the player's team standing) | 'player' (sort by player name) | 'birth'
-  // (sort by birth country name) — one per table column (name/born in/plays for,
-  // wc2026_players.html), set exclusively via setSort (table header click) or ?psort=. No
-  // separate mode-toggle UI in this panel — the table headers themselves are the mode picker.
-  let _mode = 'team';
+  // 'playsFor' | 'bornIn' (sort by that column's own country's standing — elo/pop/delta/alpha,
+  // whichever the sidebar's own reorderable list currently leads with; same criteria, resolved
+  // against a different per-player country) | 'player' (sort by player name, the table's "name"
+  // column only). Set exclusively via setSort (table header click) or ?psort= — no separate
+  // mode-toggle UI in this panel, the table headers themselves are the mode picker. Whichever of
+  // the three is active, the *criteria* (which metric, in what priority) are exclusively the
+  // sidebar's own reorderable list's business — a table header only ever picks which country
+  // (birth vs. plays-for) those same criteria get applied to, or reverses direction.
+  let _mode = 'playsFor';
   let _teamOrder = ['elo', 'pop', 'delta', 'alpha'];
   let _dir = 'desc';
   let _stage = 0; // index into CAROUSEL_STAGES
@@ -55,7 +59,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     <div class="csb-layout d-inline-flex align-items-stretch gap-1">
       <div class="csb-sort-stack">
         <table class="csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
-          <tr><td class="csb-header text-muted ps-1" style="vertical-align: middle;"><span class="cbs-header-label">${T.sortLabels.action}</span></td></tr>
+          <tr><td class="csb-header text-muted ps-1" style="vertical-align: middle;" title="${T.psbLabels.sortTeamsTip}"><span class="cbs-header-label">${T.psbLabels.sortTeams}</span></td></tr>
           <tr><td class="csb-sort-col text-muted">
             <div class="csb-sort-list d-flex flex-column h-100 position-relative">
               <button class="csb-sort-dir" title="${T.csbTips.sortDir}"></button>
@@ -175,30 +179,30 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   };
 
   // Every elo/pop/delta/alpha item is always clickable (see the sort-list click handler below,
-  // which switches into 'team' mode itself rather than requiring it first) — --active marks
-  // which one is currently driving the order, replacing the old "disabled unless already in
-  // team mode" dimming from when a separate mode-toggle picked team vs. player.
+  // which switches into 'playsFor' mode itself rather than requiring it first) — --active marks
+  // which one is currently driving the order, whenever either country-standing mode is active.
+  const _isTeamMode = () => _mode === 'playsFor' || _mode === 'bornIn';
   const _syncSortUI = () => {
-    _sortListEl.querySelectorAll('.csb-sort-item').forEach(el => el.classList.toggle('csb-sort-item--active', _mode === 'team' && el.dataset.sort === _teamOrder[0]));
+    _sortListEl.querySelectorAll('.csb-sort-item').forEach(el => el.classList.toggle('csb-sort-item--active', _isTeamMode() && el.dataset.sort === _teamOrder[0]));
     _sortDirBtn.dataset.dir = _dir;
     _updateAlphaLabel();
   };
   _syncSortUI();
 
-  // Table-column-header entry point (see wc2026_players.html) — same click-to-sort/click-again-
-  // to-reverse convention as a plain HTML table. Switching into 'team' mode this way leads with
-  // 'alpha' (the literal content of the "plays for" column is a country name), not whatever
-  // criterion the sidebar's own reorderable list last had active — that list still lets the user
-  // pick elo/pop/delta afterward, this is just this entry point's own sensible default.
+  // Table-column-header entry point (see wc2026_players.html) — 'player' (the name column),
+  // 'bornIn' (the "born in" column) or 'playsFor' (the "plays for" column). Never touches
+  // _teamOrder itself: which criteria drive a country-standing sort, and in what priority, is
+  // exclusively the sidebar's own reorderable list's business (see the sort-list click handler
+  // below) — a table header only ever picks which of the three modes is active, or, if it's
+  // already active, reverses direction. Same click-to-sort/click-again-to-reverse convention as
+  // a plain table.
   const setSort = mode => {
     if (mode === _mode) {
       _dir = _dir === 'desc' ? 'asc' : 'desc';
     } else {
       _mode = mode;
-      if (mode === 'team') _teamOrder = ['alpha', ..._teamOrder.filter(k => k !== 'alpha')];
     }
     _syncSortUI();
-    _updateSortList();
     callbacks.onChange?.();
     _saveState();
   };
@@ -215,7 +219,10 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     const item = e.target.closest('.csb-sort-item');
     if (!item) return;
     const key = item.dataset.sort;
-    _mode = 'team';
+    // Reorders the shared criteria list without forcing a specific mode — stays on 'bornIn' if
+    // that's what was active, defaults to 'playsFor' only when coming from 'player' (which has
+    // no criteria of its own to speak of).
+    if (!_isTeamMode()) _mode = 'playsFor';
     _teamOrder = [key, ..._teamOrder.filter(k => k !== key)];
     _updateSortList();
     _syncSortUI();
@@ -236,23 +243,27 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
       if (team && !reachesStage(team.visibleThroughIndex, _stage)) return false;
       return true;
     });
+    // 'bornIn' and 'playsFor' apply the exact same criteria (_teamOrder, sidebar-controlled) —
+    // only which country each player is looked up by differs: rawById.get(p.birthCountryId)
+    // (any country in the world, not just a qualified team — most have an Elo entry too) vs.
+    // the qualified team QUALIFIED_BY_NAME[p.nation] resolves to.
+    const _resolve = _mode === 'bornIn'
+      ? p => (p.birthCountryId != null ? rawById.get(p.birthCountryId) : null)
+      : p => rawById.get(QUALIFIED_BY_NAME[p.nation]);
+    const _label = _mode === 'bornIn' ? p => p.birthCountry : p => p.nation;
     const sorted = [...filtered].sort((a, b) => {
       if (_mode === 'player') {
         const d = a.name.localeCompare(b.name);
         return _dir === 'asc' ? -d : d;
       }
-      if (_mode === 'birth') {
-        const d = (a.birthCountry ?? '').localeCompare(b.birthCountry ?? '') || a.name.localeCompare(b.name);
-        return _dir === 'asc' ? -d : d;
-      }
-      const teamA = rawById.get(QUALIFIED_BY_NAME[a.nation]);
-      const teamB = rawById.get(QUALIFIED_BY_NAME[b.nation]);
+      const teamA = _resolve(a);
+      const teamB = _resolve(b);
       for (let i = 0; i < Math.min(_teamOrder.length, 2); i++) {
         let d = (!teamA || !teamB) ? 0 : teamComparators[_teamOrder[i]](teamA, teamB);
         if (i === 0 && _dir === 'asc') d = -d;
         if (d !== 0) return d;
       }
-      return a.nation.localeCompare(b.nation);
+      return _label(a).localeCompare(_label(b));
     });
     // Mirrors js/elo_ranking.js's own initEloRanking renderFn, which sets #elo-meta-count the
     // same way (authoritative count from the actual filtered/sorted result, not a re-derived
@@ -291,7 +302,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     const players = loadSlice('players');
     if (!shared && !players) return false;
 
-    if (players?.mode === 'team' || players?.mode === 'player' || players?.mode === 'birth') _mode = players.mode;
+    if (players?.mode === 'playsFor' || players?.mode === 'bornIn' || players?.mode === 'player') _mode = players.mode;
     if (Array.isArray(shared?.order)) {
       const keys = shared.order.filter(k => _TEAM_SORT_KEYS.includes(k));
       if (keys.length) _teamOrder = [...new Set([...keys, ..._teamOrder])].slice(0, _teamOrder.length);
@@ -322,11 +333,13 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     }
 
     const psort = sp.get('psort');
-    if (psort === 'player' || psort === 'birth') {
+    if (psort === 'player' || psort === 'playsFor' || psort === 'bornIn') {
       _mode = psort;
-    } else if (psort?.startsWith('team:')) {
-      const key = psort.slice(5);
-      _mode = 'team';
+    } else if (psort?.startsWith('playsFor:') || psort?.startsWith('bornIn:')) {
+      // ?psort=playsFor:<key> / bornIn:<key> is the one URL-only exception to "only the sidebar
+      // reorders criteria" (mirrors control 1's own ?sort= URL API) — a deep link, not a UI action.
+      const [mode, key] = psort.split(':');
+      _mode = mode;
       if (_TEAM_SORT_KEYS.includes(key)) _teamOrder = [key, ..._teamOrder.filter(k => k !== key)];
     }
 
@@ -365,7 +378,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
 
   return {
     get sortMode() { return _mode; },
-    get sortKey()  { return _mode === 'team' ? _teamOrder[0] : _mode === 'birth' ? 'birth' : 'alpha'; },
+    get sortKey()  { return (_mode === 'playsFor' || _mode === 'bornIn') ? _teamOrder[0] : 'alpha'; },
     get sortDir()  { return _dir; },
     // Native-only view (moved unchecked) — every visible player's birth country and plays-for
     // country are the same string by construction (see wc2026_players.html's own .native

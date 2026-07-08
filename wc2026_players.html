@@ -132,24 +132,28 @@ const playsForFlag = p => {
 
 // Table-header sort UI (click a column to sort by it, click again to reverse) — drives the same
 // sidebar state the filter panel's own sort controls do (players_sidebar.js's setSort), so the
-// two can never disagree about what's currently sorting the list.
+// two can never disagree about what's currently sorting the list. "born in" sorts by the birth
+// country's standing, "plays for" by the team's — same criteria (the sidebar's own reorderable
+// list), applied to a different country per column; each is its own dimension, only "name" (and
+// its own click-again-to-reverse) is unrelated to either.
 const _sortArrow = () => sidebar.sortDir === 'asc' ? ' ▾' : ' ▴';
-// With only natives shown (sidebar.onlyNative — moved unchecked), "born in" and "plays for" are
-// the same string for every row by construction, so the two columns collapse into one. Its
-// click target is whichever of 'birth'/'team' is already active (so a repeat click still just
-// reverses direction, same as any other header); defaults to 'team' otherwise.
 const renderHead = () => {
   const mode = sidebar.sortMode;
   const th = (key, label) => html`<th class="pt-th${mode === key ? ' pt-th-active' : ''}" @click=${() => sidebar.setSort(key)}>${label}${mode === key ? _sortArrow() : ''}</th>`;
+  // Native-only view: birth country and plays-for country are the same value for every visible
+  // row, so the two columns are already merged into one — sorting it means "by that (single)
+  // country's standing," represented by whichever of bornIn/playsFor is already the active mode
+  // (defaulting to playsFor coming from 'player', same as the sort-list's own default).
+  const mergedKey = mode === 'bornIn' ? 'bornIn' : 'playsFor';
   const cols = sidebar.onlyNative
-    ? [th('player', T.psbLabels.byPlayer), th(mode === 'birth' ? 'birth' : 'team', `${T.chainLegend.bornIn} / ${T.chainLegend.playsFor}`)]
-    : [th('player', T.psbLabels.byPlayer), th('birth', T.chainLegend.bornIn), th('team', T.chainLegend.playsFor)];
+    ? [th('player', T.psbLabels.byPlayer), th(mergedKey, `${T.chainLegend.bornIn} / ${T.chainLegend.playsFor}`)]
+    : [th('player', T.psbLabels.byPlayer), th('bornIn', T.chainLegend.bornIn), th('playsFor', T.chainLegend.playsFor)];
   render(html`${cols}`, document.getElementById('player-list-head'));
 };
 
 // sidebar.sortPlayers filters (native/moved, confederation, tournament stage) and sorts
-// (by team standing, player name, or birth country) in one pass — see players_sidebar.js's own
-// comment. Re-renders the header alongside the body so the active-column arrow always matches.
+// (by team standing, or by player name) in one pass — see players_sidebar.js's own comment.
+// Re-renders the header alongside the body so the active-column arrow always matches.
 const renderPlayers = () => {
   const sorted = sidebar.sortPlayers(entries);
   renderHead();
