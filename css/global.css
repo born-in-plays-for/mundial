@@ -204,7 +204,10 @@ body { background: #f5f2ec; color: var(--color-default); }
 .elo-rank { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
 .elo-name .elo-dot:first-child { margin-left: 3px; }
-.elo-flag { width: 20px; height: 20px; }
+/* Thin white ring — circle-flags' own artwork already fills a circle, so border-radius:50%
+   just clips the img's own square bounding box to match (harmless/no-op on the visible
+   circle); the border is what actually adds definition against the pill's gradient bg. */
+.elo-flag { width: 20px; height: 20px; border-radius: 50%; border: 0.5px solid #fff; }
 /* Wraps .elo-flag — an <img> can't reliably render its own ::before/::after (generated
    content doesn't apply to replaced elements), so a badge anchored to the flag (see
    taxonomy.css's winner check mark) is positioned relative to this wrapper instead. */
