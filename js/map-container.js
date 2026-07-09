@@ -63,15 +63,15 @@
 // All 8 values below were tuned live via #diverging-debug and logged to the
 // console from there — see that panel to keep iterating.
 let _divergingParams = {
-  neutral:      '#efece4',
+  neutral:      '#e0e0e0',
   easyLeft:     '#ff0000', // negative extreme — "plays for" (import), red
-  easyRight:    '#0044ff', // positive extreme — "born in" (export), blue
-  outlierLeft:  '#7f1f00',
-  outlierRight: '#001f7f',
+  easyRight:    '#0000ff', // positive extreme — "born in" (export), blue
+  outlierLeft:  '#bf0000',
+  outlierRight: '#0000bf',
   algoLeft:     'power',
   algoRight:    'power',
-  easeLeft:     2,
-  easeRight:    2,
+  easeLeft:     2.2,
+  easeRight:    1.8,
 };
 export const getDivergingParams = () => ({ ..._divergingParams });
 export const setDivergingParams = patch => {
@@ -110,16 +110,18 @@ export const THEMES = {
   violet: {
     label: 'Violet',
     // A genuine diverging scale, not a clamped-at-0 sequential one — net talent
-    // balance (home-grown contribution: export + native, minus imports) is
+    // balance (exports minus imports; natives deliberately excluded — a
+    // country's own homegrown-and-still-there players don't represent a
+    // talent flow either way, so including them just diluted the signal) is
     // signed and means something different on each side of 0: positive is a
     // net exporter (dominated by "born in"), negative a net importer
-    // (dominated by "plays for", e.g. Curaçao at -25). Colors/easing live in
+    // (dominated by "plays for", e.g. Curaçao at -26). Colors/easing live in
     // _divergingParams above (getDivergingParams()/setDivergingParams()), not
     // here — see the #diverging-debug panel for a live slider/color-picker UI.
     diverging: true,
-    metric: rec => (rec.count ?? 0) + (rec.nativeCount ?? 0) - (rec.importCount ?? 0),
-    ratioMaxPos: 68, // 2nd after France (102) — Netherlands
-    ratioMaxNeg: 15, // 2nd after Curaçao (-25) — DR Congo
+    metric: rec => (rec.count ?? 0) - (rec.importCount ?? 0),
+    ratioMaxPos: 42, // 2nd after France (78) — Netherlands
+    ratioMaxNeg: 21, // 2nd after Curaçao (-26) — DR Congo
     outlierIdsPos: new Set([250]), // France — biggest net exporter
     outlierIdsNeg: new Set([531]), // Curaçao — biggest net importer
     legendKey: 'balance',
@@ -184,8 +186,17 @@ _buildPalettes(THEMES[_themeName]);
 // Magnitude only (0..1) — color() below picks which side's max/palette to use.
 export const normalize = (v, theme = THEMES[_themeName]) => {
   if (theme.diverging) {
+    // Shared max across both sides, not each side's own ratioMaxPos/Neg — the two ceilings
+    // are wildly different (e.g. 42 vs 21), and normalizing each side against its own ceiling
+    // made a country sitting at its side's own 2nd place reach full color saturation regardless
+    // of how that magnitude compared to the other side: DR Congo at -21 (maxed out on ratioMaxNeg)
+    // read as visually "as extreme" as Netherlands at +42 (maxed out on ratioMaxPos), even though
+    // 42 is double 21 in real terms. A shared max means equal color intensity = equal real
+    // magnitude on either side. ratioMaxPos/ratioMaxNeg themselves are unchanged and still drive
+    // the legend's own tick *labels* and gradient domain (wc2026_map.js) — only the color mapping
+    // uses the shared value.
     const neg = v < 0;
-    const max = neg ? theme.ratioMaxNeg : theme.ratioMaxPos;
+    const max = Math.max(theme.ratioMaxPos, theme.ratioMaxNeg);
     const x = Math.min(Math.abs(v), max) / max;
     return neg ? _ease(x, _divergingParams.algoLeft, _divergingParams.easeLeft)
                : _ease(x, _divergingParams.algoRight, _divergingParams.easeRight);

@@ -1479,7 +1479,12 @@ world.objects.countries.geometries.forEach(g => {
 });
 
 // ── Ocean background — fills the full projection area before land paths ──────
-g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','#b8d8ea').attr('stroke','none');
+// Neutral gray, not blue — the violet theme's diverging scale (map-container.js's
+// _divergingParams) uses blue for its positive/export side, and a blue ocean competed with
+// blue countries for attention instead of receding as backdrop. Deliberately theme-independent
+// (see the "Satellite colors" note in CLAUDE.md) — real water stays the same regardless of
+// which land palette is active.
+g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','#b0c4c4').attr('stroke','none');
 
 // ── World choropleth (skip UK polygon — rendered separately below) ────────────
 g.selectAll('.country')
