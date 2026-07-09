@@ -70,8 +70,8 @@ let _divergingParams = {
   outlierRight: '#0000bf',
   algoLeft:     'power',
   algoRight:    'power',
-  easeLeft:     2.2,
-  easeRight:    1.8,
+  easeLeft:     2.0,
+  easeRight:    2.0,
 };
 export const getDivergingParams = () => ({ ..._divergingParams });
 export const setDivergingParams = patch => {
