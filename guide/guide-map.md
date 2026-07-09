@@ -23,7 +23,7 @@ covering how countries are filtered, sorted, and displayed.
 <!-- /i18n:quotes -->
 
 <!-- i18n:control_sidebar -->
-## The Control Panel
+# The Control Panel
 
 The <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:var(--text-muted,#999);border-radius:0 4px 4px 0">‹</kbd> button in the top-right corner of the window opens the control panel,
 controlling what appears on the map and in the country list.
@@ -32,21 +32,17 @@ controlling what appears on the map and in the country list.
 
 The panel has five parts: a **toolbar** across the top; **sort** and **view** stacked on the left; the **filter** matrix on the right; and an **infobar** along the bottom.
 
-### Toolbar
+## Toolbar
 
 - <kbd style="font-size:.68em;font-family:var(--bs-font-monospace,ui-monospace,monospace);background:var(--bg-hover,#f0ede8);border:1px solid var(--border,#e4e0d8);color:#1C274C;border-radius:3px;padding:2px 4px;vertical-align:middle">ESC</kbd> collapses the panel back to its ‹ button.
 - <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederation"> filters the list to a single FIFA confederation — see *FIFA confederation filter*, below.
 - <img class="gp-icon" src="images/solar_linear/share-svgrepo-com.svg" alt="share"> and <img class="gp-icon" src="images/solar_linear/question-circle-svgrepo-com.svg" alt="params"> form a pair: **share** copies to the clipboard a URL that reproduces the panel's exact current configuration, ready to paste into another device or send to someone else; **params** opens a plain-English summary of those same current settings — sort, filters, stage, and more — the same panel `?explain` opens on any page load (see *URL query parameters*, below).
 
-### Sort
+## Sort
 
 Four reorderable criteria — **Elo ranking** (an independent rating that adjusts after every match based on the result and the opponent's strength — see *Data Sources*, below), **population**, **Δ** (delta of plays-for minus born-in), **A–Z** — plus a direction toggle (↓↑) to reverse ascending/descending. Only the top two criteria are actually used; click a criterion to move it to the top of the list.
 
-### View
-
-Switches the country list between **teams** (one pill per country, the default) and **matches** (one row per fixture, opponents paired side by side) — see *Team / match view*, below.
-
-### Filter
+## Filter
 
 The matrix crosses two **columns** (exporter / non-exporter) with four **rows** in two groups:
 
@@ -55,11 +51,13 @@ The matrix crosses two **columns** (exporter / non-exporter) with four **rows** 
 
 Uncheck any cell to hide that category. Click a row or column header to toggle the whole group at once.
 
-### Infobar
+## Infobar
 
 Shows how many countries are currently visible out of the total, and the data source (and last-updated date) for whichever criterion is primary in the sort column.
 
-### Team / match view
+## View
+
+Switches the country list between **teams** (one pill per country, the default) and **matches** (one row per fixture, opponents paired side by side).
 
 The view switch only does something once the tournament stage carousel — in the Country List tab below the map, not this panel; see *The Bottom Panel*, below — has moved past **Group stage**: there's no single fixture to pair a team with before the knockout rounds start, so it stays disabled until then.
 
@@ -68,17 +66,17 @@ In match view, each row shows both teams either side of the kickoff date/score:
 - Not yet played: the kickoff date, and a wavy top/bottom border on both pills — a "some assembly required" look for a fixture that could still go either way.
 - Played: the score (plus penalty shootout result, if it went that far) in place of the date, and the losing team's flag greyed out.
 
-### FIFA confederation filter
+## FIFA confederation filter
 
 The <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederation"> button next to the **FIFA** row opens a dropdown to filter the list to a single confederation. Non-FIFA countries are unaffected — they remain visible or hidden according to the rest of the filter matrix.
 
 Selecting a confederation also highlights its external boundary on the map and zooms to fit it in view. Select **All FIFA Confederations** to clear the filter.
 
-### URL query parameters
+## URL query parameters
 
 The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* in the [Countries page guide](?guide=countries) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
 
-### About the country reference
+## About the country reference
 
 The map and the list use [eloratings.net](https://www.eloratings.net/) as the source of countries —
 not the FIFA member list. This means the list includes non-FIFA territories such as Greenland,
@@ -244,15 +242,15 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 </div>
 
 <!-- i18n:map -->
-## The Map
+# The Map
 
-### Choropleth & Flags
+## Choropleth & Flags
 
 Each country is shaded by the active colour theme's metric (see *The Legend*, below) —
 the darker the shade, the higher the value. Countries with no data for that metric appear in a neutral pale tone.
 Countries currently included in the filter display a circular flag marker.
 
-### Zoom & Pan
+## Zoom & Pan
 
 Scroll (or pinch) to zoom · drag to pan. Three round buttons float over the map's bottom-left corner:
 
@@ -260,7 +258,7 @@ Scroll (or pinch) to zoom · drag to pan. Three round buttons float over the map
 - <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> — when a country is selected, zooms and pans to fit all highlighted countries at once.
 - A small circular colour swatch cycles the map's colour theme — see *The Legend*, below.
 
-### The Legend
+## The Legend
 
 The map has three colour themes, cycled via the swatch button described in *Zoom & Pan* above — each shades countries by a different metric:
 
@@ -273,7 +271,7 @@ The map has three colour themes, cycled via the swatch button described in *Zoom
 For **Diverging**, the colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, and a standalone dot *at each end* for the country furthest off scale on that side (biggest net importer, biggest net exporter). For **Forest** and **Earthy**, the bar instead runs dark-to-pale from left to right, with a single standalone dot for the one country furthest off scale.
 Whichever theme is selected persists across visits.
 
-### Tooltips
+## Tooltips
 
 Hover any country to see details. Tooltips are not shown on mobile.
 
@@ -283,11 +281,11 @@ Hover any country to see details. Tooltips are not shown on mobile.
 <!-- /i18n:map -->
 
 <!-- i18n:bottom_panel -->
-## The Bottom Panel
+# The Bottom Panel
 
 The scrollable area below the map has three tabs.
 
-### <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> The Country List
+## <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> The Country List
 
 The default tab lists every country as a pill badge.
 The Control Panel controls which badges appear and in what order;
@@ -317,7 +315,7 @@ The <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="r
 
 Click the active badge a second time, click anywhere else on the map, or press **Esc** to deselect.
 
-### The Player Table
+## The Player Table
 
 When a country is selected, the player table shows three sections:
 
@@ -329,7 +327,7 @@ When a country is selected, the player table shows three sections:
 
 Player names link to their Wikipedia page in the current interface language when available.
 
-### <img class="gp-icon" src="images/wc2026.svg" alt=""> Chains
+## <img class="gp-icon" src="images/wc2026.svg" alt=""> Chains
 
 The chain tab shows sequences of countries linked by born-in / plays-for connections:
 a player born in A plays for B, a player born in B plays for C — and so on,
@@ -337,7 +335,7 @@ forming a chain of nationalities across the tournament.
 <!-- /i18n:bottom_panel -->
 
 <!-- i18n:data_sources -->
-## Data Sources
+# Data Sources
 
 | Source | Used for |
 |---|---|
