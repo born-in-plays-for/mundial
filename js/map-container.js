@@ -78,8 +78,8 @@ let _divergingParams = {
   // and v=-1 were visually indistinguishable from true 0. floorLeft/floorRight is the minimum
   // fraction of the way to the full-strength color that ANY nonzero v on that side starts at,
   // however small — only the exact value 0 itself renders as pure `neutral`.
-  floorLeft:    0.12,
-  floorRight:   0.12,
+  floorLeft:    0.06,
+  floorRight:   0.06,
 };
 export const getDivergingParams = () => ({ ..._divergingParams });
 export const setDivergingParams = patch => {
