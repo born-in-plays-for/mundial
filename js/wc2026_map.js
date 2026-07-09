@@ -2071,7 +2071,7 @@ _themeToggleBtn?.addEventListener('click', () => {
   setTheme(next);
 });
 onThemeChange(() => {
-  g.selectAll('.country').attr('fill', function(d) { return choroFill(+d.id, app.byId); });
+  g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });
   g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
   _buildLegendGradient();
   _updateLegendTicks();

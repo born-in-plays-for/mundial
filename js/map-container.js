@@ -15,6 +15,8 @@
 //   .zoom       — D3 zoom behaviour (already called on svg)
 //   .onZoom     — optional callback(e) for extra page-level zoom work
 
+import { QUALIFIED_NAMES } from './qualified.js';
+
 // ── Colour themes ───────────────────────────────────────────────────────────
 // Each theme is its own lens on the data, not just a different palette on the
 // same number: `metric` picks which figure a country is colored by, `ratioMax`
@@ -107,6 +109,11 @@ export const THEMES = {
     metric: rec => rec.importCount ?? 0,
     ratioMax: 21, // 2nd after Curaçao (26) — DR Congo
     outlierIds: new Set([531]),
+    // Only qualified countries have a squad to import players into — a
+    // non-qualified country's importCount is always a trivial 0 (nothing to do
+    // with actually having zero imports), so it must render as noData like any
+    // other country with nothing to say, not share the ramp's own "0" color.
+    qualifiedOnly: true,
     legendKey: 'imports', // T.legendMetric[legendKey] — #legend-born's description
 
     outlier: '#000',
@@ -133,6 +140,10 @@ export const THEMES = {
     outlierIdsPos: new Set([250]), // France — biggest net exporter
     outlierIdsNeg: new Set([531]), // Curaçao — biggest net importer
     legendKey: 'balance',
+    // Unlike earthy, no qualifiedOnly gate: a non-qualified country's
+    // importCount of 0 is genuinely true (no squad to import into), not a
+    // meaningless placeholder — so its net balance correctly reduces to its
+    // own export count, same as forest.
     noData: '#e8e4e0',
     // Neutral, not tinted toward either arm — shown only briefly before world
     // data loads, so it has no "diverging" meaning of its own to represent.
@@ -229,6 +240,7 @@ export const choroFill = (id, byId) => {
   } else if (theme.outlierIds.has(id)) {
     return theme.outlier;
   }
+  if (theme.qualifiedOnly && !QUALIFIED_NAMES[id]) return theme.noData;
   const r = byId[id];
   return r ? color(theme.metric(r), theme) : theme.noData;
 };
