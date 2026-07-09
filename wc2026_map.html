@@ -76,8 +76,12 @@
       </div>
       <!-- Diverging themes only (see map-container.js's THEMES.*.diverging) — the positive-
            side outlier (negative's is the block above, reused; see _updateLegendOutlier in
-           wc2026_map.js). Hidden for sequential themes, which have just the one outlier. -->
-      <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2" hidden>
+           wc2026_map.js). Hidden for sequential themes, which have just the one outlier.
+           d-none+d-flex pair (not a plain `hidden` attribute) — Bootstrap's .d-flex carries
+           !important, which always beats the UA stylesheet's non-important [hidden] rule, so a
+           bare `hidden` attribute here would silently never actually hide it. Same pattern
+           auth-bar.js already uses for its sign-in/signed-out toggle. -->
+      <div id="legend-outlier-pos-wrap" class="d-none d-flex flex-column ps-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
           <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
         </div>

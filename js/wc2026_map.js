@@ -1995,7 +1995,7 @@ const _updateLegendOutlier = () => {
     el.textContent = negRec ? theme.metric(negRec) : '';
     if (_legendOutlierDotEl) _legendOutlierDotEl.style.background = divergingOutlierColor('neg');
     if (_legendOutlierPosWrapEl) {
-      _legendOutlierPosWrapEl.hidden = false;
+      _legendOutlierPosWrapEl.classList.remove('d-none');
       document.getElementById('legend-outlier-count-pos').textContent = posRec ? theme.metric(posRec) : '';
       if (_legendOutlierDotPosEl) _legendOutlierDotPosEl.style.background = divergingOutlierColor('pos');
     }
@@ -2004,7 +2004,7 @@ const _updateLegendOutlier = () => {
     const rec = app.byId[outlierId];
     el.textContent = rec ? theme.metric(rec) : '';
     if (_legendOutlierDotEl) _legendOutlierDotEl.style.background = theme.outlier;
-    if (_legendOutlierPosWrapEl) _legendOutlierPosWrapEl.hidden = true;
+    if (_legendOutlierPosWrapEl) _legendOutlierPosWrapEl.classList.add('d-none');
   }
 };
 
