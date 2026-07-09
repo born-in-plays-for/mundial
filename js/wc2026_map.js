@@ -1949,6 +1949,17 @@ Promise.all([
 // map-container.js's THEMES for why that varies per theme (different metric,
 // different country tops it, different ceiling — and for violet, two ceilings
 // either side of a neutral 0).
+// Diverging bar position (0-1) for a value v — proportional to the *combined* -ratioMaxNeg..
+// ratioMaxPos domain, not "each side gets 50% of the width regardless of its own span". The
+// two ceilings are wildly different (e.g. 21 vs 42): giving each half equal pixel width made
+// 0 sit at the visual midpoint while the two sides silently ran at different units-per-pixel,
+// which read as "blue starting before zero" even though the underlying color math was correct
+// at the exact same v — the eye has no way to know the two halves don't share a scale. A single
+// continuous position formula fixes that: 0 now sits at its true proportional spot (e.g. ~33%
+// when ratioMaxNeg=21/ratioMaxPos=42), and ticks (below) use the same formula so they still
+// line up with the color transitions they're labeling.
+const _divergingPos = (v, theme) => (v + theme.ratioMaxNeg) / (theme.ratioMaxNeg + theme.ratioMaxPos);
+
 const _legendBar = document.getElementById('legend-bar');
 const _buildLegendGradient = () => {
   const theme = currentTheme();
@@ -1956,9 +1967,17 @@ const _buildLegendGradient = () => {
     // Negative extreme (left) -> neutral 0 (middle) -> positive extreme (right) —
     // a number-line reading, not the sequential themes' "high/dark on the left"
     // convention (which has no single "high side" once values can go negative).
+    // Each stop carries its own explicit position (v's real proportional spot in the combined
+    // domain), not left as an unpositioned/evenly-distributed stop.
     ? [
-        ...Array.from({length: 30}, (_, i) => color(-theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg, theme)),
-        ...Array.from({length: 30}, (_, i) => color((i / 29) * theme.ratioMaxPos, theme)),
+        ...Array.from({length: 30}, (_, i) => {
+            const v = -theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg;
+            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
+          }),
+        ...Array.from({length: 30}, (_, i) => {
+            const v = (i / 29) * theme.ratioMaxPos;
+            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
+          }),
       ]
     : Array.from({length: 60}, (_, i) => color(RATIO_MIN + (i / 59) * (theme.ratioMax - RATIO_MIN), theme));
   _legendBar.style.background = `linear-gradient(to ${theme.diverging ? 'right' : 'left'}, ${stops.join(',')})`;
@@ -1966,6 +1985,11 @@ const _buildLegendGradient = () => {
 };
 _buildLegendGradient();
 
+// Ticks are absolutely positioned (percent, matching #legend-bar's own width — see
+// css/map-container.css) rather than flexbox-evenly-spaced, specifically so a diverging theme's
+// ticks land exactly on the color transitions _buildLegendGradient() now draws at those same
+// proportional positions — flex space-between assumed all 5 ticks were equally far apart, which
+// was only ever true for the sequential themes' single continuous 0..ratioMax scale.
 const _legendTicksEl = document.getElementById('legend-ticks');
 const _updateLegendTicks = () => {
   if (!_legendTicksEl) return;
@@ -1973,7 +1997,11 @@ const _updateLegendTicks = () => {
   const ticks = theme.diverging
     ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
     : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
-  render(html`${ticks.map(t => html`<span>${t}</span>`)}`, _legendTicksEl);
+  // Sequential bar direction is 'to left' (high/dark value on the left, 0 on the right — see
+  // _buildLegendGradient) — the reverse of diverging's left-to-right number line, so position
+  // is inverted (1 - t/ratioMax) to match.
+  const pct = t => theme.diverging ? _divergingPos(t, theme) * 100 : (1 - t / theme.ratioMax) * 100;
+  render(html`${ticks.map(t => html`<span style="position:absolute; left:${pct(t)}%; transform:translateX(-50%)">${t}</span>`)}`, _legendTicksEl);
 };
 _updateLegendTicks();
 

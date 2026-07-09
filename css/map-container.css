@@ -73,7 +73,11 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 }
 #legend-bar { height: 10px; flex: 1; max-width: 280px; }
 #legend-ticks, #legend-outlier-count, #legend-outlier-count-pos { font-family: var(--bs-font-monospace); }
-#legend-ticks { width: 280px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
+/* position:relative + explicit height — js/wc2026_map.js's _updateLegendTicks() absolutely
+   positions each <span> by percent (matching #legend-bar's own gradient stop positions), so
+   this container needs to establish both the positioning context and its own height (nothing
+   in normal flow left to size it once children are taken out of flow). */
+#legend-ticks { position: relative; width: 280px; height: 12px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
 @media (max-width: 767.98px) {
   #legend-bar { max-width: 90px; }
   #legend-ticks { width: 90px; font-size: 8px; }
