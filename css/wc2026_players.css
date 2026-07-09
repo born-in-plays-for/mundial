@@ -11,6 +11,10 @@
    page's own dim-mode player list (css/player.css's .pt-player-row/.pt-country-header) groups
    players under a country header instead of one flat sortable row per player, a different
    enough shape that it isn't reused here. */
+/* table-layout:fixed makes column widths content-independent (see .pt-born/.pt-caps below) —
+   without it, a long unbroken name (e.g. "Bosnie-Herzégovine") forces the column, and thus the
+   whole table/page, wider than the viewport regardless of overflow/text-overflow settings. */
+.pt-table { table-layout: fixed; }
 .pt-table thead th.pt-th {
   color: var(--text-muted); cursor: pointer; user-select: none; white-space: nowrap;
   /* Sticks right below the fixed #players-header — --players-header-h is that header's own
@@ -29,6 +33,12 @@
 /* "born in"/"plays for" columns — same muted/11px look as .pt-caps (css/player.css) had on
    its own, restated here since .pt-caps' own rule doesn't touch layout, just color/size. */
 .pt-born { color: var(--text-muted); font-size: 11px; }
+
+/* Fixed share of the table's width (the "name" column absorbs whatever's left — table-layout:
+   fixed distributes unclaimed width across columns with no explicit width of their own). Long
+   names truncate with an ellipsis instead of forcing the table wider than the viewport; the
+   full name is still available via the <td title> tooltip (wc2026_players.html). */
+.pt-born, .pt-caps { width: 30%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Players sidebar (control 2 — js/players_sidebar.js)
  *

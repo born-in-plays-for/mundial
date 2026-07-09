@@ -172,6 +172,17 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     const conf = item.dataset.conf;
     setConfFilter(conf ? (confIdsOverride[conf] ?? null) : null, conf || null);
   });
+  // The label itself carries no data-bs-toggle of its own (only .csb-conf-btn does) — forward
+  // its click to the real toggle button so the whole "current confederation" text is clickable,
+  // not just the small icon next to it. Nested btn.click() dispatches and fully resolves its own
+  // click event first (opens the dropdown, and Bootstrap re-arms its document-level "click
+  // outside" listener as part of that show); control then returns here and the *original* click
+  // event keeps bubbling past the label towards document — where that just-armed listener sees a
+  // target outside .csb-conf-dropdown and immediately closes what was just opened. Confirmed via
+  // a driven browser: without stopPropagation the menu opens and closes within the one click, a
+  // visible no-op. stopPropagation keeps the original event from ever reaching document.
+  const _confToggleBtn = _confDropdown?.querySelector('.csb-conf-btn');
+  _confLabelEl?.addEventListener('click', e => { e.stopPropagation(); _confToggleBtn?.click(); });
 
   // Which country the confederation dropdown checks — CONF_IDS covers arbitrary countries, not
   // just the 48 qualified teams, so a birth country resolves the exact same way a plays-for
@@ -386,7 +397,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     // Mirrors js/elo_ranking.js's own initEloRanking renderFn, which sets #elo-meta-count the
     // same way (authoritative count from the actual filtered/sorted result, not a re-derived
     // DOM scan — see feedback_check_for_duplicate_state.md).
-    if (_metaCountEl) _metaCountEl.textContent = `${sorted.length}/${list.length} ${T.players(list.length)}`;
+    if (_metaCountEl) _metaCountEl.textContent = `${sorted.length}/${list.length} ${T.playersAndCoaches(list.length)}`;
     return sorted;
   };
 

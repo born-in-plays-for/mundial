@@ -92,8 +92,9 @@
 /* Browser default focus ring (bright blue) was harmless back when these buttons had their
    own border to blend into — now that borders are gone (.csb-toggle, .csb-icon-btn,
    .csb-conf-btn), it stands out on its own. Replace with something in the sidebar's own
-   muted palette, kept inset so it doesn't add layout width. */
-#control-sidebar button:focus-visible {
+   muted palette, kept inset so it doesn't add layout width. .csb-panel-scoped, same reason
+   as .csb-icon-btn above — #players-sidebar's Share button needs this too. */
+.csb-panel button:focus-visible {
   outline: 1px solid var(--border-strong);
   outline-offset: -1px;
 }
@@ -344,15 +345,18 @@
    18×18, own SVG (not Bootstrap's stock .btn-close, whose hardcoded black
    glyph didn't match this icon set's #1C274C navy stroke), opacity fades in
    on hover. Shared by .csb-collapse, .csb-share, .csb-params-badge below —
-   each adds only what makes it different. */
-#control-sidebar .csb-icon-btn {
+   each adds only what makes it different. .csb-panel-scoped (not
+   #control-sidebar-only) since #players-sidebar's own Share button
+   (js/players_sidebar.js) reuses this same .csb-icon-btn/.csb-share markup —
+   without it, that button falls back to the browser's default <button> chrome. */
+.csb-panel .csb-icon-btn {
   width: 18px; height: 18px; padding: 0;
   border: none; background: none;
   display: flex; align-items: center; justify-content: center;
   opacity: 0.75; cursor: pointer;
 }
-#control-sidebar .csb-icon-btn:hover { opacity: 1; }
-#control-sidebar .csb-icon-btn img { width: 100%; height: 100%; }
+.csb-panel .csb-icon-btn:hover { opacity: 1; }
+.csb-panel .csb-icon-btn img { width: 100%; height: 100%; }
 
 /* .csb-collapse swaps the shared 18×18 square for an auto-width "ESC" kbd hint —
    overrides the fixed square from the shared recipe above. */
@@ -419,6 +423,6 @@
 /* Truncates instead of pushing whatever sits after it in .csb-toolbar out of shape on a long
    confederation name — min-width:0 overrides the flex-item default (min-width:auto, which
    blocks shrinking below content size and would otherwise make text-overflow a no-op here). */
-.csb-conf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.csb-conf-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; cursor: pointer; }
 
  

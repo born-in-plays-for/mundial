@@ -26,7 +26,7 @@
   </div>
 </header>
 <div id="main-content" class="container pb-2 taxonomy">
-  <table class="table table-sm table-striped table-hover table-responsive pt-table" style="font-size: 12px;">
+  <table class="table table-sm table-striped table-hover pt-table" style="font-size: 12px;">
     <thead><tr id="player-list-head"></tr></thead>
     <tbody id="player-list"></tbody>
   </table>
@@ -139,15 +139,18 @@ const playsForFlag = p => {
 const _sortArrow = () => sidebar.sortDir === 'asc' ? ' ▾' : ' ▴';
 const renderHead = () => {
   const mode = sidebar.sortMode;
-  const th = (key, label) => html`<th class="pt-th${mode === key ? ' pt-th-active' : ''}" @click=${() => sidebar.setSort(key)}>${label}${mode === key ? _sortArrow() : ''}</th>`;
+  // extraClass mirrors the tbody cell's own width class (pt-born/pt-caps, css/wc2026_players.css)
+  // so table-layout:fixed's column-width algorithm — which only looks at the first row — sizes
+  // this header cell the same as the data cells below it.
+  const th = (key, label, extraClass = '') => html`<th class="pt-th${extraClass ? ' ' + extraClass : ''}${mode === key ? ' pt-th-active' : ''}" @click=${() => sidebar.setSort(key)}>${label}${mode === key ? _sortArrow() : ''}</th>`;
   // Native-only view: birth country and plays-for country are the same value for every visible
   // row, so the two columns are already merged into one — sorting it means "by that (single)
   // country's standing," represented by whichever of bornIn/playsFor is already the active mode
   // (defaulting to playsFor coming from 'player', same as the sort-list's own default).
   const mergedKey = mode === 'bornIn' ? 'bornIn' : 'playsFor';
   const cols = sidebar.onlyNative
-    ? [th('player', T.psbLabels.byPlayer), th(mergedKey, `${T.chainLegend.bornIn} / ${T.chainLegend.playsFor}`)]
-    : [th('player', T.psbLabels.byPlayer), th('bornIn', T.chainLegend.bornIn), th('playsFor', T.chainLegend.playsFor)];
+    ? [th('player', T.psbLabels.byPlayer), th(mergedKey, `${T.chainLegend.bornIn} / ${T.chainLegend.playsFor}`, 'pt-caps')]
+    : [th('player', T.psbLabels.byPlayer), th('bornIn', T.chainLegend.bornIn, 'pt-born'), th('playsFor', T.chainLegend.playsFor, 'pt-caps')];
   render(html`${cols}`, document.getElementById('player-list-head'));
 };
 
@@ -162,8 +165,8 @@ const renderPlayers = () => {
     ${sorted.map(p => html`
       <tr>
         <td>${wikiLink(p)}</td>
-        ${merged ? nothing : html`<td class="pt-born text-nowrap">${birthFlag(p)}${p.birthCountry}</td>`}
-        <td class="pt-caps text-nowrap">${playsForFlag(p)}${p.nation}</td>
+        ${merged ? nothing : html`<td class="pt-born" title=${p.birthCountry}>${birthFlag(p)}${p.birthCountry}</td>`}
+        <td class="pt-caps" title=${p.nation}>${playsForFlag(p)}${p.nation}</td>
       </tr>`)}
   `, document.getElementById('player-list'));
 };

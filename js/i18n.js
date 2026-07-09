@@ -202,6 +202,7 @@ export const T = {
     caps:          'sél.',
     coach:         'sélectionneur',
     players:       n => `joueur${n > 1 ? 's' : ''}`,
+    playersAndCoaches: n => `joueur${n > 1 ? 's' : ''} et sélectionneur${n > 1 ? 's' : ''}`,
     exported:      (n, name) => `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${name ? _frPrep(name) + ' ' + name : 'ici'}`,
 
     ptNative:      (n, name) => name ? `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${_frPrep(name)} ${name} et sélectionné${n > 1 ? 's' : ''} par ${_frDefArt(name)}${name}` : `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} et sélectionné${n > 1 ? 's' : ''} ici`,
@@ -329,6 +330,7 @@ export const T = {
     caps:          'pres.',
     coach:         'allenatore',
     players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
+    playersAndCoaches: n => `giocator${n === 1 ? 'e' : 'i'} e allenator${n === 1 ? 'e' : 'i'}`,
     exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'}`,
 
     ptNative:      (n, name) => name ? `giocator${n === 1 ? 'e' : 'i'} nat${n === 1 ? 'o' : 'i'} ${_itPrep(name)} ${name} e selezionat${n === 1 ? 'o' : 'i'} per ${_itDefArt(name)}${name}` : `giocator${n === 1 ? 'e' : 'i'} nat${n === 1 ? 'o' : 'i'} e selezionat${n === 1 ? 'o' : 'i'} qui`,
@@ -456,6 +458,7 @@ export const T = {
     caps:          'Sp.',
     coach:         'Trainer',
     players:       () => 'Spieler',
+    playersAndCoaches: () => 'Spieler und Trainer',
     exported:      (n, name) => name ? 'in ' + name + (n === 1 ? ' geborener Spieler' : ' geborene Spieler') : (n === 1 ? 'hier geborener Spieler' : 'hier geborene Spieler'),
 
     ptNative:      (_, name) => name ? `in ${name} geborene und für ${name} ausgewählte Spieler` : 'hier geborene und ausgewählte Spieler',
@@ -583,6 +586,7 @@ export const T = {
     caps:          'int.',
     coach:         'entrenador',
     players:       n => `jugador${n === 1 ? '' : 'es'}`,
+    playersAndCoaches: n => `jugador${n === 1 ? '' : 'es'} y entrenador${n === 1 ? '' : 'es'}`,
     exported:      (n, name) => `jugador${n === 1 ? '' : 'es'} nacido${n === 1 ? '' : 's'}${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'}`,
 
     ptNative:      (n, name) => name ? `jugador${n === 1 ? '' : 'es'} nacido${n === 1 ? '' : 's'} ${_esPrep(name)} ${name} y seleccionado${n === 1 ? '' : 's'} por ${_esDefArt(name)}${name}` : `jugador${n === 1 ? '' : 'es'} nacido${n === 1 ? '' : 's'} y seleccionado${n === 1 ? '' : 's'} aquí`,
@@ -710,6 +714,7 @@ export const T = {
     caps:          'caps',
     coach:         'coach',
     players:       n => `player${n > 1 ? 's' : ''}`,
+    playersAndCoaches: n => `player${n > 1 ? 's' : ''} and coach${n > 1 ? 'es' : ''}`,
     exported:      (n, name) => `player${n > 1 ? 's' : ''} born${name ? ' in ' + name : ' here'}`,
 
     ptNative:      (n, name) => name ? `player${n > 1 ? 's' : ''} born in ${name} and selected for ${name}` : `player${n > 1 ? 's' : ''} born and selected here`,

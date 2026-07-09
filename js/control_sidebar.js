@@ -310,6 +310,17 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const conf = item.dataset.conf;
     setConfFilter(conf ? (CONF_IDS[conf] ?? null) : null, conf || null);
   });
+  // The label itself carries no data-bs-toggle of its own (only .csb-conf-btn does) — forward
+  // its click to the real toggle button so the whole "current confederation" text is clickable,
+  // not just the small icon next to it. Mirrors players_sidebar.js's own #players-conf-label
+  // (.csb-conf-label is a shared class/style between the two sidebars — see control-sidebar.css)
+  // — see that file's own comment for why stopPropagation is required: the nested btn.click()
+  // opens the dropdown and re-arms Bootstrap's document-level "click outside" listener as part
+  // of that; without stopping it here, the *original* click event then keeps bubbling past the
+  // label to document, where that listener sees a target outside .csb-conf-dropdown and
+  // immediately closes what was just opened (open+closed within the one click, a visible no-op).
+  const _confToggleBtn = _confDropdown?.querySelector('.csb-conf-btn');
+  _confLabelEl?.addEventListener('click', e => { e.stopPropagation(); _confToggleBtn?.click(); });
   _panel.querySelector('[data-row="nqn"]' ).addEventListener('click', () => _filterToggle([_fltEN, _fltON]));
   _panel.querySelector('[data-col="exp"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQE, _fltEF, _fltEN]));
   _panel.querySelector('[data-col="nexp"]').addEventListener('click', () => _filterToggle([_fltQI,  _fltQ,  _fltOF, _fltON]));
