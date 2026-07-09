@@ -5,10 +5,10 @@ let _carouselCount = 0; // see createStageCarousel's carouselId
 // Builds the tournament-stage carousel widget (prev/next controls, indicator dots, one
 // captioned slide per CAROUSEL_STAGES entry) — shared by <elo-ranking> (js/elo_ranking.js) and
 // players_sidebar.js, so the two never end up as two independent implementations of the same
-// widget that could drift apart. Reports navigation via events on the returned element
-// ('stage-change' when the carousel actually moves, 'qualified-toggle' when a stage caption
-// itself is clicked) rather than owning any tournament state itself — callers own the current
-// stage index and the furthest-reachable-stage computation (see maxReachableStage below).
+// widget that could drift apart. Reports navigation via a 'stage-change' event on the returned
+// element (when the carousel actually moves) rather than owning any tournament state itself —
+// callers own the current stage index and the furthest-reachable-stage computation (see
+// maxReachableStage below).
 export function createStageCarousel(T) {
   // Bootstrap's carousel data-api (prev/next/indicator clicks) resolves its target purely via
   // data-bs-target="#id" (Selector.getElementFromSelector) — no fallback to closest() — so an
@@ -28,15 +28,8 @@ export function createStageCarousel(T) {
     const caption = document.createElement('div');
     caption.className = 'stage-caption';
     const title = document.createElement('span');
-    title.className = 'elo-item elo-item--qualified stage-title';
-    title.innerHTML = `<span class="elo-name">${T.stageLabels[i]}</span>`;
-    // Independent of carousel position — a caller may use this to toggle a "qualified" filter
-    // shortcut (see control_sidebar.js's own qualified-toggle listener); harmless no-op for any
-    // caller that doesn't listen for it.
-    title.addEventListener('click', e => {
-      e.stopPropagation();
-      carousel.dispatchEvent(new CustomEvent('qualified-toggle', { bubbles: true }));
-    });
+    title.className = 'stage-title fs-6';
+    title.textContent = T.stageLabels[i];
     caption.append(title);
     item.appendChild(caption);
     inner.appendChild(item);

@@ -283,10 +283,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _saveState();
   };
 
-  // The stage carousel's own title pill (now inside <elo-ranking>) dispatches this same toggle
-  // independently of carousel position — see elo_ranking.js's 'qualified-toggle' event.
   _panel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
-  eloMain.addEventListener('qualified-toggle', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
   _panel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
   _panel.querySelector('[data-row="qni"]' ).addEventListener('click', () => _filterToggle([_fltQE,  _fltQ]));
   _panel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));

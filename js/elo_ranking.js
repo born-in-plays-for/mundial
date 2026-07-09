@@ -73,8 +73,8 @@ class EloRanking extends HTMLElement {
   // next controls sit absolutely over the list's left/right edges, indicators below — see
   // css/global.css's .elo-viz). Position/persistence stays owned by control_sidebar.js — this
   // component only mounts the widget (built by createStageCarousel, shared with
-  // players_sidebar.js — see js/stage_carousel.js) and reports slides/toggles via events
-  // ('stage-change', 'qualified-toggle') rather than holding any tournament state itself.
+  // players_sidebar.js — see js/stage_carousel.js) and reports slides via a 'stage-change'
+  // event rather than holding any tournament state itself.
   #carousel = null;
   #viz = null; // the wrap div itself — see set displayMode below
 
@@ -85,10 +85,10 @@ class EloRanking extends HTMLElement {
     const wrap = document.createElement('div');
     wrap.className = 'elo-viz';
 
-    // Built by the shared factory (js/stage_carousel.js) — 'stage-change'/'qualified-toggle'
-    // dispatch on the carousel element itself and bubble up through wrap/this, so external
-    // listeners attached to this <elo-ranking> instance (e.g. control_sidebar.js's
-    // eloMain.addEventListener('stage-change', ...)) still receive them unchanged.
+    // Built by the shared factory (js/stage_carousel.js) — 'stage-change' dispatches on the
+    // carousel element itself and bubbles up through wrap/this, so external listeners attached
+    // to this <elo-ranking> instance (e.g. control_sidebar.js's
+    // eloMain.addEventListener('stage-change', ...)) still receive it unchanged.
     this.#carousel = createStageCarousel(T);
     wrap.appendChild(this.#carousel.el);
 

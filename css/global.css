@@ -54,7 +54,6 @@ body { background: var(--page-bg); color: var(--color-default); }
 .elo-stage-carousel .carousel-inner { min-height: 20px; }
 .elo-stage-carousel .carousel-item { text-align: center; }
 .elo-stage-carousel .stage-caption { padding: 2px 40px 8px; }
-.elo-stage-carousel .stage-title.elo-item--qualified { margin: 0 auto; }
 .elo-viz .carousel-control-prev,
 .elo-viz .carousel-control-next {
   position: absolute; top: 0; bottom: 0;
