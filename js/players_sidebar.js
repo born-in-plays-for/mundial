@@ -282,27 +282,41 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
       if (team && !reachesStage(team.visibleThroughIndex, _stage)) return false;
       return true;
     });
-    // 'bornIn' and 'playsFor' apply the exact same criteria (_teamOrder, sidebar-controlled) —
-    // only which country each player is looked up by differs: rawById.get(p.birthCountryId)
-    // (any country in the world, not just a qualified team — most have an Elo entry too) vs.
-    // the qualified team QUALIFIED_BY_NAME[p.nation] resolves to.
-    const _resolve = _mode === 'bornIn'
-      ? p => (p.birthCountryId != null ? rawById.get(p.birthCountryId) : null)
-      : p => rawById.get(QUALIFIED_BY_NAME[p.nation]);
-    const _label = _mode === 'bornIn' ? p => p.birthCountry : p => p.nation;
+    // 'bornIn' and 'playsFor' both apply the sidebar's own leading criterion (_teamOrder[0]) —
+    // just to the two dimensions in opposite priority: whichever mode is active goes first, the
+    // other dimension is the tie-break, and the player's own name is the final tie-break after
+    // that. rawById.get(p.birthCountryId) covers any country in the world (not just a qualified
+    // team — most still have an Elo entry too); QUALIFIED_BY_NAME[p.nation] resolves the team.
+    const _resolveBornIn   = p => (p.birthCountryId != null ? rawById.get(p.birthCountryId) : null);
+    const _resolvePlaysFor = p => rawById.get(QUALIFIED_BY_NAME[p.nation]);
+    const _primary   = _mode === 'bornIn' ? _resolveBornIn   : _resolvePlaysFor;
+    const _secondary = _mode === 'bornIn' ? _resolvePlaysFor : _resolveBornIn;
+    // A birth country can be genuinely absent from the Elo rankings entirely (e.g. the Isle of
+    // Man — not a FIFA member) — rawById.get(...) then returns undefined, not just a low rank.
+    // Treating "unknown" as a tie against *everyone* (the old `!pA || !pB ? 0 : ...`) breaks
+    // Array#sort's consistency contract: two players tied against every OTHER player aren't
+    // necessarily tied against each other, so the actual sort position ends up arbitrary
+    // (wherever the comparison happened to land during the algorithm's own pivoting) instead of
+    // predictable. Unknown-vs-known is a real, orderable fact — unknown always sorts last,
+    // regardless of _dir (flipping direction shouldn't make missing data jump to the top).
+    const _cmpMaybe = (x, y, cmp) => {
+      if (!x && !y) return 0;
+      if (!x) return 1;
+      if (!y) return -1;
+      const d = cmp(x, y);
+      return _dir === 'asc' ? -d : d;
+    };
     const sorted = [...filtered].sort((a, b) => {
       if (_mode === 'player') {
         const d = a.name.localeCompare(b.name);
         return _dir === 'asc' ? -d : d;
       }
-      const teamA = _resolve(a);
-      const teamB = _resolve(b);
-      for (let i = 0; i < Math.min(_teamOrder.length, 2); i++) {
-        let d = (!teamA || !teamB) ? 0 : teamComparators[_teamOrder[i]](teamA, teamB);
-        if (i === 0 && _dir === 'asc') d = -d;
-        if (d !== 0) return d;
-      }
-      return _label(a).localeCompare(_label(b));
+      const key = _teamOrder[0];
+      let d = _cmpMaybe(_primary(a), _primary(b), teamComparators[key]);
+      if (d !== 0) return d;
+      d = _cmpMaybe(_secondary(a), _secondary(b), teamComparators[key]);
+      if (d !== 0) return d;
+      return a.name.localeCompare(b.name);
     });
     // Mirrors js/elo_ranking.js's own initEloRanking renderFn, which sets #elo-meta-count the
     // same way (authoritative count from the actual filtered/sorted result, not a re-derived
