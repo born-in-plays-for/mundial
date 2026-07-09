@@ -72,6 +72,14 @@ let _divergingParams = {
   algoRight:    'power',
   easeLeft:     2.0,
   easeRight:    2.0,
+  // Two genuinely separate gradients meeting at a hard jump on either side of v=0, not one
+  // continuous function that merely approaches neutral as v→0. Without a floor, a power curve
+  // is ~flat near x=0 (x=1/42 eased at exponent 2 is ~0.0006 of the way to full color) — v=1
+  // and v=-1 were visually indistinguishable from true 0. floorLeft/floorRight is the minimum
+  // fraction of the way to the full-strength color that ANY nonzero v on that side starts at,
+  // however small — only the exact value 0 itself renders as pure `neutral`.
+  floorLeft:    0.12,
+  floorRight:   0.12,
 };
 export const getDivergingParams = () => ({ ..._divergingParams });
 export const setDivergingParams = patch => {
@@ -195,11 +203,17 @@ export const normalize = (v, theme = THEMES[_themeName]) => {
     // magnitude on either side. ratioMaxPos/ratioMaxNeg themselves are unchanged and still drive
     // the legend's own tick *labels* and gradient domain (wc2026_map.js) — only the color mapping
     // uses the shared value.
+    if (v === 0) return 0; // the only value that renders as pure `neutral` — see floorLeft/Right above
     const neg = v < 0;
     const max = Math.max(theme.ratioMaxPos, theme.ratioMaxNeg);
     const x = Math.min(Math.abs(v), max) / max;
-    return neg ? _ease(x, _divergingParams.algoLeft, _divergingParams.easeLeft)
-               : _ease(x, _divergingParams.algoRight, _divergingParams.easeRight);
+    const floor = neg ? _divergingParams.floorLeft : _divergingParams.floorRight;
+    const eased = neg ? _ease(x, _divergingParams.algoLeft, _divergingParams.easeLeft)
+                       : _ease(x, _divergingParams.algoRight, _divergingParams.easeRight);
+    // Two separate gradients meeting at a jump on v=0, not one continuous curve through it —
+    // any nonzero v starts at `floor` (already visibly tinted) instead of asymptotically
+    // approaching 0 the way a bare eased(x) does for small x.
+    return floor + (1 - floor) * eased;
   }
   return (Math.max(0, v) / theme.ratioMax) ** (theme.ease ?? 2);
 };

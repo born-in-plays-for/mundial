@@ -2091,9 +2091,13 @@ onThemeChange(() => {
     algoRight:    document.getElementById('dbg-algo-right'),
     easeLeft:     document.getElementById('dbg-ease-left'),
     easeRight:    document.getElementById('dbg-ease-right'),
+    floorLeft:    document.getElementById('dbg-floor-left'),
+    floorRight:   document.getElementById('dbg-floor-right'),
   };
   const _dbgEaseLeftVal  = document.getElementById('dbg-ease-left-val');
   const _dbgEaseRightVal = document.getElementById('dbg-ease-right-val');
+  const _dbgFloorLeftVal  = document.getElementById('dbg-floor-left-val');
+  const _dbgFloorRightVal = document.getElementById('dbg-floor-right-val');
   const _dbgSync = params => {
     _dbgEls.neutral.value      = params.neutral;
     _dbgEls.easyLeft.value     = params.easyLeft;
@@ -2104,8 +2108,12 @@ onThemeChange(() => {
     _dbgEls.algoRight.value    = params.algoRight;
     _dbgEls.easeLeft.value     = params.easeLeft;
     _dbgEls.easeRight.value    = params.easeRight;
+    _dbgEls.floorLeft.value    = params.floorLeft;
+    _dbgEls.floorRight.value   = params.floorRight;
     _dbgEaseLeftVal.textContent  = params.easeLeft;
     _dbgEaseRightVal.textContent = params.easeRight;
+    _dbgFloorLeftVal.textContent  = params.floorLeft;
+    _dbgFloorRightVal.textContent = params.floorRight;
   };
   _dbgSync(_dbgDefaults);
   const _dbgApply = () => {
@@ -2119,10 +2127,14 @@ onThemeChange(() => {
       algoRight:    _dbgEls.algoRight.value,
       easeLeft:     +_dbgEls.easeLeft.value,
       easeRight:    +_dbgEls.easeRight.value,
+      floorLeft:    +_dbgEls.floorLeft.value,
+      floorRight:   +_dbgEls.floorRight.value,
     };
     setDivergingParams(next);
     _dbgEaseLeftVal.textContent  = _dbgEls.easeLeft.value;
     _dbgEaseRightVal.textContent = _dbgEls.easeRight.value;
+    _dbgFloorLeftVal.textContent  = _dbgEls.floorLeft.value;
+    _dbgFloorRightVal.textContent = _dbgEls.floorRight.value;
     // eslint-disable-next-line no-console
     console.log('[diverging-debug]', next);
   };
