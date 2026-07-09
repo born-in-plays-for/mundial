@@ -98,7 +98,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
         </tr>
       </tbody></table>
     </div>
-    <div class="csb-footer"><div id="elo-meta"><span id="elo-meta-count"></span></div></div>
+    <div class="csb-footer"><div id="elo-meta" class="elo-meta"><span id="elo-meta-count"></span></div></div>
   </div></div></div></div>`, _sidebarHost);
 
   const _el = document.getElementById('players-sidebar');

@@ -195,7 +195,11 @@ class MundialAuthBar extends HTMLElement {
   _showOffline(category, techDetail) {
     console.warn('[auth-bar]', techDetail);
     const nav = this.querySelector('nav');
-    if (nav) nav.style.background = '#f5f2ec';
+    // Deliberately matches the page's own background (--page-bg, css/global.css) rather than
+    // the navbar's normal one — offline state visually "flattens" the navbar into the page
+    // instead of standing out. Was a hardcoded literal duplicate of body's own background;
+    // reads the shared variable now so the two can't silently drift apart.
+    if (nav) nav.style.background = 'var(--page-bg)';
     const section = this._freshAuthSection();
     section.style.visibility = '';
 

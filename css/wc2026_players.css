@@ -60,11 +60,6 @@
    just the remainder for control 2's simpler, rowspan/colspan-free filter table shape. */
 #players-sidebar .csb-filter-table td:first-child { border-left: 0; }
 
-/* Every Bootstrap .btn in this sidebar (native/moved toggles, .psb-conf-scope) — Bootstrap's
-   own default padding (~0.375rem 0.75rem) is sized for full-scale UI, oversized next to this
-   sidebar's 11px/compact everything-else. */
-#players-sidebar .btn { padding: 0.15rem 0.3rem; font-size: 11px; }
-
 /* Filter rows (native/moved) — standard Bootstrap btn-check toggle buttons (same pattern as
    .psb-conf-scope), so on/off state and the click target are both Bootstrap's own; this only
    needs to override .csb-table td's default right-align (meant for a column that sits next to

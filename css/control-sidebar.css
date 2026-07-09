@@ -16,9 +16,10 @@
  * .csb-sort-stack       — flex column: sort table + display table, stacked
  * .csb-table            — shared look (border-collapse) for all three tables. Base font-size!important
  *                         (11px) lives on #control-sidebar and most descendants just inherit
- *                         it — but a few (global.css's .elo-name, Bootstrap's .btn and
- *                         .dropdown-menu) set their own font-size elsewhere and need an
- *                         explicit #control-sidebar-scoped re-declaration to fall in line
+ *                         it — non-Bootstrap elements (global.css's .elo-name) still need their
+ *                         own explicit re-declaration to fall in line; Bootstrap's own .btn/
+ *                         .dropdown-menu no longer do, now that css/bootstrap-custom.scss's
+ *                         $input-btn-font-size/$dropdown-font-size already match (11px)
  * .csb-header            — cellule d'en-tête (tri / sélection)
  * .csb-sort-col         — colonne tri (gauche)
  * .csb-sort-list        — flex column des options de tri
@@ -324,9 +325,11 @@
    back when both lived in the same table (see .csb-layout: they're now two
    independent tables, stacked via flex, each free to size to its own content). */
 #control-sidebar .csb-display-toggle { white-space: nowrap; }
-/* Bootstrap's .btn sets its own font-size (its full-size default) — needs an explicit
-   re-declaration here, same as .elo-name above, to match the rest of the sort column. */
-#control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0 3px; font-size: 11px; }
+/* font-size no longer needs a re-declaration here — css/bootstrap-custom.scss's own
+   $input-btn-font-size already matches the rest of the sort column (11px) by default. margin/
+   padding stay: horizontal-only padding and no margin is a deliberate layout choice, not a
+   full-size-default patch. */
+#control-sidebar .csb-display-toggle .btn { margin: 0; padding: 0 3px; }
 /* #control-sidebar .csb-display-toggle .btn-check:checked + .btn {
   color: rgba(33, 37, 41, 0.75);
 } */
@@ -411,8 +414,6 @@
    shows the plain "FIFA" label; picking a confederation is a global zoom action,
    not scoped to that one filter row. */
 .csb-conf-dropdown { display: inline-flex; z-index: 2000; }
-/* Bootstrap's .dropdown-menu sets its own font-size — same fix as .elo-name/.btn above */
-.csb-conf-dropdown .dropdown-menu { font-size: 11px; }
 .csb-conf-btn { cursor: pointer; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center; opacity: 0.75; }
 .csb-conf-btn:hover { opacity: 1; }
 

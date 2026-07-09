@@ -8,9 +8,11 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 .legend-outlier-dot { width: 10px; height: 10px; border-radius: 50%; background: #000; }
 #legend-outlier-count, #legend-outlier-count-pos { font-size: 9px; color: var(--color-dim); margin-top: 3px; }
 
-/* arc colors — set as CSS vars by wc2026_map.js at runtime */
-.color-exp { color: var(--arc-export-color); }
-.color-imp { color: var(--arc-import-color); }
+/* Same --exp-accent/--imp-accent tokens the elo-ranking pills use (css/taxonomy.css's :root
+   block) — js/wc2026_map.js reads them back via getComputedStyle for the arcs themselves, so
+   this page's map arcs, tooltip counts, and player-table headers all agree on one color pair. */
+.color-exp { color: var(--exp-accent); }
+.color-imp { color: var(--imp-accent); }
 
 /* page header — #sidebar-host is position:absolute (see wc2026_map.html), taken out of the
    grid flow so it can overlap the map when collapsed instead of pushing it down. That leaves

@@ -1,0 +1,26 @@
+{
+  "name": "mundial",
+  "version": "1.0.0",
+  "description": "Static frontend for the [Born In, Plays For](https://github.com/born-in-plays-for) project — interactive D3.js choropleth map of the 2026 FIFA World Cup showing where players were born vs. which country they represent.",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "sass css/bootstrap-custom.scss css/bootstrap-custom.min.css --style=compressed --load-path=node_modules --no-source-map --quiet-deps --silence-deprecation=import,global-builtin,color-functions,if-function"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/born-in-plays-for/mundial.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/born-in-plays-for/mundial/issues"
+  },
+  "homepage": "https://github.com/born-in-plays-for/mundial#readme",
+  "devDependencies": {
+    "bootstrap": "^5.3.3",
+    "sass": "^1.101.0"
+  }
+}

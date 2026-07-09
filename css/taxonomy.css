@@ -1,15 +1,21 @@
 /* Taxonomy — canonical pill styling for country badges */
 
 
+/* --exp-accent/--imp-accent live at :root, not .taxonomy — js/wc2026_map.js's arc drawing
+   (outside any .taxonomy-classed ancestor: the tooltip and player table aren't under #tab-elo)
+   reads them too, via getComputedStyle(document.documentElement). One shared export/import
+   color pair for the whole page instead of the map maintaining its own separate hardcoded
+   copy — the deeper blue/red here was originally the map arcs' own choice, picked for contrast
+   against the choropleth terrain; kept as the canonical value since it reads fine at pill scale
+   too, not just enlarged on the map. */
+:root {
+  --exp-accent: #1d4ed8;
+  --imp-accent: #dc2626;
+}
 .taxonomy {
   --darkest-text:  #333;
   --medium-text:   #555;
   --light-text:    #999;
-  /* Fixed arrow accent colors — deliberately not count-scaled (unlike the pill's gradient
-     background): scaling both channels by the same count was redundant. These are the
-     original flat colors the arrows always had, kept fixed now instead of scaled. */
-  --exp-accent: #3b82f6;
-  --imp-accent: #ef4444;
 }
 
 /* Default: darkest text */

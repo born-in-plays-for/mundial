@@ -1,0 +1,69 @@
+// css/bootstrap-custom.scss
+//
+// Custom Bootstrap 5.3 build, compiled locally (npm run build:css) instead of using the CDN's
+// stock build — see CLAUDE.md's "planned: replace with custom Bootstrap build" note. Two
+// problems with the stock build for this site: components are sized for a full-scale UI, but
+// this site runs everything at 11-13px, so every single .btn/.dropdown-menu/.badge needed its
+// own manual font-size/padding override wherever it appeared (see e.g. control-sidebar.css's
+// own comment on this); and the default $primary is a vivid blue that doesn't belong next to
+// the site's muted earth-tone palette. Values below are pulled directly from the same custom
+// properties css/global.css already defines (--color-default, --text-muted, etc.) — this isn't
+// a new palette, just Bootstrap now speaking the site's existing one instead of its own.
+//
+// Rebuild after editing: npm run build:css (outputs css/bootstrap-custom.min.css, committed
+// like any other static asset — no live build pipeline, same one-off-script model as the
+// OG-image regen described in CLAUDE.md).
+
+// ── Palette — mirrors css/global.css's :root custom properties ─────────────────────────────
+$color-default:  #171715; // --color-default
+$text-muted-c:    #999;   // --text-muted
+$bg-hover:        #f0ede8; // --bg-hover
+$border-strong:   #c8c4be; // --border-strong
+$body-bg-c:       #f5f2ec; // global.css's body background
+
+// Override the scalar variables themselves, not just the $theme-colors map built from them —
+// the map alone misses components (dropdown active state, focus rings, form validation, etc.)
+// that reference $primary/$secondary/$dark/$light directly rather than going through the map.
+// $theme-colors then rebuilds itself from these as normal, no separate map override needed.
+$primary:   $color-default;
+$secondary: $text-muted-c;
+$dark:      $color-default;
+$light:     $bg-hover;
+$body-color: $color-default;
+$body-bg:      $body-bg-c;
+$border-color: $border-strong;
+$link-color:   $color-default;
+
+// Bootstrap's default focus ring is a vivid blue glow — replace with the same muted, inset
+// treatment control-sidebar.css already hand-rolls per-button (border-strong, no glow), so a
+// Bootstrap-native :focus-visible state now matches it automatically everywhere.
+$focus-ring-color: rgba($border-strong, .75);
+$focus-ring-width: 1px;
+$focus-ring-blur:  0;
+
+// ── Dimensions — the actual complaint: stock Bootstrap sizes for a full-scale UI, this site
+// runs at 11-13px everywhere. $font-size-base stays at the default (1rem) so page typography
+// (headings, body copy) is untouched — only component-level controls shrink.
+$input-btn-font-size:    .6875rem; // 11px
+$input-btn-padding-y:    .1rem;
+$input-btn-padding-x:    .4rem;
+$input-btn-font-size-sm: .625rem;  // 10px
+$input-btn-padding-y-sm: .05rem;
+$input-btn-padding-x-sm: .3rem;
+
+$border-radius:      .25rem;
+$border-radius-sm:   .2rem;
+$border-radius-lg:   .3rem;
+
+$badge-font-size: .65em;
+$badge-padding-y: .25em;
+$badge-padding-x: .5em;
+
+$dropdown-font-size:      .6875rem;
+$dropdown-padding-y:      .25rem;
+$dropdown-item-padding-y: .2rem;
+$dropdown-item-padding-x: .75rem;
+
+$form-check-input-width: .9em;
+
+@import "bootstrap/scss/bootstrap";

@@ -1,5 +1,6 @@
 /* tokens */
 :root {
+  --page-bg: #f5f2ec;
   --fixed-element-bg: #faf9f6;
   --vert-gutter: 0.75rem;
   --color-default: #171715;
@@ -16,7 +17,7 @@
 mundial-auth-bar nav [stroke]:not(.warn-icon *) { stroke: #1C274C; stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
 
 /* base */
-body { background: #f5f2ec; color: var(--color-default); }
+body { background: var(--page-bg); color: var(--color-default); }
 .sub { font-size: 12px; color: var(--text-muted); }
 .sub em { color: #555; font-style: normal; }
 .flex-col { flex: 1; min-width: 0; }

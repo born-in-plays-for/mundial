@@ -1,4 +1,5 @@
 .DS_Store
+node_modules/
 __pycache__/
 *.pdf
 pipeline/FIFA_Coca-Cola Men's World Ranking.html

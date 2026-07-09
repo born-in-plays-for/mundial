@@ -78,7 +78,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           <td class="csb-toggle-col text-muted">
             <div class="csb-display-toggle" title="${T.sortLabels.matchHint}">
               <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
-              <label class="btn elo-item" for="csb-display-team">${T.sortLabels.teamDisplay}</label>
+              <label class="btn" for="csb-display-team">${T.sortLabels.teamDisplay}</label>
               <input type="radio" class="btn-check" name="csb-display" id="csb-display-match" data-display="match">
               <label class="btn" for="csb-display-match">${T.sortLabels.match}</label>
             </div>
@@ -346,8 +346,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _displayToggleEl = _panel.querySelector('.csb-display-toggle');
   const _teamDisplayRadio = _displayToggleEl.querySelector('[data-display="team"]');
   const _matchDisplayRadio = _displayToggleEl.querySelector('[data-display="match"]');
-  const _teamDisplayLabel = _displayToggleEl.querySelector('label[for="csb-display-team"]');
-  const _matchDisplayLabel = _displayToggleEl.querySelector('label[for="csb-display-match"]');
 
   // team/match display switch — see _displayMode's own comment above for what it does.
   // Not part of _sortOrder/_updateSortCol's reordering: it's a mode switch, not a
@@ -361,8 +359,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _displayMode = mode;
     _teamDisplayRadio.checked = mode === 'team';
     _matchDisplayRadio.checked = mode === 'match';
-    _teamDisplayLabel.classList.toggle('elo-item', mode === 'team');
-    _matchDisplayLabel.classList.toggle('elo-item', mode === 'match');
     eloMain.displayMode = mode;
   };
 

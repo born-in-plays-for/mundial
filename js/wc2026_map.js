@@ -27,10 +27,14 @@ const path      = _wm.path;
 
 let _worldTopo = null; // set once world-atlas JSON loads
 
-const ARC_EXPORT_COLOR = '#1d4ed8'; // blue
-const ARC_IMPORT_COLOR = '#dc2626'; // red
-document.documentElement.style.setProperty('--arc-export-color', ARC_EXPORT_COLOR);
-document.documentElement.style.setProperty('--arc-import-color', ARC_IMPORT_COLOR);
+// Single source of truth for the export/import color pair is css/taxonomy.css's :root-level
+// --exp-accent/--imp-accent — also used by the elo-ranking pills' own ▶/◀ indicators, so the
+// map's arcs and the pills read as the same concept instead of two independently-tuned blues/
+// reds (see conversation: they used to be two hardcoded, drifting-apart pairs). Read once here
+// rather than in drawArc() itself, which runs per-arc.
+const _rootStyle = getComputedStyle(document.documentElement);
+const ARC_EXPORT_COLOR = _rootStyle.getPropertyValue('--exp-accent').trim(); // blue
+const ARC_IMPORT_COLOR = _rootStyle.getPropertyValue('--imp-accent').trim(); // red
 const ARC_OFFSET = 1.0; // lateral separation: visual offset = sw * ARC_OFFSET / k
 const ARC_MID_T  = 0.65; // arrow at 65% toward destination — separates bidirectional pairs along the arc
 
