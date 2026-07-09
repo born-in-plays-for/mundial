@@ -1,4 +1,5 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData } from './qualified.js';
@@ -2040,9 +2041,14 @@ const _legendBornFullEl  = document.getElementById('legend-born-full');
 const _legendBornBriefEl = document.getElementById('legend-born-brief');
 const _updateLegendBorn = () => {
   const { full, brief } = T.legendMetric[currentTheme().legendKey];
-  // title: fallback for when #legend-born's ellipsis truncates the (real
-  // sentence, not a fixed-width label) full text on a narrower desktop window.
-  if (_legendBornFullEl)  { _legendBornFullEl.textContent  = full;  _legendBornFullEl.title = full; }
+  // full carries an inline <em> (i18n.js) around the operator word ("minus"/"moins"/etc.) for
+  // emphasis without shouting in all-caps — rendered via unsafeHTML since it's a developer-
+  // authored translation string, never user input. title (the ellipsis-truncation fallback,
+  // native tooltips can't render HTML) strips the tag back out to plain text.
+  if (_legendBornFullEl) {
+    render(html`${unsafeHTML(full)}`, _legendBornFullEl);
+    _legendBornFullEl.title = full.replace(/<[^>]+>/g, '');
+  }
   if (_legendBornBriefEl) _legendBornBriefEl.textContent = brief;
 };
 _updateLegendBorn();

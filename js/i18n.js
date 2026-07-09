@@ -217,7 +217,7 @@ export const T = {
     legendMetric: {
       exports: { full: "Joueurs nés dans ce pays qui jouent pour une autre sélection nationale.", brief: 'Nés ici, jouent ailleurs' },
       imports: { full: "Joueurs qui jouent pour la sélection de ce pays mais sont nés dans un autre pays.", brief: 'Jouent ici, nés ailleurs' },
-      balance: { full: 'Joueurs nés dans ce pays moins les joueurs de la sélection de ce pays nés ailleurs.', brief: 'Nés ici moins joue ici et né ailleurs, net' },
+      balance: { full: 'Joueurs nés dans ce pays et jouant pour un autre pays <em>moins</em> les joueurs de la sélection de ce pays nés ailleurs.', brief: 'Nés ici moins joue ici et né ailleurs, net' },
     },
     sortLabels: { action: 'trier', view: 'afficher', elo: 'classement', exp: 'exports', imp: 'imports', pop: 'population', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'équipes', match: 'matchs', matchHint: 'Regrouper par match (à partir des 16es de finale)' },
     filterLabels: { action: 'filtrer', exporter: "A des joueurs nés ici qui jouent pour un autre pays", nonExp: "Aucun joueur né ici ne joue pour un autre pays", qualified: 'qualifié', importer: "A des joueurs nés dans un autre pays dans sa sélection", nonImp: "Toute la sélection est née dans ce pays", nonQual: 'non-qual.', all: 'tout' },
@@ -345,7 +345,7 @@ export const T = {
     legendMetric: {
       exports: { full: "Giocatori nati in questo paese che giocano per un'altra nazionale.", brief: 'Nati qui, giocano altrove' },
       imports: { full: 'Giocatori che giocano per la nazionale di questo paese ma sono nati in un altro paese.', brief: 'Giocano qui, nati altrove' },
-      balance: { full: 'Giocatori nati in questo paese meno i giocatori della nazionale di questo paese nati altrove.', brief: 'Nati qui meno gioca qui e nato altrove, netto' },
+      balance: { full: 'Giocatori nati in questo paese e che giocano per un altro paese <em>meno</em> i giocatori della nazionale di questo paese nati altrove.', brief: 'Nati qui meno gioca qui e nato altrove, netto' },
     },
     sortLabels: { action: 'ordinare', view: 'visualizzare', elo: 'classifica', exp: 'export', imp: 'import', pop: 'popolazione', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'squadre', match: 'partite', matchHint: 'Raggruppa per partita (dagli ottavi in poi)' },
     filterLabels: { action: 'filtrare', exporter: "Ha giocatori nati qui che giocano per un altro paese", nonExp: "Nessun giocatore nato qui gioca per un altro paese", qualified: 'qualific.', importer: "Ha giocatori nati in un altro paese nella sua selezione", nonImp: "L'intera selezione è nata in questo paese", nonQual: 'non-qual.', all: 'tutto' },
@@ -473,7 +473,7 @@ export const T = {
     legendMetric: {
       exports: { full: 'Spieler, die in diesem Land geboren wurden und für eine andere Nationalmannschaft spielen.', brief: 'Hier geboren, spielt anderswo' },
       imports: { full: 'Spieler, die für die Nationalmannschaft dieses Landes spielen, aber in einem anderen Land geboren wurden.', brief: 'Spielt hier, anderswo geboren' },
-      balance: { full: 'Spieler, die in diesem Land geboren wurden, minus Spieler der Nationalmannschaft dieses Landes, die anderswo geboren wurden.', brief: 'Hier geboren minus hier spielt und anderswo geboren, netto' },
+      balance: { full: 'Spieler, die in diesem Land geboren wurden und für ein anderes Land spielen, <em>minus</em> Spieler der Nationalmannschaft dieses Landes, die anderswo geboren wurden.', brief: 'Hier geboren minus hier spielt und anderswo geboren, netto' },
     },
     sortLabels: { action: 'Sortieren', view: 'Anzeigen', elo: 'Rang', exp: 'Export', imp: 'Import', pop: 'Bevölkerung', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'Teams', match: 'Spiele', matchHint: 'Nach Spielpaarung gruppieren (ab dem Achtelfinale)' },
     filterLabels: { action: 'Filtern', exporter: "Hat hier geborene Spieler, die für ein anderes Land spielen", nonExp: "Kein hier geborener Spieler spielt für ein anderes Land", qualified: 'qualif.', importer: "Hat im Kader Spieler, die anderswo geboren wurden", nonImp: "Der gesamte Kader wurde in diesem Land geboren", nonQual: 'nicht-qual.', all: 'alle' },
@@ -601,7 +601,7 @@ export const T = {
     legendMetric: {
       exports: { full: 'Jugadores nacidos en este país que juegan para otra selección nacional.', brief: 'Nacidos aquí, juegan fuera' },
       imports: { full: 'Jugadores que juegan para la selección de este país pero nacieron en otro país.', brief: 'Juegan aquí, nacidos fuera' },
-      balance: { full: 'Jugadores nacidos en este país menos los jugadores de la selección de este país nacidos fuera.', brief: 'Nacidos aquí menos juega aquí y nacido fuera, neto' },
+      balance: { full: 'Jugadores nacidos en este país y que juegan por otro país <em>menos</em> los jugadores de la selección de este país nacidos fuera.', brief: 'Nacidos aquí menos juega aquí y nacido fuera, neto' },
     },
     sortLabels: { action: 'ordenar', view: 'ver', elo: 'ranking', exp: 'exports', imp: 'imports', pop: 'población', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'equipos', match: 'partidos', matchHint: 'Agrupar por partido (desde dieciseisavos)' },
     filterLabels: { action: 'filtrar', exporter: "Tiene jugadores nacidos aquí que juegan para otro país", nonExp: "Ningún jugador nacido aquí juega para otro país", qualified: 'clasific.', importer: "Tiene en su plantilla jugadores nacidos en otro país", nonImp: "Toda la plantilla nació en este país", nonQual: 'no-clasif.', all: 'todo' },
@@ -729,7 +729,7 @@ export const T = {
     legendMetric: {
       exports: { full: "Players born in this country who play for another country's national team.", brief: 'Born here, plays elsewhere' },
       imports: { full: "Players who play for this country's national team but were born in another country.", brief: 'Plays here, born elsewhere' },
-      balance: { full: "Players born in this country minus players of this country's national team born elsewhere.", brief: 'Born here minus plays here and born elsewhere, net' },
+      balance: { full: "Players born in this country and playing for another country <em>minus</em> players of this country's national team born elsewhere.", brief: 'Born here minus plays here and born elsewhere, net' },
     },
     sortLabels: { action: 'sort', view: 'view', elo: 'ranking', exp: 'exports', imp: 'imports', pop: 'population', delta: 'Δ', alpha: 'A–Z', teamDisplay: 'teams', match: 'matches', matchHint: 'Group by fixture (Round of 32 onward)' },
     filterLabels: { action: 'filter', exporter: "Has players born here who play for another country", nonExp: "No players born here play for another country", qualified: 'qualified', importer: "Has players born elsewhere on its squad", nonImp: "Entire squad was born in this country", nonQual: 'non-qual.', all: 'all' },
