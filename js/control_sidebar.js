@@ -3,6 +3,8 @@ import { CONF_IDS } from './conf.js';
 import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './qualified.js';
 import { maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
+import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
+import { wireShareButton } from './share_button.js';
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
@@ -59,8 +61,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
             <div class="csb-sort-list d-flex flex-column h-100 position-relative">
               <button class="csb-sort-dir" title="${T.csbTips.sortDir}"></button>
               <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="elo" title="${T.csbTips.sortElo}">${T.sortLabels.elo}</div>
-              <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="exp">${T.sortLabels.exp}</div> -->
-              <!-- <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="imp">${T.sortLabels.imp}</div> -->
               <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="pop" title="${T.csbTips.sortPop}">${T.sortLabels.pop}</div>
               <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="delta" title="${T.csbTips.sortDelta}">${T.sortLabels.delta}</div>
               <div class="csb-sort-item flex-grow-1 d-flex align-items-center justify-content-center text-nowrap" data-sort="alpha" title="${T.csbTips.sortAlpha}">${T.sortLabels.alpha}</div>
@@ -308,9 +308,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (!item) return;
     e.stopPropagation();
     const conf = item.dataset.conf;
-    const ids = conf ? (CONF_IDS[conf] ?? null) : null;
-    setConfFilter(ids, conf || null);
-    document.dispatchEvent(new CustomEvent('mundial-conf-changed', { detail: { conf, ids } }));
+    setConfFilter(conf ? (CONF_IDS[conf] ?? null) : null, conf || null);
   });
   _panel.querySelector('[data-row="nqn"]' ).addEventListener('click', () => _filterToggle([_fltEN, _fltON]));
   _panel.querySelector('[data-col="exp"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQE, _fltEF, _fltEN]));
@@ -393,7 +391,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const item = e.target.closest('.csb-sort-item');
     if (item) {
       const key = item.dataset.sort;
-      _sortOrder = [key, ..._sortOrder.filter(k => k !== key)];
+      _sortOrder = promoteKeys(_sortOrder, [key]);
       _updateSortCol();
       callbacks.renderElo?.(callbacks.scrollToActiveElo);
       _saveState();
@@ -607,17 +605,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // Shared with players_sidebar.js's "sort by team" mode — see qualified.js's own comment.
   const _sortFns = teamComparators;
 
-  // exp/imp show both counts, always imports-then-exports — same fixed reading order as the
-  // ◀▶ import/export dot (taxonomy.css: red ◀ import, blue ▶ export), regardless of which of
-  // the two is the active primary sort key, so a fixture's left/right pills (and any other
-  // pair of pills on screen) always read the same way instead of flipping order between
-  // sort=imp and sort=exp. Unlike delta below, which collapses to a single number when one
-  // side is 0 (its own count is a difference, not a sort key picked specifically to look at
-  // exports/imports by), sort=exp/sort=imp is a deliberate request to see that pair, so both
-  // numbers always show even when one side is 0.
   const _ptsFor = (key, item, fmtPop) =>
-      key === 'exp' || key === 'imp' ? `${item.impCount} · ${item.expCount}`
-    : key === 'delta' ? (item.impCount && item.expCount ? `${item.impCount} · ${item.expCount}` : item.impCount || item.expCount || null)
+      key === 'delta' ? (item.impCount && item.expCount ? `${item.impCount} · ${item.expCount}` : item.impCount || item.expCount || null)
     : key === 'elo'   ? item.pts
     : key === 'pop'   ? (item.pop ? fmtPop(item.pop) : null)
     : null;
@@ -633,8 +622,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       key === 'elo'   ? Number(item.pts) || 0
     : key === 'pop'   ? (item.pop ?? 0)
     : key === 'delta' ? (item.expCount - item.impCount)
-    : key === 'imp'   ? item.impCount
-    : key === 'exp'   ? item.expCount
     : 0;
 
   // Groups filtered items into fixture couples for match-display mode: each team pairs with
@@ -743,15 +730,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }));
   };
 
-  // 'imp'/'exp' are valid sort keys with no UI entry (the .csb-sort-item rows for them are
-  // commented out in the template above) — reachable only via ?sort=imp / ?sort=exp (see
-  // _SORT_PAIR below and applyParams' bare-key handling), never by clicking/dragging. Still
-  // full members of _SORT_KEYS so they pass the same validation as the 4 UI keys everywhere
-  // else that checks membership (URL parsing, localStorage restore, the explain panel).
-  const _SORT_KEYS  = new Set(['elo', 'alpha', 'pop', 'delta', 'imp', 'exp']);
-  // Documents the ?sort=imp / ?sort=exp pairing used by applyParams below: each is the other's
-  // automatic 2nd criterion when requested bare (no second key given).
-  const _SORT_PAIR  = { imp: 'exp', exp: 'imp' };
+  const _SORT_KEYS  = new Set(['elo', 'alpha', 'pop', 'delta']);
   const _ALIASES    = {
     qual:  ['qie','qi','qe','q'],
     nq:    ['ef','en','of','on'],
@@ -797,32 +776,84 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     return Number.isNaN(n) ? 0 : n;
   };
 
+  // ── Param table — single source for both directions of the URL <-> state bridge (see
+  // js/param_table.js's own header comment). Each entry's get() is also what _buildStateLines
+  // below reads its raw values from, so "what Share puts in the URL" and "what the explain
+  // panel/console describe" can't drift apart from each other or from applyParams' own reading.
+  const _paramTable = createParamTable([
+    // Country rows only have one identity to sort by — the degenerate, no-axes case of
+    // sortEntry (see its own header comment). players_sidebar.js's psort is the N-axes case.
+    sortEntry('sort', {
+      validKeys: _SORT_KEYS,
+      getOrder: () => _sortOrder,
+      setOrder: v => { _sortOrder = v; },
+      onApply: _updateSortCol,
+    }),
+    dirEntry('dir', { getDir: () => _sortDir, setDir: v => { _sortDir = v; _updateSortCol(); } }),
+    // Before 'display' — _setDisplayMode('match') self-guards against _stage === 0, and _stage
+    // is still its initial 0 until _setStage runs (see _restoreState's own note above).
+    // createParamTable's applyFrom walks entries in array order, so this ordering is load-bearing.
+    stageEntry('stage', { getStageIndex: () => _stage, setStage: _setStage }),
+    {
+      key: 'display',
+      get: () => _displayMode,
+      apply: raw => {
+        if (raw !== 'team' && raw !== 'match') return false;
+        _setDisplayMode(raw);
+        return true;
+      },
+    },
+    {
+      key: 'show',
+      get: () => _describeCells(Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k)),
+      apply: raw => {
+        const cells = new Set();
+        raw.split(',').forEach(t => {
+          const k = t.trim();
+          (_ALIASES[k] ?? [k]).forEach(c => cells.add(c));
+        });
+        const valid = [...cells].filter(c => _CELL_MAP[c]);
+        if (!valid.length) return false;
+        Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el) el.checked = cells.has(k); });
+        return true;
+      },
+    },
+    {
+      // Routed through setConfFilter (declared below) rather than inlined here — same setter
+      // the confederation dropdown itself calls, so there's exactly one place that mutates
+      // _confIds/_confKey, not two copies drifting apart.
+      key: 'fifaconf',
+      get: () => _confKey ?? '',
+      apply: raw => { setConfFilter(CONF_IDS[raw] ?? null, raw || null); return true; },
+    },
+  ]);
+
   // The explain panel describes the live control-sidebar state only — it doesn't care
   // whether a given setting arrived via a URL param, a restored localStorage snapshot, or
-  // a plain click. One line per key, always sourced from the same live state variables the
-  // rest of this module reads/writes (_sortOrder, _sortDir, _stage, _CELL_MAP, _confKey,
-  // _displayMode) — so it can never drift from what's actually on screen. The Share button
-  // reuses this same list to build its URL, so the two can never drift from each other either.
+  // a plain click. One line per key, always sourced from the same live state (via _paramTable's
+  // own get()) the rest of this module reads/writes — so it can never drift from what's actually
+  // on screen. The Share button reuses the same table to build its URL, so the two can never
+  // drift from each other either.
   const _buildStateLines = () => {
     const P = T.csbParams;
     return [
       _stage > 0
-        ? { param: `stage=${CAROUSEL_STAGES[_stage]}`, desc: P.stageDesc(T.stageLabels[_stage]) }
-        : { param: `stage=${CAROUSEL_STAGES[0]}`, desc: P.stageDefault(T.stageLabels[0]) },
-      { param: `sort=${_sortOrder.slice(0, 2).join(',')}`, desc: P.sortDesc(_sortOrder.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) },
-      { param: `dir=${_sortDir}`, desc: _sortDir === 'asc' ? P.dirAsc : P.dirDesc },
+        ? { param: `stage=${_paramTable.get('stage')}`, desc: P.stageDesc(T.stageLabels[_stage]) }
+        : { param: `stage=${_paramTable.get('stage')}`, desc: P.stageDefault(T.stageLabels[0]) },
+      { param: `sort=${_paramTable.get('sort')}`, desc: P.sortDesc(_sortOrder.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) },
+      { param: `dir=${_paramTable.get('dir')}`, desc: _sortDir === 'asc' ? P.dirAsc : P.dirDesc },
       (() => {
         const cells = Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k);
         return cells.length
-          ? { param: `show=${_describeCells(cells)}`, desc: P.cellsDesc(cells.join(' · ')) }
+          ? { param: `show=${_paramTable.get('show')}`, desc: P.cellsDesc(cells.join(' · ')) }
           : { param: 'show=', desc: P.cellsNone };
       })(),
       _confKey
-        ? { param: `fifaconf=${_confKey}`, desc: P.confDesc(P.confNames[_confKey] ?? _confKey) }
+        ? { param: `fifaconf=${_paramTable.get('fifaconf')}`, desc: P.confDesc(P.confNames[_confKey] ?? _confKey) }
         : { param: 'fifaconf=', desc: P.confDefault },
       _displayMode === 'match'
-        ? { param: 'display=match', desc: P.displayDesc(P.displayNames.match) }
-        : { param: 'display=team', desc: P.displayDefault(P.displayNames.team) },
+        ? { param: `display=${_paramTable.get('display')}`, desc: P.displayDesc(P.displayNames.match) }
+        : { param: `display=${_paramTable.get('display')}`, desc: P.displayDefault(P.displayNames.team) },
     ];
   };
 
@@ -870,8 +901,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   // ── Persistence (localStorage) ──────────────────────────────────────────
 
-  const _CS_PARAM_KEYS = ['sort', 'dir', 'stage', 'show', 'fifaconf', 'display'];
-
   // Set only while _restoreState is applying a saved stage — _setStage below fires
   // 'slide.bs.carousel' synchronously, and that handler calls _saveState() itself (the normal
   // path for a user-driven carousel click). During restore that fires BEFORE _restoreState has
@@ -905,7 +934,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
     if (Array.isArray(shared?.order)) {
       const keys = shared.order.filter(k => _SORT_KEYS.has(k));
-      if (keys.length) { _sortOrder = [...new Set([...keys, ..._sortOrder])].slice(0, _sortOrder.length); _updateSortCol(); }
+      if (keys.length) { _sortOrder = promoteKeys(_sortOrder, keys); _updateSortCol(); }
     }
     if (shared?.dir === 'asc' || shared?.dir === 'desc') {
       _sortDir = shared.dir;
@@ -947,52 +976,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
 
   // ── Share button (#csb-share) — builds a URL that reproduces this exact sidebar
-  // configuration on another app instance. Reuses _buildStateLines' full live-state
-  // snapshot — the very same description/optimization (_describeCells etc.) the explain
-  // panel uses, so the two can never drift apart.
-  const _shareBtn = _el.querySelector('#csb-share');
-  // Classic Bootstrap toast — bootstrap.Toast owns the fade transition and the
-  // auto-hide timer, so there's no bespoke CSS/setTimeout bookkeeping to maintain.
-  let _shareToastEl = null;
-  const _showShareToast = msg => {
-    if (!_shareToastEl) {
-      const container = document.createElement('div');
-      container.className = 'toast-container position-fixed end-0 p-3';
-      container.style.top = '32px'; // clears the fixed navbar (mundial-auth-bar), same offset it gives its own siblings
-      _shareToastEl = document.createElement('div');
-      _shareToastEl.className = 'toast align-items-center';
-      _shareToastEl.setAttribute('role', 'status');
-      _shareToastEl.setAttribute('aria-live', 'polite');
-      _shareToastEl.setAttribute('aria-atomic', 'true');
-      container.appendChild(_shareToastEl);
-      document.body.appendChild(container);
-    }
-    render(html`<div class="d-flex">
-      <div class="toast-body">${msg}</div>
-      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="${T.csbParams.close}"></button>
-    </div>`, _shareToastEl);
-    bootstrap.Toast.getOrCreateInstance(_shareToastEl, { delay: 2000 }).show();
-  };
-  _shareBtn?.addEventListener('click', async e => {
-    e.stopPropagation(); // harmless now that [data-col="all"] lives on the "all" <span class="cbs-header-label"> itself (a sibling, not an ancestor) — kept defensively in case that scoping ever changes back
-    const sp = new URLSearchParams();
-    _buildStateLines().forEach(({ param }) => {
-      const eq = param.indexOf('=');
-      sp.set(param.slice(0, eq), param.slice(eq + 1));
-    });
-    const url = `${location.origin}${location.pathname}?${sp.toString()}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      _showShareToast(T.csbParams.shareCopied);
-    } catch {
-      _showShareToast(T.csbParams.shareFailed);
-    }
+  // configuration on another app instance, straight from _paramTable (see its own comment).
+  wireShareButton(_el.querySelector('#csb-share'), {
+    T,
+    buildUrl: () => `${location.origin}${location.pathname}?${_paramTable.buildQuery().toString()}`,
   });
 
   const applyParams = (sp) => {
     if (!sp) return;
 
-    if (!_CS_PARAM_KEYS.some(k => sp.has(k))) {
+    if (!_paramTable.hasAny(sp)) {
       // No control-sidebar params in the URL — restore the persisted state instead.
       const restored = _restoreState();
       if (sp.has('explain')) {
@@ -1008,55 +1001,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       return;
     }
 
-    let changed = false;
-
-    const sort = sp.get('sort');
-    if (sort) {
-      let keys = sort.split(/[\s,+]+/).filter(k => _SORT_KEYS.has(k));
-      // ?sort=imp / ?sort=exp bare (no explicit 2nd key) auto-fill their documented pair
-      // partner as the 2nd criterion, rather than falling through to whatever's currently
-      // 3rd/4th in _sortOrder. A multi-key request (e.g. ?sort=imp,pop) is left alone — naming
-      // an explicit 2nd key always overrides the automatic pairing.
-      if (keys.length === 1 && _SORT_PAIR[keys[0]]) keys = [keys[0], _SORT_PAIR[keys[0]]];
-      if (keys.length) { _sortOrder = [...new Set([...keys, ..._sortOrder])].slice(0, _sortOrder.length); changed = true; }
-    }
-
-    const dir = sp.get('dir');
-    if (dir === 'asc' || dir === 'desc') { _sortDir = dir; changed = true; }
-
-    if (changed) _updateSortCol();
-
-    // stage before display — _setDisplayMode('match') self-guards against _stage === 0, and
-    // _stage is still its initial 0 until _setStage runs (see _restoreState's own note above).
-    const stage = sp.get('stage');
-    if (stage) {
-      const idx = CAROUSEL_STAGES.indexOf(stage);
-      if (idx >= 0) _setStage(idx);
-    }
-
-    const display = sp.get('display');
-    if (display === 'team' || display === 'match') _setDisplayMode(display);
-
-    const show = sp.get('show');
-    if (show) {
-      const cells = new Set();
-      show.split(',').forEach(t => {
-        const k = t.trim();
-        (_ALIASES[k] ?? [k]).forEach(c => cells.add(c));
-      });
-      const _valid = [...cells].filter(c => _CELL_MAP[c]);
-      if (_valid.length) Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el) el.checked = cells.has(k); });
-    }
-
-    const conf = sp.get('fifaconf');
-    if (conf !== null) { _confIds = CONF_IDS[conf] ?? null; _confKey = conf || null; _syncConfRadio(); }
+    _paramTable.applyFrom(sp);
 
     callbacks.renderElo?.();
     applyFlagFilter();
-
-    if (conf && CONF_IDS[conf]) {
-      document.dispatchEvent(new CustomEvent('mundial-conf-changed', { detail: { conf, ids: CONF_IDS[conf] } }));
-    }
 
     const lines = _buildStateLines();
     const _visible = _countVisible();
@@ -1071,14 +1019,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _saveState();
   };
 
-  const setConfFilter = (ids, key = null) => {
-    _confIds = ids ?? null;
-    _confKey = key;
-    _syncConfRadio();
-    callbacks.renderElo?.();
-    applyFlagFilter();
-    _saveState();
-  };
+  // mundial-conf-changed: only wc2026_map.js listens today (highlights the confederation's
+  // boundary and zooms to fit) — harmless no-op on countries/players pages.
+  const setConfFilter = createConfFilterSetter({
+    setState: (ids, key) => { _confIds = ids; _confKey = key; },
+    syncRadio: _syncConfRadio,
+    notify: () => { callbacks.renderElo?.(); applyFlagFilter(); },
+    saveState: _saveState,
+  });
 
   return {
     get sortOrder() { return _sortOrder; },
