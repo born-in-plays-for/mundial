@@ -5,7 +5,12 @@ import { createStageCarousel, maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
 
 const _TEAM_SORT_KEYS = ['elo', 'pop', 'delta', 'alpha'];
-const _PARAM_KEYS = ['psort', 'pdir', 'pstage', 'pshow', 'pfifaconf', 'pconfscope'];
+// 'dir'/'stage'/'fifaconf' are unprefixed — same name, same value domain, same 'shared'
+// localStorage slice as control_sidebar.js's own ?dir=/?stage=/?fifaconf=, so a link built on
+// one page still means the same thing pasted into the other. 'psort'/'pshow'/'pconfscope' stay
+// prefixed because their *shape* is genuinely page-private (mode+criterion vs. a flat criteria
+// list; native/moved vs. country-category cells; no countries-page equivalent at all).
+const _PARAM_KEYS = ['psort', 'dir', 'stage', 'pshow', 'fifaconf', 'pconfscope'];
 
 // Control 2 (see js/control_sidebar.js's own header comment for the 3-layer split this and
 // that module both sit under). Purpose-built for wc2026_players.html — a player is a different
@@ -63,6 +68,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
         <input type="radio" class="btn-check" name="psb-conf-scope" id="psb-conf-scope-playsFor" autocomplete="off" data-scope="playsFor" checked>
         <label class="btn" for="psb-conf-scope-playsFor">${T.psbLabels.confScopeTeam}</label>
       </div>
+      <button id="psb-share" class="csb-icon-btn csb-share" title="${T.csbParams.share}"><img src="images/solar_linear/share-svgrepo-com.svg" width="18" height="18" aria-hidden="true"></button>
     </div>
     <div class="psb-carousel-host"></div>
     <div class="csb-layout d-inline-flex align-items-stretch gap-1">
@@ -264,6 +270,53 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     _saveState();
   });
 
+  // ── Share button (#psb-share) — same idea as control_sidebar.js's own #csb-share (mirrors
+  // its param names for the 3 keys that mean the same thing on both pages — dir/stage/fifaconf —
+  // see _PARAM_KEYS' own comment above), just without that one's explain-panel description
+  // lines: this page has no params-badge/modal to reuse for that, so it builds the query string
+  // straight from live state instead of going through a shared _buildStateLines step.
+  const _shareBtn = _panel.querySelector('#psb-share');
+  let _shareToastEl = null;
+  const _showShareToast = msg => {
+    if (!_shareToastEl) {
+      const container = document.createElement('div');
+      container.className = 'toast-container position-fixed end-0 p-3';
+      container.style.top = '32px'; // clears the fixed navbar (mundial-auth-bar)
+      _shareToastEl = document.createElement('div');
+      _shareToastEl.className = 'toast align-items-center';
+      _shareToastEl.setAttribute('role', 'status');
+      _shareToastEl.setAttribute('aria-live', 'polite');
+      _shareToastEl.setAttribute('aria-atomic', 'true');
+      container.appendChild(_shareToastEl);
+      document.body.appendChild(container);
+    }
+    render(html`<div class="d-flex">
+      <div class="toast-body">${msg}</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="${T.csbParams.close}"></button>
+    </div>`, _shareToastEl);
+    bootstrap.Toast.getOrCreateInstance(_shareToastEl, { delay: 2000 }).show();
+  };
+  _shareBtn?.addEventListener('click', async e => {
+    e.stopPropagation();
+    const sp = new URLSearchParams();
+    sp.set('psort', _mode === 'player' ? 'player' : `${_mode}:${_teamOrder[0]}`);
+    sp.set('dir', _dir);
+    sp.set('stage', CAROUSEL_STAGES[_stage]);
+    const shown = [];
+    if (_fltNative.checked) shown.push('native');
+    if (_fltMoved.checked) shown.push('moved');
+    sp.set('pshow', shown.join(','));
+    sp.set('fifaconf', _confKey ?? '');
+    sp.set('pconfscope', _confScope);
+    const url = `${location.origin}${location.pathname}?${sp.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      _showShareToast(T.csbParams.shareCopied);
+    } catch {
+      _showShareToast(T.csbParams.shareFailed);
+    }
+  });
+
   // ── Sort + filter (one pass — see js/control_sidebar.js's sortAndFilter, same naming
   // convention of "sort" meaning "the whole filtered, ordered result"). Native/moved is a
   // player's own fact (born where they play, or not) — not the country-shaped 4-cell matrix
@@ -398,10 +451,10 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
       if (_TEAM_SORT_KEYS.includes(key)) _teamOrder = [key, ..._teamOrder.filter(k => k !== key)];
     }
 
-    const pdir = sp.get('pdir');
-    if (pdir === 'asc' || pdir === 'desc') _dir = pdir;
+    const dir = sp.get('dir');
+    if (dir === 'asc' || dir === 'desc') _dir = dir;
 
-    if (psort || pdir) { _syncSortUI(); _updateSortList(); }
+    if (psort || dir) { _syncSortUI(); _updateSortList(); }
 
     const pshow = sp.get('pshow');
     if (pshow !== null) {
@@ -410,15 +463,15 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
       _fltMoved.checked = keys.has('moved');
     }
 
-    const pconf = sp.get('pfifaconf');
-    if (pconf !== null) setConfFilter(confIdsOverride[pconf] ?? null, pconf || null);
+    const conf = sp.get('fifaconf');
+    if (conf !== null) setConfFilter(confIdsOverride[conf] ?? null, conf || null);
 
     const pconfscope = sp.get('pconfscope');
     if (pconfscope === 'playsFor' || pconfscope === 'bornIn') { _confScope = pconfscope; _syncConfScope(); }
 
-    const pstage = sp.get('pstage');
-    if (pstage) {
-      const idx = CAROUSEL_STAGES.indexOf(pstage);
+    const stage = sp.get('stage');
+    if (stage) {
+      const idx = CAROUSEL_STAGES.indexOf(stage);
       if (idx >= 0) _setStage(idx);
     }
 

@@ -109,6 +109,39 @@ All dependencies from jsDelivr CDN — no build step:
 
 UI language follows the browser locale. Supported: French, German, Italian, Spanish, English (fallback). Country names via `Intl.DisplayNames`. Wikipedia player links in all five languages.
 
+## Control bar state
+
+`wc2026_map.html` and `wc2026_countries.html` share `#control-sidebar` (`js/control_sidebar.js`); `wc2026_players.html` has its own `#sidebar-host` panel (`js/players_sidebar.js`). Both persist to `localStorage` and both are deep-linkable via URL params — a subset of that state is genuinely shared between the two (same `localStorage` slice, same URL param name), the rest is page-private:
+
+```mermaid
+flowchart TB
+  subgraph SHARED["Shared state — localStorage slice 'shared', same URL param names on both pages"]
+    direction TB
+    S1["sort criteria order<br/>elo / pop / delta / alpha<br/>(control-sidebar also has 2 hidden-from-UI keys: imp / exp)<br/>URL: sort=k1,k2 (control) · psort=mode:key (players, leading key only)"]
+    S2["sort direction<br/>asc / desc<br/>URL: dir="]
+    S3["tournament stage<br/>group / r32 / r16 / qf / sf / final / winner<br/>URL: stage="]
+    S4["confederation filter<br/>uefa / afc / caf / conmebol / concacaf / ofc / none<br/>URL: fifaconf="]
+  end
+
+  subgraph CONTROL["#control-sidebar only — map + countries pages<br/>localStorage slice 'countries'"]
+    direction TB
+    C1["category cells shown<br/>qie / qi / qe / q / ef / en / of / on<br/>(+ aliases: qual / nq / exp / nexp / imp / all)<br/>URL: show="]
+    C2["display mode<br/>team / match<br/>URL: display="]
+    C3["not persisted, UI-only:<br/>collapse toggle (ESC) · params-badge explain panel · Share button"]
+  end
+
+  subgraph PLAYERS["#sidebar-host only — players page<br/>localStorage slice 'players'"]
+    direction TB
+    P1["sort mode<br/>player / playsFor / bornIn<br/>(picks which country a row is ranked by; 'player' has no criteria of its own)<br/>URL: bundled into psort="]
+    P2["origin filters<br/>native / moved<br/>URL: pshow="]
+    P3["confederation scope<br/>bornIn / playsFor<br/>(which country the fifaconf filter checks)<br/>URL: pconfscope="]
+    P4["not persisted, UI-only:<br/>Share button"]
+  end
+
+  SHARED --- CONTROL
+  SHARED --- PLAYERS
+```
+
 ## See also
 
 - [born-in-plays-for](https://github.com/born-in-plays-for) — org overview + architecture diagram
