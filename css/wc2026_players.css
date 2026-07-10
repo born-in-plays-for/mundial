@@ -83,8 +83,14 @@
 /* ── Stage carousel host — .elo-viz/.elo-stage-carousel/.carousel-* are all global
    (css/global.css), not tied to <elo-ranking> — mounting createStageCarousel()'s own .el
    here needs no extra rules beyond not letting it collide with the toolbar above it. No
-   control-1 equivalent — its own carousel lives inside <elo-ranking>, not the sidebar itself. */
-#players-sidebar .psb-carousel-host { width: 320px; }
+   control-1 equivalent — its own carousel lives inside <elo-ranking>, not the sidebar itself.
+   width:100% (not a fixed px value) so it always matches .csb-toolbar/.csb-layout's own width
+   (both stretch to the card's actual content width, which varies with locale/table content) —
+   a fixed width here left the prev/next buttons (positioned edge-to-edge of this host) flush
+   on the left but short of the card's real right edge, since the sibling rows kept stretching
+   past whatever px value this had while this one didn't. */
+#players-sidebar{ min-width: min(100vw, 400px); }
+#players-sidebar .psb-carousel-host { width: 100%; }
 
 /* Footer (visible/total count) — js/players_sidebar.js reuses control 1's own #elo-meta/
    #elo-meta-count ids directly (styled in css/control-sidebar.css) rather than a
