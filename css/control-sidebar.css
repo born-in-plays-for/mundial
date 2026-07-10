@@ -350,6 +350,11 @@
   padding-right: 6px; margin-right: 3px;
   border-right: 1px solid #999;
 }
+/* Icon-only pill (js/control_sidebar.js's ICON_MAP) instead of text — sized down from its
+   native 24×24 to match the row's ~11px text, with a small floor (10px) so the glyph's own
+   detail (three thin paths inside the circle) doesn't disappear entirely at that size. */
+#control-sidebar .csb-map-icon { display: inline-flex; align-items: center; }
+#control-sidebar .csb-map-icon svg { width: 14px; height: 14px; }
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
 

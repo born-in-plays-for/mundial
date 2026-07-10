@@ -1,10 +1,19 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
 import { CONF_IDS } from './conf.js';
 import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './qualified.js';
 import { maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
 import { wireShareButton } from './share_button.js';
+
+// Same "Born In / Plays For" globe glyph as js/auth-bar.js's own ICON_HOME (unrelated modules,
+// no shared import between them — kept as a plain inline string here too rather than adding a
+// cross-module dependency for one constant). stroke uses currentColor rather than auth-bar's
+// hardcoded #1C274C — this one sits in a checkbox pill whose text color already flips between
+// checked/unchecked (same as the teams/matches labels beside it), and the glyph needs to
+// follow along the same way plain text would.
+const ICON_MAP = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M6 4.71053C6.78024 5.42105 8.38755 7.36316 8.57481 9.44737C8.74984 11.3955 10.0357 12.9786 12 13C12.7549 13.0082 13.5183 12.4629 13.5164 11.708C13.5158 11.4745 13.4773 11.2358 13.417 11.0163C13.3331 10.7108 13.3257 10.3595 13.5 10C14.1099 8.74254 15.3094 8.40477 16.2599 7.72186C16.6814 7.41898 17.0659 7.09947 17.2355 6.84211C17.7037 6.13158 18.1718 4.71053 17.9377 4" stroke="currentColor" stroke-width="1.5"/><path d="M22 13C21.6706 13.931 21.4375 16.375 17.7182 16.4138C17.7182 16.4138 14.4246 16.4138 13.4365 18.2759C12.646 19.7655 13.1071 21.3793 13.4365 22" stroke="currentColor" stroke-width="1.5"/></svg>`;
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true, hasMap = true }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
@@ -79,7 +88,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
             <div class="csb-display-toggle">
               <span class="csb-map-toggle" ?hidden=${!hasMap}>
                 <input type="checkbox" class="btn-check" id="csb-map-toggle" autocomplete="off" checked>
-                <label class="btn" for="csb-map-toggle" title="${T.sortLabels.mapHint}">${T.sortLabels.map}</label>
+                <label class="btn csb-map-icon" for="csb-map-toggle" title="${T.sortLabels.mapHint}" aria-label="${T.sortLabels.map}">${unsafeHTML(ICON_MAP)}</label>
               </span>
               <span class="csb-display-radios" title="${T.sortLabels.matchHint}">
                 <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
