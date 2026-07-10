@@ -234,7 +234,7 @@ Orthogonal zu den obigen Kategorien.
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap -->
-Name in <em>Kursivschrift</em> und gedimmte Flagge — zu klein für die Karte.
+Gedimmte Flagge — zu klein für die Karte.
 <!-- /i18n:tax_desc_nomap --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
@@ -262,8 +262,6 @@ Nur in der Spiele-Ansicht sichtbar — siehe Team-/Spiel-Ansicht, oben.
         <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
         <span class="elo-name" data-id="504">Morocco</span>
       </span>
-    <span class="elo-item-wrap" style="display: none;">
-    </spam>
     </span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_won -->

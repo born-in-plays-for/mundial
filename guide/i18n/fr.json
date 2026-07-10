@@ -98,7 +98,7 @@
   "tax_desc_both": "Des joueurs nés ailleurs jouent pour ce pays, et des joueurs nés ici jouent pour d'autres pays.",
   "tax_label_offmap": "Hors carte",
   "tax_note_offmap": "Orthogonal aux catégories ci-dessus.",
-  "tax_desc_nomap": "Nom en <em>italique</em> et drapeau estompé — trop petit pour apparaître sur la carte.",
+  "tax_desc_nomap": "Drapeau estompé — trop petit pour apparaître sur la carte.",
   "tax_desc_nomap_nonfifa": "Idem, ici combiné avec non-FIFA.",
   "map": [
     "## La carte",

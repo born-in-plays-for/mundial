@@ -324,7 +324,7 @@
    nowrap width from inflating a table column shared with the sort-list above,
    back when both lived in the same table (see .csb-layout: they're now two
    independent tables, stacked via flex, each free to size to its own content). */
-#control-sidebar .csb-display-toggle { white-space: nowrap; }
+#control-sidebar .csb-display-toggle { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
 /* font-size no longer needs a re-declaration here — css/bootstrap-custom.scss's own
    $input-btn-font-size already matches the rest of the sort column (11px) by default. margin/
    padding stay: horizontal-only padding and no margin is a deliberate layout choice, not a
@@ -333,6 +333,23 @@
 /* #control-sidebar .csb-display-toggle .btn-check:checked + .btn {
   color: rgba(33, 37, 41, 0.75);
 } */
+
+/* ── Map show/hide checkbox — same row, left of the team/match switch ────
+   A plain visibility toggle (js/wc2026_map.js's onMapToggle), unrelated to _displayMode —
+   same Bootstrap btn-check pill look as the team/match switch itself (hidden checkbox +
+   .btn label, see getbootstrap.com/docs/5.3/forms/checks-radios) rather than the filter
+   table's □/▣ glyph checkboxes, so it reads as one control family with teams/matches
+   instead of borrowing the filter grid's convention. The shared
+   `#control-sidebar .csb-display-toggle .btn` rule above already sizes/pads its label the
+   same as the team/match pills. Separated from them with its own border-right rather than
+   a table column, since both live in one flex row now (.csb-display-toggle). Omitted
+   entirely (hasMap=false) on pages that reuse this sidebar without a map —
+   wc2026_countries.html, control-sidebar-test.html — so no dead control sits next to a
+   switch with nothing to do. */
+#control-sidebar .csb-map-toggle {
+  padding-right: 6px; margin-right: 3px;
+  border-right: 1px solid #999;
+}
 
 /* ── Sort direction button ─────────────────────────────────────────────── */
 

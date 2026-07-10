@@ -234,7 +234,7 @@ Orthogonal aux catégories ci-dessus.
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap -->
-Nom en <em>italique</em> et drapeau estompé — trop petit pour apparaître sur la carte.
+Drapeau estompé — trop petit pour apparaître sur la carte.
 <!-- /i18n:tax_desc_nomap --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
@@ -262,8 +262,6 @@ Visible uniquement en vue matchs — voir Vue équipes / matchs, ci-dessus.
         <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
         <span class="elo-name" data-id="504">Morocco</span>
       </span>
-    <span class="elo-item-wrap" style="display: none;">
-    </spam>
     </span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_won -->

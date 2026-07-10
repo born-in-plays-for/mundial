@@ -92,8 +92,7 @@
   background-clip: padding-box;
 }
 
-/* No map centroid: italic name + dimmed flag */
-.taxonomy .elo-item--no-map .elo-name { font-style: italic; }
+/* No map centroid: dimmed flag */
 .taxonomy .elo-item--no-map .elo-flag { opacity: 0.35; }
 
 /* Match-display mode: lost a decided fixture — grey out the flag, name stays legible */

@@ -196,7 +196,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" alt="">
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap --><em>Italic</em> name and dimmed flag — too small to appear on the map.<!-- /i18n:tax_desc_nomap --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap -->Dimmed flag — too small to appear on the map.<!-- /i18n:tax_desc_nomap --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--nonfifa elo-item--no-map" style="flex-shrink:0">

@@ -98,7 +98,7 @@
   "tax_desc_both": "Jugadores nacidos en otro país juegan para este país, y jugadores nacidos aquí juegan para otros países.",
   "tax_label_offmap": "Fuera del mapa",
   "tax_note_offmap": "Ortogonal a las categorías anteriores.",
-  "tax_desc_nomap": "Nombre en <em>cursiva</em> y bandera atenuada — demasiado pequeño para aparecer en el mapa.",
+  "tax_desc_nomap": "Bandera atenuada — demasiado pequeño para aparecer en el mapa.",
   "tax_desc_nomap_nonfifa": "Ídem, aquí combinado con no-FIFA.",
   "map": [
     "## El mapa",

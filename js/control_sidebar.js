@@ -6,7 +6,7 @@ import { loadSlice, saveSlice } from './persist.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
 import { wireShareButton } from './share_button.js';
 
-export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true }) {
+export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true, hasMap = true }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
   // 'team' (default) — flat list, unchanged. 'match' — teams grouped fixture-by-fixture
@@ -54,7 +54,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <div class="csb-sort-stack d-flex flex-column gap-1">
       <table class="flex-grow-1 csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
-          <td class="csb-header text-muted ps-1" title="${T.csbTips.action}" style="vertical-align: middle;">${_sortLabel}</td>
+          <td class="csb-header text-muted ps-1" title="${T.csbTips.action}">${_sortLabel}</td>
         </tr>
         <tr>
           <td class="csb-sort-col text-muted">
@@ -70,17 +70,23 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       </tbody></table>
       <table class="csb-table csb-display-table table table-sm table-bordered mb-0"><tbody>
         <tr>
-          <td class="csb-header text-muted ps-1" style="vertical-align: middle;" title="${T.csbTips.view}">
+          <td class="csb-header text-muted ps-1" title="${T.csbTips.view}">
             <span class="cbs-header-label">${T.sortLabels.view}</span>
           </td>
         </tr>
         <tr>
           <td class="csb-toggle-col text-muted">
-            <div class="csb-display-toggle" title="${T.sortLabels.matchHint}">
-              <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
-              <label class="btn" for="csb-display-team">${T.sortLabels.teamDisplay}</label>
-              <input type="radio" class="btn-check" name="csb-display" id="csb-display-match" data-display="match">
-              <label class="btn" for="csb-display-match">${T.sortLabels.match}</label>
+            <div class="csb-display-toggle">
+              <span class="csb-map-toggle" ?hidden=${!hasMap}>
+                <input type="checkbox" class="btn-check" id="csb-map-toggle" autocomplete="off" checked>
+                <label class="btn" for="csb-map-toggle" title="${T.sortLabels.mapHint}">${T.sortLabels.map}</label>
+              </span>
+              <span class="csb-display-radios" title="${T.sortLabels.matchHint}">
+                <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
+                <label class="btn" for="csb-display-team">${T.sortLabels.teamDisplay}</label>
+                <input type="radio" class="btn-check" name="csb-display" id="csb-display-match" data-display="match">
+                <label class="btn" for="csb-display-match">${T.sortLabels.match}</label>
+              </span>
             </div>
           </td>
         </tr>
@@ -88,7 +94,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     </div>
     <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
     <tr>
-      <td colspan="2" class="csb-header text-muted ps-1" style="vertical-align: baseline;">
+      <td colspan="2" class="csb-header text-muted ps-1">
         <div class="d-flex align-items-center justify-content-between">
           <span class="cbs-header-label">${T.filterLabels.action}</span>
           <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
@@ -343,6 +349,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _displayToggleEl = _panel.querySelector('.csb-display-toggle');
   const _teamDisplayRadio = _displayToggleEl.querySelector('[data-display="team"]');
   const _matchDisplayRadio = _displayToggleEl.querySelector('[data-display="match"]');
+  // Independent of _displayMode (team/match) — a plain visibility toggle for the map itself,
+  // not a sort/display criterion. Only *visible* when hasMap=true (see initSidebar's own
+  // param) — on pages that reuse this sidebar without a map (wc2026_countries.html,
+  // control-sidebar-test.html) the element is still rendered (just `hidden`, see the template
+  // above), so this lookup and its listener stay unconditional; there's simply no
+  // onMapToggle callback wired up on those pages for it to call.
+  const _mapToggleEl = _panel.querySelector('#csb-map-toggle');
 
   // team/match display switch — see _displayMode's own comment above for what it does.
   // Not part of _sortOrder/_updateSortCol's reordering: it's a mode switch, not a
@@ -410,6 +423,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _setDisplayMode(radio.dataset.display);
     callbacks.renderElo?.(callbacks.scrollToActiveElo);
     _saveState();
+  });
+
+  _mapToggleEl?.addEventListener('change', () => {
+    callbacks.onMapToggle?.(_mapToggleEl.checked);
   });
 
   if (!alwaysOpen) {
@@ -928,6 +945,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     saveSlice('countries', {
       checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
       display: _displayMode,
+      map: _mapToggleEl ? _mapToggleEl.checked : true,
     });
   };
 
@@ -969,6 +987,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _restoringState = false;
 
     if (countries?.display === 'team' || countries?.display === 'match') _setDisplayMode(countries.display);
+
+    // Programmatic — doesn't fire the checkbox's own 'change' listener, so the callback that
+    // actually shows/hides #map-container has to be invoked here explicitly (see js/wc2026_map.js's
+    // onMapToggle). No-op on pages without a map (hasMap=false): _mapToggleEl still exists
+    // (just hidden), but there's no onMapToggle callback wired up to call.
+    if (typeof countries?.map === 'boolean' && _mapToggleEl) {
+      _mapToggleEl.checked = countries.map;
+      callbacks.onMapToggle?.(countries.map);
+    }
 
     callbacks.renderElo?.();
     applyFlagFilter();

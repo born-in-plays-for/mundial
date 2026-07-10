@@ -846,6 +846,13 @@ _sidebarCallbacks.onSidebarToggle = () => {
   if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
   _syncPaddingTop();
 };
+// #map-container is position:fixed (see css/map-container.css) — hiding it doesn't disturb
+// document flow, so page content below just needs its padding-top recomputed to close the gap
+// (_mc's own rect collapses to 0 height once hidden, same code path as any other resize).
+_sidebarCallbacks.onMapToggle = visible => {
+  if (_mc) _mc.style.display = visible ? '' : 'none';
+  _syncPaddingTop();
+};
 
 document.addEventListener('mundial-conf-changed', ({ detail: { conf, ids } }) => {
   _highlightConf(ids);

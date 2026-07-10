@@ -234,7 +234,7 @@ Ortogonal a las categorías anteriores.
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap -->
-Nombre en <em>cursiva</em> y bandera atenuada — demasiado pequeño para aparecer en el mapa.
+Bandera atenuada — demasiado pequeño para aparecer en el mapa.
 <!-- /i18n:tax_desc_nomap --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
@@ -262,8 +262,6 @@ Visible solo en la vista de partidos — ver Vista equipos / partidos, arriba.
         <span class="elo-flag-wrap"><img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" alt=""></span>
         <span class="elo-name" data-id="504">Morocco</span>
       </span>
-    <span class="elo-item-wrap" style="display: none;">
-    </spam>
     </span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_won -->

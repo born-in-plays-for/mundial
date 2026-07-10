@@ -98,7 +98,7 @@
   "tax_desc_both": "Spieler aus anderen Ländern spielen für dieses Land, und Spieler aus diesem Land spielen für andere Länder.",
   "tax_label_offmap": "Nicht auf der Karte",
   "tax_note_offmap": "Orthogonal zu den obigen Kategorien.",
-  "tax_desc_nomap": "Name in <em>Kursivschrift</em> und gedimmte Flagge — zu klein für die Karte.",
+  "tax_desc_nomap": "Gedimmte Flagge — zu klein für die Karte.",
   "tax_desc_nomap_nonfifa": "Ebenso, hier kombiniert mit Nicht-FIFA.",
   "map": [
     "## Die Karte",
