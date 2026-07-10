@@ -71,6 +71,15 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
      this against the taller #legend (gradient bar + ticks stacked) beside it. */
   align-self: flex-start;
 }
+/* wc2026_map.html's #legend uses align-items-start (not Bootstrap's default -center) —
+   its 3 children (negative-outlier-dot column, gradient-bar column, positive-outlier-dot
+   column) each stack a fixed-height top row (dot or bar, both 10px) over a shorter/taller
+   text row below (#legend-outlier-count's auto height from a 9px font vs #legend-ticks'
+   own explicit 12px, needed for its absolutely-positioned children — see its own comment
+   below). Centering columns of different total height shifts their top rows out of
+   alignment by that difference/2, which is exactly the "tiny pixelesque" dot-vs-bar
+   misalignment this replaced — same class of bug #legend-born's own align-self:flex-start
+   fixed above, just scoped to the parent since all 3 columns need the same fix here. */
 #legend-bar { height: 10px; flex: 1; max-width: 280px; }
 #legend-ticks, #legend-outlier-count, #legend-outlier-count-pos { font-family: var(--bs-font-monospace); }
 /* position:relative + explicit height — js/wc2026_map.js's _updateLegendTicks() absolutely
