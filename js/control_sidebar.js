@@ -345,6 +345,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _el.classList.add('collapsed');
     _toggle.textContent = '‹';
     callbacks.onSidebarToggle?.();
+    _saveState();
   });
 
   // ── Sort controls ──
@@ -444,6 +445,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const collapsed = _el.classList.toggle('collapsed');
     _toggle.textContent = collapsed ? '‹' : '›';
     callbacks.onSidebarToggle?.();
+    _saveState();
   });
 
   document.addEventListener('keydown', e => {
@@ -451,6 +453,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _el.classList.add('collapsed');
     _toggle.textContent = '‹';
     callbacks.onSidebarToggle?.();
+    _saveState();
   });
   } // end !alwaysOpen
 
@@ -515,6 +518,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _toggle.textContent = '‹';
     }
     callbacks.onSidebarToggle?.();
+    _saveState();
     const _cleanup = () => {
       _body.style.transition = '';
       _body.style.maxWidth = '';
@@ -956,6 +960,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
       display: _displayMode,
       map: _mapToggleEl ? _mapToggleEl.checked : true,
+      // Always false on alwaysOpen pages (no .csb-toggle/collapse there to ever add the
+      // class) — harmless to save regardless, just never restored for them (see _restoreState).
+      collapsed: _el.classList.contains('collapsed'),
     });
   };
 
@@ -1005,6 +1012,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (typeof countries?.map === 'boolean' && _mapToggleEl) {
       _mapToggleEl.checked = countries.map;
       callbacks.onMapToggle?.(countries.map);
+    }
+
+    // alwaysOpen pages never render .csb-toggle/.collapsed at all (see the template above),
+    // so there's nothing to restore there — collapsed is only ever meaningful (and only ever
+    // saved as true) on the map's own collapsible/swipe-drawer sidebar.
+    if (!alwaysOpen && typeof countries?.collapsed === 'boolean' && countries.collapsed !== _el.classList.contains('collapsed')) {
+      _el.classList.toggle('collapsed', countries.collapsed);
+      if (_toggle) _toggle.textContent = countries.collapsed ? '‹' : '›';
+      callbacks.onSidebarToggle?.();
     }
 
     callbacks.renderElo?.();
