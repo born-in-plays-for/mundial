@@ -89,7 +89,7 @@
    a fixed width here left the prev/next buttons (positioned edge-to-edge of this host) flush
    on the left but short of the card's real right edge, since the sibling rows kept stretching
    past whatever px value this had while this one didn't. */
-#players-sidebar{ min-width: min(100vw, 400px); }
+#players-sidebar{ min-width: min(100vw, 420px); }
 #players-sidebar .psb-carousel-host { width: 100%; }
 
 /* Footer (visible/total count) — js/players_sidebar.js reuses control 1's own #elo-meta/
