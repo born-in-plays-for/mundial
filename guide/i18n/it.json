@@ -369,7 +369,7 @@
   ],
   "tax_note_gradient": "Lo sfondo della pillola è a sua volta un gradiente rosso (importazioni) → bianco (nativi) → blu (esportazioni) — più larga la banda di un colore, maggiore la quota di quel gruppo nella rosa totale del paese.",
   "tax_desc_gradient_exp": "Prevalentemente blu — un grande esportatore (81) con solo una manciata di importazioni (3).",
-  "tax_desc_gradient_mixed": "Una banda rossa visibile accanto al blu — un mix più equilibrato di importazioni (7) ed esportazioni (22).",
+  "tax_desc_gradient_mixed": "Una banda rossa visibile accanto al blu — un mix più equilibrato di esportazioni (11) e importazioni (7).",
   "tax_desc_gradient_imp": "Quasi interamente rosso — quasi tutta la rosa (26) è nata altrove.",
   "tax_label_fixture": "Accoppiamenti (vista partite)",
   "tax_note_fixture": "Visibile solo in vista partite — vedi Vista squadre / partite, sopra.",

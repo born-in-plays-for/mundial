@@ -200,13 +200,13 @@ Predominantemente azul — un gran exportador (81) con solo un puñado de import
 <!-- /i18n:tax_desc_gradient_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(155,193,250); --imp-color: rgb(248,167,167); --imp-pivot: 14.3%; --native-pivot: 72.8%; flex-shrink:0">
-    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gb-eng.svg" alt="">
-    <span class="elo-name" data-id="8260">England</span>
-    <span class="elo-pts"><span class="elo-pts-primary">7 · 22</span></span>
+  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(160,197,250); --imp-color: rgb(248,167,167); --imp-pivot: 18.4%; --native-pivot: 86.4%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/us.svg" alt="">
+    <span class="elo-name" data-id="840">United States</span>
+    <span class="elo-pts"><span class="elo-pts-primary">7 · 11</span></span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->
-Una banda roja visible junto al azul — una mezcla más equilibrada de importaciones (7) y exportaciones (22).
+Una banda roja visible junto al azul — una mezcla más equilibrada de exportaciones (11) e importaciones (7).
 <!-- /i18n:tax_desc_gradient_mixed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">

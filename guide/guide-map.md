@@ -171,12 +171,12 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->Mostly blue — a heavy exporter (81) with only a handful of imports (3).<!-- /i18n:tax_desc_gradient_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(155,193,250); --imp-color: rgb(248,167,167); --imp-pivot: 14.3%; --native-pivot: 72.8%; flex-shrink:0">
-    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gb-eng.svg" alt="">
-    <span class="elo-name" data-id="8260">England</span>
-    <span class="elo-pts"><span class="elo-pts-primary">7 · 22</span></span>
+  <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(160,197,250); --imp-color: rgb(248,167,167); --imp-pivot: 18.4%; --native-pivot: 86.4%; flex-shrink:0">
+    <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/us.svg" alt="">
+    <span class="elo-name" data-id="840">United States</span>
+    <span class="elo-pts"><span class="elo-pts-primary">7 · 11</span></span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->A visible red band alongside the blue — a more even mix of imports (7) and exports (22).<!-- /i18n:tax_desc_gradient_mixed --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->A visible red band alongside the blue — a more even mix of exports (11) and imports (7).<!-- /i18n:tax_desc_gradient_mixed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--qualified elo-item--knocked-out elo-item--imp" style="--imp-color: rgb(239,68,68); --imp-pivot: 96.3%; --native-pivot: 100.0%; flex-shrink:0">

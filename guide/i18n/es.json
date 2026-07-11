@@ -370,7 +370,7 @@
   ],
   "tax_note_gradient": "El fondo de la píldora es a su vez un degradado rojo (importaciones) → blanco (nativos) → azul (exportaciones) — cuanto más ancha la banda de un color, mayor la proporción de ese grupo en la plantilla total del país.",
   "tax_desc_gradient_exp": "Predominantemente azul — un gran exportador (81) con solo un puñado de importaciones (3).",
-  "tax_desc_gradient_mixed": "Una banda roja visible junto al azul — una mezcla más equilibrada de importaciones (7) y exportaciones (22).",
+  "tax_desc_gradient_mixed": "Una banda roja visible junto al azul — una mezcla más equilibrada de exportaciones (11) e importaciones (7).",
   "tax_desc_gradient_imp": "Casi enteramente rojo — casi toda la plantilla (26) nació en otro lugar.",
   "tax_label_fixture": "Enfrentamientos (vista de partidos)",
   "tax_note_fixture": "Visible solo en la vista de partidos — ver Vista equipos / partidos, arriba.",

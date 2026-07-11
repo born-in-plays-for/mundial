@@ -369,7 +369,7 @@
   ],
   "tax_note_gradient": "L'arrière-plan de la pastille est lui-même un dégradé rouge (imports) → blanc (natifs) → bleu (exports) — plus la bande d'une couleur est large, plus la part de ce groupe dans l'effectif total du pays est grande.",
   "tax_desc_gradient_exp": "Majoritairement bleu — un gros exportateur (81) avec seulement une poignée d'imports (3).",
-  "tax_desc_gradient_mixed": "Une bande rouge visible à côté du bleu — un mélange plus équilibré d'imports (7) et d'exports (22).",
+  "tax_desc_gradient_mixed": "Une bande rouge visible à côté du bleu — un mélange plus équilibré d'exports (11) et d'imports (7).",
   "tax_desc_gradient_imp": "Presque entièrement rouge — la quasi-totalité de l'effectif (26) est née ailleurs.",
   "tax_label_fixture": "Rencontres (vue matchs)",
   "tax_note_fixture": "Visible uniquement en vue matchs — voir Vue équipes / matchs, ci-dessus.",

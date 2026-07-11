@@ -370,7 +370,7 @@
   ],
   "tax_note_gradient": "Der Hintergrund der Pille ist selbst ein Verlauf von Rot (Importe) → Weiß (einheimisch) → Blau (Exporte) — je breiter das Band einer Farbe, desto größer der Anteil dieser Gruppe am gesamten Spielerkader des Landes.",
   "tax_desc_gradient_exp": "Überwiegend blau — ein starker Exporteur (81) mit nur einer Handvoll Importen (3).",
-  "tax_desc_gradient_mixed": "Ein sichtbares rotes Band neben dem Blau — eine ausgewogenere Mischung aus Importen (7) und Exporten (22).",
+  "tax_desc_gradient_mixed": "Ein sichtbares rotes Band neben dem Blau — eine ausgewogenere Mischung aus Exporten (11) und Importen (7).",
   "tax_desc_gradient_imp": "Fast vollständig rot — fast der gesamte Kader (26) wurde anderswo geboren.",
   "tax_label_fixture": "Spielpaarungen (Spiele-Ansicht)",
   "tax_note_fixture": "Nur in der Spiele-Ansicht sichtbar — siehe Team-/Spiel-Ansicht, oben.",
