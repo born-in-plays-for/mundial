@@ -45,7 +45,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
 | `data/` | Git submodule → `mundial-data` repo. Contains only frontend-consumed data, nothing pipeline-internal: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5, `status.json` — tournament elimination status), `elo_rank.json`, `uk-nations.geojson`. (`r32_teams.json` was removed — superseded by `v2/live.json`'s `teams` key. `countries.json` moved out to `mundial-build/pipeline/countries.json` — a pipeline build input, never a frontend asset.) |
-| `wc2026_og_v5.jpg` | 2880×1620 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=2) |
+| `wc2026_og_v7.jpg` | 4320×2430 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=3). Regenerate with `tools/regenerate_og_image.py` — **never hand-roll this script inline**, see that section below. |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
 | `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
@@ -126,49 +126,20 @@ All frontend `fetch()` calls reference `data/` paths (e.g. `fetch('data/v2/map.j
 
 ### Regenerating the OG image
 
-Uses `http://localhost:4040/` (local server). Output: 2880×1620 PNG (1440×810 viewport × dpr=2 — HiDPI required for sharp LinkedIn/Facebook previews).
-- Clicks France flag to activate dim/arc mode (export/import arcs visible)
-- Hovers France path center to show the combined tooltip
+Run **`tools/regenerate_og_image.py`** (requires `http://localhost:4040/` — the local dev server, see "Running locally" above). This is the single source of truth for the generation recipe — do not recreate the Playwright script inline from memory or from an old CLAUDE.md diff; past regenerations have silently regressed resolution/quality that way (see script docstring for the incident history: v5 shipped at dpr=1 and looked soft, fixed at dpr=2 in commit `fbab53d`; the same blurriness recurred on the Facebook Sharing Debugger at dpr=2 and was fixed again at dpr=3 for v7).
 
-```python
-from playwright.sync_api import sync_playwright
-with sync_playwright() as p:
-    browser = p.chromium.launch()
-    page = browser.new_page(viewport={"width": 1440, "height": 810}, device_scale_factor=2)
-    page.goto("http://localhost:4040/wc2026_map.html",
-              wait_until="networkidle", timeout=30000)
-    page.wait_for_timeout(4000)
-    # Select quote index 1 ("Heureux qui, comme Olise, a fait un beau voyage.")
-    page.evaluate('''() => {
-        const dot = document.querySelector('.pq-dot[data-idx="1"]');
-        if (dot) dot.click();
-    }''')
-    page.wait_for_timeout(500)
-    # Click France flag to activate dim/arc mode
-    page.evaluate('''() => {
-        const flag = document.querySelector('image.flag-qualified[data-id="250"]');
-        if (flag) flag.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    }''')
-    page.wait_for_timeout(2000)
-    # Hover France path center to show tooltip
-    page.evaluate('''() => {
-        const path = document.querySelector('path[data-id="250"]');
-        if (path) {
-            const rect = path.getBoundingClientRect();
-            const cx = rect.x + rect.width / 2;
-            const cy = rect.y + rect.height / 2;
-            path.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, clientX: cx, clientY: cy }));
-            path.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: cx, clientY: cy }));
-        }
-    }''')
-    page.wait_for_timeout(1500)
-    page.screenshot(path="wc2026_og_v5.jpg", type="jpeg", quality=90)
-    browser.close()
+```bash
+python3 tools/regenerate_og_image.py v8   # bump the version each time
 ```
 
-After regenerating, re-scrape LinkedIn and Facebook previews:
-- **LinkedIn**: https://www.linkedin.com/post-inspector/
-- **Facebook**: https://developers.facebook.com/tools/debug/
+Output: 4320×2430 JPEG (1440×810 viewport × device_scale_factor=3, quality=95). The script clicks the France flag to activate dim/arc mode and hovers the France path center to show the combined tooltip, matching the composition documented in the "Key architecture decisions" quote-of-the-day / dim-arc sections above.
+
+After running it, by hand:
+1. Update `og:image` / `og:image:url` / `og:image:secure_url` / `og:image:width` / `og:image:height` in **both** `index.html` and `wc2026_map.html`
+2. `git rm` the previous `wc2026_og_v<N-1>.jpg`
+3. After deploy, re-scrape the previews:
+   - **LinkedIn**: https://www.linkedin.com/post-inspector/
+   - **Facebook**: https://developers.facebook.com/tools/debug/
 
 ---
 
