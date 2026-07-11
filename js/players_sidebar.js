@@ -309,7 +309,10 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
         return shown.join(',');
       },
       apply: raw => {
-        const keys = new Set(raw.split(',').map(s => s.trim()).filter(Boolean));
+        // Case-insensitive for the same reason control_sidebar.js's 'show' entry is:
+        // browser address-bar autocomplete can silently swap in a previously-visited
+        // differently-cased URL even when the user typed it correctly.
+        const keys = new Set(raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
         _fltNative.checked = keys.has('native');
         _fltMoved.checked = keys.has('moved');
         return true; // '' is valid here too (both unchecked)

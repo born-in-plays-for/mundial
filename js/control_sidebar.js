@@ -897,8 +897,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       get: () => _describeCells(Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k)),
       apply: raw => {
         const cells = new Set();
+        // Case-insensitive: browser address-bar autocomplete can silently swap in a
+        // previously-visited lowercase URL even when the user typed the correct casing.
         raw.split(',').forEach(t => {
-          const k = t.trim();
+          const k = t.trim().toUpperCase();
           (_ALIASES[k] ?? [k]).forEach(c => cells.add(c));
         });
         const valid = [...cells].filter(c => _CELL_MAP[c]);
