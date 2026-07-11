@@ -1,4 +1,4 @@
-import { _LANG } from './i18n.js';
+import { _LANG, countryName } from './i18n.js';
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked@14/+esm';
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
 
@@ -162,6 +162,12 @@ async function _showSection(guideId) {
   if (md) {
     body.innerHTML = marked.parse(md);
     body.querySelectorAll('.gp-wip').forEach(el => el.outerHTML = _WIP_HTML);
+    // Country-example pills (elo-name spans) are static English text baked into the
+    // markdown source — re-localize them here rather than translating 16+ literal
+    // country names per language file.
+    body.querySelectorAll('.elo-name[data-id]').forEach(el => {
+      el.textContent = countryName(Number(el.dataset.id), el.textContent);
+    });
   } else {
     body.innerHTML = _WIP_HTML;
   }
