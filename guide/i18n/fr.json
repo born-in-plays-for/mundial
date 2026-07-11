@@ -1,5 +1,5 @@
 {
-  "page_title": "# Né en / Joue pour",
+  "page_title": "# Guide utilisateur",
   "intro": [
     "Cette carte visualise les effectifs de la Coupe du Monde 2026 sous l'angle du lieu de naissance.",
     "Chaque pays est coloré selon le nombre total de joueurs du Mondial qui y sont nés —",
@@ -221,7 +221,7 @@
     "Ces sources alimentent un pipeline automatisé qui fusionne, croise et enrichit les données brutes avant de les publier sur cette page.",
     "Les classements Elo sont actualisés quotidiennement ; les données des effectifs sont mises à jour manuellement lorsque les sélections changent."
   ],
-  "countries_page_title": "# Pays",
+  "countries_page_title": "# Guide API",
   "countries_intro": "Tous les pays de l'écosystème de la Coupe du Monde 2026 — équipes qualifiées et monde plus large du football — classés par classement Elo et colorés selon leurs connexions né-dans / joue-pour.",
   "countries_url_params": [
     "## Paramètres d'URL",

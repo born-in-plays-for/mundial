@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Geboren in / Spielt für
+# Benutzerhandbuch
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->

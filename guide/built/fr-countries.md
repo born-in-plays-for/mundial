@@ -1,5 +1,5 @@
 <!-- i18n:countries_page_title -->
-# Pays
+# Guide API
 <!-- /i18n:countries_page_title -->
 
 <!-- i18n:countries_intro -->

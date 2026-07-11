@@ -107,41 +107,41 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td colspan="2" class="csb-header text-muted ps-1">
         <div class="d-flex align-items-center justify-content-between">
           <span class="cbs-header-label">${T.filterLabels.action}</span>
-          <span class="elo-item" data-col="all" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
+          <span class="elo-item" data-col="AB" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
         </div>
       </td>
-      <td class="csb-col" data-col="exp" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name"></span></span></td>
-      <td class="csb-col" data-col="nexp" title="${T.filterLabels.nonExp}"><span class="elo-item elo-item--nexp"><span class="elo-name"></span></span></td>
+      <td class="csb-col" data-col="AE" title="${T.filterLabels.exporter}"><span class="elo-item elo-item--exp"><span class="elo-name"></span></span></td>
+      <td class="csb-col" data-col="AK" title="${T.filterLabels.nonExp}"><span class="elo-item elo-item--nexp"><span class="elo-name"></span></span></td>
     </tr>
     <tr>
-      <td rowspan="2" class="csb-group" data-row="q"><span class="elo-item"><span class="elo-name">${T.filterLabels.qualified}</span></span></td>
-      <td class="csb-row" data-row="qi" title="${T.filterLabels.importer}"><span class="elo-item elo-item--imp"><span class="elo-name"></span></span></td>
-      <td class="text-muted" title="${T.csbTips.qie}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qie" checked></label></td>
-      <td class="text-muted" title="${T.csbTips.qi}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qi"  checked></label></td>
+      <td rowspan="2" class="csb-group" data-row="QB"><span class="elo-item"><span class="elo-name">${T.filterLabels.qualified}</span></span></td>
+      <td class="csb-row" data-row="IB" title="${T.filterLabels.importer}"><span class="elo-item elo-item--imp"><span class="elo-name"></span></span></td>
+      <td class="text-muted" title="${T.csbTips.qie}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-IE" checked></label></td>
+      <td class="text-muted" title="${T.csbTips.qi}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-IK"  checked></label></td>
     </tr>
     <tr>
-      <td class="csb-row" data-row="qni" title="${T.filterLabels.nonImp}"><span class="elo-item elo-item--nimp"><span class="elo-name"></span></span></td>
-      <td class="text-muted" title="${T.csbTips.qe}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-qe"  checked></label></td>
-      <td class="text-muted" title="${T.csbTips.q}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-q"   checked></label></td>
+      <td class="csb-row" data-row="HB" title="${T.filterLabels.nonImp}"><span class="elo-item elo-item--nimp"><span class="elo-name"></span></span></td>
+      <td class="text-muted" title="${T.csbTips.qe}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HE"  checked></label></td>
+      <td class="text-muted" title="${T.csbTips.q}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HK"   checked></label></td>
     </tr>
     <!-- showNonQualified=false (e.g. wc2026_players.html, whose data only ever covers the 48
          qualified squads' own rosters) hides these two rows via ?hidden instead of omitting
-         them from the template entirely, so #filter-ef/-of/-en/-on stay real, queryable
-         elements. catEloChecked below dereferences them unconditionally (_fltEF.checked etc.);
+         them from the template entirely, so #filter-FE/-FK/-NE/-NK stay real, queryable
+         elements. catEloChecked below dereferences them unconditionally (_fltFE.checked etc.);
          omitting the rows would make those null on a page that hides this group, and anything
          that later reaches a non-qualified country id (sortAndFilter, a future filter feature)
          would throw. A hidden row's checkboxes just never receive user input — cheaper than
          guarding every read site against null. -->
     <tr ?hidden=${!showNonQualified}>
-      <td rowspan="2" class="csb-group" data-row="nq" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
-      <td class="csb-row" data-row="nqf" title="${T.csbTips.fifa}"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-ef"></label></td>
-      <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-of"></label></td>
+      <td rowspan="2" class="csb-group" data-row="UB" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
+      <td class="csb-row" data-row="FB" title="${T.csbTips.fifa}"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
+      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FE"></label></td>
+      <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FK"></label></td>
     </tr>
     <tr ?hidden=${!showNonQualified}>
-      <td class="csb-row" data-row="nqn" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-en"></label></td>
-      <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-on"></label></td>
+      <td class="csb-row" data-row="NB" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
+      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NE"></label></td>
+      <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NK"></label></td>
     </tr>
   </tbody></table>
   </div>
@@ -154,14 +154,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _body = _el.querySelector('.csb-body');
   const _panel = _body;
 
-  const _fltQIE = _panel.querySelector('#filter-qie');
-  const _fltQI  = _panel.querySelector('#filter-qi');
-  const _fltQE  = _panel.querySelector('#filter-qe');
-  const _fltQ   = _panel.querySelector('#filter-q');
-  const _fltEF  = _panel.querySelector('#filter-ef');
-  const _fltOF  = _panel.querySelector('#filter-of');
-  const _fltEN  = _panel.querySelector('#filter-en');
-  const _fltON  = _panel.querySelector('#filter-on');
+  const _fltIE = _panel.querySelector('#filter-IE');
+  const _fltIK = _panel.querySelector('#filter-IK');
+  const _fltHE = _panel.querySelector('#filter-HE');
+  const _fltHK = _panel.querySelector('#filter-HK');
+  const _fltFE = _panel.querySelector('#filter-FE');
+  const _fltFK = _panel.querySelector('#filter-FK');
+  const _fltNE = _panel.querySelector('#filter-NE');
+  const _fltNK = _panel.querySelector('#filter-NK');
   // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
   // The carousel's DOM/Bootstrap wiring lives in <elo-ranking> (js/elo_ranking.js) now — it
   // wraps the whole pill list there. This sidebar still owns the stage index itself, its
@@ -230,30 +230,30 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const qual = !!QUALIFIED_NAMES[id];
     const imp  = (app.importByCountry[id]?.length ?? 0) > 0;
     const exp  = (app.byId[id]?.count ?? 0) > 0;
-    if  (qual &&  imp &&  exp) return 'qie';
-    if  (qual &&  imp && !exp) return 'qi';
-    if  (qual && !imp &&  exp) return 'qe';
-    if  (qual && !imp && !exp) return 'q';
+    if  (qual &&  imp &&  exp) return 'IE';
+    if  (qual &&  imp && !exp) return 'IK';
+    if  (qual && !imp &&  exp) return 'HE';
+    if  (qual && !imp && !exp) return 'HK';
     if (!qual &&               exp) return 'e';
     return 'o';
   };
 
-  const _catChecked = cat => ({qie:_fltQIE,qi:_fltQI,qe:_fltQE,q:_fltQ})[cat]?.checked ?? true;
+  const _catChecked = cat => ({IE:_fltIE,IK:_fltIK,HE:_fltHE,HK:_fltHK})[cat]?.checked ?? true;
 
   let _confIds = null; // set by setConfFilter(); null = no confederation filter
   let _confKey = null; // confederation key ('uefa' etc.) matching _confIds, for persistence/explain
 
   // 'e' (non-qualified exporter) and 'o' (non-qualified, no tournament connection) are both
-  // unaffected by the stage carousel — only the qualified categories (qie/qi/qe/q) below get
+  // unaffected by the stage carousel — only the qualified categories (IE/IK/HE/HK) below get
   // the reachesStage check, since only they have a tournament position to "reach". A
   // non-qualified exporter's players' destination countries can be filtered by stage on their
   // own (qualified) side already; the exporter itself always shows/hides purely by its own
-  // ef/en checkbox, same as of/on.
+  // FE/NE checkbox, same as FK/NK.
   const catEloChecked = (id, fifaMember) => {
     if (_confIds && fifaMember && !_confIds.has(id)) return false;
     const cat = flagCat(id);
-    if (cat === 'e') return fifaMember ? _fltEF.checked : _fltEN.checked;
-    if (cat === 'o') return fifaMember ? _fltOF.checked : _fltON.checked;
+    if (cat === 'e') return fifaMember ? _fltFE.checked : _fltNE.checked;
+    if (cat === 'o') return fifaMember ? _fltFK.checked : _fltNK.checked;
     if (!reachesStage(app.stageIndexById?.get(id), _stage)) return false;
     return _catChecked(cat);
   };
@@ -299,11 +299,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _saveState();
   };
 
-  _panel.querySelector('[data-row="q"]'   ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ]));
-  _panel.querySelector('[data-row="qi"]'  ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI]));
-  _panel.querySelector('[data-row="qni"]' ).addEventListener('click', () => _filterToggle([_fltQE,  _fltQ]));
-  _panel.querySelector('[data-row="nq"]'  ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF, _fltEN, _fltON]));
-  _panel.querySelector('[data-row="nqf"]' ).addEventListener('click', () => _filterToggle([_fltEF, _fltOF]));
+  _panel.querySelector('[data-row="QB"]'  ).addEventListener('click', () => _filterToggle([_fltIE, _fltIK, _fltHE, _fltHK]));
+  _panel.querySelector('[data-row="IB"]'  ).addEventListener('click', () => _filterToggle([_fltIE, _fltIK]));
+  _panel.querySelector('[data-row="HB"]'  ).addEventListener('click', () => _filterToggle([_fltHE, _fltHK]));
+  _panel.querySelector('[data-row="UB"]'  ).addEventListener('click', () => _filterToggle([_fltFE, _fltFK, _fltNE, _fltNK]));
+  _panel.querySelector('[data-row="FB"]'  ).addEventListener('click', () => _filterToggle([_fltFE, _fltFK]));
   const _confDropdown = _panel.querySelector('#zoom-conf-dropdown');
   const _confRadios = _confDropdown?.querySelectorAll('input[data-conf]');
   // Fills the toolbar's own slack space (between the dropdown and .ms-auto's share/params-badge
@@ -334,10 +334,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // immediately closes what was just opened (open+closed within the one click, a visible no-op).
   const _confToggleBtn = _confDropdown?.querySelector('.csb-conf-btn');
   _confLabelEl?.addEventListener('click', e => { e.stopPropagation(); _confToggleBtn?.click(); });
-  _panel.querySelector('[data-row="nqn"]' ).addEventListener('click', () => _filterToggle([_fltEN, _fltON]));
-  _panel.querySelector('[data-col="exp"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQE, _fltEF, _fltEN]));
-  _panel.querySelector('[data-col="nexp"]').addEventListener('click', () => _filterToggle([_fltQI,  _fltQ,  _fltOF, _fltON]));
-  _panel.querySelector('[data-col="all"]' ).addEventListener('click', () => _filterToggle([_fltQIE, _fltQI, _fltQE, _fltQ, _fltEF, _fltOF, _fltEN, _fltON]));
+  _panel.querySelector('[data-row="NB"]'  ).addEventListener('click', () => _filterToggle([_fltNE, _fltNK]));
+  _panel.querySelector('[data-col="AE"]'  ).addEventListener('click', () => _filterToggle([_fltIE, _fltHE, _fltFE, _fltNE]));
+  _panel.querySelector('[data-col="AK"]'  ).addEventListener('click', () => _filterToggle([_fltIK, _fltHK, _fltFK, _fltNK]));
+  _panel.querySelector('[data-col="AB"]'  ).addEventListener('click', () => _filterToggle([_fltIE, _fltIK, _fltHE, _fltHK, _fltFE, _fltFK, _fltNE, _fltNK]));
   _panel.addEventListener('change', () => { callbacks.renderElo?.(); applyFlagFilter(); _saveState(); });
 
   _panel.querySelector('.csb-collapse')?.addEventListener('click', e => {
@@ -440,6 +440,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     callbacks.onMapToggle?.(_mapToggleEl.checked);
   });
 
+  document.addEventListener('keydown', e => {
+    if (!_mapToggleEl || e.key.toLowerCase() !== 'm' || !e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    _mapToggleEl.checked = !_mapToggleEl.checked;
+    _mapToggleEl.dispatchEvent(new Event('change'));
+  });
+
   if (!alwaysOpen) {
   _toggle.addEventListener('click', () => {
     const collapsed = _el.classList.toggle('collapsed');
@@ -449,9 +456,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape' || _el.classList.contains('collapsed')) return;
-    _el.classList.add('collapsed');
-    _toggle.textContent = '‹';
+    if (e.key !== 'Escape') return;
+    const collapsed = _el.classList.toggle('collapsed');
+    _toggle.textContent = collapsed ? '‹' : '›';
     callbacks.onSidebarToggle?.();
     _saveState();
   });
@@ -766,19 +773,29 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
 
   const _SORT_KEYS  = new Set(['elo', 'alpha', 'pop', 'delta']);
+  // Cell/alias vocabulary — every code is exactly 2 letters: position 1 selects the row
+  // scope (I=qualified importers, H=qualified homegrown/no imports, Q=all qualified,
+  // F=FIFA non-qualified, N=non-FIFA, U=all unqualified, A=absolutely everything), position
+  // 2 selects the column (E=exporters, K=keeps its players/non-exporters, B=both columns).
+  // Fixed length means no code is ever a prefix of another — _ACTIONS below relies on that
+  // property so the `f`-leader keyboard chord (see its own comment) always commits after
+  // exactly 2 more keystrokes, no ambiguity, no wait.
   const _ALIASES    = {
-    qual:  ['qie','qi','qe','q'],
-    nq:    ['ef','en','of','on'],
-    exp:   ['qie','qe','ef','en'],
-    nexp:  ['qi','q','of','on'],
-    imp:   ['qie','qi'],
-    all:   ['qie','qi','qe','q','ef','en','of','on'],
+    QB:  ['IE','IK','HE','HK'],
+    UB:  ['FE','NE','FK','NK'],
+    AE:  ['IE','HE','FE','NE'],
+    AK:  ['IK','HK','FK','NK'],
+    IB:  ['IE','IK'],
+    HB:  ['HE','HK'],
+    FB:  ['FE','FK'],
+    NB:  ['NE','NK'],
+    AB:  ['IE','IK','HE','HK','FE','NE','FK','NK'],
   };
-  const _CELL_MAP   = { qie:_fltQIE, qi:_fltQI, qe:_fltQE, q:_fltQ, ef:_fltEF, en:_fltEN, of:_fltOF, on:_fltON };
+  const _CELL_MAP   = { IE:_fltIE, IK:_fltIK, HE:_fltHE, HK:_fltHK, FE:_fltFE, NE:_fltNE, FK:_fltFK, NK:_fltNK };
   // Collapses a raw cell-key list back down to _ALIASES names for succinct display —
-  // e.g. ['qie','qi','qe','q'] -> 'qual' instead of 'qie,qi,qe,q'. Used by _buildStateLines
-  // below for the explain panel / share link. Largest alias first so 'all' wins outright
-  // over reconstructing it from 'exp'+'nexp'; leftover cells with no matching alias are
+  // e.g. ['IE','IK','HE','HK'] -> 'QB' instead of 'IE,IK,HE,HK'. Used by _buildStateLines
+  // below for the explain panel / share link. Largest alias first so 'AB' wins outright
+  // over reconstructing it from 'AE'+'AK'; leftover cells with no matching alias are
   // appended as-is. Round-trips fine either way — _ALIASES expansion happens on read for
   // both the raw and the aliased form.
   const _describeCells = cells => {
@@ -793,6 +810,43 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     parts.push(...remaining);
     return parts.join(',');
   };
+
+  // ── `f`-leader keyboard shortcut — f, then any 2-letter code from _CELL_MAP/_ALIASES ──
+  // No modifier: Ctrl/Cmd+<letter> risks a mistyped Cmd-Q on macOS, which quits the whole
+  // browser at the OS level before any page JS ever sees the keystroke — unrecoverable and
+  // unrelated to this feature, but a real risk for any modifier-based leader. A bare leader
+  // (same pattern as GitHub's `g` `i`, `g` `p` navigation) sidesteps that class of mistake
+  // entirely. Guarded to only fire when focus isn't in a text field, same guard any such
+  // global shortcut needs. _ACTIONS is derived from _CELL_MAP/_ALIASES rather than hand-listed,
+  // so the shortcut layer can never drift from the filter vocabulary those two already define.
+  const _ACTIONS = {};
+  Object.entries(_CELL_MAP).forEach(([code, el]) => { _ACTIONS[code] = () => _filterToggle([el]); });
+  Object.entries(_ALIASES).forEach(([code, cells]) => { _ACTIONS[code] = () => _filterToggle(cells.map(c => _CELL_MAP[c])); });
+
+  const _isEditableTarget = el => !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+  let _chordArmed = false;
+  let _chordBuf = '';
+  let _chordTimer = null;
+  const _resetChord = () => { _chordArmed = false; _chordBuf = ''; clearTimeout(_chordTimer); };
+  const _armChordTimer = () => { clearTimeout(_chordTimer); _chordTimer = setTimeout(_resetChord, 1500); };
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (_isEditableTarget(document.activeElement)) return;
+    if (!_chordArmed) {
+      if (e.key.toLowerCase() !== 'f') return;
+      _chordArmed = true;
+      _chordBuf = '';
+      _armChordTimer();
+      return;
+    }
+    if (e.key === 'Escape') { _resetChord(); return; }
+    if (!/^[a-zA-Z]$/.test(e.key)) { _resetChord(); return; }
+    _chordBuf += e.key.toUpperCase();
+    if (_chordBuf.length < 2) { _armChordTimer(); return; }
+    const action = _ACTIONS[_chordBuf];
+    _resetChord();
+    action?.();
+  });
 
   // ── Explain panel (badge · panel · console) ─────────────────────────────
 

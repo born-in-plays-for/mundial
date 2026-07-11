@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Born In / Plays For
+# User's Guide
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->

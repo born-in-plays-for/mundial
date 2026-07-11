@@ -1,5 +1,5 @@
 <!-- i18n:countries_page_title -->
-# Países
+# Guía de la API
 <!-- /i18n:countries_page_title -->
 
 <!-- i18n:countries_intro -->

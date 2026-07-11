@@ -16,12 +16,15 @@ const _WIP_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
   <div class="gp-wip-sub">This guide section is under construction.</div>
 </div></div>`;
 
+// 'map' and 'countries' are the 2 real, page-tied guide topics — see auth-bar.js's own
+// _guideIdMap comment for why 'countries' now points at the Players page rather than the
+// retired wc2026_countries.html. 'auth' and 'default' are deliberately absent here: neither
+// is tied to one specific page (auth is reachable from the profile icon on any page; default
+// is whatever page you're already on), so there's nothing to navigate to when toggling guide
+// mode off from either — see toggleGuide's own `if (dest)` guard below.
 const _guideToPage = {
   map: '/',
-  countries: 'wc2026_countries.html',
-  players: 'wc2026_players.html',
-  france: '/insights/france.html',
-  live: 'wc2026_live.html',
+  countries: 'wc2026_players.html',
 };
 
 const _ARROW_BLUE = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#3b82f6" stroke-width="2.5"/><path d="M17,2.5 L24,6 L17,9.5Z" fill="#3b82f6"/></svg>';
@@ -75,7 +78,7 @@ export function toggleGuide(authBar) {
   }
 }
 
-const _GUIDE_IDS = new Set(['map', 'countries', 'players', 'france', 'live', 'auth']);
+const _GUIDE_IDS = new Set(['map', 'countries', 'auth', 'default']);
 
 function _ensurePanel() {
   if (_panel) { _panel.style.display = ''; return; }
@@ -279,6 +282,8 @@ function _highlightNav(activeGuideId) {
 function _sectionIcon(guideId) {
   const authBar = document.querySelector('mundial-auth-bar');
   if (!authBar) return null;
+  // 'auth' isn't a `nav a` — its trigger is the profile/sign-in area itself (see auth-bar.js's
+  // own `data-guide="auth"` on the auth-section div), so it needs its own lookup.
   const source = guideId === 'auth'
     ? authBar.querySelector('[data-ref="sign-in"]')
     : authBar.querySelector(`nav a[data-guide="${guideId}"]`);

@@ -84,9 +84,9 @@ class MundialAuthBar extends HTMLElement {
         style="position:fixed;top:0;left:0;right:0;z-index:1050;height:32px">
         <div class="container-xxl d-flex align-items-center gap-3 px-1">
           ${_navLink('/', _t.navMap, ICON_HOME, '', 'map')}
-          ${_navLink('/wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', 'countries', true)}
-          ${_navLink('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, '', 'players')}
-          ${_navLink('/wc2026_live.html', _t.navLive, ICON_LIVE, '', 'live')}
+          ${_navLink('/wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', '', true)}
+          ${_navLink('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, '', 'countries')}
+          ${_navLink('/wc2026_live.html', _t.navLive, ICON_LIVE)}
           <div class="dropdown" style="display:none;">
             <a class="nav-link dropdown-toggle d-flex align-items-center lh-1 p-0"
               href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
@@ -95,7 +95,7 @@ class MundialAuthBar extends HTMLElement {
             </a>
             <ul class="dropdown-menu dropdown-menu-start" style="min-width:0">
               <li><a href="/insights/france.html" class="dropdown-item d-flex align-items-center gap-2"
-                aria-label=${_t.navFrance} title=${_t.navFrance} data-guide="france"
+                aria-label=${_t.navFrance} title=${_t.navFrance}
                 style="opacity:0.6">
                 ${unsafeHTML(ICON_FRANCE)} ${_t.navFrance}
               </a></li>
@@ -151,18 +151,19 @@ class MundialAuthBar extends HTMLElement {
       this._refs[el.dataset.ref] = el;
     });
 
+    // 'map' (the User's Guide, off the home icon) and 'countries' (the API Guide — URL query
+    // parameters for both sidebars — off the Players icon, since wc2026_countries.html is no
+    // longer linked from the UI; see guide/guide-countries.md's own header comment) are the 2
+    // real, page-tied guide topics. Any page with no entry here falls back to 'default' (a
+    // single shared "nothing here yet" placeholder) rather than disabling the guide button —
+    // covers wc2026_countries.html, wc2026_live.html, insights/*.html, and anything added later
+    // without needing its own explicit mapping. 'auth' (offline/no-server-connection help) is
+    // separate — it's reachable via the profile icon on any page, not tied to a page at all.
     const _guideIdMap = {
       '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
-      'wc2026_countries.html': 'countries',
-      'wc2026_players.html': 'players',
-      'france.html': 'france',
-      'wc2026_live.html': 'live',
+      'wc2026_players.html': 'countries',
     };
-    this._currentGuideId = _guideIdMap[page] ?? null;
-    if (!this._currentGuideId) {
-      const btn = this._el('guide-btn');
-      if (btn) btn.disabled = true;
-    }
+    this._currentGuideId = _guideIdMap[page] ?? 'default';
 
     this._el('auth-section').style.visibility = 'hidden';
     this._offsetSibling();
@@ -171,7 +172,7 @@ class MundialAuthBar extends HTMLElement {
     // ?guide[=section] — auto-open guide panel on load
     const _sp = new URLSearchParams(location.search);
     if (_sp.has('guide')) {
-      const _validGuide = new Set(['map', 'countries', 'players', 'france', 'live', 'auth']);
+      const _validGuide = new Set(['map', 'countries', 'auth', 'default']);
       const _target = _sp.get('guide') || this._currentGuideId;
       if (_target && _validGuide.has(_target)) {
         this._currentGuideId = _target;

@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Nato in / Gioca per
+# Guida utente
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->

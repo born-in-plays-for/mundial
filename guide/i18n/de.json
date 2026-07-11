@@ -1,5 +1,5 @@
 {
-  "page_title": "# Geboren in / Spielt für",
+  "page_title": "# Benutzerhandbuch",
   "intro": [
     "Diese Karte visualisiert die Kader der Fußball-Weltmeisterschaft 2026 unter dem Gesichtspunkt des Geburtsortes.",
     "Jedes Land ist entsprechend der Gesamtzahl der WM-Spieler eingefärbt, die dort geboren wurden —",
@@ -222,7 +222,7 @@
     "Diese Quellen speisen eine automatisierte Pipeline, die die Rohdaten zusammenführt, abgleicht und anreichert, bevor sie auf dieser Seite veröffentlicht werden.",
     "Elo-Ranglisten werden täglich aktualisiert; Kaderdaten werden manuell aktualisiert, wenn sich die Kader ändern."
   ],
-  "countries_page_title": "# Länder",
+  "countries_page_title": "# API-Leitfaden",
   "countries_intro": "Alle Länder im Ökosystem der WM 2026 — qualifizierte Mannschaften und die weitere Fußballwelt — nach Elo-Rating gerankt und nach Geburtsort/spielt-für-Verbindungen farblich kodiert.",
   "countries_url_params": [
     "## URL-Parameter",

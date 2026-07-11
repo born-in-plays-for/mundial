@@ -1,5 +1,5 @@
 <!-- i18n:page_title -->
-# Né en / Joue pour
+# Guide utilisateur
 <!-- /i18n:page_title -->
 
 <!-- i18n:intro -->

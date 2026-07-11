@@ -849,9 +849,35 @@ _sidebarCallbacks.onSidebarToggle = () => {
 // #map-container is position:fixed (see css/map-container.css) — hiding it doesn't disturb
 // document flow, so page content below just needs its padding-top recomputed to close the gap
 // (_mc's own rect collapses to 0 height once hidden, same code path as any other resize).
+// Animated show/hide (fade + scaleY collapse, see .map-hidden in map-container.css) rather
+// than snapping `display` straight to none — the rAF loop keeps _syncPaddingTop's read of
+// #map-container's live (shrinking/growing) rect in step with the CSS transition each frame,
+// same way _syncPaddingTop already tracks any other rect change. `display:none` is applied
+// only once the transition finishes, matching the old instant-hide behavior for layout/a11y.
+let _mapToggleRaf = null;
 _sidebarCallbacks.onMapToggle = visible => {
-  if (_mc) _mc.style.display = visible ? '' : 'none';
-  _syncPaddingTop();
+  if (!_mc) return;
+  if (_mapToggleRaf) cancelAnimationFrame(_mapToggleRaf);
+  if (visible) {
+    _mc.style.display = '';
+    void _mc.offsetHeight; // force reflow so removing .map-hidden transitions from the hidden state
+    _mc.classList.remove('map-hidden');
+  } else {
+    _mc.classList.add('map-hidden');
+  }
+  const duration = 320; // > map-container.css's 0.3s opacity/transform transition
+  const start = performance.now();
+  const step = now => {
+    _syncPaddingTop();
+    if (now - start < duration) {
+      _mapToggleRaf = requestAnimationFrame(step);
+      return;
+    }
+    _mapToggleRaf = null;
+    _syncPaddingTop();
+    if (!visible) _mc.style.display = 'none';
+  };
+  _mapToggleRaf = requestAnimationFrame(step);
 };
 
 document.addEventListener('mundial-conf-changed', ({ detail: { conf, ids } }) => {

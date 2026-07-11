@@ -1,5 +1,5 @@
 {
-  "page_title": "# Nacido en / Juega para",
+  "page_title": "# Guía del usuario",
   "intro": [
     "Este mapa visualiza las convocatorias del Mundial 2026 desde la perspectiva del lugar de nacimiento.",
     "Cada país se colorea según el número total de jugadores del torneo nacidos allí —",
@@ -222,7 +222,7 @@
     "Estas fuentes alimentan un pipeline automatizado que fusiona, cruza y enriquece los datos brutos antes de publicarlos en esta página.",
     "Los rankings Elo se actualizan diariamente; los datos de convocatorias se actualizan manualmente cuando cambian las selecciones."
   ],
-  "countries_page_title": "# Países",
+  "countries_page_title": "# Guía de la API",
   "countries_intro": "Todos los países del ecosistema del Mundial 2026 — selecciones clasificadas y el mundo más amplio del fútbol — clasificados por rating Elo y coloreados según sus conexiones nacido-en / juega-para.",
   "countries_url_params": [
     "## Parámetros de URL",

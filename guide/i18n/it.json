@@ -1,5 +1,5 @@
 {
-  "page_title": "# Nato in / Gioca per",
+  "page_title": "# Guida utente",
   "intro": [
     "Questa mappa visualizza le rose dei Mondiali 2026 dal punto di vista del luogo di nascita.",
     "Ogni paese è colorato in base al numero totale di giocatori del torneo nati lì —",
@@ -221,7 +221,7 @@
     "Queste fonti alimentano un pipeline automatizzato che unisce, incrocia e arricchisce i dati grezzi prima di pubblicarli su questa pagina.",
     "I ranking Elo vengono aggiornati quotidianamente; i dati delle rose vengono aggiornati manualmente quando le selezioni cambiano."
   ],
-  "countries_page_title": "# Paesi",
+  "countries_page_title": "# Guida API",
   "countries_intro": "Tutti i paesi dell'ecosistema dei Mondiali 2026 — squadre qualificate e il più ampio mondo del calcio — classificati per rating Elo e colorati in base alle connessioni nato-in / gioca-per.",
   "countries_url_params": [
     "## Parametri URL",
