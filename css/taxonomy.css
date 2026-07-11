@@ -31,7 +31,7 @@
 .taxonomy .elo-item:not(.elo-item--qualified) { border: none; }
 
 /* Qualified but knocked out: dashed border only — signals "no longer alive". */
-.taxonomy .elo-item--qualified.elo-item--knocked-out { border-style: dashed; }
+.taxonomy .elo-item--qualified.elo-item--knocked-out { border-style: dashed; border-color: #aaa;}
 
 /* Schrödinger's team: fixture for the currently-viewed stage hasn't been played yet — could
    still go either way. Wavy top AND bottom edges (sides keep the pill's own normal border
