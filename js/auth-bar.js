@@ -79,6 +79,23 @@ class MundialAuthBar extends HTMLElement {
   }
 
   connectedCallback() {
+    const page = location.pathname.split('/').pop() || 'index.html';
+    // 'map' (the User's Guide, off the home icon) and 'countries' (the API Guide — URL query
+    // parameters for both sidebars — off the Players icon, since wc2026_countries.html is no
+    // longer linked from the UI; see guide/guide-countries.md's own header comment) are the 2
+    // real, page-tied guide topics. Any page with no entry here falls back to 'default' (a
+    // single shared "nothing here yet" placeholder) rather than disabling the guide button —
+    // covers wc2026_countries.html, wc2026_live.html, insights/*.html, and anything added later
+    // without needing its own explicit mapping. 'auth' (offline/no-server-connection help) is
+    // separate — it's reachable via the profile icon on any page, not tied to a page at all.
+    const _guideIdMap = {
+      '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
+      'wc2026_players.html': 'countries',
+    };
+    this._currentGuideId = _guideIdMap[page] ?? 'default';
+    const _guideHref = new URL(location.href);
+    _guideHref.searchParams.set('guide', this._currentGuideId);
+
     render(html`
       <nav class="navbar navbar-light bg-white border-bottom py-0 px-2"
         style="position:fixed;top:0;left:0;right:0;z-index:1050;height:32px">
@@ -115,17 +132,16 @@ class MundialAuthBar extends HTMLElement {
             class="d-flex align-items-center gap-3 ms-auto">
             ${_authSectionTemplate()}
           </div>
-          <button data-ref="guide-btn"
+          <a data-ref="guide-btn" href=${_guideHref.pathname + _guideHref.search}
             class="btn btn-outline-secondary p-0 d-flex align-items-center"
             aria-label=${_t.navGuide} title=${_t.navGuide}
             data-bs-toggle="button"
-            @click=${() => this._onGuideClick()}>
+            @click=${e => this._onGuideClick(e)}>
             ${unsafeHTML(ICON_GUIDE)}
-          </button>
+          </a>
         </div>
       </nav>`, this);
 
-    const page = location.pathname.split('/').pop() || 'index.html';
     const navLinks = {
       '/': ['index.html', 'wc2026_map.html', ''],
       '/wc2026_countries.html': ['wc2026_countries.html'],
@@ -151,20 +167,6 @@ class MundialAuthBar extends HTMLElement {
       this._refs[el.dataset.ref] = el;
     });
 
-    // 'map' (the User's Guide, off the home icon) and 'countries' (the API Guide — URL query
-    // parameters for both sidebars — off the Players icon, since wc2026_countries.html is no
-    // longer linked from the UI; see guide/guide-countries.md's own header comment) are the 2
-    // real, page-tied guide topics. Any page with no entry here falls back to 'default' (a
-    // single shared "nothing here yet" placeholder) rather than disabling the guide button —
-    // covers wc2026_countries.html, wc2026_live.html, insights/*.html, and anything added later
-    // without needing its own explicit mapping. 'auth' (offline/no-server-connection help) is
-    // separate — it's reachable via the profile icon on any page, not tied to a page at all.
-    const _guideIdMap = {
-      '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
-      'wc2026_players.html': 'countries',
-    };
-    this._currentGuideId = _guideIdMap[page] ?? 'default';
-
     this._el('auth-section').style.visibility = 'hidden';
     this._offsetSibling();
     this._init();
@@ -187,7 +189,12 @@ class MundialAuthBar extends HTMLElement {
 
   _el(ref) { return this._refs[ref]; }
 
-  async _onGuideClick() {
+  async _onGuideClick(e) {
+    // guide-btn is a real <a href="?guide=..."> so right-click / middle-click / ctrl+click
+    // open it in a new tab or split view via the browser's native handling. Only intercept
+    // a plain primary-button click for the in-page SPA toggle.
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
     this._guideActive = !this._guideActive;
     const { toggleGuide } = await import('./guide-mode.js');
     toggleGuide(this);
