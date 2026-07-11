@@ -18,6 +18,22 @@ export const QUALIFIED_BY_NAME = Object.fromEntries(
   Object.entries(QUALIFIED_NAMES).map(([id, name]) => [name, +id])
 );
 
+// "Aymeric Laporte" + surname "Laporte" → "LAPORTE Aymeric". Surname is usually a
+// trailing substring of name, but not always (e.g. "Hong Myung-bo", surname "Hong",
+// already leads) — cut it out wherever it occurs rather than assuming a suffix.
+export const playerDisplayName = p => {
+  const { name, surname } = p;
+  if (!surname) return name;
+  const idx = name.indexOf(surname);
+  if (idx === -1) return name;
+  const rest = (name.slice(0, idx) + name.slice(idx + surname.length)).replace(/\s+/g, ' ').trim();
+  return `${surname.toUpperCase()} ${rest}`.trim();
+};
+
+// Alphabetizing key for a player: surname when known (matching playerDisplayName's
+// surname-first display), else the full name as a fallback for records without one.
+export const playerSortKey = p => p.surname || p.name;
+
 export const buildImportByCountry = (mapData, countryNameFn) => {
   const out = {};
   for (const rec of (mapData.data ?? [])) {
@@ -26,7 +42,7 @@ export const buildImportByCountry = (mapData, countryNameFn) => {
       if (nId == null) continue;
       if (countryNameFn(rec.id, rec.country) === countryNameFn(nId, QUALIFIED_NAMES[nId])) continue;
       if (!out[nId]) out[nId] = [];
-      const imp = { name: p.name, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, pid: p.pid };
+      const imp = { name: p.name, surname: p.surname, birthCountry: rec.country, birthCountryId: rec.id, caps: p.caps, pid: p.pid };
       if (p.role) imp.role = p.role;
       out[nId].push(imp);
     }

@@ -1,6 +1,6 @@
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { CONF_IDS } from './conf.js';
-import { CAROUSEL_STAGES, QUALIFIED_NAMES, QUALIFIED_BY_NAME, reachesStage, teamComparators } from './qualified.js';
+import { CAROUSEL_STAGES, QUALIFIED_NAMES, QUALIFIED_BY_NAME, reachesStage, teamComparators, playerSortKey } from './qualified.js';
 import { createStageCarousel, maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
@@ -384,7 +384,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     };
     const sorted = [...filtered].sort((a, b) => {
       if (_mode === 'player') {
-        const d = a.name.localeCompare(b.name);
+        const d = playerSortKey(a).localeCompare(playerSortKey(b));
         return _dir === 'asc' ? -d : d;
       }
       const key = _teamOrder[0];
@@ -392,7 +392,7 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
       if (d !== 0) return d;
       d = _cmpMaybe(_secondary(a), _secondary(b), teamComparators[key]);
       if (d !== 0) return d;
-      return a.name.localeCompare(b.name);
+      return playerSortKey(a).localeCompare(playerSortKey(b));
     });
     // Mirrors js/elo_ranking.js's own initEloRanking renderFn, which sets #elo-meta-count the
     // same way (authoritative count from the actual filtered/sorted result, not a re-derived

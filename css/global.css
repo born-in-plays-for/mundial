@@ -203,7 +203,13 @@ body { background: var(--page-bg); color: var(--color-default); }
 .elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 20px; background: #fff; }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
-.elo-item--active { background: var(--border-strong) !important; border-color: var(--border-strong) !important; }
+.elo-item--active { 
+background: linear-gradient(to right,
+    var(--imp-color, #ddd) 0%,
+    #ddd var(--imp-pivot, 0%),
+    #ddd var(--native-pivot, 0%),
+    var(--exp-color, #ddd) 100%) !important;
+}
 .elo-item--zoomable { cursor: pointer; }
 .elo-item--zoomable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
 .elo-rank { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }

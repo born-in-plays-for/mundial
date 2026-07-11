@@ -34,7 +34,7 @@
 <script type="module">
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { wikiUrl, wikiUrlEn, loadWikiData, T, countryName } from './js/i18n.js';
-import { QUALIFIED_BY_NAME, buildImportByCountry, buildEloItems, loadEloData } from './js/qualified.js';
+import { QUALIFIED_BY_NAME, buildImportByCountry, buildEloItems, loadEloData, playerDisplayName, playerSortKey } from './js/qualified.js';
 import { iso2ForId, _NULL_CODE } from './js/iso2.js';
 import { initPlayersSidebar } from './js/players_sidebar.js';
 
@@ -100,7 +100,7 @@ for (const [country, natives] of Object.entries(mapData.natives ?? {})) {
   const nId = QUALIFIED_BY_NAME[country];
   for (const p of natives) entries.push({ ...p, nation: country, native: true, birthCountry: country, birthCountryId: nId });
 }
-entries.sort((a, b) => a.name.localeCompare(b.name));
+entries.sort((a, b) => playerSortKey(a).localeCompare(playerSortKey(b)));
 
 const coachCount = entries.filter(p => p.role === 'coach').length;
 document.getElementById('players-meta').textContent =
@@ -112,9 +112,10 @@ const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.
 const wikiLink = p => {
   const url = wikiUrl(p.pid);
   const en = wikiUrlEn(p.pid);
-  if (url) return html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${p.name}</a>${coachBadge(p)}`;
-  if (en) return html`${p.name} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)${coachBadge(p)}`;
-  return html`${p.name}${coachBadge(p)}`;
+  const dName = playerDisplayName(p);
+  if (url) return html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${dName}</a>${coachBadge(p)}`;
+  if (en) return html`${dName} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)${coachBadge(p)}`;
+  return html`${dName}${coachBadge(p)}`;
 };
 
 // flag-icons (css/flag-icons.min.css, linked in <head>) — same "fi fi-<iso2>" span pattern
