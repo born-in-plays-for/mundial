@@ -21,6 +21,12 @@
   .disc-num { text-align: right; font-variant-numeric: tabular-nums; }
   .disc-stage { color: var(--text-muted); font-size: 11px; }
   .disc-carousel-host { max-width: 420px; margin: 0 auto 12px; }
+  /* A still-alive team viewed at its own current (unfinished) stage has no byStage snapshot
+     yet — renderTable() falls back to its last completed stage's real figures instead of
+     hiding the row or blanking it, marked with .disc-pending so it doesn't read as "confirmed
+     as of the selected stage" like every other visible row. */
+  .disc-pending { color: var(--text-muted); cursor: help; margin-left: 2px; }
+  tr.disc-row-pending .disc-num { color: var(--text-muted); font-style: italic; }
 </style>
 </head>
 <body>
@@ -132,6 +138,21 @@ const _cmpMaybe = (a, b, get) => {
 };
 
 const stageLabel = t => t.eliminated ? `Eliminated — ${t.stage}` : t.stage;
+
+// Every eliminated team has a byStage entry for each round it actually played (contiguous
+// through its elimination round) — the only way a *visible* team (reachesStage already
+// filtered out anyone eliminated before _stage) can lack byStage[ELIM_ROUNDS[_stage]] is if
+// it's still alive and _stage is exactly its own current stage, whose fixture hasn't finished
+// yet (see the file's own note on byStage above). Walk backward to the nearest stage that
+// *does* have a snapshot — Group Stage (index 0) always does, so this never falls through.
+const snapshotFor = (t, stageIdx) => {
+  for (let i = stageIdx; i >= 0; i--) {
+    const key = ELIM_ROUNDS[i];
+    const snap = t.byStage?.[key];
+    if (snap) return { snap, stageKey: key, pending: i !== stageIdx };
+  }
+  return null;
+};
 // Plain inline span, not wrapped in a flex cell — flag-icons sizes .fi via its own em-based
 // width/aspect-ratio, but as a flex item (empty span, no min-content of its own beyond the
 // background-image) it can shrink to near-nothing under flex-shrink whenever a long team name
@@ -141,27 +162,31 @@ const flagSpan = iso2 => html`<span class="fi fi-${iso2} pt-flag"></span>`;
 
 const renderTable = () => {
   renderHead();
-  const visible = teams.filter(t => reachesStage(t.visibleThroughIndex, _stage));
-  const sorted = [...visible].sort((a, b) => {
-    if (_sortKey === 'name') { const d = a.name.localeCompare(b.name); return _sortDir === 'asc' ? d : -d; }
+  // { t, snap, pending } — figures as of the *selected* stage (js/qualified.js's
+  // ELIM_ROUNDS[_stage]), not the team's final/current totals; see snapshotFor's own comment.
+  const rows = teams
+    .filter(t => reachesStage(t.visibleThroughIndex, _stage))
+    .map(t => ({ t, ...snapshotFor(t, _stage) }));
+  const sorted = [...rows].sort((a, b) => {
+    if (_sortKey === 'name') { const d = a.t.name.localeCompare(b.t.name); return _sortDir === 'asc' ? d : -d; }
     if (_sortKey === 'stage') {
-      const d = a.visibleThroughIndex - b.visibleThroughIndex || (a.eliminated === b.eliminated ? 0 : a.eliminated ? -1 : 1);
+      const d = a.t.visibleThroughIndex - b.t.visibleThroughIndex || (a.t.eliminated === b.t.eliminated ? 0 : a.t.eliminated ? -1 : 1);
       return _sortDir === 'asc' ? d : -d;
     }
-    return _cmpMaybe(a, b, t => t[_sortKey]);
+    return _cmpMaybe(a, b, r => r.snap[_sortKey]);
   });
-  render(html`${sorted.map(t => html`
-    <tr>
+  render(html`${sorted.map(({ t, snap, stageKey, pending }) => html`
+    <tr class=${pending ? 'disc-row-pending' : ''}>
       <td>${flagSpan(t.iso2)}${t.name}</td>
-      <td class="disc-stage">${stageLabel(t)}</td>
-      <td class="disc-num">${t.matchesPlayed}</td>
-      <td class="disc-num">${t.foulsCommitted}</td>
-      <td class="disc-num">${t.foulsSuffered}</td>
-      <td class="disc-num">${t.avgFoulsCommitted.toFixed(1)}</td>
-      <td class="disc-num">${t.avgFoulsSuffered.toFixed(1)}</td>
-      <td class="disc-num">${t.yellowCards}</td>
-      <td class="disc-num">${t.redCards}</td>
-      <td class="disc-num">${t.foulsPerCard != null ? t.foulsPerCard.toFixed(2) : '—'}</td>
+      <td class="disc-stage">${stageLabel(t)}${pending ? html`<span class="disc-pending" title="${t.stage} not finished yet — figures as of ${stageKey}">†</span>` : nothing}</td>
+      <td class="disc-num">${snap.matchesPlayed}</td>
+      <td class="disc-num">${snap.foulsCommitted}</td>
+      <td class="disc-num">${snap.foulsSuffered}</td>
+      <td class="disc-num">${snap.avgFoulsCommitted.toFixed(1)}</td>
+      <td class="disc-num">${snap.avgFoulsSuffered.toFixed(1)}</td>
+      <td class="disc-num">${snap.yellowCards}</td>
+      <td class="disc-num">${snap.redCards}</td>
+      <td class="disc-num">${snap.foulsPerCard != null ? snap.foulsPerCard.toFixed(2) : '—'}</td>
     </tr>`)}`, document.getElementById('disc-body'));
 };
 
