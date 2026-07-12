@@ -1,5 +1,4 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
 import { CONF_IDS } from './conf.js';
 import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './qualified.js';
 import { maxReachableStage } from './stage_carousel.js';
@@ -7,16 +6,7 @@ import { loadSlice, saveSlice } from './persist.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
 import { wireShareButton } from './share_button.js';
 
-// images/solar_linear/earth-svgrepo-com.svg, inlined (see that file's own comment on why
-// icons live as plain strings here rather than <img> tags) — swapped in for the globus
-// glyph, whose finer paths (globe grid lines) blurred into noise at this pill's small size;
-// this one's 3 simpler strokes stay legible. stroke uses currentColor rather than the
-// source file's hardcoded #1C274C — this one sits in a checkbox pill whose text color
-// already flips between checked/unchecked (same as the teams/matches labels beside it),
-// and the glyph needs to follow along the same way plain text would.
-const ICON_MAP = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M6 4.71053C6.78024 5.42105 8.38755 7.36316 8.57481 9.44737C8.74984 11.3955 10.0357 12.9786 12 13C12.7549 13.0082 13.5183 12.4629 13.5164 11.708C13.5158 11.4745 13.4773 11.2358 13.417 11.0163C13.3331 10.7108 13.3257 10.3595 13.5 10C14.1099 8.74254 15.3094 8.40477 16.2599 7.72186C16.6814 7.41898 17.0659 7.09947 17.2355 6.84211C17.7037 6.13158 18.1718 4.71053 17.9377 4" stroke="currentColor" stroke-width="1.5"/><path d="M22 13C21.6706 13.931 21.4375 16.375 17.7182 16.4138C17.7182 16.4138 14.4246 16.4138 13.4365 18.2759C12.646 19.7655 13.1071 21.3793 13.4365 22" stroke="currentColor" stroke-width="1.5"/></svg>`;
-
-export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true, hasMap = true }) {
+export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true }) {
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
   // 'team' (default) — flat list, unchanged. 'match' — teams grouped fixture-by-fixture
@@ -87,10 +77,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         <tr>
           <td class="csb-toggle-col text-muted">
             <div class="csb-display-toggle">
-              <span class="csb-map-toggle" ?hidden=${!hasMap}>
-                <input type="checkbox" class="btn-check" id="csb-map-toggle" autocomplete="off" checked>
-                <label class="btn csb-map-icon" for="csb-map-toggle" title="${T.sortLabels.mapHint}" aria-label="${T.sortLabels.map}">${unsafeHTML(ICON_MAP)}</label>
-              </span>
               <span class="csb-display-radios">
                 <input type="radio" class="btn-check" name="csb-display" id="csb-display-team" data-display="team" checked>
                 <label class="btn" for="csb-display-team" title="${T.sortLabels.teamHint}">${T.sortLabels.teamDisplay}</label>
@@ -360,13 +346,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _displayToggleEl = _panel.querySelector('.csb-display-toggle');
   const _teamDisplayRadio = _displayToggleEl.querySelector('[data-display="team"]');
   const _matchDisplayRadio = _displayToggleEl.querySelector('[data-display="match"]');
-  // Independent of _displayMode (team/match) — a plain visibility toggle for the map itself,
-  // not a sort/display criterion. Only *visible* when hasMap=true (see initSidebar's own
-  // param) — on pages that reuse this sidebar without a map (wc2026_countries.html,
-  // control-sidebar-test.html) the element is still rendered (just `hidden`, see the template
-  // above), so this lookup and its listener stay unconditional; there's simply no
-  // onMapToggle callback wired up on those pages for it to call.
-  const _mapToggleEl = _panel.querySelector('#csb-map-toggle');
 
   // team/match display switch — see _displayMode's own comment above for what it does.
   // Not part of _sortOrder/_updateSortCol's reordering: it's a mode switch, not a
@@ -434,17 +413,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _setDisplayMode(radio.dataset.display);
     callbacks.renderElo?.(callbacks.scrollToActiveElo);
     _saveState();
-  });
-
-  _mapToggleEl?.addEventListener('change', () => {
-    callbacks.onMapToggle?.(_mapToggleEl.checked);
-  });
-
-  document.addEventListener('keydown', e => {
-    if (!_mapToggleEl || e.key.toLowerCase() !== 'm' || !e.ctrlKey || e.metaKey || e.altKey) return;
-    e.preventDefault();
-    _mapToggleEl.checked = !_mapToggleEl.checked;
-    _mapToggleEl.dispatchEvent(new Event('change'));
   });
 
   if (!alwaysOpen) {
@@ -1015,7 +983,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     saveSlice('countries', {
       checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
       display: _displayMode,
-      map: _mapToggleEl ? _mapToggleEl.checked : true,
       // Always false on alwaysOpen pages (no .csb-toggle/collapse there to ever add the
       // class) — harmless to save regardless, just never restored for them (see _restoreState).
       collapsed: _el.classList.contains('collapsed'),
@@ -1060,15 +1027,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _restoringState = false;
 
     if (countries?.display === 'team' || countries?.display === 'match') _setDisplayMode(countries.display);
-
-    // Programmatic — doesn't fire the checkbox's own 'change' listener, so the callback that
-    // actually shows/hides #map-container has to be invoked here explicitly (see js/wc2026_map.js's
-    // onMapToggle). No-op on pages without a map (hasMap=false): _mapToggleEl still exists
-    // (just hidden), but there's no onMapToggle callback wired up to call.
-    if (typeof countries?.map === 'boolean' && _mapToggleEl) {
-      _mapToggleEl.checked = countries.map;
-      callbacks.onMapToggle?.(countries.map);
-    }
 
     // alwaysOpen pages never render .csb-toggle/.collapsed at all (see the template above),
     // so there's nothing to restore there — collapsed is only ever meaningful (and only ever

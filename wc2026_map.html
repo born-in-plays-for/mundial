@@ -56,6 +56,8 @@
   <div id="sidebar-host" style="position:absolute;top:0;right:0;z-index:10"></div>
 </header>
 <div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative">
+  <button id="map-toggle-bar" type="button" class="map-toggle-bar" data-bs-toggle="collapse" data-bs-target="#map-collapse" aria-expanded="true" aria-controls="map-collapse">⌄</button>
+  <div id="map-collapse" class="collapse show w-100">
   <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
   <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
     <div id="legend-born" class="sub">
@@ -97,6 +99,7 @@
     <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
   </button>
   <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
+  </div>
 </div>
 
 <!-- Debug tool for tuning the violet theme's diverging color scale live — see

@@ -299,6 +299,14 @@ class WorldMap extends HTMLElement {
 
     const [[bx0, by0], [bx1, by1]] = this.path.bounds({type: 'Sphere'});
     this.svg.attr('viewBox', `${Math.floor(bx0)} ${Math.floor(by0)} ${Math.ceil(bx1-bx0)} ${Math.ceil(by1-by0)}`);
+    // object-fit:cover equivalent for SVG — 'slice' crops overflow to fill the box instead
+    // of the default 'meet', which letterboxes (empty #map background bars) whenever the
+    // box's own aspect ratio doesn't match the viewBox. #map itself is width:100%/height:auto
+    // in normal layout, so its box always already matches the viewBox's own aspect ratio there
+    // (nothing to crop) — this only has a visible effect in the landscape-mobile media query
+    // (css/map-container.css), where #map is forced to width:100%/height:100% of a
+    // fullscreen box with its own, unrelated aspect ratio.
+    this.svg.attr('preserveAspectRatio', 'xMidYMid slice');
 
     this.g      = this.svg.append('g');
     this.onZoom = null;

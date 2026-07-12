@@ -72,7 +72,7 @@ const fmtPop = n => new Intl.NumberFormat(LOCALE, { notation: 'compact', maximum
 const el = document.getElementById('list');
 
 const sidebarCallbacks = {};
-const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true, hasMap: false });
+const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: el, callbacks: sidebarCallbacks, alwaysOpen: true });
 
 const { render: renderElo, rawItems } = initEloRanking({
   el, sidebar,

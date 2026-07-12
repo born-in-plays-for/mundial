@@ -334,28 +334,6 @@
   color: rgba(33, 37, 41, 0.75);
 } */
 
-/* ── Map show/hide checkbox — same row, left of the team/match switch ────
-   A plain visibility toggle (js/wc2026_map.js's onMapToggle), unrelated to _displayMode —
-   same Bootstrap btn-check pill look as the team/match switch itself (hidden checkbox +
-   .btn label, see getbootstrap.com/docs/5.3/forms/checks-radios) rather than the filter
-   table's □/▣ glyph checkboxes, so it reads as one control family with teams/matches
-   instead of borrowing the filter grid's convention. The shared
-   `#control-sidebar .csb-display-toggle .btn` rule above already sizes/pads its label the
-   same as the team/match pills. Separated from them with its own border-right rather than
-   a table column, since both live in one flex row now (.csb-display-toggle). Omitted
-   entirely (hasMap=false) on pages that reuse this sidebar without a map —
-   wc2026_countries.html, control-sidebar-test.html — so no dead control sits next to a
-   switch with nothing to do. */
-#control-sidebar .csb-map-toggle {
-  padding-right: 6px; margin-right: 3px;
-  border-right: 1px solid #999;
-}
-/* Icon-only pill (js/control_sidebar.js's ICON_MAP) instead of text — sized down from its
-   native 24×24 to match the row's ~11px text, with a small floor (10px) so the glyph's own
-   detail (three thin paths inside the circle) doesn't disappear entirely at that size. */
-#control-sidebar .csb-map-icon { display: inline-flex; align-items: center; }
-#control-sidebar .csb-map-icon svg { width: 14px; height: 14px; }
-
 /* ── Sort direction button ─────────────────────────────────────────────── */
 
 .csb-panel .csb-sort-dir {

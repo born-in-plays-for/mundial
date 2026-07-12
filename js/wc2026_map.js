@@ -509,23 +509,98 @@ const _syncPaddingTop = () => {
     // Uses the *target* header height, not a live read of #map-container's own rect — its
     // `top` now transitions (see map-container.css), so a live read right after changing
     // --page-header-h would catch it mid-animation and go stale. #map-container's own height
-    // is intrinsic (content-driven), unaffected by `top`, so it's safe to read live here.
-    // .map-hidden's slide-up (translateY, see map-container.css) doesn't touch `top` or the
-    // rect's height either — it's a separate live transform offset, tracked here so page
-    // content below follows the slide frame-by-frame instead of jumping only once display:none
-    // lands (see onMapToggle's rAF loop, which calls this every frame during the transition).
-    const cs = getComputedStyle(_mc);
-    const translateY = cs.transform && cs.transform !== 'none' ? new DOMMatrix(cs.transform).m42 : 0;
-    const mapBottom = _computeHeaderHeight() + _mc.getBoundingClientRect().height + (parseFloat(cs.marginBottom) || 0) + translateY;
+    // is intrinsic (content-driven), unaffected by `top`, so it's safe to read live here —
+    // including while #map-collapse (its child) is mid-collapse/expand, since that's a normal
+    // height change like any other resize (see the Bootstrap Collapse wiring below, which polls
+    // this function every frame during that transition so #bottomTabContent tracks it live).
+    const mapBottom = _computeHeaderHeight() + _mc.getBoundingClientRect().height + (parseFloat(getComputedStyle(_mc).marginBottom) || 0);
     document.body.style.paddingTop = mapBottom + 'px';
     document.documentElement.style.scrollPaddingTop    = mapBottom + 'px';
     document.documentElement.style.scrollPaddingBottom = (_bottomPanel ? _bottomPanel.offsetHeight : 0) + 'px';
   }
 };
 requestAnimationFrame(_syncPaddingTop);
+
+// Map show/hide — a real Bootstrap Collapse (#map-collapse, see wc2026_map.html).
+// #map-container itself stays position:fixed and is never touched here; only its
+// inner wrapper collapses, so #map-container's own rect shrinks like any other
+// resize and _syncPaddingTop's normal read of it (above) already tracks the result.
+// The rAF loop below just keeps that same function polling every frame *during*
+// Bootstrap's own ~350ms height transition, since a single call per show/hide event
+// wouldn't catch the in-between frames.
+const _mapCollapseEl = document.getElementById('map-collapse');
+const _mapToggleBar = document.getElementById('map-toggle-bar');
+const _mapCollapse = _mapCollapseEl ? bootstrap.Collapse.getOrCreateInstance(_mapCollapseEl, { toggle: false }) : null;
+const _MAP_COLLAPSED_KEY = 'mundial-map-collapsed';
+// The user's real preference, independent of the collapse's live DOM state — landscape
+// mode force-expands the map without touching this (see the resize listener below).
+let _userWantsMapOpen = localStorage.getItem(_MAP_COLLAPSED_KEY) !== '1';
+let _mapToggleRaf = null;
+const _pollPaddingDuringMapToggle = () => { _syncPaddingTop(); _mapToggleRaf = requestAnimationFrame(_pollPaddingDuringMapToggle); };
+if (_mapCollapseEl) {
+  const _paintMapToggleChevron = expanded => { if (_mapToggleBar) _mapToggleBar.textContent = expanded ? '⌄' : '⌃'; };
+  _paintMapToggleChevron(_mapCollapseEl.classList.contains('show'));
+  // body's own `transition: padding-top 0.4s ease` (css/wc2026_map.css) exists for the
+  // single-shot onSidebarToggle path — driving padding-top every rAF frame here too would
+  // double-animate it (body keeps easing toward each frame's already-eased target),
+  // visibly lagging #bottomTabContent behind the map. Suspend it for the transition only.
+  _mapCollapseEl.addEventListener('show.bs.collapse', () => {
+    document.body.style.transition = 'none';
+    _paintMapToggleChevron(true);
+    if (_mapToggleRaf) cancelAnimationFrame(_mapToggleRaf);
+    _pollPaddingDuringMapToggle();
+  });
+  _mapCollapseEl.addEventListener('hide.bs.collapse', () => {
+    document.body.style.transition = 'none';
+    _paintMapToggleChevron(false);
+    if (_mapToggleRaf) cancelAnimationFrame(_mapToggleRaf);
+    _pollPaddingDuringMapToggle();
+  });
+  const _settleMapToggle = expanded => {
+    if (_mapToggleRaf) cancelAnimationFrame(_mapToggleRaf);
+    _mapToggleRaf = null;
+    _syncPaddingTop();
+    document.body.style.transition = '';
+    // Landscape force-expand (see resize listener below) must not overwrite the user's
+    // real saved preference.
+    if (_isLandscapeMobile()) return;
+    _userWantsMapOpen = expanded;
+    localStorage.setItem(_MAP_COLLAPSED_KEY, expanded ? '0' : '1');
+  };
+  _mapCollapseEl.addEventListener('shown.bs.collapse', () => _settleMapToggle(true));
+  _mapCollapseEl.addEventListener('hidden.bs.collapse', () => _settleMapToggle(false));
+  if (_mapToggleBar) {
+    _mapToggleBar.title = T.sortLabels.mapHint;
+    _mapToggleBar.setAttribute('aria-label', T.sortLabels.map);
+  }
+  // Apply the saved preference before first paint, no animation (mirrors the old
+  // checkbox-restore behavior — same one-frame-late timing as the rest of this module).
+  if (!_userWantsMapOpen && !_isLandscapeMobile()) {
+    _mapCollapseEl.classList.remove('show');
+    _paintMapToggleChevron(false);
+    _mapToggleBar?.setAttribute('aria-expanded', 'false');
+  }
+}
+document.addEventListener('keydown', e => {
+  if (!_mapCollapse || e.key.toLowerCase() !== 'm' || !e.ctrlKey || e.metaKey || e.altKey) return;
+  e.preventDefault();
+  _mapCollapse.toggle();
+});
+
 window.addEventListener('resize', () => {
   if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
   _syncMapHeight();
+  // Landscape mobile is always immersive-map (see map-container.css) — force it open if it
+  // was left collapsed from portrait, since the toggle bar itself is hidden there and the
+  // user would otherwise have no way to reopen it. Restore their real preference on the way
+  // back out, once the landscape constraint no longer applies.
+  if (_mapCollapse) {
+    if (_isLandscapeMobile()) {
+      if (!_mapCollapseEl.classList.contains('show')) _mapCollapse.show();
+    } else if (_userWantsMapOpen !== _mapCollapseEl.classList.contains('show')) {
+      _userWantsMapOpen ? _mapCollapse.show() : _mapCollapse.hide();
+    }
+  }
 });
 // Tracks #page-header's own live height (the quote block — #sidebar-host is position:absolute
 // and never affects it, see wc2026_map.html), e.g. when a longer/shorter quote is paged in.
@@ -851,40 +926,6 @@ _sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
 _sidebarCallbacks.onSidebarToggle = () => {
   if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
   _syncPaddingTop();
-};
-// #map-container is position:fixed (see css/map-container.css) — hiding it doesn't disturb
-// document flow, so page content below just needs its padding-top recomputed to close the gap
-// (_mc slides off-screen via translateY once hidden — _syncPaddingTop tracks that live offset,
-// same code path as any other resize).
-// Animated show/hide (fade + slide up, see .map-hidden in map-container.css) rather
-// than snapping `display` straight to none — the rAF loop keeps _syncPaddingTop's read of
-// #map-container's live (shrinking/growing) rect in step with the CSS transition each frame,
-// same way _syncPaddingTop already tracks any other rect change. `display:none` is applied
-// only once the transition finishes, matching the old instant-hide behavior for layout/a11y.
-let _mapToggleRaf = null;
-_sidebarCallbacks.onMapToggle = visible => {
-  if (!_mc) return;
-  if (_mapToggleRaf) cancelAnimationFrame(_mapToggleRaf);
-  if (visible) {
-    _mc.style.display = '';
-    void _mc.offsetHeight; // force reflow so removing .map-hidden transitions from the hidden state
-    _mc.classList.remove('map-hidden');
-  } else {
-    _mc.classList.add('map-hidden');
-  }
-  const duration = 320; // > map-container.css's 0.3s opacity/transform transition
-  const start = performance.now();
-  const step = now => {
-    _syncPaddingTop();
-    if (now - start < duration) {
-      _mapToggleRaf = requestAnimationFrame(step);
-      return;
-    }
-    _mapToggleRaf = null;
-    _syncPaddingTop();
-    if (!visible) _mc.style.display = 'none';
-  };
-  _mapToggleRaf = requestAnimationFrame(step);
 };
 
 document.addEventListener('mundial-conf-changed', ({ detail: { conf, ids } }) => {
