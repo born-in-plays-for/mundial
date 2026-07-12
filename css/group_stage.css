@@ -1,0 +1,49 @@
+/* Group Stage view (tab-tournament, stage 0) — see js/group_stage.js for the render logic
+   these rules style. .grp-table/.grp-title/etc are adapted from css/wc2026_live.css's
+   transient live-match widget; .grp-selector/.group-select-btn/.grp-grid/.grp-card are new
+   additions for this persistent, always-browsable, all-12-groups view. The results section
+   inside each card reuses .elo-pair/.elo-pairs/.elo-item-wrap/.elo-pair-sep as-is (css/
+   global.css, css/taxonomy.css) — no group-stage-specific CSS needed for that part at all,
+   since it's the exact same markup a knockout-stage fixture pair already renders with.
+   .grp-flag is the only group-stage-specific flag styling (the standings table's own flag
+   column; results-section flags come from the shared pill markup instead). */
+
+.group-select-btn { border: 1px solid #dee2e6; border-radius: 16px; padding: 2px 12px; font-size: 12px; background: #fff; color: #888; cursor: pointer; transition: all .15s; }
+.group-select-btn:hover { border-color: #999; }
+.group-select-btn.active { background: #1C274C; color: #fff; border-color: #1C274C; }
+
+/* One group per row, centered — not a multi-column grid. */
+.grp-grid { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.grp-card { width: 100%; max-width: 480px; border: none; border-radius: 0; background: transparent; }
+.grp-card .card-body { border-top: 1px solid #dee2e6; padding-top: 8px; }
+
+.grp-title { font-size: 13px; font-weight: 600; color: var(--medium-text, #555); margin-bottom: 4px; }
+.grp-table { font-size: 12px; margin-bottom: 0; }
+.grp-table th { font-weight: 600; color: var(--light-text, #999); padding: 2px 6px !important; white-space: nowrap; }
+.grp-table td { padding: 3px 6px !important; white-space: nowrap; }
+.grp-table .grp-team { text-align: left; min-width: 100px; }
+.grp-table .grp-num { text-align: center; min-width: 24px; }
+.grp-table .grp-gfga { text-align: center; min-width: 24px; }
+@media (max-width: 575.98px) { .grp-gfga { display: none; } }
+.grp-table .grp-pts { font-weight: 700; }
+.grp-qualify td { background: rgba(25, 135, 84, 0.1); }
+.grp-flag { width: 18px; height: 18px; border-radius: 50%; vertical-align: middle; }
+
+/* Same click affordance as .elo-item--clickable (css/global.css) — the standings table's team
+   name is a plain <td>, not a pill, so it needs its own cursor/hover rule rather than reusing
+   that class directly. */
+.grp-team--clickable { cursor: pointer; }
+.grp-team--clickable:hover { background: var(--bg-hover); }
+
+/* A drawn group-stage match (only possible here, never in a knockout — see js/group_stage.js's
+   own comment) suppresses the shared .elo-pair winner checkmark on both sides — the shared
+   CSS (taxonomy.css) has no "nobody lost" state, so leaving both sides unmarked as --lost would
+   otherwise show a check on both. !important since the base rule's own selector (.elo-pair:not
+   (.elo-pair--pending) .elo-item-wrap:has(...)::after) is more specific than this one. */
+.taxonomy .elo-pair--draw .elo-item-wrap::after { display: none !important; }
+
+/* visibility:hidden (not display:none / an empty string) — the label itself isn't wanted, but
+   the results table right below it should sit at the same vertical offset as when it was
+   visible, so the box still needs to occupy its layout space. */
+.grp-results-title { font-size: 11px; color: var(--light-text, #999); font-weight: 600; margin: 6px 0 2px; visibility: hidden; }
+.grp-results-list { margin-top: 2px; }

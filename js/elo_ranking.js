@@ -13,7 +13,9 @@ const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 // locales pad numeric dates with (e.g. fr-FR's "07") is stripped for compactness/consistency —
 // it's not a meaningful i18n distinction the way day/month order is. `date` is a full ISO
 // datetime string.
-const _fixtureDateLabel = date => {
+// Exported — js/group_stage.js reuses this for group-stage results so a finished group match
+// gets the exact same kickoff-label formatting as a knockout fixture pair.
+export const fixtureDateLabel = date => {
   if (!date) return null;
   const d = new Date(date);
   if (isNaN(d)) return null;
@@ -119,6 +121,13 @@ class EloRanking extends HTMLElement {
     if (this.#carousel) this.#carousel.maxStage = n;
   }
 
+  // Hides the whole carousel widget — used by the flat "tab-teams" list, which has no
+  // fixture/tournament concept at all (see control_sidebar.js's setMode). Defaults to shown;
+  // safe to leave untouched on pages that only ever host one always-tournament-aware instance.
+  set showCarousel(v) {
+    this.#carousel?.el.classList.toggle('d-none', !v);
+  }
+
   // Programmatic navigation (URL ?stage=, restored localStorage state) — control_sidebar.js's
   // only way to move the carousel; user clicks go through Bootstrap directly instead.
   set stage(idx) {
@@ -215,7 +224,7 @@ class EloRanking extends HTMLElement {
       if (paired) {
         const sep = document.createElement('span');
         const score = cur._pairScore; // { home, away, penalties, penaltyHome, penaltyAway } — see sortAndFilter's _pairScore
-        const dateLabel = _fixtureDateLabel(cur._pairDate); // "day|hour" — see sortAndFilter's _pairDate
+        const dateLabel = fixtureDateLabel(cur._pairDate); // "day|hour" — see sortAndFilter's _pairDate
         // Not decided yet — blur the underline (css/global.css), the same "Schrödinger's team"
         // treatment .elo-item--pending gives a team pill's border (see taxonomy.css).
         if (!score) row.classList.add('elo-pair--pending');

@@ -309,6 +309,9 @@
    disabled; see css/wc2026_players.css's own comment for why the two controls' semantics
    diverge here). */
 #control-sidebar .csb-sort-item--disabled { opacity: 0.3; pointer-events: none; }
+/* tab-tournament's non-qualified filter rows (control_sidebar.js's setMode) — same dimmed,
+   inert treatment as .csb-sort-item--disabled above, just scoped to a whole <tr>. */
+#control-sidebar .csb-nonqual-row.csb-row-disabled { opacity: 0.3; pointer-events: none; }
 .cbs-header-label {
   font-style: italic;
   color:#777;

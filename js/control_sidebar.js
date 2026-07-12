@@ -3,10 +3,38 @@ import { CONF_IDS } from './conf.js';
 import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './qualified.js';
 import { maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
+import { animateFlagHidden } from './flag_visibility.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
 import { wireShareButton } from './share_button.js';
 
-export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, showNonQualified = true }) {
+// Everything that actually differs between the three sidebar modes, in one place, instead of
+// scattered `_mode === '...'` checks at each call site (catEloChecked, _setDisplayMode, setMode,
+// the template, _saveState). 'combined' (default) is every page except the map's split tabs
+// (wc2026_countries.html, control-sidebar-test.html) — today's original, full-featured behavior,
+// unchanged by any of this. 'teams'/'tournament' are the map's own two tabs (see setMode below).
+//
+//  showNonQualified — are the FE/FK/NE/NK (non-qualified) categories real, checkbox-driven
+//    filters (true), or force-excluded regardless of checkbox state (false)?
+//  gateByStage      — does reachesStage() gate the 4 qualified categories (IE/IK/HE/HK) by the
+//    carousel's current stage, or ignore the carousel entirely (a flat, always-everyone list)?
+//  showCarousel     — is <elo-ranking>'s stage-carousel widget shown at all?
+//  showDisplayToggle — is the team/match toggle table shown at all? (Split tabs remove it
+//    entirely rather than disabling it — see forcedDisplay below, which already makes the
+//    choice for the user; a visible-but-inert toggle would just be a redundant control.)
+//  forcedDisplay    — null: the toggle/persisted/URL value governs (subject only to
+//    _setDisplayMode's own stage-0 self-guard). A function: called with the current stage,
+//    its return value always wins over whatever was requested.
+//  persistDisplay   — should _saveState() persist _displayMode at all? Split tabs' value is
+//    forced (see forcedDisplay), not a real user choice, so persisting it would just leak a
+//    meaningless value into the 'countries' localStorage slice shared with 'combined' pages.
+const MODE_BEHAVIOR = {
+  combined:   { showNonQualified: true,  gateByStage: true,  showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                     persistDisplay: true },
+  teams:      { showNonQualified: true,  gateByStage: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                             persistDisplay: false },
+  tournament: { showNonQualified: false, gateByStage: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage === 0 ? 'team' : 'match',  persistDisplay: false },
+};
+
+export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, mode = 'combined' }) {
+  let _mode = mode;
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
   // 'team' (default) — flat list, unchanged. 'match' — teams grouped fixture-by-fixture
@@ -26,6 +54,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const _sidebarHost = document.getElementById('sidebar-host');
   const _sortLabel = html`<span class="cbs-header-label">${T.sortLabels.action}</span>`;
+  // Template-time only — setMode (below) re-derives from MODE_BEHAVIOR[_mode] on every
+  // later transition; this just seeds the initial render to match the constructor's own mode.
+  const _initBehavior = MODE_BEHAVIOR[mode];
   render(html`<div id="control-sidebar" class="csb-panel ${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
   <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-2">
@@ -68,7 +99,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           </td>
         </tr>
       </tbody></table>
-      <table class="csb-table csb-display-table table table-sm table-bordered mb-0"><tbody>
+      <table class="csb-table csb-display-table table table-sm table-bordered mb-0" ?hidden=${!_initBehavior.showDisplayToggle}><tbody>
         <tr>
           <td class="csb-header text-muted ps-1" title="${T.csbTips.view}">
             <span class="cbs-header-label">${T.sortLabels.view}</span>
@@ -110,24 +141,24 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td class="text-muted" title="${T.csbTips.qe}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HE"  checked></label></td>
       <td class="text-muted" title="${T.csbTips.q}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HK"   checked></label></td>
     </tr>
-    <!-- showNonQualified=false (e.g. wc2026_players.html, whose data only ever covers the 48
-         qualified squads' own rosters) hides these two rows via ?hidden instead of omitting
-         them from the template entirely, so #filter-FE/-FK/-NE/-NK stay real, queryable
-         elements. catEloChecked below dereferences them unconditionally (_fltFE.checked etc.);
-         omitting the rows would make those null on a page that hides this group, and anything
-         that later reaches a non-qualified country id (sortAndFilter, a future filter feature)
-         would throw. A hidden row's checkboxes just never receive user input — cheaper than
-         guarding every read site against null. -->
-    <tr ?hidden=${!showNonQualified}>
+    <!-- !showNonQualified (MODE_BEHAVIOR — the map's tab-tournament, qualified-only) dims +
+         disables these two rows instead of hiding them — unlike the removed view-toggle
+         sub-panel (now fully redundant with the tab-panel swap), there's a real difference to
+         communicate here: the non-qualified categories genuinely exist, they're just out of
+         scope for this tab, so a disabled (not hidden) row reads better than making them
+         disappear. Checkboxes stay real, queryable elements either way — catEloChecked below
+         dereferences them unconditionally (_fltFE.checked etc.); setMode toggles both the class
+         and each checkbox's own disabled state dynamically when the map switches tabs. -->
+    <tr class="csb-nonqual-row ${_initBehavior.showNonQualified ? '' : 'csb-row-disabled'}">
       <td rowspan="2" class="csb-group" data-row="UB" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
       <td class="csb-row" data-row="FB" title="${T.csbTips.fifa}"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FE"></label></td>
-      <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FK"></label></td>
+      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FE" ?disabled=${!_initBehavior.showNonQualified}></label></td>
+      <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FK" ?disabled=${!_initBehavior.showNonQualified}></label></td>
     </tr>
-    <tr ?hidden=${!showNonQualified}>
+    <tr class="csb-nonqual-row ${_initBehavior.showNonQualified ? '' : 'csb-row-disabled'}">
       <td class="csb-row" data-row="NB" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NE"></label></td>
-      <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NK"></label></td>
+      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NE" ?disabled=${!_initBehavior.showNonQualified}></label></td>
+      <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NK" ?disabled=${!_initBehavior.showNonQualified}></label></td>
     </tr>
   </tbody></table>
   </div>
@@ -148,6 +179,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _fltFK = _panel.querySelector('#filter-FK');
   const _fltNE = _panel.querySelector('#filter-NE');
   const _fltNK = _panel.querySelector('#filter-NK');
+  const _nonQualRows = _panel.querySelectorAll('.csb-nonqual-row');
+  const _displayTableEl = _panel.querySelector('.csb-display-table');
   // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
   // The carousel's DOM/Bootstrap wiring lives in <elo-ranking> (js/elo_ranking.js) now — it
   // wraps the whole pill list there. This sidebar still owns the stage index itself, its
@@ -166,13 +199,24 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // silently restored the next time a valid stage is reached, since that switch was never
     // the user's own choice.
     if (_matchDisplayRadio) _matchDisplayRadio.disabled = _stage === 0;
+    // _setDisplayMode must run on EVERY stage change, unconditionally — MODE_BEHAVIOR[_mode]
+    // .forcedDisplay (inside it) overrides whatever candidate is computed below for tab-teams/
+    // tab-tournament, so a stage move that isn't one of the two cases the old code recognized
+    // (landing exactly on stage 0, or leaving it with a remembered match preference) used to
+    // skip calling _setDisplayMode entirely — silently stranding tab-tournament in whatever
+    // display it already had (bug: Round of 32 showed the flat team list, not fixtures, because
+    // going straight from stage 0 to stage 2 hit neither branch below). The candidate itself
+    // still only matters for 'combined' mode's own remembered-toggle dance across stage 0 (a
+    // real user choice there, not forced) — this computes the exact same value as before.
+    let candidate = _displayMode;
     if (_stage === 0) {
       if (_displayMode === 'match') _autoSwitchedFromMatch = true;
-      _setDisplayMode('team'); // no-op if already 'team'
+      candidate = 'team';
     } else if (_autoSwitchedFromMatch) {
       _autoSwitchedFromMatch = false;
-      _setDisplayMode('match');
+      candidate = 'match';
     }
+    _setDisplayMode(candidate);
   };
 
   // The tournament hasn't reached every stage yet — cap navigation at the furthest stage that
@@ -234,13 +278,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // the reachesStage check, since only they have a tournament position to "reach". A
   // non-qualified exporter's players' destination countries can be filtered by stage on their
   // own (qualified) side already; the exporter itself always shows/hides purely by its own
-  // FE/NE checkbox, same as FK/NK.
+  // FE/NE checkbox, same as FK/NK — except when MODE_BEHAVIOR[_mode].showNonQualified is false
+  // (tab-tournament), which excludes them outright regardless of checkbox state, and
+  // .gateByStage being false (tab-teams) skips the reachesStage check entirely — a flat team
+  // list has no fixture/elimination concept at all.
   const catEloChecked = (id, fifaMember) => {
     if (_confIds && fifaMember && !_confIds.has(id)) return false;
     const cat = flagCat(id);
-    if (cat === 'e') return fifaMember ? _fltFE.checked : _fltNE.checked;
-    if (cat === 'o') return fifaMember ? _fltFK.checked : _fltNK.checked;
-    if (!reachesStage(app.stageIndexById?.get(id), _stage)) return false;
+    const behavior = MODE_BEHAVIOR[_mode];
+    if (cat === 'e' || cat === 'o') {
+      if (!behavior.showNonQualified) return false;
+      return cat === 'e' ? (fifaMember ? _fltFE.checked : _fltNE.checked) : (fifaMember ? _fltFK.checked : _fltNK.checked);
+    }
+    if (behavior.gateByStage && !reachesStage(app.stageIndexById?.get(id), _stage)) return false;
     return _catChecked(cat);
   };
 
@@ -262,11 +312,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   const applyFlagFilter = () => {
     if (typeof d3 !== 'undefined') {
+      animateFlagHidden(d3.selectAll('.flag-qualified[data-elo-cat]'), el =>
+        !catEloChecked(+el.getAttribute('data-id'), fifaMemberIds.has(+el.getAttribute('data-id')))
+      );
       d3.selectAll('.flag-qualified[data-elo-cat]')
-        .attr('visibility', function() {
-          const id = +this.getAttribute('data-id');
-          return catEloChecked(id, fifaMemberIds.has(id)) ? null : 'hidden';
-        })
         .attr('cursor', function() {
           return isClickable(+this.getAttribute('data-id')) ? 'pointer' : 'default';
         });
@@ -275,6 +324,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       });
     }
     updateVisibleCountryCount();
+    // Lets a caller layer an additional visibility rule on top of this one — e.g.
+    // wc2026_map.js's group-stage "focus on these 4 flags only" override — without this module
+    // needing to know that concern exists. Fires every time this function runs, from whatever
+    // triggered it (checkbox, sort, stage change, ...), so the override can never go stale.
+    callbacks.afterFlagFilter?.();
   };
 
   const _filterToggle = chks => {
@@ -353,13 +407,49 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // there) rather than relying on callers to check first or on a stage-change event firing —
   // _setStage(0) is a no-op when already at stage 0, so nothing would otherwise catch a
   // restored/URL-forced 'match' at the default stage.
+  //
+  // The tab-teams/tab-tournament invariant is enforced HERE, in the primitive setter, rather
+  // than at each call site — this module has several (restored localStorage state, a URL
+  // param, the toggle's own change listener, _updateCarouselTitle) and any one of them calling
+  // this directly with a raw 'match'/'team' used to be able to desync the display from the
+  // active tab (e.g. a 'match' value persisted from a prior tab-tournament visit leaking into
+  // tab-teams on the next page load, since only _updateCarouselTitle used to guard against it).
+  // Overriding the requested mode here instead means no caller needs to know the invariant
+  // exists at all.
   const _setDisplayMode = mode => {
-    if (mode === 'match' && _stage === 0) mode = 'team';
+    const forced = MODE_BEHAVIOR[_mode].forcedDisplay;
+    if (forced) mode = forced(_stage);
+    else if (mode === 'match' && _stage === 0) mode = 'team';
     if (mode === _displayMode) return;
     _displayMode = mode;
     _teamDisplayRadio.checked = mode === 'team';
     _matchDisplayRadio.checked = mode === 'match';
     eloMain.displayMode = mode;
+  };
+
+  // Reconfigures this same shared sidebar + eloMain for one of the map's two split tabs
+  // (tab-teams / tab-tournament — see wc2026_map.js's _switchTab). Never called on pages using
+  // the default 'combined' mode, which stays exactly as it always has been.
+  const setMode = newMode => {
+    if (newMode === _mode) return;
+    _mode = newMode;
+    const behavior = MODE_BEHAVIOR[_mode];
+    // Dimmed + disabled, not hidden — the non-qualified categories still exist, they're just
+    // out of scope for tab-tournament (see the template comment above).
+    _nonQualRows.forEach(tr => {
+      tr.classList.toggle('csb-row-disabled', !behavior.showNonQualified);
+      tr.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.disabled = !behavior.showNonQualified; });
+    });
+    // The team/match toggle IS fully removed (not just disabled) on both split tabs — unlike
+    // the filter rows above, it has nothing left to communicate once the tab-panel swap already
+    // forces the one display that makes sense (see _setDisplayMode's forcedDisplay); keeping it
+    // visible-but-inert would just be a redundant, silent control. Only 'combined' pages (which
+    // never call setMode) still show and use it.
+    _displayTableEl.hidden = !behavior.showDisplayToggle;
+    eloMain.showCarousel = behavior.showCarousel;
+    _updateCarouselTitle();
+    callbacks.renderElo?.();
+    applyFlagFilter();
   };
 
   const _updateAlphaLabel = () => {
@@ -982,7 +1072,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     });
     saveSlice('countries', {
       checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
-      display: _displayMode,
+      // Only a real user choice in 'combined' mode — tab-teams/tab-tournament force this value
+      // themselves (see _setDisplayMode), so persisting it here would leak a forced, meaningless
+      // value into the slice this page shares with 'combined'-mode pages (wc2026_countries.html
+      // etc.) via the same localStorage key. Omitting the field (rather than writing it and
+      // relying on _setDisplayMode's restore-time override to catch it every time) also self-
+      // heals any stale value saved before this comment existed — saveSlice replaces the whole
+      // 'countries' object wholesale, so the very next save from a split tab clears it out.
+      ...(MODE_BEHAVIOR[_mode].persistDisplay ? { display: _displayMode } : {}),
       // Always false on alwaysOpen pages (no .csb-toggle/collapse there to ever add the
       // class) — harmless to save regardless, just never restored for them (see _restoreState).
       collapsed: _el.classList.contains('collapsed'),
@@ -1118,6 +1215,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     sortAndFilter,
     applyParams,
     setConfFilter,
+    setMode,
     updateStageTitle: _updateCarouselTitle,
   };
 }

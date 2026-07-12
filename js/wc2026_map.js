@@ -3,8 +3,11 @@ import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/u
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName } from './qualified.js';
-import { LOCALE, _LANG, T, countryName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
+import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
+import { initGroupStage } from './group_stage.js';
 import { initSidebar } from './control_sidebar.js';
+import { loadSlice, saveSlice } from './persist.js';
+import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
 import { CONF_BOUNDS } from './conf.js';
 import { ISO2_REVERSE, iso2ForId, _NULL_CODE } from './iso2.js';
 import { color, choroFill, divergingOutlierColor, getDivergingParams, setDivergingParams,
@@ -302,7 +305,7 @@ document.getElementById('zoom-reset').addEventListener('click', e => {
 });
 _zoomSpanBtn?.addEventListener('click', e => {
   e.stopPropagation();
-  _zoomToLinkedFlags();
+  _zoomToVisibleFlags();
 });
 
 
@@ -441,9 +444,57 @@ Promise.all([
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloData   = null;
 const _fifaMemberIds = new Set();
-render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking></div>`, document.getElementById('tab-elo'));
-const _eloMain = document.querySelector('#tab-elo elo-ranking');
+// Shared between tab-teams (default) and tab-tournament — see _switchTab below, which
+// reparents this same .elo-layout wrapper between the two panes instead of duplicating it.
+render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking></div>`, document.getElementById('tab-teams'));
+const _eloLayoutEl = document.querySelector('.elo-layout');
+const _eloMain = document.querySelector('.elo-main');
 const _eloMetaPanel = FOOTER_PANELS.eloMeta ? document.getElementById('elo-meta-panel') : null;
+
+// Group Stage view (js/group_stage.js) — a sibling of <elo-ranking>'s own .elo-list *inside*
+// .elo-viz (not a sibling of .elo-layout at the #tab-tournament level) — this matters
+// structurally, not just cosmetically: the carousel is always .elo-viz's first child, so
+// putting the group view inside .elo-viz too keeps the carousel above it exactly like every
+// other stage, regardless of which tab currently hosts the reparented .elo-layout. Shown only
+// while tab-tournament is the active tab AND the carousel is at stage 0 — .elo-list itself is
+// hidden for that same window (both toggled directly, not via a CSS class), since only one of
+// the two should ever be visible at once.
+const _groupStageEl = document.createElement('div');
+_groupStageEl.id = 'group-stage-view';
+_groupStageEl.className = 'taxonomy';
+_groupStageEl.hidden = true;
+const _eloListEl = _eloMain.querySelector('.elo-list');
+_eloMain.querySelector('.elo-viz').appendChild(_groupStageEl);
+let _currentCarouselStage = 0;
+let _activeTab = 'tab-teams'; // updated by _switchTab below
+let _groupStage = null; // initGroupStage(...) handle, set once fixturesData loads
+// Set of numeric team ids — driven by group_stage.js's group selector ("show only this
+// group's 4 teams' flags on the map"); a full override of the sidebar's own category filter
+// (see control_sidebar.js's applyFlagFilter/callbacks.afterFlagFilter) for exactly these 4
+// flags, run on top of it rather than folded into it, since this is a map-level concern the
+// sidebar itself has no reason to know about — every flag not in the focused group is hidden,
+// and every flag in it is forced visible regardless of what the checkboxes currently say.
+let _groupFocusIds = null;
+const _applyGroupFocus = () => {
+  if (!_groupFocusIds || typeof d3 === 'undefined') return;
+  animateFlagHidden(d3.selectAll('.flag-qualified[data-elo-cat]'), el => !_groupFocusIds.has(+el.getAttribute('data-id')));
+};
+const _updateGroupStageVisibility = () => {
+  const show = _activeTab === 'tab-tournament' && _currentCarouselStage === 0;
+  _groupStageEl.hidden = !show;
+  _eloListEl.hidden = show;
+  // Leaving the group-stage view (carousel moved on, or the user switched tabs) always clears
+  // any active group focus — otherwise the map could be silently stuck showing only 4 flags
+  // with no visible way back to "All" short of re-entering this exact view.
+  if (!show) _groupStage?.clearSelection();
+};
+// Bubbles from stage_carousel.js through <elo-ranking> — same event control_sidebar.js already
+// listens to (js/control_sidebar.js's eloMain.addEventListener('stage-change', ...)); this is
+// an independent second listener, not a replacement for that one.
+_eloMain.addEventListener('stage-change', e => {
+  _currentCarouselStage = e.detail.stage;
+  _updateGroupStageVisibility();
+});
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
 const _pageHeadingSub = document.getElementById('page-heading-sub');
@@ -489,7 +540,7 @@ const _isFullyVisible = el => {
   return r.top >= padTop && r.bottom <= window.innerHeight - padBot;
 };
 const _scrollToActiveElo = () => {
-  const el = document.querySelector('#tab-elo .elo-item--active');
+  const el = _eloMain.querySelector('.elo-item--active');
   if (el && !_isFullyVisible(el)) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 
@@ -695,18 +746,28 @@ const _zoomToActiveDimFlags = () => {
   // });
 };
 
-const _zoomToLinkedFlags = () => {
-  let srcX, srcY;
-  g.selectAll(`.flag-qualified[data-id="${dimState.sourceId}"]`).each(function() {
-    const cx = +this.getAttribute('data-cx'), cy = +this.getAttribute('data-cy');
-    if (isFinite(cx) && isFinite(cy)) { srcX = cx; srcY = cy; }
-  });
-  if (srcX == null) return;
-  const xs = [srcX], ys = [srcY];
-  g.selectAll('.flag-qualified[data-dim-visible]').each(function() {
+// Fits the view to whatever flags are actually "in view" right now, however that's currently
+// decided — the sidebar/group-focus filter (visibility:hidden) always applies, and dim mode
+// (dimState.active) additionally narrows it down to just the source country plus its linked
+// destinations/origins (data-dim-visible; a non-linked flag stays technically visible during
+// dim mode, just faded via opacity, which is why that's checked separately from visibility
+// here). Generalizes what used to be dim-mode-only ("linked countries" — see #zoom-span's own
+// old aria-label) to every state this button can be clicked in, including no selection at all
+// (fits every currently-shown flag) and the group-stage view's "focus on these 4" (js/
+// group_stage.js) — in all three cases "in view" reduces to the same two checks below, so one
+// function covers them without needing to know which state is actually active.
+const _zoomToVisibleFlags = () => {
+  const xs = [], ys = [];
+  g.selectAll('.flag-qualified[data-elo-cat]').each(function() {
+    if (this.getAttribute('visibility') === 'hidden') return;
+    if (dimState.active) {
+      const id = +this.getAttribute('data-id');
+      if (id !== dimState.sourceId && !this.hasAttribute('data-dim-visible')) return;
+    }
     const cx = +this.getAttribute('data-cx'), cy = +this.getAttribute('data-cy');
     if (isFinite(cx) && isFinite(cy)) { xs.push(cx); ys.push(cy); }
   });
+  if (xs.length === 0) return;
   const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
   if (xs.length > 1) {
     const x0 = Math.min(...xs), x1 = Math.max(...xs);
@@ -716,9 +777,10 @@ const _zoomToLinkedFlags = () => {
     svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k * (x0 + x1) / 2, vbY + vbH / 2 - k * (y0 + y1) / 2).scale(k));
   } else {
     const k2 = 9;
-    svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k2 * srcX, vbY + vbH / 2 - k2 * srcY).scale(k2));
+    svg.transition().duration(1500).call(zoom.transform, d3.zoomIdentity.translate(vbX + vbW / 2 - k2 * xs[0], vbY + vbH / 2 - k2 * ys[0]).scale(k2));
   }
 };
+
 
 const zoomToCentroid = (id, duration = 2000) => {
   const c = centroids[id];
@@ -749,7 +811,7 @@ const _renderElo = (onAnimationDone) => {
   if (dimState.sourceId) _eloMain.update(dimState.sourceId);
 };
 const _updateEloSelection = () => {
-  if (_eloMain.hasItems && !document.getElementById('tab-elo')?.hidden)
+  if (_eloMain.hasItems && !_eloMain.closest('#tab-teams, #tab-tournament')?.hidden)
     _eloMain.update(dimState.sourceId);
 };
 
@@ -773,6 +835,21 @@ const _switchTab = name => {
   document.querySelectorAll('#bottomTabList button[data-tab]').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === name);
   });
+  // tab-players isn't a real, standalone user choice (its own button is excluded from the
+  // click-wiring below — it only ever becomes active via activateCountry's dim-mode selection,
+  // which itself isn't persisted), so restoring it on a fresh page load with no selected
+  // country would just show the empty "click a country" hint. Persist only the tabs a user can
+  // actually pick directly.
+  if (name !== 'tab-players') saveSlice('bottomTab', { active: name });
+  const isEloTab = name === 'tab-teams' || name === 'tab-tournament';
+  if (isEloTab) {
+    // Same shared <elo-ranking> + sidebar for both — moved into whichever pane is now active
+    // rather than duplicated (see its own declaration comment above).
+    document.getElementById(name).appendChild(_eloLayoutEl);
+    sidebar.setMode(name === 'tab-teams' ? 'teams' : 'tournament');
+    _activeTab = name;
+    _updateGroupStageVisibility();
+  }
   _positionIndicator();
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
@@ -786,12 +863,12 @@ const _switchTab = name => {
   } else {
     _collapsePanel(_chainPanelEl);
   }
-  if (name === 'tab-elo') {
+  if (isEloTab) {
     _expandPanel(_eloMetaPanel);
   } else {
     _collapsePanel(_eloMetaPanel);
   }
-  if (name === 'tab-elo') {
+  if (isEloTab) {
     _renderElo();
     _eloMain.update(dimState.sourceId);
     _scrollToActiveElo();
@@ -805,7 +882,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
 // ── Swipe between tabs on mobile ──
 {
   const _tabContent = document.getElementById('bottomTabContent');
-  const _TAB_IDS = ['tab-elo', 'tab-players', 'tab-chain'];
+  const _TAB_IDS = ['tab-teams', 'tab-tournament', 'tab-players', 'tab-chain'];
   const _availableTabs = () => _TAB_IDS.filter(id => {
     if (id === 'tab-players') return document.getElementById('tab-players-btn')?.classList.contains('dim-selected');
     return true;
@@ -907,6 +984,28 @@ const dimState = {
   importIds: new Map(),
   arcsGroup: null,
 };
+
+// The source country and every import/export partner applyDim (defined further down) marks via
+// data-dim-visible stay visible regardless of the sidebar's own category filter
+// (visibility:hidden) — an arc pointing at a flag the filter just hid would be visually broken,
+// and it would silently drop out of #zoom-span's own fit-to-view (_zoomToVisibleFlags checks
+// the exact same visibility attribute). Same override pattern as _applyGroupFocus above, run
+// both directly from applySelection (so a fresh selection is un-hidden immediately) and via
+// callbacks.afterFlagFilter just below (so it's reapplied if the user toggles a checkbox while
+// a selection is still active — applyFlagFilter's own d3 selection would otherwise re-hide a
+// linked flag the checkbox itself excludes). Defined here, right after dimState, rather than
+// near applySelection further down — callbacks.afterFlagFilter can fire as early as the
+// restore-tab _switchTab call a few lines below, well before applySelection's own section runs.
+const _applyDimFocus = () => {
+  if (!dimState.active || typeof d3 === 'undefined') return;
+  // Pre-filtered to just the source + linked subset — animateFlagHidden's hiddenFn is
+  // unconditionally false here since this function only ever un-hides, never hides.
+  const linked = g.selectAll('.flag-qualified[data-elo-cat]').filter(function() {
+    return +this.getAttribute('data-id') === dimState.sourceId || this.hasAttribute('data-dim-visible');
+  });
+  animateFlagHidden(linked, () => false);
+};
+
 const app = {
   byId: {},
   importByCountry: {},
@@ -921,6 +1020,9 @@ const _sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds: _fifaMemberIds, eloMain: _eloMain, callbacks: _sidebarCallbacks });
 _sidebarCallbacks.renderElo = _renderElo;
 _sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
+// _applyDimFocus is defined further down (near applySelection/clearDim) — safe to reference
+// here since this arrow function is only ever called later, well after that const exists.
+_sidebarCallbacks.afterFlagFilter = () => { _applyGroupFocus(); _applyDimFocus(); };
 // Sidebar collapse/expand no longer affects #page-header's own box (it's position:absolute —
 // see wc2026_map.html), so the map's push-down amount must be recomputed explicitly here.
 _sidebarCallbacks.onSidebarToggle = () => {
@@ -977,6 +1079,20 @@ const _collapsePanel = (panel, onDone) => {
 
 const _selectionPanelEl = FOOTER_PANELS.selection ? document.getElementById('selection-panel') : null;
 const _chainPanelEl     = FOOTER_PANELS.chain     ? document.getElementById('chain-panel')     : null;
+
+// Restore whichever #bottomTabList tab was last active (see _switchTab's own saveSlice call) —
+// tab-teams (the HTML's own static default) is used whenever nothing's saved yet, or the saved
+// value isn't one of the tabs a user can actually pick directly (see _switchTab's own comment
+// on why tab-players is excluded from persistence). Runs _switchTab unconditionally, even when
+// it resolves to the same default already shown, so the sidebar mode/carousel/group-stage-view
+// wiring _switchTab performs is applied exactly once, from exactly one code path, regardless of
+// whether this is a fresh visit or a restored one. Placed here, not right after sidebar is
+// built above — _switchTab's body also touches _expandPanel/_collapsePanel/_chainPanelEl,
+// which aren't defined until this point in the script.
+const _RESTORABLE_TABS = new Set(['tab-teams', 'tab-tournament', 'tab-chain']);
+const _savedActiveTab = loadSlice('bottomTab')?.active;
+_switchTab(_RESTORABLE_TABS.has(_savedActiveTab) ? _savedActiveTab : 'tab-teams');
+
 const _updateSelectionPanel = (onCollapsed) => {
   if (!_selectionPanelEl) return;
   const id = dimState.sourceId;
@@ -1164,16 +1280,17 @@ const applyDim = (sourceId, destIds) => {
     dimState.importIds.set(cId, (dimState.importIds.get(cId) ?? 0) + 1);
   });
 
-  // Flag opacity + data-dim-visible for cursor/click control
+  // Flag opacity + data-dim-visible for cursor/click control. data-dim-visible is just a
+  // marker other code reads (e.g. _applyDimFocus, _zoomToVisibleFlags) — set instantly, not
+  // animated; the actual visual brightness change is animateFlagOpacity's job.
   const dimVisibleIds = new Set([...destIds.keys(), ...dimState.importIds.keys()]);
-  g.selectAll('.flag-qualified').each(function() {
+  g.selectAll('.flag-qualified').attr('data-dim-visible', function() {
     const id = +this.getAttribute('data-id');
-    const isExport = destIds.has(id);
-    const isImport = dimState.importIds.has(id);
-    const visible = id === sourceId || isExport || isImport;
-    d3.select(this)
-      .attr('opacity', visible ? 1 : 0.35)
-      .attr('data-dim-visible', (isExport || isImport) ? '' : null);
+    return (destIds.has(id) || dimState.importIds.has(id)) ? '' : null;
+  });
+  animateFlagOpacity(g.selectAll('.flag-qualified'), el => {
+    const id = +el.getAttribute('data-id');
+    return (id === sourceId || destIds.has(id) || dimState.importIds.has(id)) ? 1 : 0.35;
   });
   g.selectAll('.country').attr('data-dim-visible', function(d) {
     const id = d._id ?? +d.id;
@@ -1229,7 +1346,8 @@ const applyDim = (sourceId, destIds) => {
 const applyEmpty = id => {
   dimState.destIds  = new Map();
   dimState.importIds = new Map();
-  g.selectAll('.flag-qualified').attr('opacity', null).attr('data-dim-visible', null);
+  animateFlagOpacity(g.selectAll('.flag-qualified'), () => 1);
+  g.selectAll('.flag-qualified').attr('data-dim-visible', null);
   g.selectAll('.country').attr('data-dim-visible', null);
   if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line,.arc-arrow').remove();
 };
@@ -1237,10 +1355,10 @@ const applyEmpty = id => {
 const applySelection = (id, destIds) => {
   dimState.active = true;
   dimState.sourceId = id;
-  if (_zoomSpanBtn) _zoomSpanBtn.disabled = !centroids[id];
 
   if (centroids[id]) {
     applyDim(id, destIds);
+    _applyDimFocus();
   } else {
     applyEmpty(id);
   }
@@ -1278,14 +1396,19 @@ const applySelection = (id, destIds) => {
 
 const clearDim = () => {
   dimState.active = false;
-  if (_zoomSpanBtn) _zoomSpanBtn.disabled = true;
   dimState.sourceId = null;
   dimState.destIds = new Map();
   dimState.importIds = new Map();
-  g.selectAll('.flag-qualified').attr('opacity', null).attr('data-dim-visible', null);
+  animateFlagOpacity(g.selectAll('.flag-qualified'), () => 1);
+  g.selectAll('.flag-qualified').attr('data-dim-visible', null);
   g.selectAll('.country').attr('data-dim-visible', null);
   if (dimState.arcsGroup) dimState.arcsGroup.selectAll('.arc-line').remove();
   document.body.classList.remove('dim-active');
+  // Re-assert the sidebar's own category filter — _applyDimFocus force-showed the source/
+  // linked flags regardless of it while the selection was active (now a no-op, since it
+  // checks dimState.active itself), so anything that override was hiding needs its
+  // visibility:hidden restored, not left stuck visible.
+  sidebar.applyFlagFilter();
   const _ptEl = document.getElementById('tab-players');
   if (_ptEl) {
     _saveAccState(_ptEl);
@@ -1672,7 +1795,7 @@ const buildFixedInset = ({ id, geo, anchor, r }) => {
     // data-cx/cy here are NOT used to position this element (.flag-fixed opts out
     // of that in map-container.js's zoom handler — x/y above are local badge
     // coordinates instead) — they exist only so code that scans .flag-qualified
-    // positions directly off the DOM (_zoomToLinkedFlags, the initial fit-all-flags
+    // positions directly off the DOM (_zoomToVisibleFlags, the initial fit-all-flags
     // bounds) sees the same anchor point already stored in the `centroids` map.
     .attr('data-cx', fx).attr('data-cy', fy)
     .attr('width', flagS).attr('height', flagS)
@@ -1960,12 +2083,17 @@ Promise.all([
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations, capeVerdeGeo, curacaoGeo);
   // Init elo ranking component with centroids now populated
-  _eloMain.onCountryClick = id => {
+  // Kept as its own named reference (not just assigned inline to _eloMain.onCountryClick) so
+  // js/group_stage.js's pills can be wired to the exact same function below — <elo-ranking>'s
+  // own .onCountryClick is a setter-only accessor (js/elo_ranking.js's `set onCountryClick`,
+  // no getter), so reading _eloMain.onCountryClick back here would silently be undefined.
+  const _onCountryClick = id => {
     if (dimState.sourceId === id) { clearDim(); return; }
     activateCountry(id);
     if (enablesDim(id) && centroids[id]) _zoomToActiveDimFlags();
     else if (centroids[id]) zoomToCentroid(id);
   };
+  _eloMain.onCountryClick = _onCountryClick;
   _eloMain.isClickable = () => true;
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
@@ -1981,7 +2109,41 @@ Promise.all([
   // Powers the control-sidebar's "match" sort criterion — pairs each team with its
   // known opponent for the round matching whichever carousel stage is active.
   app.matchInfoByIso2 = buildMatchInfo(statusByIso2, fixturesData, buildNameByIso2(eloData.rankings, countryName));
+  // Same buildEloItems() items the rest of tab-tournament's pills already render from — see
+  // js/group_stage.js's own comment on why it needs these (elo pts/qualified/exp/imp/color),
+  // not fixturesData.standings, for its results-section pills to match other stages exactly.
+  const _eloItemsByIso2 = new Map(_eloRawItems.map(item => [item.iso2, item]));
+  _groupStage = initGroupStage({
+    container: _groupStageEl, fixturesData, T, regionName, eloItemsByIso2: _eloItemsByIso2,
+    // Literally the same function assigned to _eloMain.onCountryClick just above — clicking a
+    // pill or team name here has to behave identically (selection, dim/arc mode, map zoom,
+    // toggle-off-if-already-active) to clicking one in tab-tournament's own pill list, and
+    // reusing the exact reference is what guarantees that.
+    onCountryClick: _onCountryClick,
+    // "Show only this group's 4 teams" on the map — layered on top of the sidebar's own
+    // category filter via callbacks.afterFlagFilter (see control_sidebar.js/applyFlagFilter),
+    // not folded into it, since the sidebar has no reason to know this concern exists.
+    onGroupSelect: (letter, teamIds) => {
+      // Switching the group focus (including back to "All") makes any currently dim-selected
+      // country's arcs/flags stale — it may not even be part of the newly focused group — so
+      // clear it the same way clicking its own active pill again would.
+      if (dimState.sourceId) clearDim();
+      _groupFocusIds = letter ? new Set(teamIds) : null;
+      sidebar.applyFlagFilter();
+      // No automatic pan/zoom here — browsing quickly through group letters shouldn't yank the
+      // map around on every click. #zoom-span (_zoomToVisibleFlags) is still right there for
+      // the user to trigger the same "fit to what's currently visible" manually whenever they
+      // actually want it.
+    },
+  });
+  _updateGroupStageVisibility(); // stage 0 is the default and may never fire 'stage-change' on its own
   sidebar.updateStageTitle();
+  // Re-affirms whatever _activeTab the earlier restore-or-default _switchTab call (see above)
+  // already put the sidebar/eloMain into — not hardcoded to 'teams', since that call may have
+  // restored 'tab-tournament' instead. setMode no-ops if already correct, so this is safe
+  // either way, and still needed here: _renderEloBase (below) didn't exist yet when that
+  // earlier call ran, so its own callbacks.renderElo?.() was a no-op at the time.
+  sidebar.setMode(_activeTab === 'tab-tournament' ? 'tournament' : 'teams');
   _renderElo();
   sidebar.applyParams(new URLSearchParams(location.search));
   _expandPanel(_eloMetaPanel);

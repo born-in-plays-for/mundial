@@ -32,6 +32,7 @@
 <link rel="stylesheet" href="css/map-container.css">
 <link rel="stylesheet" href="css/control-sidebar.css">
 <link rel="stylesheet" href="css/taxonomy.css">
+<link rel="stylesheet" href="css/group_stage.css">
 </head>
 <body>
 <script type="module" src="js/auth-bar.js"></script>
@@ -95,7 +96,7 @@
   <button id="zoom-reset" type="button" aria-label="Reset zoom">
     <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
   </button>
-<button id="zoom-span" type="button" aria-label="Span all linked countries" disabled>
+<button id="zoom-span" type="button" aria-label="Span all visible countries">
     <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
   </button>
   <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
@@ -153,7 +154,8 @@
 </details>
 
 <main id="bottomTabContent" class="container-xxl px-4">
-  <div id="tab-elo" class="taxonomy"></div>
+  <div id="tab-teams" class="taxonomy"></div>
+  <div id="tab-tournament" class="taxonomy" hidden></div>
   <div id="tab-players" hidden></div>
   <div id="tab-chain" hidden></div>
 </main>
@@ -163,7 +165,8 @@
   <div id="selection-panel" class="tab-footer-panel collapsed"></div>
   <div id="chain-panel" class="tab-footer-panel collapsed"></div>
   <nav id="bottomTabList" class="py-2 d-flex justify-content-between gap-2">
-    <button class="nav-link active" id="tab-elo-btn" data-tab="tab-elo" type="button"><img class="tab-icon" src="images/solar_linear/elo_tab_cup.svg" aria-hidden="true"></button>
+    <button class="nav-link active" id="tab-teams-btn" data-tab="tab-teams" type="button"><img class="tab-icon" src="images/solar_linear/flag-svgrepo-com.svg" aria-hidden="true"></button>
+    <button class="nav-link" id="tab-tournament-btn" data-tab="tab-tournament" type="button"><img class="tab-icon" src="images/solar_linear/football-svgrepo-com.svg" aria-hidden="true"></button>
     <button class="nav-link" id="tab-players-btn" data-tab="tab-players" type="button"></button>
     <button class="nav-link" id="tab-chain-btn" data-tab="tab-chain" type="button"><img class="tab-icon" src="images/wc2026.svg" aria-hidden="true"></button>
     <div id="tab-indicator"></div>
