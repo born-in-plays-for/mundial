@@ -510,7 +510,13 @@ const _syncPaddingTop = () => {
     // `top` now transitions (see map-container.css), so a live read right after changing
     // --page-header-h would catch it mid-animation and go stale. #map-container's own height
     // is intrinsic (content-driven), unaffected by `top`, so it's safe to read live here.
-    const mapBottom = _computeHeaderHeight() + _mc.getBoundingClientRect().height + (parseFloat(getComputedStyle(_mc).marginBottom) || 0);
+    // .map-hidden's slide-up (translateY, see map-container.css) doesn't touch `top` or the
+    // rect's height either — it's a separate live transform offset, tracked here so page
+    // content below follows the slide frame-by-frame instead of jumping only once display:none
+    // lands (see onMapToggle's rAF loop, which calls this every frame during the transition).
+    const cs = getComputedStyle(_mc);
+    const translateY = cs.transform && cs.transform !== 'none' ? new DOMMatrix(cs.transform).m42 : 0;
+    const mapBottom = _computeHeaderHeight() + _mc.getBoundingClientRect().height + (parseFloat(cs.marginBottom) || 0) + translateY;
     document.body.style.paddingTop = mapBottom + 'px';
     document.documentElement.style.scrollPaddingTop    = mapBottom + 'px';
     document.documentElement.style.scrollPaddingBottom = (_bottomPanel ? _bottomPanel.offsetHeight : 0) + 'px';
@@ -848,8 +854,9 @@ _sidebarCallbacks.onSidebarToggle = () => {
 };
 // #map-container is position:fixed (see css/map-container.css) — hiding it doesn't disturb
 // document flow, so page content below just needs its padding-top recomputed to close the gap
-// (_mc's own rect collapses to 0 height once hidden, same code path as any other resize).
-// Animated show/hide (fade + scaleY collapse, see .map-hidden in map-container.css) rather
+// (_mc slides off-screen via translateY once hidden — _syncPaddingTop tracks that live offset,
+// same code path as any other resize).
+// Animated show/hide (fade + slide up, see .map-hidden in map-container.css) rather
 // than snapping `display` straight to none — the rAF loop keeps _syncPaddingTop's read of
 // #map-container's live (shrinking/growing) rect in step with the CSS transition each frame,
 // same way _syncPaddingTop already tracks any other rect change. `display:none` is applied
