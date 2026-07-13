@@ -315,7 +315,11 @@ class WorldMap extends HTMLElement {
     // Verde inset, whose anchor point is itself a function of k) with no 1-frame lag.
     this.onZoomPre = null;
 
-    this.zoom = d3.zoom().scaleExtent([1, 18]).on('zoom', e => {
+    // Upper bound raised (was 18) to let birth-city dot clusters (js/wc2026_map.js's
+    // _updatePlayerCityDots) be pulled apart further — dot/flag on-screen size stays
+    // constant (counter-scaled each tick below), only their world-space spacing grows
+    // with k, so deeper zoom is what actually separates two cities sitting close together.
+    this.zoom = d3.zoom().scaleExtent([1, 200]).on('zoom', e => {
       if (this.onZoomPre) this.onZoomPre(e);
       this.g.attr('transform', e.transform);
 
