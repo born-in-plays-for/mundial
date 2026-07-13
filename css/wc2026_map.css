@@ -104,12 +104,22 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #bottomTabList { align-items: center; flex-wrap: nowrap; height: 46px; position: relative; }
 #bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; white-space: nowrap; font-size: 13px; position: relative; }
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
-#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; display: none; cursor: default; }
+/* Always visible/clickable now — idle state (no country selected) shows a plain icon
+   (js/wc2026_map.js's _renderPlayersTabIdle) that opens the all-players table; dim-selected
+   swaps in the country pill + close button instead. */
+#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; }
 #tab-players-btn .elo-item { cursor: pointer; }
 #tab-players-btn .btn-close { cursor: pointer; }
-#tab-players-btn.dim-selected { display: flex; align-items: center; gap: 4px; }
+#tab-players-btn.dim-selected { cursor: default; }
 #tab-players-btn .elo-name { overflow: hidden; text-overflow: ellipsis; }
 #tab-players-btn:hover .elo-item { background: var(--bg-hover); border-color: var(--border-strong); }
+
+/* "Caps" column — the all-players table's own 4th column beyond css/wc2026_players.css's
+   name/born-in/plays-for three (see js/wc2026_map.js's _allPlayersTableTemplate), so it lives
+   here rather than in that shared stylesheet. Narrow and non-wrapping, like .pt-born/.pt-caps'
+   own treatment there. */
+.pt-num { width: 10%; white-space: nowrap; }
+
 #bottomTabList .nav-link:hover { background-color: var(--bg-hover); color: #000; }
 #tab-players-btn:hover { background-color: transparent !important; }
 #bottomTabList .nav-link.active { color: #000; }

@@ -2,7 +2,7 @@ import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/l
 import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initGroupStage } from './group_stage.js';
 import { initSidebar } from './control_sidebar.js';
@@ -676,26 +676,9 @@ const _syncMapHeight = () => {
     _syncPaddingTop();
     const svgRect = svgEl.getBoundingClientRect();
     const mcRect  = _mc.getBoundingClientRect();
-    const fromLeft   = svgRect.left  - mcRect.left;
     const fromBottom = mcRect.bottom - svgRect.bottom;
-    const resetH = _zoomResetBtn?.offsetHeight ?? 26;
-    const spanH  = _zoomSpanBtn?.offsetHeight  ?? 26;
-    const themeH = _themeToggleBtn?.offsetHeight ?? 26;
-    // Stacked bottom-up in the SVG's bottom-left corner (8px inset), so reading top-to-bottom
-    // still goes reset → span → theme, same order the right-side vertically-centered stack
-    // used before.
-    if (_themeToggleBtn) {
-      _themeToggleBtn.style.left   = (fromLeft + 8) + 'px';
-      _themeToggleBtn.style.bottom = (fromBottom + 8) + 'px';
-    }
-    if (_zoomSpanBtn) {
-      _zoomSpanBtn.style.left   = (fromLeft + 8) + 'px';
-      _zoomSpanBtn.style.bottom = (fromBottom + 8 + themeH + 4) + 'px';
-    }
-    if (_zoomResetBtn) {
-      _zoomResetBtn.style.left   = (fromLeft + 8) + 'px';
-      _zoomResetBtn.style.bottom = (fromBottom + 8 + themeH + 4 + spanH + 4) + 'px';
-    }
+    // #zoom-reset/#zoom-span/#theme-toggle no longer positioned here — they're normal flex
+    // children of #map-controls (wc2026_map.html) now, not floats over the SVG.
     if (_zoomHintEl) {
       _zoomHintEl.style.left      = (svgRect.right - mcRect.left) + 'px';
       _zoomHintEl.style.bottom    = fromBottom + 'px';
@@ -892,10 +875,9 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
 {
   const _tabContent = document.getElementById('bottomTabContent');
   const _TAB_IDS = ['tab-teams', 'tab-tournament', 'tab-players', 'tab-chain'];
-  const _availableTabs = () => _TAB_IDS.filter(id => {
-    if (id === 'tab-players') return document.getElementById('tab-players-btn')?.classList.contains('dim-selected');
-    return true;
-  });
+  // tab-players is always usable now (idle state shows the all-players table, dim-selected
+  // shows the selected country's) — no longer conditional on a country being selected.
+  const _availableTabs = () => _TAB_IDS;
   const _btnRect = id => {
     const btn = document.getElementById(id + '-btn');
     if (!btn) return null;
@@ -1403,6 +1385,79 @@ const applySelection = (id, destIds) => {
   document.body.classList.add('dim-active');
 };
 
+// ── "All players" table (tab-players-btn's idle state, no country selected) ──────────────────
+// Same entries construction as wc2026_players.html's own (export entries from
+// rawData.data[].players, native entries from rawData.natives) — built once below, right after
+// buildIndices(rawData) runs, since that's where rawData is in scope.
+let _allPlayerEntries = [];
+
+// Numeric ids of qualified teams whose flag is currently visible on the map (not hidden by the
+// sidebar's category filter, group focus, or dim focus) — the table only ever shows players/
+// coaches of a team the map itself is currently showing, read fresh every time it's opened
+// rather than kept in sync live.
+const _visibleQualifiedIds = () => {
+  const ids = new Set();
+  g.selectAll('.flag-qualified[data-elo-cat]').each(function() {
+    const id = +this.getAttribute('data-id');
+    if (QUALIFIED_NAMES[id] && this.getAttribute('visibility') !== 'hidden') ids.add(id);
+  });
+  return ids;
+};
+
+const _allPlayersFlag = code => code ? html`<img class="pt-flag" src="${FLAG_CDN_RECT(code)}" alt="" width="18">` : nothing;
+
+const _allPlayersRow = p => {
+  const url = wikiUrl(p.pid);
+  const en = wikiUrlEn(p.pid);
+  const dName = playerDisplayName(p);
+  const nameCell = url
+    ? html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${dName}</a>`
+    : en ? html`${dName} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)`
+    : dName;
+  const birthIso2 = p.birthCountryId != null ? iso2ForId(p.birthCountryId) : (_NULL_CODE[p.birthCountry] ?? null);
+  const teamId = QUALIFIED_BY_NAME[p.nation];
+  const teamIso2 = teamId != null ? _eloItemsById.get(teamId)?.iso2 : null;
+  return html`
+    <tr>
+      <td>${nameCell}${p.role === 'coach' ? html` <span class="coach-badge">${T.coach}</span>` : nothing}</td>
+      <td class="pt-born" title=${p.birthCountry}>${_allPlayersFlag(birthIso2)}${p.birthCountry}</td>
+      <td class="pt-caps" title=${p.nation}>${_allPlayersFlag(teamIso2)}${p.nation}</td>
+      <td class="pt-num text-end">${p.role === 'coach' ? nothing : p.caps}</td>
+    </tr>`;
+};
+
+const _allPlayersTableTemplate = () => {
+  const visibleIds = _visibleQualifiedIds();
+  const filtered = _allPlayerEntries.filter(p => visibleIds.has(QUALIFIED_BY_NAME[p.nation]));
+  const coachCount = filtered.filter(p => p.role === 'coach').length;
+  return html`
+    <p class="sub mb-2">${filtered.length - coachCount} players · ${coachCount} coaches</p>
+    <table class="table table-sm table-striped table-hover pt-table" style="font-size:12px">
+      <thead><tr>
+        <th></th><th class="pt-born">${T.chainLegend.bornIn}</th><th class="pt-caps">${T.chainLegend.playsFor}</th><th class="pt-num text-end">${T.caps}</th>
+      </tr></thead>
+      <tbody>${filtered.map(_allPlayersRow)}</tbody>
+    </table>`;
+};
+
+const _showAllPlayers = () => {
+  const ptEl = document.getElementById('tab-players');
+  if (ptEl) render(_allPlayersTableTemplate(), ptEl);
+  _switchTab('tab-players');
+};
+
+// Idle state (no country selected) — a plain, always-clickable icon, unlike the country-pill
+// state applySelection renders above (which needs its own close button since clearing that
+// selection is a distinct action from just switching tabs). Called once at initial setup and
+// every time clearDim runs.
+const _renderPlayersTabIdle = () => {
+  const _pb = document.getElementById('tab-players-btn');
+  if (!_pb) return;
+  _pb.className = 'nav-link';
+  render(html`<img class="tab-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" aria-hidden="true" @click=${() => _showAllPlayers()}>`, _pb);
+};
+_renderPlayersTabIdle();
+
 const clearDim = () => {
   dimState.active = false;
   dimState.sourceId = null;
@@ -1424,8 +1479,7 @@ const clearDim = () => {
     render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
   }
   _updateSelectionPanel(() => {
-    const _pb = document.getElementById('tab-players-btn');
-    if (_pb) { render(nothing, _pb); _pb.className = 'nav-link'; }
+    _renderPlayersTabIdle();
     requestAnimationFrame(() => _positionIndicator(false));
   });
   _updateChainSelection();
@@ -2100,6 +2154,15 @@ Promise.all([
   );
   eloData.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); });
   buildIndices(rawData);
+  // Same construction as wc2026_players.html's own `entries` — see _allPlayersTableTemplate.
+  for (const rec of rawData.data ?? []) {
+    for (const p of rec.players ?? []) _allPlayerEntries.push({ ...p, native: false, birthCountry: rec.country, birthCountryId: rec.id });
+  }
+  for (const [country, natives] of Object.entries(rawData.natives ?? {})) {
+    const nId = QUALIFIED_BY_NAME[country];
+    for (const p of natives) _allPlayerEntries.push({ ...p, nation: country, native: true, birthCountry: country, birthCountryId: nId });
+  }
+  _allPlayerEntries.sort((a, b) => playerSortKey(a).localeCompare(playerSortKey(b)));
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
     rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,
@@ -2186,19 +2249,14 @@ Promise.all([
     const x0 = Math.min(...xs), x1 = Math.max(...xs);
     const y0 = Math.min(...ys), y1 = Math.max(...ys);
     const pad = 20;
-    // The zoom-reset/zoom-span/theme-toggle stack floats over the map's bottom-left corner
-    // (_syncMapHeight below) — without extra clearance there, "fit everything" can zoom in
-    // just far enough to tuck a flag right behind those buttons. viewBox units aren't 1:1
-    // with real screen pixels (the SVG scales responsively to its container's actual CSS
-    // width, and that ratio swings a lot between a phone and a desktop), so 20 *viewBox*
-    // units of extra padding would give a much smaller on-screen margin on a narrow phone
-    // than on a wide desktop — the opposite of what's needed, since the button stack itself
-    // is a fixed ~38px regardless of viewport. Converting through the SVG's current rendered
-    // width keeps the clearance a consistent ~20 real screen px everywhere.
-    const svgWidthPx = svg.node().getBoundingClientRect().width || vbW;
-    const leftPad = pad + 20 * (vbW / svgWidthPx);
-    const k = Math.max(1, Math.min(12, Math.min(vbW / (x1 - x0 + leftPad + pad), vbH / (y1 - y0 + 2 * pad))));
-    const cx = (x0 + x1) / 2 + (pad - leftPad) / 2; // shifted left so centering pushes content right, clear of the buttons
+    // Used to need extra left clearance here: the zoom-reset/zoom-span/theme-toggle stack
+    // used to float directly over the map's bottom-left corner, and without it "fit
+    // everything" could zoom in just far enough to tuck a flag right behind those buttons.
+    // They're normal flex children of #map-controls now (wc2026_map.html, inside
+    // #legend-parent, above the map rather than overlapping it), so a plain symmetric fit
+    // has nothing left to avoid.
+    const k = Math.max(1, Math.min(12, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
+    const cx = (x0 + x1) / 2;
     const cy = (y0 + y1) / 2;
     const tx = vbX + vbW / 2 - k * cx;
     const ty = vbY + vbH / 2 - k * cy;

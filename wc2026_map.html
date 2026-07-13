@@ -29,6 +29,10 @@
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/wc2026_map.css">
 <link rel="stylesheet" href="css/player.css">
+<!-- .pt-table/.pt-th/.pt-flag/.pt-born/.pt-caps — reused as-is by the all-players table
+     (js/wc2026_map.js's _allPlayersTableTemplate); the page-specific #players-header/
+     #players-sidebar rules in here simply don't match anything on this page. -->
+<link rel="stylesheet" href="css/wc2026_players.css">
 <link rel="stylesheet" href="css/map-container.css">
 <link rel="stylesheet" href="css/control-sidebar.css">
 <link rel="stylesheet" href="css/taxonomy.css">
@@ -61,6 +65,15 @@
   <div id="map-collapse" class="collapse show w-100">
   <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
   <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
+    <div id="map-controls" class="d-flex align-items-center gap-1">
+      <button id="zoom-reset" type="button" aria-label="Reset zoom">
+        <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+      </button>
+      <button id="zoom-span" type="button" aria-label="Span all visible countries">
+        <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+      </button>
+      <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
+    </div>
     <div id="legend-born" class="sub">
       <span id="legend-born-full" class="d-none d-md-inline"></span>
       <span id="legend-born-brief" class="d-md-none"></span>
@@ -93,13 +106,6 @@
     </div>
   </div>
   <span id="zoom-hint" class="position-absolute">scroll to zoom · drag to pan</span>
-  <button id="zoom-reset" type="button" aria-label="Reset zoom">
-    <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-  </button>
-<button id="zoom-span" type="button" aria-label="Span all visible countries">
-    <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-  </button>
-  <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
   </div>
 </div>
 

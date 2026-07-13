@@ -32,11 +32,18 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
 body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
-#zoom-reset, #zoom-span, #scroll-top-btn, #theme-toggle { position: absolute; z-index: 10; cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.4); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
-/* Bottom-left stack (js/wc2026_map.js's _syncMapHeight) — sized down alongside their 20px
-   (was 24px) icons, keeping the same 2px padding + 1px border margin around the icon that
-   the shared 30px/24px pairing above had. #scroll-top-btn keeps the original 30px box (its
-   own icon is an unrelated tiny inline chevron, not one of these three). */
+/* #zoom-reset/#zoom-span/#theme-toggle are normal flex children of #map-controls
+   (wc2026_map.html, inside #legend-parent) now, not JS-positioned floats — no more
+   position:absolute/z-index, no more per-frame left/bottom writes (removed from
+   js/wc2026_map.js's _syncMapHeight). #scroll-top-btn is unrelated (lives in #bottom-panel,
+   its own position/icon — css/wc2026_map.css) but shares the same button chrome, so it
+   stays in this shared list; it keeps its own position:absolute separately below. */
+#zoom-reset, #zoom-span, #scroll-top-btn, #theme-toggle { cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.4); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
+#scroll-top-btn { position: absolute; z-index: 10; }
+/* Sized down alongside their 20px (was 24px) icons, keeping the same 2px padding + 1px
+   border margin around the icon that the shared 30px/24px pairing above had.
+   #scroll-top-btn keeps the original 30px box (its own icon is an unrelated tiny inline
+   chevron, not one of these three). */
 #zoom-reset, #zoom-span, #theme-toggle { width: 26px; height: 26px; }
 #scroll-top-btn { display: none; }
 #scroll-top-btn.visible { display: flex; }
@@ -47,8 +54,10 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    smaller, centered dot — scale(0.5) on a position:absolute (inset:0) box
    shrinks toward the box's own center by default, no extra centering math
    needed. js/wc2026_map.js's _paintThemeToggle sets --theme-swatch, a two-stop
-   preview of the active theme's ramp. */
-#theme-toggle { border-radius: 50%; }
+   preview of the active theme's ramp. position:relative here (the button itself is no
+   longer position:absolute) so that inset:0 still anchors to this box, not some
+   further-up positioned ancestor. */
+#theme-toggle { border-radius: 50%; position: relative; }
 #theme-toggle::before {
   content: '';
   position: absolute;
@@ -73,9 +82,10 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    _updateLegendBorn(), rebuilt on every theme switch — see map-container.js's
    THEMES.*.legendKey / i18n.js's T.legendMetric, each a {full, brief} pair —
    #legend-born-full/-brief swap via Bootstrap's d-none/d-md-* rather than one
-   span with two possible strings, so no JS resize listener is needed). Direct
-   child of #legend-parent (not #legend), left-aligned via that container's
-   justify-content:between against #legend on the right.
+   span with two possible strings, so no JS resize listener is needed). Now
+   display:none below (see that rule's own comment) — #legend-parent switched
+   from justify-content-between to -end in wc2026_map.html accordingly, so
+   #legend still sits on the right with this no longer there to balance against.
    min-width:0 overrides flexbox's default min-width:auto — without it a flex
    item won't shrink below its content's natural width, so text-overflow can
    never kick in no matter how tight the row gets. The full (desktop) string
@@ -83,6 +93,9 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    title attribute (set alongside its textContent) is the fallback once the
    window is too narrow for it to fit next to the gradient bar. */
 #legend-born {
+  /* Low added value for the space it costs — the theme toggle button already lets you
+     switch metrics, and the legend's own gradient/ticks carry the actual scale. */
+  display: none;
   font-size: 11px; color: #bbb;
   flex: 1 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
