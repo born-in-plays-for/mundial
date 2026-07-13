@@ -104,7 +104,7 @@ class MundialAuthBar extends HTMLElement {
           ${_navLink('/wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', '', true)}
           ${_navLink('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, '', 'countries')}
           ${_navLink('/wc2026_live.html', _t.navLive, ICON_LIVE)}
-          ${_navLink('#', 'Coming soon', '<img src="/images/puzzle-svgrepo-com.svg" width="24" height="24" alt="">')}
+          ${_navLink('#', 'Coming soon', '<img src="/images/puzzle-piece-svgrepo-com.svg" width="24" height="24" alt="">')}
           <div class="dropdown" style="display:none;">
             <a class="nav-link dropdown-toggle d-flex align-items-center lh-1 p-0"
               href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
