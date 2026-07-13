@@ -15,6 +15,11 @@ import { wireShareButton } from './share_button.js';
 //
 //  showNonQualified — are the FE/FK/NE/NK (non-qualified) categories real, checkbox-driven
 //    filters (true), or force-excluded regardless of checkbox state (false)?
+//  showFilterTable  — is the whole import/export filter table (.csb-filter-table) interactive at
+//    all? tab-tournament's own visible-team set is already fully governed by the stage carousel +
+//    group-stage view (see wc2026_map.js's _groupFocusIds), so this table's checkboxes would just
+//    be a second, redundant (and confusing) filtering axis there — dimmed + disabled entirely,
+//    same disabled-not-hidden treatment as the non-qualified rows below.
 //  gateByStage      — does reachesStage() gate the 4 qualified categories (IE/IK/HE/HK) by the
 //    carousel's current stage, or ignore the carousel entirely (a flat, always-everyone list)?
 //  showCarousel     — is <elo-ranking>'s stage-carousel widget shown at all?
@@ -28,9 +33,9 @@ import { wireShareButton } from './share_button.js';
 //    forced (see forcedDisplay), not a real user choice, so persisting it would just leak a
 //    meaningless value into the 'countries' localStorage slice shared with 'combined' pages.
 const MODE_BEHAVIOR = {
-  combined:   { showNonQualified: true,  gateByStage: true,  showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                     persistDisplay: true },
-  teams:      { showNonQualified: true,  gateByStage: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                             persistDisplay: false },
-  tournament: { showNonQualified: false, gateByStage: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage === 0 ? 'team' : 'match',  persistDisplay: false },
+  combined:   { showNonQualified: true,  showFilterTable: true,  gateByStage: true,  showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                     persistDisplay: true },
+  teams:      { showNonQualified: true,  showFilterTable: true,  gateByStage: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                             persistDisplay: false },
+  tournament: { showNonQualified: false, showFilterTable: false, gateByStage: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage === 0 ? 'team' : 'match',  persistDisplay: false },
 };
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, mode = 'combined' }) {
@@ -119,7 +124,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         </tr>
       </tbody></table>
     </div>
-    <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
+    <table class="csb-table csb-filter-table table table-sm table-bordered mb-0 ${_initBehavior.showFilterTable ? '' : 'csb-table-disabled'}"><tbody>
     <tr>
       <td colspan="2" class="csb-header text-muted ps-1">
         <div class="d-flex align-items-center justify-content-between">
@@ -133,13 +138,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <tr>
       <td rowspan="2" class="csb-group" data-row="QB"><span class="elo-item"><span class="elo-name">${T.filterLabels.qualified}</span></span></td>
       <td class="csb-row" data-row="IB" title="${T.filterLabels.importer}"><span class="elo-item elo-item--imp"><span class="elo-name"></span></span></td>
-      <td class="text-muted" title="${T.csbTips.qie}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-IE" checked></label></td>
-      <td class="text-muted" title="${T.csbTips.qi}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-IK"  checked></label></td>
+      <td class="text-muted" title="${T.csbTips.qie}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-IE" ?disabled=${!_initBehavior.showFilterTable} checked></label></td>
+      <td class="text-muted" title="${T.csbTips.qi}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-IK" ?disabled=${!_initBehavior.showFilterTable} checked></label></td>
     </tr>
     <tr>
       <td class="csb-row" data-row="HB" title="${T.filterLabels.nonImp}"><span class="elo-item elo-item--nimp"><span class="elo-name"></span></span></td>
-      <td class="text-muted" title="${T.csbTips.qe}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HE"  checked></label></td>
-      <td class="text-muted" title="${T.csbTips.q}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HK"   checked></label></td>
+      <td class="text-muted" title="${T.csbTips.qe}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HE" ?disabled=${!_initBehavior.showFilterTable} checked></label></td>
+      <td class="text-muted" title="${T.csbTips.q}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-HK" ?disabled=${!_initBehavior.showFilterTable} checked></label></td>
     </tr>
     <!-- !showNonQualified (MODE_BEHAVIOR — the map's tab-tournament, qualified-only) dims +
          disables these two rows instead of hiding them — unlike the removed view-toggle
@@ -149,16 +154,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
          disappear. Checkboxes stay real, queryable elements either way — catEloChecked below
          dereferences them unconditionally (_fltFE.checked etc.); setMode toggles both the class
          and each checkbox's own disabled state dynamically when the map switches tabs. -->
-    <tr class="csb-nonqual-row ${_initBehavior.showNonQualified ? '' : 'csb-row-disabled'}">
+    <tr class="csb-nonqual-row ${_initBehavior.showFilterTable && !_initBehavior.showNonQualified ? 'csb-row-disabled' : ''}">
       <td rowspan="2" class="csb-group" data-row="UB" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
       <td class="csb-row" data-row="FB" title="${T.csbTips.fifa}"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FE" ?disabled=${!_initBehavior.showNonQualified}></label></td>
-      <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FK" ?disabled=${!_initBehavior.showNonQualified}></label></td>
+      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FE" ?disabled=${!_initBehavior.showFilterTable || !_initBehavior.showNonQualified}></label></td>
+      <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FK" ?disabled=${!_initBehavior.showFilterTable || !_initBehavior.showNonQualified}></label></td>
     </tr>
-    <tr class="csb-nonqual-row ${_initBehavior.showNonQualified ? '' : 'csb-row-disabled'}">
+    <tr class="csb-nonqual-row ${_initBehavior.showFilterTable && !_initBehavior.showNonQualified ? 'csb-row-disabled' : ''}">
       <td class="csb-row" data-row="NB" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NE" ?disabled=${!_initBehavior.showNonQualified}></label></td>
-      <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NK" ?disabled=${!_initBehavior.showNonQualified}></label></td>
+      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NE" ?disabled=${!_initBehavior.showFilterTable || !_initBehavior.showNonQualified}></label></td>
+      <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NK" ?disabled=${!_initBehavior.showFilterTable || !_initBehavior.showNonQualified}></label></td>
     </tr>
   </tbody></table>
   </div>
@@ -180,6 +185,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _fltNE = _panel.querySelector('#filter-NE');
   const _fltNK = _panel.querySelector('#filter-NK');
   const _nonQualRows = _panel.querySelectorAll('.csb-nonqual-row');
+  const _filterTableEl = _panel.querySelector('.csb-filter-table');
   const _displayTableEl = _panel.querySelector('.csb-display-table');
   // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
   // The carousel's DOM/Bootstrap wiring lives in <elo-ranking> (js/elo_ranking.js) now — it
@@ -434,12 +440,22 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (newMode === _mode) return;
     _mode = newMode;
     const behavior = MODE_BEHAVIOR[_mode];
+    // Whole-table disable (tab-tournament) wins over the per-row non-qualified one below —
+    // skip re-adding csb-row-disabled to those rows too, or the two opacities would compound
+    // (0.3 x 0.3) instead of reading as one clean dim. Checkboxes still end up disabled either
+    // way, just the visual dimming comes from a single source.
+    _filterTableEl.classList.toggle('csb-table-disabled', !behavior.showFilterTable);
     // Dimmed + disabled, not hidden — the non-qualified categories still exist, they're just
     // out of scope for tab-tournament (see the template comment above).
     _nonQualRows.forEach(tr => {
-      tr.classList.toggle('csb-row-disabled', !behavior.showNonQualified);
-      tr.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.disabled = !behavior.showNonQualified; });
+      tr.classList.toggle('csb-row-disabled', behavior.showFilterTable && !behavior.showNonQualified);
+      tr.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.disabled = !behavior.showFilterTable || !behavior.showNonQualified; });
     });
+    // Qualified-row checkboxes (IE/IK/HE/HK) have no non-qualified-specific disabling of their
+    // own — the whole-table class above only handles opacity/pointer-events, not each
+    // checkbox's own .disabled (still real, queryable elements either way, same as the
+    // non-qualified ones — catEloChecked dereferences them unconditionally).
+    [_fltIE, _fltIK, _fltHE, _fltHK].forEach(cb => { cb.disabled = !behavior.showFilterTable; });
     // The team/match toggle IS fully removed (not just disabled) on both split tabs — unlike
     // the filter rows above, it has nothing left to communicate once the tab-panel swap already
     // forces the one display that makes sense (see _setDisplayMode's forcedDisplay); keeping it
