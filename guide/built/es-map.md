@@ -378,6 +378,20 @@ Cuando hay un país seleccionado, la tabla de jugadores muestra tres secciones:
 
 Los nombres de los jugadores enlazan a su página de Wikipedia en el idioma de la interfaz actual, cuando está disponible.
 
+### <img class="gp-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" alt=""> Todos los jugadores
+
+Haz clic en el icono de persona de la misma pestaña sin ningún país seleccionado para mostrar en su lugar todos los jugadores y entrenadores de las 48 plantillas clasificadas en una única tabla, filtrada según los equipos actualmente visibles en el mapa.
+
+Un interruptor **Bubbles / Intensity** encima de la tabla cambia cómo se representan sus ciudades de nacimiento en el mapa:
+
+![Burbujas de ciudades de nacimiento](screenshots/bubbles.png)
+
+**Bubbles** (la opción predeterminada) coloca un punto por cada ciudad de nacimiento única entre los jugadores listados — más grande cuando más jugadores comparten una ciudad. Pasa el cursor sobre un punto para ver el nombre de la ciudad y el número de jugadores.
+
+![Mapa de calor de producción de talento](screenshots/heatmap.png)
+
+**Intensity** en cambio colorea todo el mapa con una superficie de calor suave que responde a una pregunta diferente: ¿produce esta parte del mundo *más* talento mundialista del que su población por sí sola predeciría? El púrpura indica muy por encima de la media global, el verde azulado por debajo, el pálido más o menos lo esperado. Está normalizado por población, no es un simple mapa de número de jugadores — un lugar necesita un número inusualmente alto de jugadores *para su población* para destacar, por lo que el resultado no está simplemente dominado por las ciudades más grandes. El sombreado de los países se oculta mientras esta vista está activa para que el degradado se lea con claridad, y los bordes se dibujan un poco más gruesos para compensar; la leyenda cambia a la misma escala, convertida en simples marcas «×N la tasa esperada».
+
 ### <img class="gp-icon" src="images/wc2026.svg" alt=""> Cadenas
 
 La pestaña Cadenas muestra secuencias de países vinculados por relaciones nacido-aquí / juega-por:

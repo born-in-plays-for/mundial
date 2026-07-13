@@ -378,6 +378,20 @@ Lorsqu'un pays est sélectionné, le tableau des joueurs affiche trois sections 
 
 Les noms des joueurs renvoient vers leur page Wikipedia dans la langue de l'interface lorsqu'elle est disponible.
 
+### <img class="gp-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" alt=""> Tous les joueurs
+
+Cliquez sur l'icône en forme de silhouette de ce même onglet sans aucun pays sélectionné pour afficher à la place tous les joueurs et entraîneurs des 48 sélections qualifiées dans un tableau unique, filtré selon les équipes actuellement visibles sur la carte.
+
+Un interrupteur **Bubbles / Intensity** au-dessus du tableau change la façon dont leurs villes de naissance sont représentées sur la carte :
+
+![Bulles des villes de naissance](screenshots/bubbles.png)
+
+**Bubbles** (par défaut) place un point par ville de naissance unique parmi les joueurs listés — plus grand là où plus de joueurs partagent une même ville. Survolez un point pour voir le nom de la ville et le nombre de joueurs.
+
+![Carte de chaleur de la production de talents](screenshots/heatmap.png)
+
+**Intensity** colore au contraire toute la carte avec une surface de chaleur lisse répondant à une question différente : cette région du monde produit-elle *plus* de talents pour la Coupe du Monde que ce que sa population seule laisserait prévoir ? Le violet signifie nettement au-dessus de la moyenne mondiale, le sarcelle en dessous, le pâle à peu près ce à quoi on s'attendrait. C'est normalisé par la population, pas une simple carte du nombre brut de joueurs — un lieu doit compter un nombre de joueurs anormalement élevé *pour sa population* pour ressortir, ce pourquoi le résultat n'est pas simplement dominé par les plus grandes villes. Le remplissage des pays est masqué tant que cette vue est active, pour que le dégradé se lise clairement, et les frontières sont tracées un peu plus épaisses pour compenser ; la légende bascule sur la même échelle, convertie en repères simples « ×N le taux attendu ».
+
 ### <img class="gp-icon" src="images/wc2026.svg" alt=""> Chaînes
 
 L'onglet des chaînes affiche des séquences de pays reliés par des connexions né ici / joue pour :

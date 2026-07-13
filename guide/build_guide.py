@@ -96,7 +96,43 @@ def take_screenshots():
             print(f'  ✓ screenshots/{name}  [{locale}]')
 
             context.close()
+
+        take_bubbles_and_heatmap_screenshots(browser)
         browser.close()
+
+
+def take_bubbles_and_heatmap_screenshots(browser):
+    """Capture the all-players table's two map layer modes (Bubbles / Intensity).
+
+    English only — neither view has any localized text of its own (the "N players ·
+    M coaches" line and the Bubbles/Intensity toggle labels are hardcoded English in the
+    app itself, unlike the rest of the UI), so there's nothing for per-locale variants to
+    show that a single capture doesn't already cover.
+    """
+    # Taller than the control_sidebar capture's 800px — #map-container's own height is computed
+    # from the viewport (_syncMapHeight, reserving space for the fixed header/bottom tab bar); a
+    # short viewport left the in-map legend rendered behind the fixed bottom bar in this element
+    # screenshot.
+    context = browser.new_context(viewport={'width': 1280, 'height': 1000}, device_scale_factor=2)
+    page = context.new_page()
+    page.goto(f'{BASE_URL}/wc2026_map.html', wait_until='networkidle', timeout=30_000)
+    page.wait_for_timeout(3_000)
+
+    page.locator('#tab-players-btn img').click()
+    page.wait_for_timeout(500)
+    page.locator('#map-container').screenshot(path=str(SCREENSHOTS / 'bubbles.png'))
+    print('  ✓ screenshots/bubbles.png')
+
+    # A plain JS .click() (not Playwright's own click(), even with force=True) — the fixed bottom
+    # tab bar visually overlaps this label depending on scroll position, and Playwright's
+    # dispatched click landed without actually toggling the radio (its 'change' handler never
+    # fired). A real DOM .click() on the <label> reliably activates its associated <input>.
+    page.evaluate('document.querySelector(\'label[for="map-layer-intensity"]\').click()')
+    page.wait_for_timeout(8_000)  # first Intensity build: fetch + offscreen-canvas raster render
+    page.locator('#map-container').screenshot(path=str(SCREENSHOTS / 'heatmap.png'))
+    print('  ✓ screenshots/heatmap.png')
+
+    context.close()
 
 
 # ── Language builds ───────────────────────────────────────────────────────────

@@ -378,6 +378,20 @@ Quando un paese è selezionato, la tabella dei giocatori mostra tre sezioni:
 
 I nomi dei giocatori collegano alla loro pagina Wikipedia nella lingua dell'interfaccia corrente, quando disponibile.
 
+### <img class="gp-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" alt=""> Tutti i giocatori
+
+Clicca sull'icona a forma di persona della stessa scheda senza alcun paese selezionato per elencare invece ogni giocatore e allenatore delle 48 rose qualificate in un'unica tabella, filtrata in base alle squadre attualmente visibili sulla mappa.
+
+Un interruttore **Bubbles / Intensity** sopra la tabella cambia il modo in cui le loro città di nascita vengono rappresentate sulla mappa:
+
+![Bolle delle città di nascita](screenshots/bubbles.png)
+
+**Bubbles** (l'opzione predefinita) posiziona un punto per ogni città di nascita unica tra i giocatori elencati — più grande dove più giocatori condividono la stessa città. Passa il mouse su un punto per vedere il nome della città e il numero di giocatori.
+
+![Mappa di calore della produzione di talenti](screenshots/heatmap.png)
+
+**Intensity** colora invece l'intera mappa con una superficie di calore uniforme che risponde a una domanda diversa: questa parte del mondo produce *più* talenti per il Mondiale di quanto la sua sola popolazione farebbe prevedere? Il viola indica un valore ben superiore alla media globale, il verde acqua uno inferiore, il pallido all'incirca quanto ci si aspetterebbe. È normalizzata per popolazione, non una semplice mappa del numero di giocatori — un luogo ha bisogno di un numero insolitamente alto di giocatori *rispetto alla sua popolazione* per risaltare, motivo per cui il risultato non è semplicemente dominato dalle città più grandi. La colorazione dei paesi è nascosta finché questa vista è attiva, così il gradiente si legge chiaramente, e i confini sono tracciati un po' più marcati per compensare; la legenda passa alla stessa scala, convertita in semplici indicazioni «×N il tasso atteso».
+
 ### <img class="gp-icon" src="images/wc2026.svg" alt=""> Catene
 
 La scheda Catene mostra sequenze di paesi collegate da relazioni nato-qui / gioca-per:

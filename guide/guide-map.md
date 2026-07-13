@@ -327,6 +327,20 @@ When a country is selected, the player table shows three sections:
 
 Player names link to their Wikipedia page in the current interface language when available.
 
+## <img class="gp-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" alt=""> All Players
+
+Click the same tab's person icon with **no** country selected to instead list every player and coach across all 48 qualified squads in one flat table, filtered to whichever teams are currently visible on the map.
+
+A **Bubbles / Intensity** switch above the table changes how their birth cities are plotted on the map itself:
+
+![Birth-city bubbles](screenshots/bubbles.png)
+
+**Bubbles** (the default) places one dot per unique birth city among the listed players — bigger where more players share a city. Hover a dot for the city name and player count.
+
+![Talent-production heat map](screenshots/heatmap.png)
+
+**Intensity** instead shades the whole map with a smooth heat-map surface answering a different question: does this part of the world produce *more* World Cup talent than its population alone would predict? Purple means well above the global average, teal means below it, pale means roughly what you'd expect. It's normalised by population, not a raw player-count map — a place needs an unusually large number of players *for its population* to stand out, which is why the result isn't simply dominated by the biggest cities. Country shading is hidden while this view is active so the gradient reads clearly, and borders are drawn a little bolder to compensate; the legend swaps to the same scale, converted to plain "×N the expected rate" ticks.
+
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Chains
 
 The chain tab shows sequences of countries linked by born-in / plays-for connections:
