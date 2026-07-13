@@ -865,6 +865,7 @@ const _switchTab = name => {
     _eloMain.update(dimState.sourceId);
     _scrollToActiveElo();
   }
+  _updatePlayerCityDots();
 };
 document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
   if (btn.id === 'tab-players-btn') return;
@@ -995,6 +996,60 @@ const _applyDimFocus = () => {
     return +this.getAttribute('data-id') === dimState.sourceId || this.hasAttribute('data-dim-visible');
   });
   animateFlagHidden(linked, () => false);
+};
+
+// Birth-city dots (see _updatePlayerCityDots below) — declared here, not near the all-players
+// table further down, for the same reason as _applyDimFocus just above: _switchTab's restore-tab
+// call a few lines below invokes _updatePlayerCityDots too, well before that table's own section
+// of the file runs.
+// pid (string) -> { city, lat, lon } — data/v2/birthplace.json, best-effort (not every pid has
+// an entry). Populated once in the main data-load callback further down.
+let _birthplaceByPid = {};
+// Whether #tab-players' current content is the all-players table (vs. a selected country's own
+// player table, or the "click a country" idle hint) — drives whether birth-city dots should be
+// showing on the map at all.
+let _showingAllPlayers = false;
+// A separate marker layer alongside the country flags, shown only while the all-players table is
+// the active content of #tab-players. Reuses .standalone-dot (map-container.js's existing,
+// previously-unused zoom-tick mechanism: cx/cy ride along with the map's own pan/zoom transform
+// for free, only r/stroke-width get counter-scaled each tick to stay a constant size) —
+// data-r-base lets each dot request its own radius instead of that mechanism's single global default.
+const CITY_DOT_COLOR = '#7c3aed';
+const _updatePlayerCityDots = () => {
+  if (typeof d3 === 'undefined') return;
+  const ptEl = document.getElementById('tab-players');
+  const show = _showingAllPlayers && ptEl && !ptEl.hidden;
+  if (!show) {
+    g.select('.city-dots').remove();
+    return;
+  }
+  const visibleIds = _visibleQualifiedIds();
+  const byCoord = new Map();
+  for (const p of _allPlayerEntries) {
+    if (!visibleIds.has(QUALIFIED_BY_NAME[p.nation])) continue;
+    const bp = _birthplaceByPid[p.pid];
+    if (!bp) continue;
+    const key = `${bp.lat.toFixed(3)},${bp.lon.toFixed(3)}`;
+    let rec = byCoord.get(key);
+    if (!rec) { rec = { lat: bp.lat, lon: bp.lon, city: bp.city, count: 0 }; byCoord.set(key, rec); }
+    rec.count++;
+  }
+  g.select('.city-dots').remove();
+  const dotsGroup = g.append('g').attr('class', 'city-dots');
+  for (const { lat, lon, city, count } of byCoord.values()) {
+    const [cx, cy] = projection([lon, lat]);
+    dotsGroup.append('circle')
+      .attr('class', 'standalone-dot')
+      .attr('cx', cx).attr('cy', cy)
+      .attr('data-r-base', Math.max(2, 2 * Math.sqrt(count)))
+      .attr('fill', CITY_DOT_COLOR).attr('fill-opacity', 0.7)
+      .attr('stroke', '#fff')
+      .append('title').text(count > 1 ? `${city} (${count})` : city);
+  }
+  const k = d3.zoomTransform(svg.node()).k;
+  dotsGroup.selectAll('circle')
+    .attr('r', function() { return (+this.getAttribute('data-r-base')) / k; })
+    .attr('stroke-width', 0.5 / k);
 };
 
 const app = {
@@ -1346,6 +1401,7 @@ const applyEmpty = id => {
 const applySelection = (id, destIds) => {
   dimState.active = true;
   dimState.sourceId = id;
+  _showingAllPlayers = false;
 
   if (centroids[id]) {
     applyDim(id, destIds);
@@ -1383,6 +1439,7 @@ const applySelection = (id, destIds) => {
   _updateEloSelection();
   _updateSelectionPanel();
   document.body.classList.add('dim-active');
+  _updatePlayerCityDots();
 };
 
 // ── "All players" table (tab-players-btn's idle state, no country selected) ──────────────────
@@ -1443,7 +1500,9 @@ const _allPlayersTableTemplate = () => {
 const _showAllPlayers = () => {
   const ptEl = document.getElementById('tab-players');
   if (ptEl) render(_allPlayersTableTemplate(), ptEl);
+  _showingAllPlayers = true;
   _switchTab('tab-players');
+  _updatePlayerCityDots();
 };
 
 // Idle state (no country selected) — a plain, always-clickable icon, unlike the country-pill
@@ -1463,6 +1522,8 @@ const clearDim = () => {
   dimState.sourceId = null;
   dimState.destIds = new Map();
   dimState.importIds = new Map();
+  _showingAllPlayers = false;
+  _updatePlayerCityDots();
   animateFlagOpacity(g.selectAll('.flag-qualified'), () => 1);
   g.selectAll('.flag-qualified').attr('data-dim-visible', null);
   g.selectAll('.country').attr('data-dim-visible', null);
@@ -2146,7 +2207,9 @@ Promise.all([
   fetch('data/fixtures.json').then(r => r.json()).catch(() => null),
   fetch('geo/cape-verde.geojson').then(r => r.json()).catch(() => null),
   fetch('geo/curacao.geojson').then(r => r.json()).catch(() => null),
-]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData, capeVerdeGeo, curacaoGeo]) => {
+  fetch('data/v2/birthplace.json').then(r => r.json()).catch(() => ({})),
+]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData, capeVerdeGeo, curacaoGeo, birthplaceByPid]) => {
+  _birthplaceByPid = birthplaceByPid;
   _worldTopo = world;
   _eloData = eloData;
   app.eloRank = Object.fromEntries(

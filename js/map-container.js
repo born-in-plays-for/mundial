@@ -329,7 +329,7 @@ class WorldMap extends HTMLElement {
         .attr('y', function() { return +this.getAttribute('data-cy') - s/2; });
 
       this.svg.selectAll('.standalone-dot')
-        .attr('r', DOT_R / e.transform.k)
+        .attr('r', function() { return (+this.getAttribute('data-r-base') || DOT_R) / e.transform.k; })
         .attr('stroke-width', 0.5 / e.transform.k);
 
       this.svg.selectAll('.offset-flag').each(function() {
