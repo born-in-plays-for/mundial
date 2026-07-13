@@ -9,9 +9,10 @@ const ICON_FRANCE = `<svg style="width:24px;height:24px" viewBox="0 0 512 512" x
 const ICON_RANKINGS = _icon(`<path d="M16 22V13C16 11.5858 16 10.8787 15.5607 10.4393C15.1213 10 14.4142 10 13 10H11C9.58579 10 8.87868 10 8.43934 10.4393C8 10.8787 8 11.5858 8 13V22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M8 22C8 20.5858 8 19.8787 7.56066 19.4393C7.12132 19 6.41421 19 5 19C3.58579 19 2.87868 19 2.43934 19.4393C2 19.8787 2 20.5858 2 22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M22 22V19C22 17.5858 22 16.8787 21.5607 16.4393C21.1213 16 20.4142 16 16.4393 16.4393C16 16.8787 16 17.5858 16 19V22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M11.1459 3.02251C11.5259 2.34084 11.7159 2 12 2C12.2841 2 12.4741 2.34084 12.8541 3.02251L12.9524 3.19887C13.0603 3.39258 13.1143 3.48944 13.1985 3.55334C13.2827 3.61725 13.3875 3.64097 13.5972 3.68841L13.7881 3.73161C14.526 3.89857 14.895 3.98205 14.9828 4.26432C15.0706 4.54659 14.819 4.84072 14.316 5.42898L14.1858 5.58117C14.0429 5.74833 13.9714 5.83191 13.9392 5.93531C13.9071 6.03872 13.9179 6.15023 13.9395 6.37327L13.9592 6.57632C14.0352 7.36118 14.0733 7.75361 13.8435 7.92807C13.6136 8.10252 13.2682 7.94346 12.5773 7.62535L12.3986 7.54305C12.2022 7.45265 12.1041 7.40745 12 7.40745C11.8959 7.40745 11.7978 7.45265 11.6014 7.54305L11.4227 7.62535C10.7318 7.94346 10.3864 8.10252 10.1565 7.92807C9.92674 7.75361 9.96476 7.36118 10.0408 6.57632L10.0605 6.37327C10.0821 6.15023 10.0929 6.03872 10.0608 5.93531C10.0286 5.83191 9.95713 5.74833 9.81418 5.58117L9.68403 5.42898C9.18097 4.84072 8.92945 4.54659 9.01723 4.26432C9.10501 3.98205 9.47396 3.89857 10.2119 3.73161L10.4028 3.68841C10.6125 3.64097 10.7173 3.61725 10.8015 3.55334C10.8857 3.48944 10.9397 3.39258 11.0476 3.19887L11.1459 3.02251Z" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_PLAYERS = _icon(`<circle cx="12" cy="9" r="3" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="12" r="10" stroke="#1C274C" stroke-width="1.5"/><path d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>`);
 const ICON_GUIDE = _icon(`<circle cx="12" cy="12" r="10" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="#1C274C" stroke-width="1.5"/><path d="M15 9L19 5" stroke="#1C274C" stroke-width="1.5"/><path d="M5 19L9 15" stroke="#1C274C" stroke-width="1.5"/><path d="M9 9L5 5" stroke="#1C274C" stroke-width="1.5"/><path d="M19 19L15 15" stroke="#1C274C" stroke-width="1.5"/>`);
-const ICON_MENU_DOTS = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="12" r="2" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="12" r="2" stroke="#1C274C" stroke-width="1.5"/><circle cx="19" cy="12" r="2" stroke="#1C274C" stroke-width="1.5"/></svg>`;
 const ICON_COURSE_UP = _icon(`<path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z" stroke="#1C274C" stroke-width="1.5"/><path d="M7 14L9.29289 11.7071C9.68342 11.3166 10.3166 11.3166 10.7071 11.7071L12.2929 13.2929C12.6834 13.6834 13.3166 13.6834 13.7071 13.2929L17 10M17 10V12.5M17 10H14.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 const ICON_STATUS = _icon(`<path d="M4 4H20L14 12V19L10 21V12L4 4Z" stroke="#1C274C" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`);
+const ICON_CARD = _icon(`<rect x="6" y="3" width="12" height="18" rx="2" stroke="#1C274C" stroke-width="1.5"/>`);
+const ICON_CHAIN = _icon(`<path d="M9 15L15 9" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M11 6L12.5 4.5C14 3 16.5 3 18 4.5C19.5 6 19.5 8.5 18 10L16.5 11.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M13 18L11.5 19.5C10 21 7.5 21 6 19.5C4.5 18 4.5 15.5 6 14L7.5 12.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>`);
 const ICON_LOGIN = _icon(`<path d="M12.9999 21.9994C17.055 21.9921 19.1784 21.8926 20.5354 20.5355C21.9999 19.0711 21.9999 16.714 21.9999 12C21.9999 7.28595 21.9999 4.92893 20.5354 3.46447C19.071 2 16.714 2 11.9999 2C7.28587 2 4.92884 2 3.46438 3.46447C2.10734 4.8215 2.00779 6.94493 2.00049 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M3 21L11 13M11 13H5M11 13V19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 const ICON_LOGOUT = _icon(`<path d="M12.9999 21.9994C17.055 21.9921 19.1784 21.8926 20.5354 20.5355C21.9999 19.0711 21.9999 16.714 21.9999 12C21.9999 7.28595 21.9999 4.92893 20.5354 3.46447C19.071 2 16.714 2 11.9999 2C7.28587 2 4.92884 2 3.46438 3.46447C2.10734 4.8215 2.00779 6.94493 2.00049 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M11 13L3 21M3 21H9M3 21V15" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 const WA_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#25D366" style="width:18px;height:18px;vertical-align:-3px;display:inline-block"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
@@ -24,6 +25,13 @@ const _navLink = (href, label, icon, extra = '', guideId = '', hidden = false) =
     data-guide=${guideId || nothing}
     @mouseover=${e => e.currentTarget.style.opacity = 1}
     @mouseout=${e => e.currentTarget.style.opacity = .6}>${unsafeHTML(icon)}</a>`;
+
+const _dropdownItem = (href, label, icon, guideId = '') =>
+  html`<li><a href=${href} class="dropdown-item d-flex align-items-center gap-2"
+    aria-label=${label} title=${label} style=${_hoverStyle}
+    data-guide=${guideId || nothing}
+    @mouseover=${e => e.currentTarget.style.opacity = 1}
+    @mouseout=${e => e.currentTarget.style.opacity = .6}>${unsafeHTML(icon)} ${label}</a></li>`;
 
 const _authSectionTemplate = ({onSignIn, onSignOut} = {}) => html`
   <button data-ref="sign-in" class="btn btn-link btn-sm p-0 d-flex align-items-center"
@@ -102,31 +110,25 @@ class MundialAuthBar extends HTMLElement {
         <div class="container-xxl d-flex align-items-center gap-3 px-1">
           ${_navLink('/', _t.navMap, ICON_HOME, '', 'map')}
           ${_navLink('/wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', '', true)}
-          ${_navLink('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, '', 'countries')}
           ${_navLink('/wc2026_live.html', _t.navLive, ICON_LIVE)}
-          ${_navLink('#', 'Coming soon', '<img src="/images/puzzle-piece-svgrepo-com.svg" width="24" height="24" alt="">')}
-          <div class="dropdown" style="display:none;">
-            <a class="nav-link dropdown-toggle d-flex align-items-center lh-1 p-0"
-              href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-              style="opacity:0.6">
-              ${unsafeHTML(ICON_MENU_DOTS)}
+          <div class="dropdown">
+            <a href="#" class="nav-link dropdown-toggle d-flex align-items-center lh-1 p-0"
+              role="button" data-bs-toggle="dropdown" aria-expanded="false"
+              aria-label=${_t.navGoodies} title=${_t.navGoodies} style=${_hoverStyle}
+              @mouseover=${e => e.currentTarget.style.opacity = 1}
+              @mouseout=${e => e.currentTarget.style.opacity = .6}>
+              <img src="/images/puzzle-piece-svgrepo-com.svg" width="24" height="24" alt="">
             </a>
             <ul class="dropdown-menu dropdown-menu-start" style="min-width:0">
-              <li><a href="/insights/france.html" class="dropdown-item d-flex align-items-center gap-2"
-                aria-label=${_t.navFrance} title=${_t.navFrance}
-                style="opacity:0.6">
-                ${unsafeHTML(ICON_FRANCE)} ${_t.navFrance}
-              </a></li>
-              <li><a href="/insights/perf.html" class="dropdown-item d-flex align-items-center gap-2"
-                aria-label="Performance" title="Group stage performance"
-                style="opacity:0.6">
-                ${unsafeHTML(ICON_COURSE_UP)} Performance
-              </a></li>
-              <li><a href="/insights/status.html" class="dropdown-item d-flex align-items-center gap-2"
-                aria-label="Status" title="Imported players — elimination status"
-                style="opacity:0.6">
-                ${unsafeHTML(ICON_STATUS)} Status
-              </a></li>
+              <!-- Superseded by #tab-players-btn (wc2026_map.html's bottom panel) as the map's
+                   own all-players view — kept reachable here rather than dropped outright, since
+                   wc2026_players.html is still a real, independent standalone page. -->
+              ${_dropdownItem('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, 'countries')}
+              ${_dropdownItem('/insights/perf.html', _t.navPerf, ICON_COURSE_UP)}
+              ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD)}
+              ${_dropdownItem('/insights/france.html', _t.navFrance, ICON_FRANCE)}
+              ${_dropdownItem('/insights/status.html', _t.navStatus, ICON_STATUS)}
+              ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
           <div data-ref="auth-section" data-guide="auth"
@@ -149,7 +151,9 @@ class MundialAuthBar extends HTMLElement {
       '/wc2026_players.html': ['wc2026_players.html'],
       '/insights/france.html': ['france.html'],
       '/insights/perf.html': ['perf.html'],
+      '/insights/discipline.html': ['discipline.html'],
       '/insights/status.html': ['status.html'],
+      '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
       '/wc2026_live.html': ['wc2026_live.html'],
       'guide.html': ['guide.html'],
     };
