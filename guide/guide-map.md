@@ -30,7 +30,7 @@ controlling what appears on the map and in the country list.
 
 ![Control panel](screenshots/control_sidebar.png)
 
-The panel has five parts: a **toolbar** across the top; **sort** and **view** stacked on the left; the **filter** matrix on the right; and an **infobar** along the bottom.
+The panel has four parts: a **toolbar** across the top; **sort** on the left; the **filter** matrix on the right; and an **infobar** along the bottom.
 
 ## Toolbar
 
@@ -55,17 +55,6 @@ Uncheck any cell to hide that category. Click a row or column header to toggle t
 
 Shows how many countries are currently visible out of the total, and the data source (and last-updated date) for whichever criterion is primary in the sort column.
 
-## View
-
-Switches the country list between **teams** (one pill per country, the default) and **matches** (one row per fixture, opponents paired side by side).
-
-The view switch only does something once the tournament stage carousel — in the Country List tab below the map, not this panel; see *The Bottom Panel*, below — has moved past **Group stage**: there's no single fixture to pair a team with before the knockout rounds start, so it stays disabled until then.
-
-In match view, each row shows both teams either side of the kickoff date/score:
-
-- Not yet played: the kickoff date, and a wavy top/bottom border on both pills — a "some assembly required" look for a fixture that could still go either way.
-- Played: the score (plus penalty shootout result, if it went that far) in place of the date, and the losing team's flag greyed out.
-
 ## FIFA confederation filter
 
 The <img class="gp-icon" src="images/solar_linear/widget-5-svgrepo-com.svg" alt="confederation"> button next to the **FIFA** row opens a dropdown to filter the list to a single confederation. Non-FIFA countries are unaffected — they remain visible or hidden according to the rest of the filter matrix.
@@ -74,7 +63,7 @@ Selecting a confederation also highlights its external boundary on the map and z
 
 ## URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* in the [Countries page guide](?guide=countries) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* in the [API Guide](?guide=countries) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
 
 ## About the country reference
 
@@ -209,7 +198,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 
 <div>
 <div style="font-size:.8rem;font-weight:600;margin-bottom:2px;color:#555"><!-- i18n:tax_label_fixture -->Fixtures (match view)<!-- /i18n:tax_label_fixture --></div>
-<div style="font-size:.8rem;color:#777;margin-bottom:6px"><!-- i18n:tax_note_fixture -->Only shown in match view — see Team / match view, above.<!-- /i18n:tax_note_fixture --></div>
+<div style="font-size:.8rem;color:#777;margin-bottom:6px"><!-- i18n:tax_note_fixture -->Only shown once countries are grouped by fixture — see *Tournament*, below.<!-- /i18n:tax_note_fixture --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-pair" style="display:inline-flex">
     <span class="elo-item-wrap">
@@ -283,23 +272,13 @@ Hover any country to see details. Tooltips are not shown on mobile.
 <!-- i18n:bottom_panel -->
 # The Bottom Panel
 
-The scrollable area below the map has three tabs.
+The scrollable area below the map has four tabs.
 
-## <img class="gp-icon" src="images/solar_linear/elo_tab_cup.svg" alt=""> The Country List
+## <img class="gp-icon" src="images/solar_linear/ranking-svgrepo-com.svg" alt=""> The Country List
 
-The default tab lists every country as a pill badge.
+The default tab lists every country — qualified or not — as a pill badge, no tournament carousel.
 The Control Panel controls which badges appear and in what order;
 the default sort is by [World Football Elo rating](https://www.eloratings.net/).
-
-A small carousel sits above the list, cycling through seven positions: **Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
-
-- Use the ‹ › arrows, or swipe left/right on touch screens, to move between stages.
-- Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it.
-- Navigation is capped at the furthest stage the tournament has actually reached; later positions stay locked until real fixtures resolve into them.
-
-The carousel acts as an additional filter, layered on top of the Control Panel — you can, for example,
-show only Round of 16 teams that are also exporters by advancing the carousel and unchecking the non-exporter column in the panel.
-It only filters the four **qualified** rows (importer / non-importer × exporter / non-exporter); the four **non-qualified** rows (FIFA / non-FIFA × exporter / non-exporter) are orthogonal to it and stay unaffected at every position — they have no tournament stage of their own to reach.
 
 Clicking a badge selects that country and zooms the map to it.
 
@@ -314,6 +293,27 @@ The <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.
 The <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="reset"> button restores the initial pan/zoom, optimised to fit every country in view.
 
 Click the active badge a second time, click anywhere else on the map, or press **Esc** to deselect.
+
+## <img class="gp-icon" src="images/world-cup-svgrepo-com.svg" alt=""> Tournament
+
+The same badge list, this time scoped to the 48 **qualified** countries only, with a small carousel above it cycling through seven positions: **Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
+
+- Use the ‹ › arrows, or swipe left/right on touch screens, to move between stages.
+- Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it.
+- Navigation is capped at the furthest stage the tournament has actually reached; later positions stay locked until real fixtures resolve into them.
+
+The carousel acts as an additional filter, layered on top of the Control Panel — you can, for example,
+show only Round of 16 teams that are also exporters by advancing the carousel and unchecking the non-exporter column in the panel.
+It only filters the four **qualified** rows (importer / non-importer × exporter / non-exporter); the four **non-qualified** rows have no tournament stage of their own to reach.
+
+At **Group stage**, the badge list is replaced by group standings — one selectable group (A–L) at a time, with each match's result and the teams through to the Round of 32 highlighted based on the actual outcomes (a draw earns no checkmark either way).
+
+Past Group stage, countries are instead grouped by fixture automatically: each row pairs both opponents either side of the kickoff date/score —
+
+- Not yet played: the kickoff date, and a wavy top/bottom border on both pills — a "some assembly required" look for a fixture that could still go either way.
+- Played: the score (plus penalty shootout result, if it went that far) in place of the date, and the losing team's flag greyed out.
+
+Clicking a badge, arrows, and the zoom buttons all behave the same way here as in *The Country List*, above.
 
 ## The Player Table
 
