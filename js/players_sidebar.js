@@ -152,15 +152,14 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
   // is already crowded with collapse/share/params-badge) — shows the active filter at a
   // glance instead of only revealing it by opening the dropdown.
   const _confLabelEl = _panel.querySelector('#players-conf-label');
-  // .psb-conf-scope (declared properly below, next to its own change listener) means nothing
-  // without a confederation actually selected — disabled (native `disabled`, dims via
-  // Bootstrap's own .btn-check:disabled+.btn CSS) rather than removed, so the toolbar's layout
-  // stays stable regardless of whether a confederation is currently picked.
+  // .psb-conf-scope reads as "meaningless without a confederation actually selected", but it's
+  // always clickable regardless — no UI-level disabling based on state (removed; more protection
+  // than the current, still-in-flux UI complexity warrants, see control_sidebar.js's own
+  // MODE_BEHAVIOR comment for the same call made there).
   const _confScopeEl = _panel.querySelector('.psb-conf-scope');
   const _syncConfRadio = () => {
     _confRadios?.forEach(r => { r.checked = r.dataset.conf === (_confKey ?? ''); });
     if (_confLabelEl) _confLabelEl.textContent = _confKey ? (T.csbParams.confNames[_confKey] ?? _confKey) : T.csbParams.confAll;
-    _confScopeEl?.querySelectorAll('input[data-scope]').forEach(r => { r.disabled = !_confKey; });
   };
   _syncConfRadio();
   _confDropdown?.addEventListener('show.bs.dropdown',   () => { _body.style.overflow = 'visible'; });

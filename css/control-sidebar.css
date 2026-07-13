@@ -309,15 +309,6 @@
    disabled; see css/wc2026_players.css's own comment for why the two controls' semantics
    diverge here). */
 #control-sidebar .csb-sort-item--disabled { opacity: 0.3; pointer-events: none; }
-/* tab-tournament's non-qualified filter rows (control_sidebar.js's setMode) — same dimmed,
-   inert treatment as .csb-sort-item--disabled above, just scoped to a whole <tr>. */
-#control-sidebar .csb-nonqual-row.csb-row-disabled { opacity: 0.3; pointer-events: none; }
-/* tab-tournament's entire filter table (control_sidebar.js's setMode/MODE_BEHAVIOR.showFilterTable)
-   — the carousel + group-stage view already fully govern which teams are visible there, so this
-   whole import/export filter would just be a second, redundant axis. Same dimmed/inert treatment
-   as .csb-row-disabled above; setMode skips re-adding that per-row class to .csb-nonqual-row
-   while this is active, so the two opacities never compound. */
-#control-sidebar .csb-filter-table.csb-table-disabled { opacity: 0.3; pointer-events: none; }
 .cbs-header-label {
   font-style: italic;
   color:#777;
