@@ -1953,12 +1953,22 @@ const buildBlendedInset = ({ id, geo, corner = 'bottom-right' }) => {
     .on('click',     (event) => onCountryClick(event, id));
 
   const flagNode = flag.node();
-  const syncVisibility = () => {
+  // Mirrors opacity too, not just visibility — js/flag_visibility.js's animateFlagHidden fades
+  // the flag's opacity over ~180ms+ and only flips `visibility` at the very end of a hide (or
+  // immediately, ahead of its own fade-in, for a show). Tracking visibility alone made this
+  // circle either pop in instantly before the flag had faded in at all, or stay fully solid for
+  // the flag's entire fade-out before snapping away at the last instant — never actually in
+  // sync with what the flag was doing. Mirroring opacity too (updated every animation frame,
+  // since the MutationObserver fires per DOM mutation) keeps the circle's own fade tied to the
+  // flag's, so it only ever appears/disappears together with its own flag, not ahead of or
+  // behind it.
+  const syncBlend = () => {
     const hidden = flagNode.getAttribute('visibility') === 'hidden';
-    blend.attr('visibility', hidden ? 'hidden' : null);
+    blend.attr('visibility', hidden ? 'hidden' : null)
+      .attr('opacity', flagNode.getAttribute('opacity') ?? 1);
   };
-  new MutationObserver(syncVisibility).observe(flagNode, { attributes: true, attributeFilter: ['visibility'] });
-  syncVisibility();
+  new MutationObserver(syncBlend).observe(flagNode, { attributes: true, attributeFilter: ['visibility', 'opacity'] });
+  syncBlend();
 
   const update = k => {
     const screenSide = k >= CV_BLEND_K_THRESHOLD

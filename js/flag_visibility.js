@@ -18,23 +18,45 @@ const _staggeredEach = (nodes, apply) => {
   nodes.forEach((node, i) => apply(d3.select(node), node, i * step));
 };
 
-// hiddenFn(el) -> bool: should this flag be hidden? Only touches elements whose hidden state
-// is actually changing. Hiding fades opacity down to 0, then sets visibility:hidden (so it
-// stops intercepting clicks/hover once gone, same as the old instant toggle did). Showing
-// un-hides first and fades opacity up from 0 to whatever was last set via animateFlagOpacity
-// (data-flag-opacity, defaulting to 1 if this flag has never been dimmed) — so a flag that was
-// both dimmed and filtered out returns to its dimmed brightness on reveal, not a full-opacity
-// flash.
+// hiddenFn(el) -> bool: should this flag be hidden? Only touches elements whose *intended*
+// hidden state is actually changing — tracked via data-hidden-target, not read back off the
+// live `visibility` attribute. That distinction matters: several callers (control_sidebar.js's
+// category filter, _applyGroupFocus, _applyDimFocus) can all run on the same flag within one
+// synchronous batch (control_sidebar.js's callbacks.afterFlagFilter chain), each with a
+// different opinion. A hide fades opacity to 0 and only flips `visibility` at the very end, so
+// mid-fade the DOM still reads "visible" — a later caller in the same batch wanting it shown
+// would see no change needed and do nothing, leaving the hide to finish anyway; the *next*
+// unrelated interaction then has to notice and re-show it, and the filter re-hides it right
+// back — a tug-of-war that reads as constant flicker (this is exactly what made Curaçao/Cape
+// Verde's blended inset flicker on nearly every unrelated flag-set change: they're common
+// dim-mode import links, so _applyDimFocus's "keep shown" and the category filter's "hide" kept
+// fighting over the same flag). Comparing against the last *requested* target instead of the
+// DOM's current (possibly mid-transition) state means the later caller in the same batch always
+// wins outright — d3 transitions on the same element/attribute naturally interrupt/replace an
+// earlier one, so requesting "show" cancels an in-flight "hide" before it ever reaches its own
+// `visibility:hidden` step.
 export const animateFlagHidden = (selection, hiddenFn) => {
-  const changed = selection.nodes().filter(el => (el.getAttribute('visibility') === 'hidden') !== hiddenFn(el));
+  const changed = selection.nodes().filter(el => {
+    const target = hiddenFn(el);
+    const known = el.hasAttribute('data-hidden-target');
+    const current = known ? el.getAttribute('data-hidden-target') === '1' : el.getAttribute('visibility') === 'hidden';
+    return current !== target;
+  });
   _staggeredEach(changed, (sel, el, delay) => {
-    if (hiddenFn(el)) {
+    const target = hiddenFn(el);
+    el.setAttribute('data-hidden-target', target ? '1' : '0');
+    if (target) {
       sel.transition().delay(delay).duration(DURATION_MS).attr('opacity', 0)
-        .on('end', function() { d3.select(this).attr('visibility', 'hidden'); });
+        .on('end', function() {
+          // Only actually hide if still the intended target — a later call may already have
+          // flipped it back before this transition got a chance to run (normally that call
+          // would have interrupted this transition outright; this is just cheap insurance).
+          if (this.getAttribute('data-hidden-target') === '1') d3.select(this).attr('visibility', 'hidden');
+        });
     } else {
-      const target = parseFloat(el.getAttribute('data-flag-opacity') ?? '1');
+      const opacityTarget = parseFloat(el.getAttribute('data-flag-opacity') ?? '1');
       sel.attr('visibility', null).attr('opacity', 0)
-         .transition().delay(delay).duration(DURATION_MS).attr('opacity', target);
+         .transition().delay(delay).duration(DURATION_MS).attr('opacity', opacityTarget);
     }
   });
 };
