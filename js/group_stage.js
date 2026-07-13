@@ -1,5 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { pillClasses, pillContent, pillStyle, fixtureDateLabel } from './elo_ranking.js';
+import { loadSlice, saveSlice } from './persist.js';
 
 // Persistent Group Stage view for tab-tournament's stage 0 — all 12 groups' standings +
 // played-fixture results, always browsable (not gated on a live match). Adapted from
@@ -99,9 +100,13 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
     .map(t => eloItemsByIso2.get(t.iso2)?.id)
     .filter(id => id != null);
 
+  // 'groupStage' — its own localStorage slice (js/persist.js), private to this module: the
+  // selected-group choice has no equivalent on any other page, unlike control_sidebar.js's
+  // 'shared'/'countries' slices which round-trip with players_sidebar.js.
   const _select = letter => {
     _selected = letter;
     _render();
+    saveSlice('groupStage', { selected: letter });
     onGroupSelect?.(letter, letter ? _teamIdsForGroup(letter) : []);
   };
 
@@ -146,12 +151,19 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
       </div>`, container);
   };
 
-  _render();
-  // clearSelection: used by wc2026_map.js when the group-stage view itself is hidden (e.g. the
-  // carousel moves past stage 0, or the user leaves tab-tournament) — resets both the visible
-  // selector state and the map's group-focus filter it drives, so leaving this view never
-  // strands the map showing only 4 flags with no way back short of re-entering and re-clicking
-  // "All".
-  const clearSelection = () => _select(null);
-  return { render: _render, clearSelection };
+  // Restore the last selected group (or "All") across reloads — routed through _select itself,
+  // not a separate restore path, so the render + saveSlice + onGroupSelect (map filter/zoom)
+  // side effects can't drift out of sync with what a real click does.
+  const _saved = loadSlice('groupStage')?.selected;
+  _select(_GROUP_LETTERS.includes(_saved) ? _saved : null);
+  // Exposed so wc2026_map.js can re-sync the map's own group-focus filter whenever this view
+  // becomes visible/hidden again (switching #bottomTabList tabs) — WITHOUT going through
+  // _select/onGroupSelect (which also clears an active dim selection and re-persists): tab
+  // navigation isn't the user picking a new group, it's the same selection becoming visible or
+  // not, so it should neither reset _selected nor touch dim mode.
+  return {
+    render: _render,
+    get selected() { return _selected; },
+    get selectedTeamIds() { return _selected ? _teamIdsForGroup(_selected) : []; },
+  };
 };

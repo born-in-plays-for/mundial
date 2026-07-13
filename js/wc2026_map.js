@@ -92,6 +92,11 @@ const dotCentroid = d => {
 };
 
 svg.on('click', () => { clearDim(); });
+// The mouse leaving the map entirely (not just moving to open ocean, still inside the SVG —
+// see the ocean's own mousemove above) is the other spot nothing was hiding the tooltip from
+// during dim mode, for the same reason: every country/flag's mouseleave skips hideTip() while
+// dim mode is active, assuming a subsequent hover elsewhere will replace it.
+svg.on('mouseleave', () => { hideTip(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') clearDim(); });
 
 // Zoom behaviour lives in <world-map>; register page-specific extra work here.
@@ -483,10 +488,14 @@ const _updateGroupStageVisibility = () => {
   const show = _activeTab === 'tab-tournament' && _currentCarouselStage === 0;
   _groupStageEl.hidden = !show;
   _eloListEl.hidden = show;
-  // Leaving the group-stage view (carousel moved on, or the user switched tabs) always clears
-  // any active group focus — otherwise the map could be silently stuck showing only 4 flags
-  // with no visible way back to "All" short of re-entering this exact view.
-  if (!show) _groupStage?.clearSelection();
+  // Re-syncs the map's own group-focus filter to match whatever group_stage.js's own
+  // (persisted, tab-switch-proof) selection currently is — entering re-applies it, leaving
+  // clears it so the map doesn't stay silently stuck showing only 4 flags while the user
+  // browses an unrelated tab. Deliberately bypasses onGroupSelect/_select here: this isn't the
+  // user picking a new group, just the same selection becoming visible or not, so it shouldn't
+  // reset group_stage.js's own state, re-persist anything, or clear an active dim selection.
+  _groupFocusIds = (show && _groupStage?.selected) ? new Set(_groupStage.selectedTeamIds) : null;
+  sidebar.applyFlagFilter();
 };
 // Bubbles from stage_carousel.js through <elo-ranking> — same event control_sidebar.js already
 // listens to (js/control_sidebar.js's eloMain.addEventListener('stage-change', ...)); this is
@@ -1694,7 +1703,13 @@ world.objects.countries.geometries.forEach(g => {
 // blue countries for attention instead of receding as backdrop. Deliberately theme-independent
 // (see the "Satellite colors" note in CLAUDE.md) — real water stays the same regardless of
 // which land palette is active.
-g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','#b0c4c4').attr('stroke','none');
+// Real ocean gets the same tooltip-hiding mousemove the temporary loading placeholder above
+// has — without it, moving from a country straight to open water left the tooltip stuck
+// showing the last-hovered country: every country/flag's own mouseleave skips hideTip()
+// while dim mode is active (assuming a subsequent hover elsewhere will replace it), and
+// nothing else was wired to catch "moved to a spot with no country at all" during dim mode.
+g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','#b0c4c4').attr('stroke','none')
+  .on('mousemove', () => { hideTip(); });
 
 // ── World choropleth (skip UK polygon — rendered separately below) ────────────
 g.selectAll('.country')
