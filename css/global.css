@@ -14,7 +14,7 @@
 
 /* navbar icon normalisation — 1.5 px visual stroke regardless of SVG viewBox size */
 /* .warn-icon class on the SVG excludes it from colour/weight normalisation */
-mundial-auth-bar nav [stroke]:not(.warn-icon *) { stroke: #1C274C; stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+mundial-auth-bar nav [stroke]:not(.chain-icon *):not(.warn-icon *) { stroke: #1C274C; stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
 
 /* base */
 body { background: var(--page-bg); color: var(--color-default); }
