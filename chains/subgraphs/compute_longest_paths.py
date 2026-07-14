@@ -221,7 +221,7 @@ def main():
 
         result = {
             "title": f"Longest chain — {desc}",
-            "subtitle": f"Mondial 2026 · {len(links)} players · {len(nodes)} countries",
+            "subtitle": f"{len(links)} players · {len(nodes)} countries",
             "source": "source : Wikipédia · effectifs Mondial 2026",
             "mode": mode,
             "mode_description": desc,

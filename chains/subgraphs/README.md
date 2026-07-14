@@ -59,7 +59,7 @@ Same shape as `chains/wc2026_chain_longest.json`:
 ```json
 {
   "title": "Longest chain — ...",
-  "subtitle": "Mondial 2026 · 14 players · 15 countries",
+  "subtitle": "14 players · 15 countries",
   "mode": "fwd",
   "mode_description": "born in → plays for (export direction)",
   "nodes": [

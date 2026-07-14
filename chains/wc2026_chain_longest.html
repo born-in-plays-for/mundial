@@ -331,6 +331,10 @@ const _switchChainMode = mode => {
     b.classList.toggle('active', b.dataset.mode === mode);
   });
   _renderChainNow();
+  document.querySelectorAll('#chain-mode-toggle .chain-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === chainMode);
+    btn.addEventListener('click', () => _switchChainMode(btn.dataset.mode));
+  });
 };
 const _VARIANT_MODE_BY_FILE = {
   'subgraphs/longest_both.json': 'both',
@@ -351,16 +355,11 @@ if (_initialMode) {
     chainVariants.bwd = bwd;
     chainMode = _initialMode;
     chainData = chainVariants[_initialMode];
-    container.insertAdjacentHTML('afterbegin', `<div class="d-flex justify-content-center gap-1 py-2" id="chain-mode-toggle">
-      <button class="chain-mode-btn" data-mode="bwd" title="Import direction">← import</button>
-      <button class="chain-mode-btn active" data-mode="both" title="Both directions">both</button>
-      <button class="chain-mode-btn" data-mode="fwd" title="Export direction">export →</button>
-    </div>`);
+    _renderChainNow();
     document.querySelectorAll('#chain-mode-toggle .chain-mode-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.mode === chainMode);
       btn.addEventListener('click', () => _switchChainMode(btn.dataset.mode));
     });
-    _renderChainNow();
   }).catch(e => { chainContent.textContent = 'Error: ' + e.message; });
 } else {
   fetch(_dataParam)

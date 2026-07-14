@@ -80,13 +80,17 @@ export function renderChain(chain, container, opts = {}) {
     const subtitleText = L.subtitle ? L.subtitle(links.length, nodes.length) : chain.subtitle;
     const _btnStyle = dis => `width:28px;height:24px;border-radius:5px;border:none;background:#e8e4de;color:#888;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:${dis ? 'default' : 'pointer'};opacity:${dis ? '0.35' : '1'}`;
     hdrParent.innerHTML = `
-      <div class="d-flex align-items-center gap-2 py-1 overflow-hidden">
-        <div class="fw-semibold flex-shrink-1 text-truncate" style="font-size:12px;min-width:0">[${_spanHtml(`← ${L.bornIn}`, '#3b82f6')} | ${_spanHtml(`${L.playsFor} →`, '#ef4444')}]</div>
-        <div class="text-truncate" style="flex:1 1 0%;min-width:0;font-size:10px;color:var(--color-dim)">${subtitleText ?? ''}</div>
-        ${onCountryClick ? `<div class="ms-auto d-flex gap-1 flex-shrink-0">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 py-1 overflow-hidden">
+        <div class="d-flex flex-nowrap justify-content-center gap-1 py-2" id="chain-mode-toggle">
+          <button class="chain-mode-btn" data-mode="bwd" title="Import direction">${_spanHtml(`${L.playsFor}`, '#ef4444')}</button>
+          <button class="chain-mode-btn active" data-mode="both" title="Both directions">both</button>
+          <button class="chain-mode-btn" data-mode="fwd" title="Export direction">${_spanHtml(`${L.bornIn}`, '#3b82f6')}</button>
+        </div>
+        ${onCountryClick ? `<div class="d-flex gap-1">
           <button data-nav="-1" style="${_btnStyle(selIdx >= 0 && selIdx === 0)}">◀</button>
           <button data-nav="1"  style="${_btnStyle(selIdx >= 0 && selIdx === nn - 1)}">▶</button>
         </div>` : ''}
+        <div class="text-truncate" style="min-width:0;font-size:10px;color:var(--color-dim)">${subtitleText ?? ''}</div>
       </div>`;
     if (onCountryClick) {
       hdrParent.querySelectorAll('[data-nav]').forEach(btn => {
