@@ -16,7 +16,6 @@ Static frontend for the [Born In, Plays For](https://github.com/born-in-plays-fo
 | [/guide.html](https://mundial.cthiebaud.com/guide.html) | User guide |
 | [/chains/wc2026_chain_longest.html](https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html) | Export chain snake renderer |
 | [/insights/france.html](https://mundial.cthiebaud.com/insights/france.html) | France departments choropleth |
-| [/insights/perf.html](https://mundial.cthiebaud.com/insights/perf.html) | Regional performance analysis |
 | [/insights/status.html](https://mundial.cthiebaud.com/insights/status.html) | Elimination status bar chart, toggle between imports/exports ranking |
 
 ## Running locally

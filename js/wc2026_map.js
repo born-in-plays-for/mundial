@@ -1,16 +1,15 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
-import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
-import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData, findPlayerWikiUrl } from './i18n.js';
+import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initGroupStage } from './group_stage.js';
 import { initSidebar } from './control_sidebar.js';
 import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
 import { loadKdeData, makeKdeColorScale, buildKdeRaster, kdeLegendTicks } from './kde_layer.js';
 import { CONF_BOUNDS } from './conf.js';
-import { ISO2_REVERSE, iso2ForId, _NULL_CODE } from './iso2.js';
+import { iso2ForId, _NULL_CODE } from './iso2.js';
 import { choroFill, getDivergingParams, setDivergingParams, currentTheme, onThemeChange,
          FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT, W, H,
          buildChoroplethIndex, paintChoropleth, wireLegend,
@@ -281,20 +280,6 @@ function _highlightConf(ids) {
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
 render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
 
-// Chain tab: load data lazily, render when tab is shown, re-render on resize
-// Both callbacks reference symbols defined later in the module — safe because they
-// are only invoked on user interaction, after the module has fully loaded.
-const _chainOnClick    = node => {
-  const id = ISO2_REVERSE[node.code];
-  if (dimState.sourceId === id) { clearDim(); return; }
-  activateCountry(id); _zoomToActiveDimFlags(); requestAnimationFrame(() => _chainUpdate?.scrollActive());
-};
-const _chainGetIndex   = () => {
-  if (!_chainData || dimState.sourceId == null) return -1;
-  return _chainData.nodes.findIndex(n => ISO2_REVERSE[n.code] === dimState.sourceId);
-};
-let _chainData = null, _chainUpdate = null;
-
 /* ── Accordion state persistence ─────────────────────────────────────────────
    Bootstrap's Collapse instances get confused across lit-html renders.
    We own the state: save before every render, restore after. */
@@ -325,41 +310,6 @@ const _restoreAccState = ptEl => ['exp','nat','imp'].forEach(k => {
     btn.setAttribute('aria-expanded', 'false');
   }
 });
-// Lazy lookup: player name → {href, fallback}, shared with the standalone chain page
-// via i18n.js's findPlayerWikiUrl (app.byId → local byId there).
-const _chainWikiUrl = name => findPlayerWikiUrl(name, app.byId);
-const _renderChain = () => {
-  if (!_chainData) return;
-  let chainContent = document.getElementById('chain-content');
-  if (!chainContent) {
-    chainContent = document.createElement('div');
-    chainContent.id = 'chain-content';
-    document.getElementById('tab-chain').appendChild(chainContent);
-  }
-  // No headerContainer — #chain-panel was cut from wc2026_map.html (moved to
-  // chains/wc2026_chain_longest.html as a fixed, always-visible footer). renderChain's
-  // own fallback (headerContainer ?? wrapper) now renders the legend/subtitle/nav-
-  // buttons header inline, at the top of the chain content, instead of pinned below.
-  _chainUpdate = renderChain(_chainData, chainContent, {
-    onCountryClick:   _chainOnClick,
-    getSelectedIndex: _chainGetIndex,
-    getPlayerWikiUrl: _chainWikiUrl,
-    labels:           { ...T.chainLegend, subtitle: T.chainSubtitle },
-  });
-};
-// On selection change: surgical update only — no SVG rebuild, no flicker.
-const _updateChainSelection = () => {
-  if (_chainUpdate && !document.getElementById('tab-chain')?.hidden)
-    _chainUpdate(_chainGetIndex());
-};
-// fwd/bwd/both direction toggle moved to chains/wc2026_chain_longest.html (cut, not
-// duplicated) — this tab always shows the "both" (undirected) variant now.
-fetch('./chains/subgraphs/longest_both.json').then(r => r.json()).then(both => {
-  _chainData = both;
-  const tab = document.getElementById('tab-chain');
-  if (!tab.hidden) _renderChain();
-});
-
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloData   = null;
 const _fifaMemberIds = new Set();
@@ -761,10 +711,6 @@ const _switchTab = name => {
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
   });
-  if (name === 'tab-chain' && _chainData) {
-    _renderChain();
-    requestAnimationFrame(() => _chainUpdate?.scrollActive());
-  }
   if (isEloTab) {
     _expandPanel(_eloMetaPanel);
   } else {
@@ -785,7 +731,7 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
 // ── Swipe between tabs on mobile ──
 {
   const _tabContent = document.getElementById('bottomTabContent');
-  const _TAB_IDS = ['tab-teams', 'tab-tournament', 'tab-players', 'tab-chain'];
+  const _TAB_IDS = ['tab-teams', 'tab-tournament', 'tab-players'];
   // tab-players is always usable now (idle state shows the all-players table, dim-selected
   // shows the selected country's) — no longer conditional on a country being selected.
   const _availableTabs = () => _TAB_IDS;
@@ -834,15 +780,10 @@ document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
   }, { passive: true });
 }
 
-let _chainResizeTimer = null;
 window.addEventListener('resize', () => {
   _syncMapHeight();
   sidebar.measureControlSidebar();
   _positionIndicator(false);
-  clearTimeout(_chainResizeTimer);
-  _chainResizeTimer = setTimeout(() => {
-    if (_chainData && !document.getElementById('tab-chain')?.hidden) _renderChain();
-  }, 150);
 });
 
 // ── Tooltip helpers ───────────────────────────────────────────────────────────
@@ -1106,7 +1047,7 @@ const _selectionPanelEl = FOOTER_PANELS.selection ? document.getElementById('sel
 // whether this is a fresh visit or a restored one. Placed here, not right after sidebar is
 // built above — _switchTab's body also touches _expandPanel/_collapsePanel, which aren't
 // defined until this point in the script.
-const _RESTORABLE_TABS = new Set(['tab-teams', 'tab-tournament', 'tab-chain']);
+const _RESTORABLE_TABS = new Set(['tab-teams', 'tab-tournament']);
 const _savedActiveTab = loadSlice('bottomTab')?.active;
 _switchTab(_RESTORABLE_TABS.has(_savedActiveTab) ? _savedActiveTab : 'tab-teams');
 
@@ -1344,8 +1285,7 @@ const applySelection = (id, destIds) => {
     _saveAccState(ptEl);
     render(playerTableTemplate(id), ptEl);
     _restoreAccState(ptEl);
-    if (document.getElementById('tab-chain')?.hidden !== false)
-      window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
   }
 
   // Tab button pill + close
@@ -1363,7 +1303,6 @@ const applySelection = (id, destIds) => {
     requestAnimationFrame(() => _positionIndicator());
   }
 
-  _updateChainSelection();
   _updateEloSelection();
   _updateSelectionPanel();
   document.body.classList.add('dim-active');
@@ -1488,7 +1427,6 @@ const clearDim = () => {
     _renderPlayersTabIdle();
     requestAnimationFrame(() => _positionIndicator(false));
   });
-  _updateChainSelection();
   _updateEloSelection();
   _updateSelectionPanel();
 };

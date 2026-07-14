@@ -48,6 +48,13 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
 .chain-mode-btn { border: 1px solid #dee2e6; border-radius: 16px; padding: 2px 12px; font-size: 11px; background: #fff; color: #888; cursor: pointer; transition: all .15s; }
 .chain-mode-btn:hover { border-color: #999; }
 .chain-mode-btn.active { background: #1C274C; color: #fff; border-color: #1C274C; }
+/* .chain-hit / [data-nav] — wc2026_chain_render.js's own per-country hit circles and
+   prev/next nav buttons (both rendered into #chain-content/#chain-panel below), not
+   styled by that shared module itself. Moved here from css/wc2026_map.css now that
+   this is the only page still using wc2026_chain_render.js's interactive output —
+   wc2026_map.html's own chain tab was removed entirely. */
+.chain-hit:hover { fill: rgba(0,0,0,.06) !important; }
+[data-nav]:hover:not(:disabled) { background: var(--bg-hover) !important; }
 </style>
 </head>
 <body>
@@ -165,8 +172,8 @@ ukFeatures.forEach(f => {
 // ordering in renderWorld"). Filled in by _applyDim() below, once a flag is clicked.
 const arcsGroup = g.append('g').attr('class', 'arcs-group');
 
-// ── Qualified-country flags only — mirrors insights/perf.html's own simplification:
-// no non-qualified exporters, no Cape Verde/Curaçao fixed-zoom insets. ─────────────
+// ── Qualified-country flags only — deliberately simplified vs. wc2026_map.js's own
+// full flag set: no non-qualified exporters, no Cape Verde/Curaçao fixed-zoom insets. ─
 const ALL_QUALIFIED = eloData.rankings
   .filter(r => QUALIFIED_NAMES[r.id] && r.iso2)
   .map(r => ({ id: r.id, iso2: r.iso2.toLowerCase() }));

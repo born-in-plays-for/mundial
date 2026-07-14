@@ -123,7 +123,3 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #tab-players-btn:hover { background-color: transparent !important; }
 #bottomTabList .nav-link.active { color: #000; }
 #tab-indicator { position: absolute; bottom: 6px; height: 0; border-bottom: 1.5px dotted #888; pointer-events: none; transition: left 0.3s ease, width 0.3s ease; }
-
-/* chain hit areas */
-.chain-hit:hover { fill: rgba(0,0,0,.06) !important; }
-[data-nav]:hover:not(:disabled) { background: var(--bg-hover) !important; }

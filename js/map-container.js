@@ -40,8 +40,8 @@ import { T, countryName } from './i18n.js';
 // `rec` (as seen by `metric`) is an app.byId[] entry — see buildIndices() in
 // wc2026_map.js for exactly which fields it carries (count/nativeCount/
 // importCount today). Metrics fall back to 0 for a missing field rather than
-// throwing, since insights/perf.html builds its own byId records and doesn't
-// compute every field the main map does.
+// throwing, defensively — a byId built some other way than buildChoroplethIndex()
+// (below) might not compute every field the main map does.
 // ── Diverging scale (violet) — EASY TWEAKS ──────────────────────────────────
 // Live-tunable at runtime via setDivergingParams()/getDivergingParams() below
 // (see the #diverging-debug panel in wc2026_map.html for a slider/color-picker

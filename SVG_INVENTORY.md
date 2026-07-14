@@ -16,7 +16,6 @@ SVG path data is inlined as JS string constants and rendered via `unsafeHTML`. E
 | `ICON_RANKINGS` | `solar_linear/ranking-svgrepo-com.svg` | Ranking | Rankings nav link |
 | `ICON_GUIDE` | `solar_linear/help-svgrepo-com.svg` | Crosshair/compass | Guide toggle button |
 | `ICON_MENU_DOTS` | `solar_linear/menu-dots-svgrepo-com.svg` | Three horizontal dots | Dropdown menu toggle |
-| `ICON_COURSE_UP` | `solar_linear/graph-up-svgrepo-com.svg` | Graph Up| Performance link |
 | `ICON_LOGIN` | `solar_linear/square-bottom-up-svgrepo-com.svg` | Square Bottom Up  | Sign-in button |
 | `ICON_LOGOUT` | `solar_linear/square-bottom-down-svgrepo-com.svg` | Square Bottom Down  | Sign-out button |
 | `WA_ICON` | *(custom — no source file)* | WhatsApp logo, `#25D366` fill | Offline contact link |
@@ -78,15 +77,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 8. `<img>` tags — `insights/perf.html`
-
-| Element | Source file | Description |
-|---|---|---|
-| Globe/world button | `images/solar_linear/global-svgrepo-com.svg` | Globe — world view reset |
-
----
-
-## 9. CSS background-image — `css/control-sidebar.css`
+## 8. CSS background-image — `css/control-sidebar.css`
 
 | Selector | Source file | Description |
 |---|---|---|
@@ -95,7 +86,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 10. CSS mask — `css/taxonomy.css`
+## 9. CSS mask — `css/taxonomy.css`
 
 | Selector | Source file | Description |
 |---|---|---|
@@ -124,3 +115,4 @@ referenced directly by filename in `wc2026_live.html`'s `setBadge()` calls.)
 | `solar_linear/gamepad-svgrepo-com.svg` | Gamepad |
 | `solar_linear/plug-circle-svgrepo-com.svg` | Plug/connection |
 | `solar_linear/logout-2-svgrepo-com.svg` | Logout (variant 2) |
+| `solar_linear/graph-up-svgrepo-com.svg` | Graph up (was `ICON_COURSE_UP`'s attribution — insights/perf.html and its dropdown link were removed) |
