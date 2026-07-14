@@ -1,6 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
-import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
+import { initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initGroupStage } from './group_stage.js';
@@ -989,11 +989,6 @@ document.addEventListener('mundial-conf-changed', ({ detail: { conf, ids } }) =>
 });
 
 const enablesDim = id => !!(app.byId[id] || QUALIFIED_NAMES[id]);
-const countryPillTemplate = id => {
-  const item = _eloItemsById.get(id);
-  if (!item) return nothing;
-  return html`<span class="${pillClasses(item)}" style="${pillStyle(item)}">${pillContent({ ...item, pts: null })}</span>`;
-};
 
 const fmtPop = pop => parseFloat(pop.toFixed(2))
   .toLocaleString(LOCALE, { maximumFractionDigits: 2, minimumFractionDigits: 2, useGrouping: false }) + 'M';
@@ -1144,15 +1139,18 @@ const applySelection = (id, destIds) => {
     window.scrollTo({ top: 0 });
   }
 
-  // Tab button pill + close
+  // Tab button label + close — a generic "1 team" count via _tabPlayersLabel, same icon and
+  // same wording pattern the ambient state's "N teams" uses (T.teams), not the team's own
+  // name/flag: every #tab-players-btn mode reads as the same kind of thing (a count), the
+  // identity of what's focused lives in the table itself, not the nav pill.
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     const wasActive = _playersBtn.classList.contains('active');
-    _playersBtn.className = 'nav-link dim-selected taxonomy' + (wasActive ? ' active' : '');
+    _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
     const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
     render(html`
       <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>
-      <span @click=${() => _switchTab('tab-players')}>${countryPillTemplate(id)}</span>
+      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.teams(1)}`, () => _switchTab('tab-players'))}
       <span class="btn-close" style="cursor:pointer;${_closeStyle}" aria-label="Close"
             @click=${() => clearDim()}></span>
     `, _playersBtn);
@@ -1175,11 +1173,23 @@ let _allPlayerEntries = [];
 // sidebar's category filter, group focus, or dim focus) — the ambient table only ever shows
 // players/coaches of a team the map itself is currently showing, read fresh every time it's
 // opened rather than kept in sync live.
+// Reads each flag's *target* hidden state (data-hidden-target), not the live `visibility`
+// attribute — a hide fades out over ~180ms+stagger and only sets `visibility="hidden"` once
+// that finishes (see js/flag_visibility.js's own comment), while a show clears it immediately.
+// Sampling `visibility` synchronously right after a filter/stage change — exactly what this and
+// the nav pill's live count (_renderPlayersTabIdle) do — would then catch some flags still mid
+// fade-out, still reading "visible" a moment after they were told to hide, inflating the count
+// with the outgoing set on top of the incoming one. data-hidden-target is set the instant a
+// flag's target changes, so it always reflects where the filter is headed, never the animation.
 const _visibleQualifiedIds = () => {
   const ids = new Set();
   g.selectAll('.flag-qualified[data-elo-cat]').each(function() {
     const id = +this.getAttribute('data-id');
-    if (QUALIFIED_NAMES[id] && this.getAttribute('visibility') !== 'hidden') ids.add(id);
+    if (!QUALIFIED_NAMES[id]) return;
+    const hidden = this.hasAttribute('data-hidden-target')
+      ? this.getAttribute('data-hidden-target') === '1'
+      : this.getAttribute('visibility') === 'hidden';
+    if (!hidden) ids.add(id);
   });
   return ids;
 };
@@ -1278,24 +1288,37 @@ const _showAllPlayers = () => {
   _updateAllPlayersMapLayer();
 };
 
-// Idle state (no country selected) — a plain, always-clickable icon plus a live count of however
-// many players are in the ambient (currently-visible) set, so the pill previews what tab-players
-// will show even before it's opened — the same preview role the dim-selected country pill
-// (applySelection, above) already plays for a one-team focus. No-ops while dim is active: that
-// pill belongs to applySelection instead (see _sidebarCallbacks.afterFlagFilter's own comment on
-// why this is safe to call unconditionally on every filter/stage change). Called once at initial
-// setup and every time clearDim runs.
+// One shared layout for every #tab-players-btn mode (idle count, one-team focus, and eventually
+// a fixture's two teams) — label + icon packed together and right-aligned as a unit inside
+// .tab-players-label (justify-content:flex-end, css/wc2026_map.css), so any extra width
+// #tab-players-btn's own flex-grow-1 (see wc2026_map.css) picks up shows up as blank space
+// before the label, not as a gap between the label and the icon — neither one's position shifts
+// with the other's width.
+const _tabPlayersLabel = (iconSrc, label, onClick) => html`
+  <span class="tab-players-label" @click=${onClick}>
+    <span class="elo-item"><span class="elo-name">${label}</span></span>
+    <img class="tab-icon" src="${iconSrc}" aria-hidden="true">
+  </span>`;
+
+// Same icon regardless of mode — the label text (a plain "N team(s)" count, see _tabPlayersLabel
+// call sites below) is what tells the two apart, not the icon.
+const _PLAYERS_TAB_ICON = 'images/solar_linear/user-circle-svgrepo-com.svg';
+
+// Idle state (no country selected) — a live count of however many teams are in the ambient
+// (currently-visible) set, so the pill previews what tab-players will show even before it's
+// opened — the same preview role the dim-selected "1 team" pill (applySelection, above) already
+// plays for a one-team focus, rendered through the same _tabPlayersLabel so both modes look and
+// behave alike (a generic count, never the focused team's own name/flag; see applySelection's
+// own comment). No-ops while dim is active: that pill belongs to applySelection instead (see
+// _sidebarCallbacks.afterFlagFilter's own comment on why this is safe to call unconditionally on
+// every filter/stage change). Called once at initial setup and every time clearDim runs.
 const _renderPlayersTabIdle = () => {
   if (dimState.active) return;
   const _pb = document.getElementById('tab-players-btn');
   if (!_pb) return;
-  _pb.className = 'nav-link';
-  const count = _visiblePlayerEntries().filter(p => p.role !== 'coach').length;
-  render(html`
-    <span @click=${() => _showAllPlayers()}>
-      <img class="tab-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" aria-hidden="true">
-      <span class="elo-item taxonomy"><span class="elo-name">${count} ${T.players(count)}</span></span>
-    </span>`, _pb);
+  _pb.className = 'nav-link flex-grow-1';
+  const count = _visibleQualifiedIds().size;
+  render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `${count} ${T.teams(count)}`, () => _showAllPlayers()), _pb);
 };
 _renderPlayersTabIdle();
 // Layers the nav pill's live-count refresh onto the same callback assigned near initSidebar()

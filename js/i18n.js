@@ -218,6 +218,7 @@ export const T = {
     coach:         'sélectionneur',
     players:       n => `joueur${n > 1 ? 's' : ''}`,
     playersAndCoaches: n => `joueur${n > 1 ? 's' : ''} et sélectionneur${n > 1 ? 's' : ''}`,
+    teams:         n => `équipe${n > 1 ? 's' : ''}`,
 
     chainLegend:   { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue pour', post: 'chemin' },
     chainSubtitle: (p, c) => `${p} joueurs · ${c} pays`,
@@ -338,6 +339,7 @@ export const T = {
     coach:         'allenatore',
     players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
     playersAndCoaches: n => `giocator${n === 1 ? 'e' : 'i'} e allenator${n === 1 ? 'e' : 'i'}`,
+    teams:         n => `squadr${n === 1 ? 'a' : 'e'}`,
 
     chainLegend:   { pre: 'Il più lungo', bornIn: 'nato in', playsFor: 'gioca per', post: 'cammino' },
     chainSubtitle: (p, c) => `${p} giocatori · ${c} paesi`,
@@ -458,6 +460,7 @@ export const T = {
     coach:         'Trainer',
     players:       () => 'Spieler',
     playersAndCoaches: () => 'Spieler und Trainer',
+    teams:         n => n === 1 ? 'Mannschaft' : 'Mannschaften',
 
     chainLegend:   { pre: 'Der längste', bornIn: 'geboren in', playsFor: 'spielt für', post: 'Weg' },
     chainSubtitle: (p, c) => `${p} Spieler · ${c} Länder`,
@@ -578,6 +581,7 @@ export const T = {
     coach:         'entrenador',
     players:       n => `jugador${n === 1 ? '' : 'es'}`,
     playersAndCoaches: n => `jugador${n === 1 ? '' : 'es'} y entrenador${n === 1 ? '' : 'es'}`,
+    teams:         n => `equipo${n === 1 ? '' : 's'}`,
 
     chainLegend:   { pre: 'El más largo', bornIn: 'nacido en', playsFor: 'juega para', post: 'camino' },
     chainSubtitle: (p, c) => `${p} jugadores · ${c} países`,
@@ -698,6 +702,7 @@ export const T = {
     coach:         'coach',
     players:       n => `player${n > 1 ? 's' : ''}`,
     playersAndCoaches: n => `player${n > 1 ? 's' : ''} and coach${n > 1 ? 'es' : ''}`,
+    teams:         n => `team${n > 1 ? 's' : ''}`,
 
     chainLegend:   { pre: 'Longest', bornIn: 'born in', playsFor: 'plays for', post: 'path' },
     chainSubtitle: (p, c) => `${p} players · ${c} countries`,

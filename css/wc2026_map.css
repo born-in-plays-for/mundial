@@ -103,10 +103,16 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #bottomTabList { align-items: center; flex-wrap: nowrap; height: 46px; position: relative; }
 #bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; white-space: nowrap; font-size: 13px; position: relative; }
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
-/* Always visible/clickable now — idle state (no country selected) shows a plain icon plus a
-   live player count (js/wc2026_map.js's _renderPlayersTabIdle) previewing the ambient table
-   that opens on click; dim-selected swaps in the country pill + close button instead. */
-#tab-players-btn { flex: 0 1 auto; min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+/* Always visible/clickable now — idle state (no country selected) shows a live "N teams" count;
+   dim-selected shows "1 team" plus a close button — same generic _tabPlayersLabel layout either
+   way (js/wc2026_map.js), never the focused team's own name/flag. .flex-grow-1 (Bootstrap
+   utility, applied by JS alongside every className write) is what absorbs the label's own width
+   changes, so the other two nav buttons never shift; .tab-players-label's own flex-grow then
+   fills the button's box, and justify-content:flex-end packs the pill + icon together against
+   its right edge — any extra width shows up as blank space before the pill, not as a gap between
+   the pill and the icon, so neither the pill's text nor the icon shifts independently. */
+#tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+#tab-players-btn .tab-players-label { display: flex; align-items: center; justify-content: flex-end; flex: 1 1 auto; min-width: 0; gap: 4px; }
 #tab-players-btn .elo-item { cursor: pointer; }
 #tab-players-btn .btn-close { cursor: pointer; }
 #tab-players-btn.dim-selected { cursor: default; }
