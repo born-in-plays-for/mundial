@@ -1155,7 +1155,7 @@ const applySelection = (id, destIds) => {
   }
 
   // Tab button label + close — a generic "1 team" count via _tabPlayersLabel, same icon and
-  // same wording pattern the ambient state's "N teams" uses (T.teams), not the team's own
+  // same wording pattern the ambient state's "N teams" uses (T.countries), not the team's own
   // name/flag: every #tab-players-btn mode reads as the same kind of thing (a count), the
   // identity of what's focused lives in the table itself, not the nav pill.
   const _playersBtn = document.getElementById('tab-players-btn');
@@ -1165,7 +1165,7 @@ const applySelection = (id, destIds) => {
     const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
     render(html`
       <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>
-      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.teams(1)}`, () => _switchTab('tab-players'))}
+      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.countries(1)}`, () => _switchTab('tab-players'))}
       <span class="btn-close" style="cursor:pointer;${_closeStyle}" aria-label="Close"
             @click=${() => clearDim()}></span>
     `, _playersBtn);
@@ -1333,7 +1333,7 @@ const _renderPlayersTabIdle = () => {
   if (!_pb) return;
   _pb.className = 'nav-link flex-grow-1';
   const count = _visibleQualifiedIds().size;
-  render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `${count} ${T.teams(count)}`, () => _showAllPlayers()), _pb);
+  render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `${count} ${T.countries(count)}`, () => _showAllPlayers()), _pb);
 };
 _renderPlayersTabIdle();
 // Layers the nav pill's live-count refresh onto the same callback assigned near initSidebar()
@@ -1425,7 +1425,7 @@ const activateFixture = (idA, idB, pairId) => {
     const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
     render(html`
       <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>
-      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `2 ${T.teams(2)}`, () => _switchTab('tab-players'))}
+      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `2 ${T.countries(2)}`, () => _switchTab('tab-players'))}
       <span class="btn-close" style="cursor:pointer;${_closeStyle}" aria-label="Close"
             @click=${() => clearFixtureSelection()}></span>
     `, _playersBtn);
