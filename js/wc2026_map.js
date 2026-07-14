@@ -1270,7 +1270,7 @@ const _playersTableTemplate = (focusIds = null) => {
     .sort((a, b) => playerSortKey(a).localeCompare(playerSortKey(b)));
   const coachCount = filtered.filter(p => p.role === 'coach').length;
   return html`
-    <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Map layer">
+    <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Map layer" style="display: none;">
       <input type="radio" class="btn-check" name="map-layer-mode" id="map-layer-bubbles" autocomplete="off"
         ?checked=${_mapLayerMode === 'bubbles'} @change=${() => _setMapLayerMode('bubbles')}>
       <label class="btn btn-outline-secondary" for="map-layer-bubbles">Bubbles</label>

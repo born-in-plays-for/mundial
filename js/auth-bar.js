@@ -106,7 +106,7 @@ class MundialAuthBar extends HTMLElement {
     render(html`
       <nav class="navbar navbar-light bg-white border-bottom py-0 px-2"
         style="position:fixed;top:0;left:0;right:0;z-index:1050;height:32px">
-        <div class="container-xxl d-flex align-items-center gap-3 px-1">
+        <div class="container-xxl d-flex align-items-center gap-4 px-1">
           ${_navLink('/', _t.navMap, ICON_HOME, '', 'map')}
           ${_navLink('/wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', '', true)}
           ${_navLink('/wc2026_live.html', _t.navLive, ICON_LIVE)}
