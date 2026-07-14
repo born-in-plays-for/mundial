@@ -850,7 +850,7 @@ let _activeFixture = null; // { pairId, idA, idB } or null
 // the two are mutually exclusive alternate views of "where are these players born", both scoped
 // to the same #tab-players context (see _showingAllPlayers above). Persisted like the rest of the
 // map's own UI state.
-let _mapLayerMode = loadSlice('mapLayer')?.mode === 'intensity' ? 'intensity' : 'bubbles';
+let _mapLayerMode = /* loadSlice('mapLayer')?.mode === 'intensity' ? 'intensity' : */ 'bubbles';
 // A separate marker layer alongside the country flags, shown only while the all-players table is
 // the active content of #tab-players. Reuses .standalone-dot (map-container.js's existing,
 // previously-unused zoom-tick mechanism: cx/cy ride along with the map's own pan/zoom transform

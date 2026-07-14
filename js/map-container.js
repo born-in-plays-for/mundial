@@ -178,7 +178,7 @@ export const THEMES = {
 
 const _THEME_KEY = 'mundial-map-theme';
 const _storedTheme = localStorage.getItem(_THEME_KEY);
-let _themeName = THEMES[_storedTheme] ? _storedTheme : 'violet';
+let _themeName = /* THEMES[_storedTheme] ? _storedTheme : */ 'violet';
 
 // Sequential themes cache one interpolator (_palette), built from that theme's
 // own hand-picked `ramp` array via a multi-stop spline (interpolateRgbBasis).
@@ -259,11 +259,13 @@ export const themeNames   = () => Object.keys(THEMES);
 const _themeListeners = new Set();
 export const onThemeChange = fn => { _themeListeners.add(fn); return () => _themeListeners.delete(fn); };
 export const setTheme = name => {
+  /*
   if (!THEMES[name] || name === _themeName) return false;
   _themeName = name;
   _buildPalettes(THEMES[name]);
   localStorage.setItem(_THEME_KEY, name);
   _themeListeners.forEach(fn => fn(name));
+  */
   return true;
 };
 
