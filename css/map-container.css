@@ -74,7 +74,22 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 /* Never grows past one line: nowrap (cascades to #legend-born/#legend's text
    children) plus clipping instead of letting an overlong description push
    the row wider or wrap onto a second line. */
-#legend-parent { overflow-x: hidden; white-space: nowrap; }
+/* Vertical-only drag handle (js/wc2026_map.js) — resizes #map's own height (not
+   width: #map stays width:100%, only height gets an inline px override). row-resize
+   signals the affordance; touch-action:none stops touch drags from scrolling the page
+   instead. user-select:none mirrors #map-toggle-bar's own guard against accidental text
+   selection while dragging. Buttons inside (#zoom-reset/#zoom-span/#theme-toggle) are
+   excluded from the drag in JS so their own clicks/cursor keep working. */
+#legend-parent { overflow-x: hidden; white-space: nowrap; cursor: row-resize; touch-action: none; user-select: none; -webkit-user-select: none; position: relative; }
+/* Purely decorative grab affordance for the drag-resize above — centered over the bar
+   regardless of #map-controls/#legend's own flex widths on either side, so absolute
+   positioning (not a flex child) is the only way to keep it centered as those widths
+   change. pointer-events:none so it never steals the drag/click handling already wired
+   to #legend-parent and its real children. Opacity ~0.4 over the bar's own light
+   background approximates var(--text-muted) (#999) without recoloring the (solid black
+   fill) source SVG. */
+#legend-grip { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.4; pointer-events: none; }
+#legend-parent:hover #legend-grip { opacity: 0.7; }
 #legend { font-size: 11px; color: var(--text-muted); }
 #legend-countries { font-size: 11px; color: #bbb; }
 #legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }

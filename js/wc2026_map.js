@@ -698,6 +698,46 @@ if (_bottomPanel) new ResizeObserver(() => {
 }).observe(_bottomPanel);
 _syncMapHeight();
 
+// #legend-parent drag-resize — vertical only. #map is width:100%/height:auto by default
+// (css/map-container.css); dragging sets an explicit inline px height on the SVG, which
+// crops more/less of the map rather than stretching it, since map-container.js's
+// preserveAspectRatio="xMidYMid slice" fills whatever box it's given. Width is never
+// touched. Reuses _syncMapHeight/_syncPaddingTop (above) to keep body padding and
+// #zoom-hint's position live during the drag, same as the map-collapse toggle does.
+const _MAP_HEIGHT_KEY = 'mundial-map-height';
+const _legendParent = document.getElementById('legend-parent');
+const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));
+if (_storedMapHeight && !_isLandscapeMobile()) document.getElementById('map').style.height = _storedMapHeight + 'px';
+if (_legendParent) {
+  let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
+  _legendParent.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return; // #zoom-reset/#zoom-span/#theme-toggle keep their own click behavior
+    const mapEl = document.getElementById('map');
+    _dragging = true;
+    _dragStartY = e.clientY;
+    _dragStartHeight = mapEl.getBoundingClientRect().height;
+    // Everything else stacked inside #map-container (toggle bar + legend-parent itself) —
+    // held constant for the drag so the map's max height never pushes the bar off-screen.
+    _dragOtherHeight = _mc.getBoundingClientRect().height - _dragStartHeight;
+    _legendParent.setPointerCapture(e.pointerId);
+  });
+  _legendParent.addEventListener('pointermove', e => {
+    if (!_dragging) return;
+    const minH = 120;
+    const maxH = window.innerHeight - _mc.getBoundingClientRect().top - _dragOtherHeight - 20;
+    const h = Math.max(minH, Math.min(maxH, _dragStartHeight + (e.clientY - _dragStartY)));
+    document.getElementById('map').style.height = h + 'px';
+    _syncMapHeight();
+  });
+  const _endMapDrag = () => {
+    if (!_dragging) return;
+    _dragging = false;
+    localStorage.setItem(_MAP_HEIGHT_KEY, parseFloat(document.getElementById('map').style.height));
+  };
+  _legendParent.addEventListener('pointerup', _endMapDrag);
+  _legendParent.addEventListener('pointercancel', _endMapDrag);
+}
+
 const _scrollTopBtn = document.getElementById('scroll-top-btn');
 if (_scrollTopBtn) {
   window.addEventListener('scroll', () => {
