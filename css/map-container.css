@@ -26,12 +26,37 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 #map-toggle-bar:hover { color: #333; }
 
 /* map */
+/* Wraps just <world-map>+#zoom-hint (not #legend-parent) — the positioning context
+   #zoom-hint anchors to below, and its own clip-path crops the hint to exactly #map's
+   rendered height (whatever that is: aspect-ratio auto, or the #legend-parent
+   drag-resize's inline px override — js/wc2026_map.js) with no JS needed to measure
+   it. A percentage height on #zoom-hint itself couldn't do this instead: this wrapper's
+   own CSS height is 'auto' (content-driven), and percentage heights against an
+   auto-height containing block resolve to nothing per spec — the same restriction
+   #map-collapse's own height:100% below works around by getting an explicit height.
+   clip-path, not overflow-y:hidden (with overflow-x:visible to spare the horizontal
+   axis) — #zoom-hint's own left:100% deliberately renders it entirely outside this
+   frame's right edge, in #map-container's own right gutter (its own padding-right:
+   var(--vert-gutter), above), same as it always has, and per spec a `visible`/`hidden`
+   overflow-x/y pair computes the visible side to `auto` instead — still a clipping
+   scroll container, silently clipping the hint right back. clip-path has no such
+   pairing rule: inset(top right bottom left), so 0 on every side but right (pushed
+   off by -100vw) clips vertically flush with the box while leaving the right side
+   effectively unbounded. */
+#map-frame { position: relative; clip-path: inset(0 -100vw 0 0); }
 #map { display: block; width: 100%; height: auto; touch-action: none; background-color: var(--fixed-element-bg); overflow: hidden; padding-bottom: 0.5px; }
 .country { cursor: default; transition: opacity .12s; }
 .country:hover { opacity: .7; }
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
 body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
-#zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; overflow: hidden; text-overflow: ellipsis; }
+/* left:100%/bottom:0 (relative to #map-frame, which wraps exactly #map) replace what
+   used to be js/wc2026_map.js's _syncMapHeight computing the same two offsets every
+   resize/collapse/drag tick via getBoundingClientRect — pure layout now, always live,
+   no recompute trigger needed. One behavior change: without a JS-measured max-height,
+   #zoom-hint's own text-overflow:ellipsis never actually engages (nothing makes IT
+   overflow) — on a very short dragged-down map, #map-frame's overflow:hidden still
+   crops the hint at the right height, just as a hard cut instead of an ellipsis. */
+#zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; left: 100%; bottom: 0; overflow: hidden; text-overflow: ellipsis; }
 /* #zoom-reset/#zoom-span/#theme-toggle are normal flex children of #map-controls
    (wc2026_map.html, inside #legend-parent) now, not JS-positioned floats — no more
    position:absolute/z-index, no more per-frame left/bottom writes (removed from
@@ -160,6 +185,10 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
      splits that leftover vertical space equally above/below #map — visible in DevTools'
      flex overlay as violet padding-looking bands, though it's flex free-space, not padding. */
   #map-collapse { height: 100%; }
+  /* Same reasoning as #map-collapse just above — #map-frame is another auto-height
+     wrapper between #map-collapse and #map, and #map's own height:100% needs it to
+     have an explicit height to resolve against. */
+  #map-frame { height: 100%; }
   #map { width: 100% !important; height: 100% !important; }
   #legend-parent { display: none !important; }
   #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; margin-top: 0 !important; top: 0 !important;}

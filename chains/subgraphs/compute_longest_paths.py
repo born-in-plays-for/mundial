@@ -17,7 +17,7 @@ from pathlib import Path
 from ortools.sat.python import cp_model
 
 ROOT = Path(__file__).resolve().parent.parent.parent
-DATA_FILE = ROOT / "wc2026_map_data.json"
+DATA_FILE = ROOT / "data/v2/map.json"
 OUTPUT_DIR = Path(__file__).resolve().parent
 
 ISO2_OVERRIDES = {

@@ -63,7 +63,10 @@
 <div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative">
   <button id="map-toggle-bar" type="button" class="map-toggle-bar" data-bs-toggle="collapse" data-bs-target="#map-collapse" aria-expanded="true" aria-controls="map-collapse">⌄</button>
   <div id="map-collapse" class="collapse show w-100">
+  <div id="map-frame">
   <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
+  <span id="zoom-hint">scroll to zoom · drag to pan</span>
+  </div>
   <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
     <img id="legend-grip" src="images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
     <div id="map-controls" class="d-flex align-items-center gap-1">
@@ -106,7 +109,6 @@
       </div>
     </div>
   </div>
-  <span id="zoom-hint" class="position-absolute">scroll to zoom · drag to pan</span>
   </div>
 </div>
 

@@ -6,12 +6,12 @@
   "mode_description": "plays for ← born in (import direction)",
   "nodes": [
     {
-      "country": "New Zealand",
-      "code": "nz"
+      "country": "Jordan",
+      "code": "jo"
     },
     {
-      "country": "Scotland",
-      "code": "gb-sct"
+      "country": "Iraq",
+      "code": "iq"
     },
     {
       "country": "Australia",
@@ -68,29 +68,29 @@
   ],
   "links": [
     {
-      "player": "Callan Elliot",
+      "player": "Mohammad Abu Hashish",
       "city": "",
-      "caps": 10,
+      "caps": 56,
       "direction": "bwd",
-      "birth_country": "Scotland",
-      "plays_for": "New Zealand",
-      "birth_code": "gb-sct",
-      "plays_code": "nz"
+      "birth_country": "Iraq",
+      "plays_for": "Jordan",
+      "birth_code": "iq",
+      "plays_code": "jo"
     },
     {
-      "player": "Lyndon Dykes",
+      "player": "Graham Arnold",
       "city": "",
-      "caps": 51,
+      "caps": 0,
       "direction": "bwd",
       "birth_country": "Australia",
-      "plays_for": "Scotland",
+      "plays_for": "Iraq",
       "birth_code": "au",
-      "plays_code": "gb-sct"
+      "plays_code": "iq"
     },
     {
       "player": "Miloš Degenek",
       "city": "",
-      "caps": 56,
+      "caps": 57,
       "direction": "bwd",
       "birth_country": "Croatia",
       "plays_for": "Australia",
@@ -100,7 +100,7 @@
     {
       "player": "Ante Budimir",
       "city": "",
-      "caps": 37,
+      "caps": 38,
       "direction": "bwd",
       "birth_country": "Bosnia and Herzegovina",
       "plays_for": "Croatia",
@@ -110,7 +110,7 @@
     {
       "player": "Esmir Bajraktarević",
       "city": "",
-      "caps": 15,
+      "caps": 16,
       "direction": "bwd",
       "birth_country": "United States",
       "plays_for": "Bosnia and Herzegovina",
@@ -130,7 +130,7 @@
     {
       "player": "Julián Quiñones",
       "city": "",
-      "caps": 21,
+      "caps": 22,
       "direction": "bwd",
       "birth_country": "Colombia",
       "plays_for": "Mexico",
@@ -150,7 +150,7 @@
     {
       "player": "Nico Paz",
       "city": "",
-      "caps": 8,
+      "caps": 9,
       "direction": "bwd",
       "birth_country": "Spain",
       "plays_for": "Argentina",
@@ -160,7 +160,7 @@
     {
       "player": "Aymeric Laporte",
       "city": "",
-      "caps": 44,
+      "caps": 46,
       "direction": "bwd",
       "birth_country": "France",
       "plays_for": "Spain",
@@ -170,7 +170,7 @@
     {
       "player": "Michael Olise",
       "city": "",
-      "caps": 15,
+      "caps": 17,
       "direction": "bwd",
       "birth_country": "England",
       "plays_for": "France",
@@ -190,7 +190,7 @@
     {
       "player": "Waldemar Anton",
       "city": "",
-      "caps": 12,
+      "caps": 13,
       "direction": "bwd",
       "birth_country": "Uzbekistan",
       "plays_for": "Germany",

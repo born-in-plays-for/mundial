@@ -676,22 +676,13 @@ if (_pageHeader) new ResizeObserver(() => {
 }).observe(_pageHeader);
 const _bottomPanel  = document.getElementById('bottom-panel');
 const _bottomTabNav = document.getElementById('bottomTabList');
-const _syncMapHeight = () => {
-  const svgEl = document.getElementById('map');
-  requestAnimationFrame(() => {
-    _syncPaddingTop();
-    const svgRect = svgEl.getBoundingClientRect();
-    const mcRect  = _mc.getBoundingClientRect();
-    const fromBottom = mcRect.bottom - svgRect.bottom;
-    // #zoom-reset/#zoom-span/#theme-toggle no longer positioned here — they're normal flex
-    // children of #map-controls (wc2026_map.html) now, not floats over the SVG.
-    if (_zoomHintEl) {
-      _zoomHintEl.style.left      = (svgRect.right - mcRect.left) + 'px';
-      _zoomHintEl.style.bottom    = fromBottom + 'px';
-      _zoomHintEl.style.maxHeight = svgRect.height + 'px';
-    }
-  });
-};
+// #zoom-hint and #zoom-reset/#zoom-span/#theme-toggle used to be positioned here on every
+// call (getBoundingClientRect() math against #map/#map-container) — both are plain CSS now
+// (css/map-container.css's #map-frame/#zoom-hint, and #map-controls' normal flex flow), so
+// this is just a one-frame-deferred _syncPaddingTop, kept as its own function since callers
+// throughout this file already call it by this name after anything that can change #map's
+// rendered box (resize, collapse toggle, drag-resize, dim-mode zoom).
+const _syncMapHeight = () => requestAnimationFrame(_syncPaddingTop);
 if (_bottomPanel) new ResizeObserver(() => {
   if (!_isLandscapeMobile()) document.body.style.paddingBottom = _bottomPanel.offsetHeight + 'px';
   _syncMapHeight();
@@ -702,8 +693,9 @@ _syncMapHeight();
 // (css/map-container.css); dragging sets an explicit inline px height on the SVG, which
 // crops more/less of the map rather than stretching it, since map-container.js's
 // preserveAspectRatio="xMidYMid slice" fills whatever box it's given. Width is never
-// touched. Reuses _syncMapHeight/_syncPaddingTop (above) to keep body padding and
-// #zoom-hint's position live during the drag, same as the map-collapse toggle does.
+// touched. Reuses _syncMapHeight/_syncPaddingTop (above) to keep body padding in sync
+// during the drag, same as the map-collapse toggle does — #zoom-hint's own position is
+// plain CSS now (#map-frame/#zoom-hint, css/map-container.css) and needs no JS at all.
 const _MAP_HEIGHT_KEY = 'mundial-map-height';
 const _legendParent = document.getElementById('legend-parent');
 const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));

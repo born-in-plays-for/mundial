@@ -7,18 +7,78 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/map-container.css">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
 #container { width: 100%; }
 #source { font-size: 10px; color: #ccc; text-align: center; padding: 4px 0 16px; }
+/* Duplicated from css/wc2026_map.css (.legend-outlier-wrap/.legend-outlier-dot/
+   #legend-outlier-count) rather than linking that whole stylesheet — it's the main
+   map page's primary CSS file, full of #page-header/tooltip/dim/sidebar rules with
+   global selectors (body, etc.) that don't apply here and could collide with this
+   page's own simpler body layout above. See the duplication report (PR description)
+   for the full accounting. --text-muted substituted for --color-dim, which isn't
+   defined anywhere reachable on this page (nor, actually, on wc2026_map.html itself). */
+.legend-outlier-wrap { height: 10px; }
+.legend-outlier-dot { width: 10px; height: 10px; border-radius: 50%; background: #000; }
+#legend-outlier-count, #legend-outlier-count-pos { font-size: 9px; color: var(--text-muted); margin-top: 3px; }
 </style>
 </head>
 <body>
 <script type="module" src="../js/auth-bar.js"></script>
 <mundial-auth-bar></mundial-auth-bar>
-<div id="container"></div>
+<!-- #map-container — same markup/CSS (css/map-container.css) as wc2026_map.html's own,
+     so mundial-auth-bar's _offsetSibling() positions it below the 32px navbar the same
+     way. See the second module script below for what's wired to it: a trimmed,
+     tooltip/dim/sidebar-free choropleth (world + UK nations + qualified flags only). -->
+<div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative">
+  <button id="map-toggle-bar" type="button" class="map-toggle-bar" data-bs-toggle="collapse" data-bs-target="#map-collapse" aria-expanded="true" aria-controls="map-collapse">⌄</button>
+  <div id="map-collapse" class="collapse show w-100">
+  <div id="map-frame">
+  <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
+  <span id="zoom-hint"></span>
+  </div>
+  <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
+    <img id="legend-grip" src="../images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
+    <div id="map-controls" class="d-flex align-items-center gap-1">
+      <button id="zoom-reset" type="button" aria-label="Reset zoom">
+        <img src="../images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+      </button>
+      <button id="zoom-span" type="button" aria-label="Span all visible countries">
+        <img src="../images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+      </button>
+      <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
+    </div>
+    <div id="legend-born" class="sub">
+      <span id="legend-born-full" class="d-none d-md-inline"></span>
+      <span id="legend-born-brief" class="d-md-none"></span>
+    </div>
+    <div id="legend" class="d-flex align-items-start">
+      <div class="d-flex flex-column pe-2">
+        <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+          <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
+        </div>
+        <div id="legend-outlier-count" class="text-center"></div>
+      </div>
+      <div>
+        <div id="legend-bar" class="overflow-hidden rounded-2"></div>
+        <div id="legend-ticks"></div>
+      </div>
+      <div id="legend-outlier-pos-wrap" class="d-none d-flex flex-column ps-2">
+        <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+          <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
+        </div>
+        <div id="legend-outlier-count-pos" class="text-center"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+<div id="container" class="container-xxl"></div>
 <div id="source"></div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script type="module">
 import { renderChain } from './wc2026_chain_render.js';
 
@@ -42,6 +102,293 @@ window.addEventListener('resize', () => {
     renderChain(chainData, container);
   }, 150);
 });
+</script>
+
+<script type="module">
+// ── #map-container wiring ───────────────────────────────────────────────────────
+// A trimmed copy of wc2026_map.html's own map widget: world choropleth + zoom/theme
+// controls + legend + collapsible/draggable-resize bar, with no per-country
+// interaction (no tooltips, no dim/arc mode, no player table, no Elo sidebar — none
+// of that applies to this page). Everything importable from shared modules is
+// imported, not copied; the rest (not exported anywhere) is a deliberate, documented
+// duplication of small pieces of js/wc2026_map.js — see the duplication report in
+// the PR description for the full accounting of what's copied vs. shared.
+import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
+import { choroFill, color, currentTheme, themeName, themeNames, setTheme, onThemeChange,
+         divergingOutlierColor, FLAG_CDN, FLAG } from '../js/map-container.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildImportByCountry } from '../js/qualified.js';
+import { T, countryName } from '../js/i18n.js';
+
+const _wm = document.querySelector('world-map');
+const { svg, g, projection, path, zoom } = _wm;
+document.getElementById('zoom-hint').textContent = T.zoomHint;
+
+const [mapData, eloData, ukNations, world] = await Promise.all([
+  fetch('../data/v2/map.json').then(r => r.json()),
+  fetch('../data/elo_rank.json').then(r => r.json()),
+  fetch('../data/uk-nations.geojson').then(r => r.json()),
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
+]);
+
+// Kosovo has no numeric id in the 110m topojson (see CLAUDE.md's "Kosovo" section;
+// same 4-line patch duplicated in insights/perf.html for the same reason).
+world.objects.countries.geometries.forEach(geo => {
+  if (!geo.id && geo.properties?.name === 'Kosovo') geo.id = 383;
+});
+
+// byId — a trimmed reimplementation of wc2026_map.js's buildIndices() (not exported,
+// and entangled there with tooltip/player-table indices this page has no use for):
+// only the fields choroFill()/THEMES.*.metric actually read (count/nativeCount/importCount).
+const nativeByCountry = {};
+Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
+  const nId = QUALIFIED_BY_NAME[name];
+  if (nId != null) nativeByCountry[nId] = players;
+});
+const importByCountry = buildImportByCountry(mapData, countryName);
+const byId = {};
+(mapData.data ?? []).forEach(d => {
+  d.nativeCount = (nativeByCountry[d.id] ?? []).length;
+  d.importCount = (importByCountry[d.id] ?? []).length;
+  byId[d.id] = d;
+});
+Object.entries(nativeByCountry).forEach(([nId, players]) => {
+  const id = +nId;
+  if (byId[id]) return;
+  byId[id] = { id, count: 0, nativeCount: players.length, importCount: (importByCountry[id] ?? []).length };
+});
+
+// ── World choropleth + UK nations + mesh — trimmed js/wc2026_map.js renderWorld():
+// same painting, none of the mousemove/click/cursor wiring (no tooltip or dim mode
+// on this page). ───────────────────────────────────────────────────────────────
+const UK_GU_TO_ID = { ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263 };
+
+g.append('path').datum({ type: 'Sphere' }).attr('d', path).attr('fill', '#b0c4c4').attr('stroke', 'none');
+
+g.selectAll('.country')
+  .data(topojson.feature(world, world.objects.countries).features.filter(d => +d.id !== 826))
+  .join('path')
+  .attr('class', 'country')
+  .attr('d', path)
+  .attr('fill', d => choroFill(+d.id, byId))
+  .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
+
+g.append('path')
+  .datum(topojson.mesh(world, world.objects.countries, (a, b) => a !== b))
+  .attr('fill', 'none').attr('stroke', '#b8b0a8').attr('stroke-width', .3).attr('d', path);
+
+const ukFeatures = ukNations.features.map(f => ({ ...f, _id: UK_GU_TO_ID[f.properties.GU_A3] }));
+g.selectAll('.country-uk')
+  .data(ukFeatures)
+  .join('path')
+  .attr('class', 'country country-uk')
+  .attr('d', path)
+  .attr('fill', d => choroFill(d._id, byId))
+  .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
+
+// ── Qualified-country flags only — mirrors insights/perf.html's own simplification:
+// no non-qualified exporters, no Cape Verde/Curaçao fixed-zoom insets. ─────────────
+const centroids = {};
+topojson.feature(world, world.objects.countries).features.forEach(f => { if (f.id) centroids[+f.id] = path.centroid(f); });
+ukFeatures.forEach(f => { if (f._id) centroids[f._id] = path.centroid(f); });
+
+const ALL_QUALIFIED = eloData.rankings
+  .filter(r => QUALIFIED_NAMES[r.id] && r.iso2)
+  .map(r => ({ id: r.id, iso2: r.iso2.toLowerCase() }));
+
+const flagsG = g.append('g').attr('class', 'flags');
+ALL_QUALIFIED.forEach(({ id, iso2 }) => {
+  const c = centroids[id];
+  if (!c || !isFinite(c[0])) return;
+  const [cx, cy] = c;
+  flagsG.append('image')
+    .classed('flag-qualified', true)
+    .attr('data-id', id).attr('data-cx', cx).attr('data-cy', cy)
+    .attr('href', FLAG_CDN(iso2))
+    .attr('x', cx - FLAG / 2).attr('y', cy - FLAG / 2)
+    .attr('width', FLAG).attr('height', FLAG)
+    .attr('clip-path', 'inset(0% round 50%)');
+});
+
+// ── Zoom controls — trimmed js/wc2026_map.js (#zoom-reset wiring + a dim-mode-free
+// #zoom-span/_zoomToVisibleFlags: fit every qualified flag instead of "visible" ones,
+// since nothing on this page ever hides a flag). ──────────────────────────────────
+const _zoomResetBtn = document.getElementById('zoom-reset');
+const _zoomSpanBtn  = document.getElementById('zoom-span');
+const _themeToggleBtn = document.getElementById('theme-toggle');
+const _initialTransform = d3.zoomIdentity;
+const _syncResetBtn = t => {
+  _zoomResetBtn.disabled = Math.abs(t.k - _initialTransform.k) < 0.001
+    && Math.abs(t.x - _initialTransform.x) < 0.5
+    && Math.abs(t.y - _initialTransform.y) < 0.5;
+};
+_syncResetBtn(_initialTransform);
+_wm.onZoom = e => _syncResetBtn(e.transform);
+_zoomResetBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  svg.transition().duration(400).call(zoom.transform, _initialTransform);
+});
+_zoomSpanBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  const xs = [], ys = [];
+  flagsG.selectAll('.flag-qualified').each(function() {
+    const cx = +this.getAttribute('data-cx'), cy = +this.getAttribute('data-cy');
+    if (isFinite(cx) && isFinite(cy)) { xs.push(cx); ys.push(cy); }
+  });
+  if (!xs.length) return;
+  const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const pad = 20;
+  const k = Math.max(1, Math.min(9, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
+  svg.transition().duration(1500).call(zoom.transform,
+    d3.zoomIdentity.translate(vbX + vbW / 2 - k * (x0 + x1) / 2, vbY + vbH / 2 - k * (y0 + y1) / 2).scale(k));
+});
+
+// ── Legend gradient/ticks/outlier + theme toggle paint — near-verbatim copy of
+// js/wc2026_map.js's _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/
+// _updateLegendBorn/_paintThemeToggle (none exported; app.byId → local byId). ─────
+const _divergingPos = (v, theme) => (v + theme.ratioMaxNeg) / (theme.ratioMaxNeg + theme.ratioMaxPos);
+const _legendBar = document.getElementById('legend-bar');
+const _buildLegendGradient = () => {
+  const theme = currentTheme();
+  const stops = theme.diverging
+    ? [
+        ...Array.from({ length: 30 }, (_, i) => {
+            const v = -theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg;
+            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
+          }),
+        ...Array.from({ length: 30 }, (_, i) => {
+            const v = (i / 29) * theme.ratioMaxPos;
+            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
+          }),
+      ]
+    : Array.from({ length: 60 }, (_, i) => color((i / 59) * theme.ratioMax, theme));
+  _legendBar.style.background = `linear-gradient(to ${theme.diverging ? 'right' : 'left'}, ${stops.join(',')})`;
+  _legendBar.style.borderRadius = '5px';
+};
+
+const _legendTicksEl = document.getElementById('legend-ticks');
+const _updateLegendTicks = () => {
+  const theme = currentTheme();
+  const ticks = theme.diverging
+    ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
+    : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
+  const pct = t => theme.diverging ? _divergingPos(t, theme) * 100 : (1 - t / theme.ratioMax) * 100;
+  render(html`${ticks.map(t => html`<span style="position:absolute; left:${pct(t)}%; transform:translateX(-50%)">${t}</span>`)}`, _legendTicksEl);
+};
+
+const _legendOutlierPosWrapEl = document.getElementById('legend-outlier-pos-wrap');
+const _legendOutlierDotEl     = document.getElementById('legend-outlier-dot');
+const _legendOutlierDotPosEl  = document.getElementById('legend-outlier-dot-pos');
+const _updateLegendOutlier = () => {
+  const el = document.getElementById('legend-outlier-count');
+  const theme = currentTheme();
+  if (theme.diverging) {
+    const [negId] = theme.outlierIdsNeg, [posId] = theme.outlierIdsPos;
+    const negRec = byId[negId], posRec = byId[posId];
+    el.textContent = negRec ? theme.metric(negRec) : '';
+    _legendOutlierDotEl.style.background = divergingOutlierColor('neg');
+    _legendOutlierPosWrapEl.classList.remove('d-none');
+    document.getElementById('legend-outlier-count-pos').textContent = posRec ? theme.metric(posRec) : '';
+    _legendOutlierDotPosEl.style.background = divergingOutlierColor('pos');
+  } else {
+    const [outlierId] = theme.outlierIds;
+    const rec = byId[outlierId];
+    el.textContent = rec ? theme.metric(rec) : '';
+    _legendOutlierDotEl.style.background = theme.outlier;
+    _legendOutlierPosWrapEl.classList.add('d-none');
+  }
+};
+
+const _legendBornFullEl  = document.getElementById('legend-born-full');
+const _legendBornBriefEl = document.getElementById('legend-born-brief');
+const _updateLegendBorn = () => {
+  const { full, brief } = T.legendMetric[currentTheme().legendKey];
+  render(html`${unsafeHTML(full)}`, _legendBornFullEl);
+  _legendBornFullEl.title = full.replace(/<[^>]+>/g, '');
+  _legendBornBriefEl.textContent = brief;
+};
+
+const _paintThemeToggle = () => {
+  const theme = currentTheme();
+  const at = f => theme.ramp[Math.round(f * (theme.ramp.length - 1))];
+  const stops = theme.diverging ? [divergingOutlierColor('neg'), divergingOutlierColor('pos')] : [at(0.55), at(0.9)];
+  _themeToggleBtn.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${stops[0]}, ${stops[1]})`);
+};
+
+_buildLegendGradient(); _updateLegendTicks(); _updateLegendOutlier(); _updateLegendBorn(); _paintThemeToggle();
+
+_themeToggleBtn.addEventListener('click', () => {
+  const names = themeNames();
+  setTheme(names[(names.indexOf(themeName()) + 1) % names.length]);
+});
+onThemeChange(() => {
+  g.selectAll('.country').attr('fill', function(d) { return choroFill(+d.id, byId); });
+  g.selectAll('.country-uk').attr('fill', function(d) { return choroFill(d._id, byId); });
+  _buildLegendGradient(); _updateLegendTicks(); _updateLegendOutlier(); _updateLegendBorn(); _paintThemeToggle();
+});
+
+// ── Map-toggle-bar collapse + body padding-top sync — trimmed js/wc2026_map.js
+// (Bootstrap Collapse wiring + _syncPaddingTop). This page has no bottom-tab-bar/
+// landscape-mobile special case, so a plain ResizeObserver on #map-container stands
+// in for wc2026_map.js's own rAF-polling-during-transition loop — simpler because
+// the need here is simpler, not a byte-for-byte copy. Own localStorage keys
+// (mundial-chain-map-* rather than mundial-map-*) so this page's map preferences
+// stay independent of wc2026_map.html's. ──────────────────────────────────────────
+const _mc = document.getElementById('map-container');
+const _mapCollapseEl = document.getElementById('map-collapse');
+const _mapToggleBar  = document.getElementById('map-toggle-bar');
+const _mapCollapse   = bootstrap.Collapse.getOrCreateInstance(_mapCollapseEl, { toggle: false });
+const _MAP_COLLAPSED_KEY = 'mundial-chain-map-collapsed';
+const _paintMapToggleChevron = expanded => { _mapToggleBar.textContent = expanded ? '⌄' : '⌃'; };
+const _syncBodyPadding = () => { document.body.style.paddingTop = _mc.getBoundingClientRect().bottom + 'px'; };
+new ResizeObserver(_syncBodyPadding).observe(_mc);
+_mapCollapseEl.addEventListener('show.bs.collapse', () => _paintMapToggleChevron(true));
+_mapCollapseEl.addEventListener('hide.bs.collapse',  () => _paintMapToggleChevron(false));
+_mapCollapseEl.addEventListener('shown.bs.collapse',  () => localStorage.setItem(_MAP_COLLAPSED_KEY, '0'));
+_mapCollapseEl.addEventListener('hidden.bs.collapse', () => localStorage.setItem(_MAP_COLLAPSED_KEY, '1'));
+_mapToggleBar.title = T.sortLabels.mapHint;
+_mapToggleBar.setAttribute('aria-label', T.sortLabels.map);
+if (localStorage.getItem(_MAP_COLLAPSED_KEY) === '1') {
+  _mapCollapseEl.classList.remove('show');
+  _paintMapToggleChevron(false);
+  _mapToggleBar.setAttribute('aria-expanded', 'false');
+}
+_syncBodyPadding();
+
+// ── #legend-parent drag-resize + grip icon — same behavior just added to
+// wc2026_map.html/js/wc2026_map.js (own localStorage key; not exported there either). ──
+const _MAP_HEIGHT_KEY = 'mundial-chain-map-height';
+const _legendParent = document.getElementById('legend-parent');
+const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));
+if (_storedMapHeight) document.getElementById('map').style.height = _storedMapHeight + 'px';
+{
+  let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
+  _legendParent.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    const mapEl = document.getElementById('map');
+    _dragging = true;
+    _dragStartY = e.clientY;
+    _dragStartHeight = mapEl.getBoundingClientRect().height;
+    _dragOtherHeight = _mc.getBoundingClientRect().height - _dragStartHeight;
+    _legendParent.setPointerCapture(e.pointerId);
+  });
+  _legendParent.addEventListener('pointermove', e => {
+    if (!_dragging) return;
+    const minH = 120;
+    const maxH = window.innerHeight - _mc.getBoundingClientRect().top - _dragOtherHeight - 20;
+    const h = Math.max(minH, Math.min(maxH, _dragStartHeight + (e.clientY - _dragStartY)));
+    document.getElementById('map').style.height = h + 'px';
+    _syncBodyPadding();
+  });
+  const _endMapDrag = () => {
+    if (!_dragging) return;
+    _dragging = false;
+    localStorage.setItem(_MAP_HEIGHT_KEY, parseFloat(document.getElementById('map').style.height));
+  };
+  _legendParent.addEventListener('pointerup', _endMapDrag);
+  _legendParent.addEventListener('pointercancel', _endMapDrag);
+}
 </script>
 </body>
 </html>
