@@ -3,7 +3,7 @@ import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/u
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
-import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
+import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData, findPlayerWikiUrl } from './i18n.js';
 import { initGroupStage } from './group_stage.js';
 import { initSidebar } from './control_sidebar.js';
 import { loadSlice, saveSlice } from './persist.js';
@@ -294,8 +294,6 @@ const _chainGetIndex   = () => {
   return _chainData.nodes.findIndex(n => ISO2_REVERSE[n.code] === dimState.sourceId);
 };
 let _chainData = null, _chainUpdate = null;
-const _chainVariants = {}; // {both, fwd, bwd}
-let _chainMode = 'both';
 
 /* ── Accordion state persistence ─────────────────────────────────────────────
    Bootstrap's Collapse instances get confused across lit-html renders.
@@ -327,19 +325,9 @@ const _restoreAccState = ptEl => ['exp','nat','imp'].forEach(k => {
     btn.setAttribute('aria-expanded', 'false');
   }
 });
-// Lazy lookup: player name → {href, fallback} drawn from loaded app data.
-// fallback=true means current-language URL absent, using English fallback (renders as "Name (en)").
-const _chainWikiUrl = name => {
-  for (const rec of Object.values(app.byId)) {
-    const p = (rec.players ?? []).find(q => q.name === name);
-    if (!p) continue;
-    const url = wikiUrl(p.pid);
-    if (url) return { href: url, fallback: false };
-    const en = wikiUrlEn(p.pid);
-    if (en) return { href: en, fallback: true };
-  }
-  return null;
-};
+// Lazy lookup: player name → {href, fallback}, shared with the standalone chain page
+// via i18n.js's findPlayerWikiUrl (app.byId → local byId there).
+const _chainWikiUrl = name => findPlayerWikiUrl(name, app.byId);
 const _renderChain = () => {
   if (!_chainData) return;
   let chainContent = document.getElementById('chain-content');
@@ -364,34 +352,11 @@ const _updateChainSelection = () => {
   if (_chainUpdate && !document.getElementById('tab-chain')?.hidden)
     _chainUpdate(_chainGetIndex());
 };
-const _chainToggleHtml = `<div class="d-flex justify-content-center gap-1 py-2" id="chain-mode-toggle">
-  <button class="chain-mode-btn" data-mode="bwd" title="Import direction">← import</button>
-  <button class="chain-mode-btn active" data-mode="both" title="Both directions">both</button>
-  <button class="chain-mode-btn" data-mode="fwd" title="Export direction">export →</button>
-</div>`;
-const _switchChainMode = (mode) => {
-  if (!_chainVariants[mode]) return;
-  _chainMode = mode;
-  _chainData = _chainVariants[mode];
-  document.querySelectorAll('#chain-mode-toggle .chain-mode-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.mode === mode);
-  });
-  _renderChain();
-};
-Promise.all([
-  fetch('./chains/subgraphs/longest_both.json').then(r => r.json()),
-  fetch('./chains/subgraphs/longest_fwd.json').then(r => r.json()),
-  fetch('./chains/subgraphs/longest_bwd.json').then(r => r.json()),
-]).then(([both, fwd, bwd]) => {
-  _chainVariants.both = both;
-  _chainVariants.fwd = fwd;
-  _chainVariants.bwd = bwd;
+// fwd/bwd/both direction toggle moved to chains/wc2026_chain_longest.html (cut, not
+// duplicated) — this tab always shows the "both" (undirected) variant now.
+fetch('./chains/subgraphs/longest_both.json').then(r => r.json()).then(both => {
   _chainData = both;
   const tab = document.getElementById('tab-chain');
-  tab.insertAdjacentHTML('afterbegin', _chainToggleHtml);
-  tab.querySelectorAll('.chain-mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => _switchChainMode(btn.dataset.mode));
-  });
   if (!tab.hidden) _renderChain();
 });
 
@@ -1766,27 +1731,21 @@ const onCountryClick = (event, id) => {
 // ── World render ────────────────────────────────────────────────────────────
 const renderWorld = (world, ukNations, capeVerdeGeo, curacaoGeo) => {
 
-// ── Ocean background — fills the full projection area before land paths ──────
-// Neutral gray, not blue — the violet theme's diverging scale (map-container.js's
-// _divergingParams) uses blue for its positive/export side, and a blue ocean competed with
-// blue countries for attention instead of receding as backdrop. Deliberately theme-independent
-// (see the "Satellite colors" note in CLAUDE.md) — real water stays the same regardless of
-// which land palette is active.
+// Ocean background + world choropleth + mesh borders + UK home nations — shared with
+// the chain page via map-container.js's paintChoropleth() (Kosovo id patch included).
+// Only the drawing itself is shared; mousemove/click/cursor/dim wiring (all
+// page-specific — tooltips, dim mode, sidebar filters) is chained onto the returned
+// selections below.
+const { worldFeatures, ukFeatures, oceanPath, countryPaths, ukPaths } = paintChoropleth(g, path, world, ukNations, app.byId);
+_worldFeatures = worldFeatures;
+_ukFeatures = ukFeatures;
+
 // Real ocean gets the same tooltip-hiding mousemove the temporary loading placeholder above
 // has — without it, moving from a country straight to open water left the tooltip stuck
 // showing the last-hovered country: every country/flag's own mouseleave skips hideTip()
 // while dim mode is active (assuming a subsequent hover elsewhere will replace it), and
 // nothing else was wired to catch "moved to a spot with no country at all" during dim mode.
-g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','#b0c4c4').attr('stroke','none')
-  .on('mousemove', () => { hideTip(); });
-
-// World choropleth + mesh borders + UK home nations — shared with the chain page via
-// map-container.js's paintChoropleth() (Kosovo id patch included). Only the drawing
-// itself is shared; mousemove/click/cursor/dim wiring (all page-specific — tooltips,
-// dim mode, sidebar filters) is chained onto the returned selections below.
-const { worldFeatures, ukFeatures, countryPaths, ukPaths } = paintChoropleth(g, path, world, ukNations, app.byId);
-_worldFeatures = worldFeatures;
-_ukFeatures = ukFeatures;
+oceanPath.on('mousemove', () => { hideTip(); });
 
 countryPaths
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)

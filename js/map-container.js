@@ -410,15 +410,27 @@ export const buildChoroplethIndex = rawData => {
 // GU_A3 code (Natural Earth) → synthetic country ID (UK home nations — see CLAUDE.md).
 export const UK_GU_TO_ID = { ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263 };
 
-// Paints the world choropleth + mesh borders + UK home nations into `g` (a D3 selection,
-// typically <world-map>.g) and returns the D3 selections plus the two feature arrays
-// (worldFeatures/ukFeatures) callers need for centroid/bounds lookups (zoomToCentroid
-// below, flag placement). Deliberately just the drawing calls — no mousemove/click/
-// cursor/dim wiring, which stays with the caller (chain onto the returned selections;
-// see wc2026_map.js's renderWorld for the pattern) since that's all page-specific
-// (tooltips, dim mode, sidebar filters) with nothing generic left to share. `topojson`
-// is read as a global (script tag), same convention <world-map> itself uses for `d3`.
+// Paints the ocean background + world choropleth + mesh borders + UK home nations
+// into `g` (a D3 selection, typically <world-map>.g) and returns the D3 selections
+// plus the two feature arrays (worldFeatures/ukFeatures) callers need for
+// centroid/bounds lookups (zoomToCentroid below, flag placement). Deliberately just
+// the drawing calls — no mousemove/click/cursor/dim wiring, which stays with the
+// caller (chain onto the returned selections; see wc2026_map.js's renderWorld for
+// the pattern) since that's all page-specific (tooltips, dim mode, sidebar filters)
+// with nothing generic left to share. `topojson` is read as a global (script tag),
+// same convention <world-map> itself uses for `d3`.
 export const paintChoropleth = (g, path, world, ukNations, byId) => {
+  // Neutral gray, not blue — the violet theme's diverging scale (_divergingParams
+  // above) uses blue for its positive/export side, and a blue ocean competed with
+  // blue countries for attention instead of receding as backdrop. Deliberately
+  // theme-independent (see CLAUDE.md's "Satellite colors" note) — real water stays
+  // the same regardless of which land palette is active. This one line was missing
+  // on the chain page for a while (paintChoropleth's own extraction never included
+  // it, and nothing else painted it there either) — folded in here now so both pages
+  // reading the same ocean color can't drift apart again the same way.
+  const oceanPath = g.append('path').datum({ type: 'Sphere' })
+    .attr('d', path).attr('fill', '#b0c4c4').attr('stroke', 'none');
+
   // Kosovo has no numeric id in the 110m topojson — only {properties:{name:'Kosovo'}} —
   // patched here, before the topojson.feature() call below needs it (see CLAUDE.md's
   // "Kosovo" section).
@@ -452,7 +464,7 @@ export const paintChoropleth = (g, path, world, ukNations, byId) => {
     .attr('fill', d => choroFill(d._id, byId))
     .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
 
-  return { worldFeatures, ukFeatures, countryPaths, meshPath, ukPaths };
+  return { worldFeatures, ukFeatures, oceanPath, countryPaths, meshPath, ukPaths };
 };
 
 // ── Centroid overrides + zoom-to-country ────────────────────────────────────────

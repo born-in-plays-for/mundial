@@ -42,6 +42,12 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
   border-top: 1px solid var(--border);
   padding: 4px var(--vert-gutter);
 }
+/* #chain-mode-toggle (fwd/bwd/both) — moved here from wc2026_map.js/css/wc2026_map.css
+   (cut, not duplicated). Copied as its own small rule rather than linking
+   css/wc2026_map.css wholesale, same reasoning as the legend-outlier rules above. */
+.chain-mode-btn { border: 1px solid #dee2e6; border-radius: 16px; padding: 2px 12px; font-size: 11px; background: #fff; color: #888; cursor: pointer; transition: all .15s; }
+.chain-mode-btn:hover { border-color: #999; }
+.chain-mode-btn.active { background: #1C274C; color: #fff; border-color: #1C274C; }
 </style>
 </head>
 <body>
@@ -118,7 +124,7 @@ import { choroFill, currentTheme, onThemeChange, FLAG_CDN, FLAG,
          drawCountryArcs, rescaleArcs, computeImportIds } from '../js/map-container.js';
 import { animateFlagOpacity } from '../js/flag_visibility.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME } from '../js/qualified.js';
-import { T } from '../js/i18n.js';
+import { T, loadWikiData, findPlayerWikiUrl } from '../js/i18n.js';
 import { ISO2_REVERSE } from '../js/iso2.js';
 
 const _wm = document.querySelector('world-map');
@@ -130,6 +136,7 @@ const [mapData, eloData, ukNations, world] = await Promise.all([
   fetch('../data/elo_rank.json').then(r => r.json()),
   fetch('../data/uk-nations.geojson').then(r => r.json()),
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
+  loadWikiData('../'),
 ]);
 
 // byId/importByCountry — only what choroFill()/THEMES.*.metric and the dim/arc mode
@@ -282,23 +289,82 @@ svg.on('click', () => _clearSelection());
 document.addEventListener('keydown', e => { if (e.key === 'Escape') _clearSelection(); });
 
 const container = document.getElementById('container');
+// renderChain() clears whatever container it's given (container.innerHTML = '') on
+// every render — a dedicated child holds the SVG so the fwd/bwd/both toggle below,
+// inserted as its sibling, survives every re-render (mode switch, resize). Same
+// #chain-content/outer-tab split js/wc2026_map.js's own chain tab uses.
+const chainContent = document.createElement('div');
+chainContent.id = 'chain-content';
+container.appendChild(chainContent);
+
 const chainPanelEl = document.getElementById('chain-panel');
-const _renderChainOpts = { onCountryClick: _chainOnClick, getSelectedIndex: _getSelectedIndex, headerContainer: chainPanelEl };
-const dataFile = new URLSearchParams(location.search).get('data') || 'subgraphs/longest_both.json';
-fetch(dataFile)
-  .then(r => r.json())
-  .then(chain => {
-    chainData = chain;
-    _chainUpdate = renderChain(chain, container, _renderChainOpts);
-  })
-  .catch(e => { container.textContent = 'Error: ' + e.message; });
+const _renderChainOpts = {
+  onCountryClick:   _chainOnClick,
+  getSelectedIndex: _getSelectedIndex,
+  headerContainer:  chainPanelEl,
+  // Player name → {href, fallback}, shared with wc2026_map.js's own chain tab via
+  // i18n.js's findPlayerWikiUrl (app.byId there, local byId here).
+  getPlayerWikiUrl: name => findPlayerWikiUrl(name, byId),
+};
+const _renderChainNow = () => { if (chainData) _chainUpdate = renderChain(chainData, chainContent, _renderChainOpts); };
+
+// ── fwd/bwd/both direction toggle — moved here from js/wc2026_map.js's chain tab
+// (cut, not duplicated: that tab now always shows just the "both" variant). Only
+// shown when ?data= names one of the three precomputed longest-chain variants below,
+// or is left off entirely (defaulting to "both") — an arbitrary ?data= file (e.g.
+// wc2026_chain_loop.json) has no fwd/bwd counterpart, so single-file mode applies
+// exactly as before. ────────────────────────────────────────────────────────────
+const chainVariants = {}; // {both, fwd, bwd}
+let chainMode = 'both';
+const _switchChainMode = mode => {
+  if (!chainVariants[mode]) return;
+  chainMode = mode;
+  chainData = chainVariants[mode];
+  document.querySelectorAll('#chain-mode-toggle .chain-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  _renderChainNow();
+};
+const _VARIANT_MODE_BY_FILE = {
+  'subgraphs/longest_both.json': 'both',
+  'subgraphs/longest_fwd.json':  'fwd',
+  'subgraphs/longest_bwd.json':  'bwd',
+};
+const _dataParam = new URLSearchParams(location.search).get('data');
+const _initialMode = _dataParam ? (_VARIANT_MODE_BY_FILE[_dataParam] ?? null) : 'both';
+
+if (_initialMode) {
+  Promise.all([
+    fetch('subgraphs/longest_both.json').then(r => r.json()),
+    fetch('subgraphs/longest_fwd.json').then(r => r.json()),
+    fetch('subgraphs/longest_bwd.json').then(r => r.json()),
+  ]).then(([both, fwd, bwd]) => {
+    chainVariants.both = both;
+    chainVariants.fwd = fwd;
+    chainVariants.bwd = bwd;
+    chainMode = _initialMode;
+    chainData = chainVariants[_initialMode];
+    container.insertAdjacentHTML('afterbegin', `<div class="d-flex justify-content-center gap-1 py-2" id="chain-mode-toggle">
+      <button class="chain-mode-btn" data-mode="bwd" title="Import direction">← import</button>
+      <button class="chain-mode-btn active" data-mode="both" title="Both directions">both</button>
+      <button class="chain-mode-btn" data-mode="fwd" title="Export direction">export →</button>
+    </div>`);
+    document.querySelectorAll('#chain-mode-toggle .chain-mode-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === chainMode);
+      btn.addEventListener('click', () => _switchChainMode(btn.dataset.mode));
+    });
+    _renderChainNow();
+  }).catch(e => { chainContent.textContent = 'Error: ' + e.message; });
+} else {
+  fetch(_dataParam)
+    .then(r => r.json())
+    .then(chain => { chainData = chain; _renderChainNow(); })
+    .catch(e => { chainContent.textContent = 'Error: ' + e.message; });
+}
 
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    if (!chainData) return;
-    _chainUpdate = renderChain(chainData, container, _renderChainOpts);
-  }, 150);
+  resizeTimer = setTimeout(_renderChainNow, 150);
 });
 
 // #chain-panel is position:fixed (bottom) — body needs matching padding-bottom so

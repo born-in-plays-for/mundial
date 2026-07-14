@@ -51,6 +51,26 @@ const _resolveWiki = (data, pid) => {
 export const wikiUrl   = pid => _resolveWiki(_wikiPrimary, pid);
 export const wikiUrlEn = pid => _resolveWiki(_wikiEn ?? _wikiPrimary, pid);
 
+// Looks up a player by name across every country in a byId index (map.json's own
+// per-country `players` — export records only; natives never appear in an export/
+// import chain by definition, so they're not searched) and resolves their Wikipedia
+// link. { href, fallback: true } means the current-language article is missing and
+// href points at the English one instead — see "Wikipedia links in player table" in
+// CLAUDE.md. Shared by wc2026_map.js's chain tab and the standalone chain page
+// (chains/wc2026_chain_longest.html), both of which pass renderChain()'s own byId as
+// getPlayerWikiUrl: name => findPlayerWikiUrl(name, byId).
+export const findPlayerWikiUrl = (name, byId) => {
+  for (const rec of Object.values(byId)) {
+    const p = (rec.players ?? []).find(q => q.name === name);
+    if (!p) continue;
+    const url = wikiUrl(p.pid);
+    if (url) return { href: url, fallback: false };
+    const en = wikiUrlEn(p.pid);
+    if (en) return { href: en, fallback: true };
+  }
+  return null;
+};
+
 // Resolve a name from an ISO alpha-2 (or subdivision) code, e.g. 'fr', 'gb-eng'.
 // Used by pages that have a code but no numeric id (chain render, standalone FIFA page).
 export const regionName = (alpha2, fallback = '') => {
