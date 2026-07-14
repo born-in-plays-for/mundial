@@ -699,6 +699,12 @@ const _switchTab = name => {
   // actually pick directly.
   if (name !== 'tab-players') saveSlice('bottomTab', { active: name });
   const isEloTab = name === 'tab-teams' || name === 'tab-tournament';
+  // Switching to Teams/Tournament abandons whatever country was dim-selected — that focus only
+  // makes sense while looking at tab-players (the tab that actually renders it; see
+  // applySelection/clearDim below). tab-players itself is excluded (switching *to* it, e.g. via
+  // the dim-selected country pill in its own nav button, is how you view that very selection —
+  // clearing it there would undo the click that just requested it).
+  if (isEloTab && dimState.active) clearDim();
   if (isEloTab) {
     // Same shared <elo-ranking> + sidebar for both — moved into whichever pane is now active
     // rather than duplicated (see its own declaration comment above).

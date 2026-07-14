@@ -20,6 +20,14 @@ import { wireShareButton } from './share_button.js';
 //    still-in-flux UI complexity warrants; let people click anything, fix what breaks).
 //  gateByStage      — does reachesStage() gate the 4 qualified categories (IE/IK/HE/HK) by the
 //    carousel's current stage, or ignore the carousel entirely (a flat, always-everyone list)?
+//  ignoreTeamFilters — bypass the category checkboxes (IE/IK/HE/HK) and the confederation
+//    dropdown entirely for qualified teams, so anything filtered while browsing tab-teams has
+//    zero effect on tab-tournament's own set — "the tournament is what it is": only
+//    reachesStage() (driven purely by the carousel's stage) decides who's visible there. The
+//    two DOM controls stay shared (same checkboxes/dropdown, same _mode-independent state — see
+//    setMode's own comment on why nothing is reset on tab switch) so a filter set in tab-teams
+//    is still there when the user switches back, it just never leaks into tab-tournament while
+//    that tab is active.
 //  showCarousel     — is <elo-ranking>'s stage-carousel widget shown at all?
 //  showDisplayToggle — is the team/match toggle table shown at all? (Split tabs remove it
 //    entirely rather than disabling it — see forcedDisplay below, which already makes the
@@ -31,9 +39,9 @@ import { wireShareButton } from './share_button.js';
 //    forced (see forcedDisplay), not a real user choice, so persisting it would just leak a
 //    meaningless value into the 'countries' localStorage slice shared with 'combined' pages.
 const MODE_BEHAVIOR = {
-  combined:   { showNonQualified: true,  gateByStage: true,  showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                     persistDisplay: true },
-  teams:      { showNonQualified: true,  gateByStage: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                             persistDisplay: false },
-  tournament: { showNonQualified: false, gateByStage: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage === 0 ? 'team' : 'match',  persistDisplay: false },
+  combined:   { showNonQualified: true,  gateByStage: true,  ignoreTeamFilters: false, showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                     persistDisplay: true },
+  teams:      { showNonQualified: true,  gateByStage: false, ignoreTeamFilters: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                             persistDisplay: false },
+  tournament: { showNonQualified: false, gateByStage: true,  ignoreTeamFilters: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage === 0 ? 'team' : 'match',  persistDisplay: false },
 };
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, mode = 'combined' }) {
@@ -281,9 +289,17 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // .gateByStage being false (tab-teams) skips the reachesStage check entirely — a flat team
   // list has no fixture/elimination concept at all.
   const catEloChecked = (id, fifaMember) => {
-    if (_confIds && fifaMember && !_confIds.has(id)) return false;
-    const cat = flagCat(id);
     const behavior = MODE_BEHAVIOR[_mode];
+    const cat = flagCat(id);
+    if (behavior.ignoreTeamFilters) {
+      // tab-tournament: fully orthogonal to whatever tab-teams' checkboxes/confederation
+      // dropdown currently say. Non-qualified categories ('e'/'o') are out of scope for this
+      // mode regardless (mirrors showNonQualified: false below); qualified categories' sole
+      // gate is the carousel's own stage.
+      if (cat === 'e' || cat === 'o') return false;
+      return reachesStage(app.stageIndexById?.get(id), _stage);
+    }
+    if (_confIds && fifaMember && !_confIds.has(id)) return false;
     if (cat === 'e' || cat === 'o') {
       if (!behavior.showNonQualified) return false;
       return cat === 'e' ? (fifaMember ? _fltFE.checked : _fltNE.checked) : (fifaMember ? _fltFK.checked : _fltNK.checked);
