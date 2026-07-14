@@ -185,7 +185,7 @@ const _QUOTES_ASIDE = [  { text: "Il calcio è l'ultima rappresentazione sacra d
   { text: "Après avoir vu ça, on peut mourir tranquille… mais le plus tard possible.",
     author: 'Thierry Roland', work: { fr: 'Finale de la Coupe du monde', en: 'World Cup Final', de: 'WM-Finale', it: 'Finale della Coppa del Mondo', es: 'Final de la Copa del Mundo' }, ref: { fr: 'commentaire TF1', en: 'TF1 commentary', de: 'TF1-Kommentar', it: 'commento TF1', es: 'comentario TF1' }, date: '1998' },
 ];
-const _Q = { fr: t => `« ${t} »`, it: t => `«${t}»`, de: t => `„${t}“`, es: t => `«${t}»`, en: t => `‘${t}’` };
+const _Q = { fr: t => `« ${t} »`, it: t => `«${t}»`, de: t => `„${t}“`, es: t => `«${t}»`, en: t => `‘${t}’` };
 const _SEP = { fr: ' — ', it: ' — ', de: ' – ', es: ' — ', en: ' – ' };
 const _fmtQuotes = lang => _QUOTES.map(q => ({
   text: _Q[lang](q.text), author: q.author,
@@ -200,13 +200,16 @@ export const T = {
     pageHeading:    'Lieu de naissance des joueurs du Mondial 2026',
     pageDescription: 'Carte choroplèthe du Mondial 2026 — pays de naissance des joueurs, dont certains jouent pour un autre pays.',
     pageQuotes: _fmtQuotes('fr'),
-    pageSub:       n => `${n} joueurs au total · source : Wikipedia`,
+    pageSub:       n => `${n} joueurs au total · source : Wikipedia`,
     mapAriaLabel:  'Carte choroplèthe des pays de naissance des joueurs du Mondial 2026',
 
     zoomHint:      'scroll pour zoomer · glisser pour déplacer',
     notQualified: 'non qualifié',
     notFifaMember: 'non membre FIFA',
 
+    noExport:      name => `Aucun joueur né ${name ? _frPrep(name) + ' ' + name : 'ici'} n'est sélectionné par un autre pays qualifié.`,
+    noImport:      name => `Tous les joueurs de la sélection sont nés ${name ? _frPrep(name) + ' ' + name : 'ici'}`,
+    selectedBy:    n => `et sélectionné${n > 1 ? 's' : ''} par un autre pays`,
     selectedByLabel: name => `Joueurs sélectionnés par ${_frDefArt(name)}${name} nés dans un autre pays`,
     clickForAll:   'Cliquer sur le pays pour voir la liste complète',
     clickForAllPlural: 'Cliquer sur le pays pour voir les listes complètes',
@@ -218,12 +221,15 @@ export const T = {
     coach:         'sélectionneur',
     players:       n => `joueur${n > 1 ? 's' : ''}`,
     playersAndCoaches: n => `joueur${n > 1 ? 's' : ''} et sélectionneur${n > 1 ? 's' : ''}`,
+    exported:      (n, name) => `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${name ? _frPrep(name) + ' ' + name : 'ici'}`,
     teams:         n => `équipe${n > 1 ? 's' : ''}`,
+    ptNative:      (n, name) => name ? `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} ${_frPrep(name)} ${name} et sélectionné${n > 1 ? 's' : ''} par ${_frDefArt(name)}${name}` : `joueur${n > 1 ? 's' : ''} né${n > 1 ? 's' : ''} et sélectionné${n > 1 ? 's' : ''} ici`,
+    ptImportTitle: (n, name) => `joueur${n > 1 ? 's' : ''} sélectionné${n > 1 ? 's' : ''} par ${_frDefArt(name)}${name} et né${n > 1 ? 's' : ''} dans un autre pays`,
 
     chainLegend:   { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue pour', post: 'chemin' },
     chainSubtitle: (p, c) => `${p} joueurs · ${c} pays`,
-    eloSource:   'source : ',
-    eloUpdated:  'mis à jour le ',
+    eloSource:   'source : ',
+    eloUpdated:  'mis à jour le ',
     eloFilter:   'filtre',
     legendCountries: 'pays',
     legendMetric: {
@@ -328,6 +334,9 @@ export const T = {
     notQualified: 'non qualificato',
     notFifaMember: 'non membro FIFA',
 
+    noExport:      name => `Nessun giocatore nato${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'} è selezionato da un altro paese qualificato.`,
+    noImport:      name => `Tutti i giocatori della rosa sono nati${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'}`,
+    selectedBy:    n => `e selezionat${n === 1 ? 'o' : 'i'} da un altro paese`,
     selectedByLabel: name => `Giocatori selezionati ${_itDa(name)} ${name} nati in un altro paese`,
     clickForAll:   'Clicca sul paese per vedere la lista completa',
     clickForAllPlural: 'Clicca sul paese per vedere le liste complete',
@@ -339,7 +348,10 @@ export const T = {
     coach:         'allenatore',
     players:       n => `giocator${n === 1 ? 'e' : 'i'}`,
     playersAndCoaches: n => `giocator${n === 1 ? 'e' : 'i'} e allenator${n === 1 ? 'e' : 'i'}`,
+    exported:      (n, name) => `giocator${n === 1 ? 'e nato' : 'i nati'}${name ? ' ' + _itPrep(name) + ' ' + name : ' qui'}`,
     teams:         n => `squadr${n === 1 ? 'a' : 'e'}`,
+    ptNative:      (n, name) => name ? `giocator${n === 1 ? 'e' : 'i'} nat${n === 1 ? 'o' : 'i'} ${_itPrep(name)} ${name} e selezionat${n === 1 ? 'o' : 'i'} per ${_itDefArt(name)}${name}` : `giocator${n === 1 ? 'e' : 'i'} nat${n === 1 ? 'o' : 'i'} e selezionat${n === 1 ? 'o' : 'i'} qui`,
+    ptImportTitle: (n, name) => `giocator${n === 1 ? 'e' : 'i'} selezionat${n === 1 ? 'o' : 'i'} per ${_itDefArt(name)}${name} e nat${n === 1 ? 'o' : 'i'} in un altro paese`,
 
     chainLegend:   { pre: 'Il più lungo', bornIn: 'nato in', playsFor: 'gioca per', post: 'cammino' },
     chainSubtitle: (p, c) => `${p} giocatori · ${c} paesi`,
@@ -449,6 +461,9 @@ export const T = {
     notQualified: 'nicht qualifiziert',
     notFifaMember: 'kein FIFA-Mitglied',
 
+    noExport:      name => name ? `Kein in ${name} geborener Spieler wird von einem anderen qualifizierten Land aufgestellt.` : 'Kein hier geborener Spieler wird von einem anderen qualifizierten Land aufgestellt.',
+    noImport:      name => name ? `Alle Kaderspieler wurden in ${name} geboren` : 'Alle Kaderspieler wurden hier geboren',
+    selectedBy:    () => 'ausgewählt von einem anderen Land',
     selectedByLabel: name => `Von ${name} ausgewählte Spieler, geboren in einem anderen Land`,
     clickForAll:   'Land anklicken für die vollständige Liste',
     clickForAllPlural: 'Land anklicken für die vollständigen Listen',
@@ -460,7 +475,10 @@ export const T = {
     coach:         'Trainer',
     players:       () => 'Spieler',
     playersAndCoaches: () => 'Spieler und Trainer',
+    exported:      (n, name) => name ? 'in ' + name + (n === 1 ? ' geborener Spieler' : ' geborene Spieler') : (n === 1 ? 'hier geborener Spieler' : 'hier geborene Spieler'),
     teams:         n => n === 1 ? 'Mannschaft' : 'Mannschaften',
+    ptNative:      (_, name) => name ? `in ${name} geborene und für ${name} ausgewählte Spieler` : 'hier geborene und ausgewählte Spieler',
+    ptImportTitle: (_, name) => name ? `für ${name} ausgewählte, woanders geborene Spieler` : 'anderswo geborene Spieler',
 
     chainLegend:   { pre: 'Der längste', bornIn: 'geboren in', playsFor: 'spielt für', post: 'Weg' },
     chainSubtitle: (p, c) => `${p} Spieler · ${c} Länder`,
@@ -570,6 +588,9 @@ export const T = {
     notQualified: 'no clasificado',
     notFifaMember: 'no miembro FIFA',
 
+    noExport:      name => `Ningún jugador nacido${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'} es seleccionado por otro país clasificado.`,
+    noImport:      name => `Todos los jugadores de la selección nacieron${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'}`,
+    selectedBy:    n => `y seleccionado${n === 1 ? '' : 's'} por otro país`,
     selectedByLabel: name => `Jugadores seleccionados por ${_esDefArt(name)}${name} nacidos en otro país`,
     clickForAll:   'Haz clic en el país para ver la lista completa',
     clickForAllPlural: 'Haz clic en el país para ver las listas completas',
@@ -581,7 +602,10 @@ export const T = {
     coach:         'entrenador',
     players:       n => `jugador${n === 1 ? '' : 'es'}`,
     playersAndCoaches: n => `jugador${n === 1 ? '' : 'es'} y entrenador${n === 1 ? '' : 'es'}`,
+    exported:      (n, name) => `jugador${n === 1 ? '' : 'es'} nacido${n === 1 ? '' : 's'}${name ? ' ' + _esPrep(name) + ' ' + name : ' aquí'}`,
     teams:         n => `equipo${n === 1 ? '' : 's'}`,
+    ptNative:      (n, name) => name ? `jugador${n === 1 ? '' : 'es'} nacido${n === 1 ? '' : 's'} ${_esPrep(name)} ${name} y seleccionado${n === 1 ? '' : 's'} por ${_esDefArt(name)}${name}` : `jugador${n === 1 ? '' : 'es'} nacido${n === 1 ? '' : 's'} y seleccionado${n === 1 ? '' : 's'} aquí`,
+    ptImportTitle: (n, name) => `jugador${n === 1 ? '' : 'es'} seleccionado${n === 1 ? '' : 's'} por ${_esDefArt(name)}${name} nacido${n === 1 ? '' : 's'} en otro país`,
 
     chainLegend:   { pre: 'El más largo', bornIn: 'nacido en', playsFor: 'juega para', post: 'camino' },
     chainSubtitle: (p, c) => `${p} jugadores · ${c} países`,
@@ -691,6 +715,9 @@ export const T = {
     notQualified: 'not qualified',
     notFifaMember: 'not a FIFA member',
 
+    noExport:      name => `No player born${name ? ' in ' + name : ' here'} is selected by another qualified country.`,
+    noImport:      name => `All squad players were born${name ? ' in ' + name : ' here'}`,
+    selectedBy:    () => 'selected by another country',
     selectedByLabel: name => `Players selected by ${name} born in another country`,
     clickForAll:   'Click the country to see the complete list',
     clickForAllPlural: 'Click the country to see the complete lists',
@@ -702,7 +729,10 @@ export const T = {
     coach:         'coach',
     players:       n => `player${n > 1 ? 's' : ''}`,
     playersAndCoaches: n => `player${n > 1 ? 's' : ''} and coach${n > 1 ? 'es' : ''}`,
+    exported:      (n, name) => `player${n > 1 ? 's' : ''} born${name ? ' in ' + name : ' here'}`,
     teams:         n => `team${n > 1 ? 's' : ''}`,
+    ptNative:      (n, name) => name ? `player${n > 1 ? 's' : ''} born in ${name} and selected for ${name}` : `player${n > 1 ? 's' : ''} born and selected here`,
+    ptImportTitle: (n, name) => `player${n > 1 ? 's' : ''} selected for ${name} born in another country`,
 
     chainLegend:   { pre: 'Longest', bornIn: 'born in', playsFor: 'plays for', post: 'path' },
     chainSubtitle: (p, c) => `${p} players · ${c} countries`,

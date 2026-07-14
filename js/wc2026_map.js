@@ -1,5 +1,6 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
+import { join } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/join.js';
 import { initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
@@ -1043,12 +1044,19 @@ const _updateSelectionPanel = (onCollapsed) => {
     return;
   }
   const fc = iso2ForId(id);
+  const cname  = countryName(id);
   const pop    = app.pop?.[fc];
   const capObj = app.capital?.[fc];
   const capText = capObj?.[_LANG] ?? capObj?.en ?? null;
-  render(html`<div class="d-flex justify-content-center align-items-center gap-4 pt-1  sub">
-    ${pop     ? html`<span>${fmtPop(pop)}</span>`  : nothing}
-    ${capText ? html`<span>${capText}</span>`       : nothing}
+
+  const items = [
+    cname && html`<span>${cname}</span>`,
+    capText && html`<span>${capText}</span>`,
+    pop && html`<span>${fmtPop(pop)}</span>`,
+  ].filter(Boolean);
+
+  render(html`<div class="d-flex justify-content-end align-items-center gap-1 pt-1 sub">
+    ${join(items, () => html`<span>·</span>`)}
   </div>`, _selectionPanelEl);
   _expandPanel(_selectionPanelEl);
 };
@@ -1498,7 +1506,7 @@ const showExportTip = (event, id) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${!QUALIFIED_NAMES[id] ? html`<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${countryName(rec.id, rec.country)}</span><small class="tt-pop fst-italic">${_fifaMemberIds.has(id) ? T.notQualified : T.notFifaMember}</small></span>` : countryName(rec.id, rec.country)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(rec.pop)}${rankTag(rec.country)}${capTag(app.capital[iso2ForId(rec.id)])}</span>
+        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(rec.pop)}${(rec.country)}${capTag(app.capital[iso2ForId(rec.id)])}</span>
       </div>
       ${body}
       ${hasMore ? html`<div class="tt-more-label text-end">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
