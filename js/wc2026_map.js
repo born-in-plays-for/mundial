@@ -49,13 +49,13 @@ const FLAG_POS_OVERRIDE = {
   191: [16.8, 45.8],    // Croatia — flag placed in Slavonia, away from the coastal strip
 };
 
-svg.on('click', () => { clearDim(); });
+svg.on('click', () => { clearDim(); clearFixtureSelection(); });
 // The mouse leaving the map entirely (not just moving to open ocean, still inside the SVG —
 // see the ocean's own mousemove above) is the other spot nothing was hiding the tooltip from
 // during dim mode, for the same reason: every country/flag's mouseleave skips hideTip() while
 // dim mode is active, assuming a subsequent hover elsewhere will replace it.
 svg.on('mouseleave', () => { hideTip(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') clearDim(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { clearDim(); clearFixtureSelection(); } });
 
 // Zoom behaviour lives in <world-map>; register page-specific extra work here.
 const zoom = _wm.zoom;
@@ -671,12 +671,13 @@ const _switchTab = name => {
   // actually pick directly.
   if (name !== 'tab-players') saveSlice('bottomTab', { active: name });
   const isEloTab = name === 'tab-teams' || name === 'tab-tournament';
-  // Switching to Teams/Tournament abandons whatever country was dim-selected — that focus only
-  // makes sense while looking at tab-players (the tab that actually renders it; see
-  // applySelection/clearDim below). tab-players itself is excluded (switching *to* it, e.g. via
-  // the dim-selected country pill in its own nav button, is how you view that very selection —
-  // clearing it there would undo the click that just requested it).
+  // Switching to Teams/Tournament abandons whatever country (or fixture) was selected — that
+  // focus only makes sense while looking at tab-players (the tab that actually renders it; see
+  // applySelection/clearDim and activateFixture/clearFixtureSelection below). tab-players itself
+  // is excluded (switching *to* it, e.g. via the dim-selected pill in its own nav button, is how
+  // you view that very selection — clearing it there would undo the click that just requested it).
   if (isEloTab && dimState.active) clearDim();
+  if (isEloTab && _activeFixture) clearFixtureSelection();
   if (isEloTab) {
     // Same shared <elo-ranking> + sidebar for both — moved into whichever pane is now active
     // rather than duplicated (see its own declaration comment above).
@@ -839,6 +840,11 @@ let _birthplaceByPid = {};
 // birth-city dots should be showing on the map at all (only meaningful over the full set). True
 // by default (nothing focused yet); applySelection flips it off, clearDim flips it back on.
 let _showingAllPlayers = true;
+// Fixture (both teams of a match-display pair) currently selected via activateFixture, further
+// down — declared here (not next to activateFixture/clearFixtureSelection themselves) because
+// _renderPlayersTabIdle, which reads it, runs synchronously at module init time, before that
+// point in the file; see _showingAllPlayers just above for the same reason.
+let _activeFixture = null; // { pairId, idA, idB } or null
 // 'bubbles' (birth-city dots, default) or 'intensity' (KDE production-risk raster) —
 // the two are mutually exclusive alternate views of "where are these players born", both scoped
 // to the same #tab-players context (see _showingAllPlayers above). Persisted like the rest of the
@@ -1120,6 +1126,7 @@ const applyEmpty = id => {
 };
 
 const applySelection = (id, destIds) => {
+  clearFixtureSelection(); // mutually exclusive with a fixture selection — see below
   dimState.active = true;
   dimState.sourceId = id;
   _showingAllPlayers = false;
@@ -1313,7 +1320,7 @@ const _PLAYERS_TAB_ICON = 'images/solar_linear/user-circle-svgrepo-com.svg';
 // _sidebarCallbacks.afterFlagFilter's own comment on why this is safe to call unconditionally on
 // every filter/stage change). Called once at initial setup and every time clearDim runs.
 const _renderPlayersTabIdle = () => {
-  if (dimState.active) return;
+  if (dimState.active || _activeFixture) return;
   const _pb = document.getElementById('tab-players-btn');
   if (!_pb) return;
   _pb.className = 'nav-link flex-grow-1';
@@ -1368,6 +1375,56 @@ const activateCountry = (id, scroll = false) => {
     : new Map();
   applySelection(id, destIds);
   if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ── Fixture selection (tab-tournament's match-display mode) ───────────────────────────────────
+// A whole fixture (both teams of a paired .elo-pair row, click on its separator — see
+// js/elo_ranking.js's onFixtureClick) — a second, mutually-exclusive alternative to the single-
+// team dim selection above. Deliberately doesn't touch the map's own dim/arc visualization
+// (dimState.destIds/importIds, flag opacity, arcs) — unlike applySelection, this only drives the
+// #tab-players-btn label + #tab-players content and the .elo-pair--active row highlight; map-side
+// wiring is left for a later pass (see the task this was built for).
+const clearFixtureSelection = () => {
+  if (!_activeFixture) return;
+  _activeFixture = null;
+  _eloMain.updateFixture(null);
+  _showingAllPlayers = true;
+  const _ptEl = document.getElementById('tab-players');
+  if (_ptEl) render(_playersTableTemplate(), _ptEl);
+  _renderPlayersTabIdle();
+  _updateAllPlayersMapLayer();
+};
+
+const activateFixture = (idA, idB, pairId) => {
+  if (_activeFixture?.pairId === pairId) { clearFixtureSelection(); return; }
+  if (dimState.active) clearDim(); // mutually exclusive with a single-team selection
+  _activeFixture = { pairId, idA, idB };
+  _showingAllPlayers = false;
+  _eloMain.updateFixture(pairId);
+
+  const ptEl = document.getElementById('tab-players');
+  if (ptEl) {
+    render(_playersTableTemplate(new Set([idA, idB])), ptEl);
+    window.scrollTo({ top: 0 });
+  }
+
+  // Same generic count pattern as applySelection's own "1 team" pill (see its comment) — "2
+  // teams" here, never the two teams' own names/flags.
+  const _playersBtn = document.getElementById('tab-players-btn');
+  if (_playersBtn) {
+    const wasActive = _playersBtn.classList.contains('active');
+    _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
+    const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
+    render(html`
+      <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>
+      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `2 ${T.teams(2)}`, () => _switchTab('tab-players'))}
+      <span class="btn-close" style="cursor:pointer;${_closeStyle}" aria-label="Close"
+            @click=${() => clearFixtureSelection()}></span>
+    `, _playersBtn);
+    requestAnimationFrame(() => _positionIndicator());
+  }
+
+  _updateAllPlayersMapLayer();
 };
 
 // ── Flag join helpers ─────────────────────────────────────────────────────────
@@ -2009,6 +2066,10 @@ Promise.all([
   };
   _eloMain.onCountryClick = _onCountryClick;
   _eloMain.isClickable = () => true;
+  // Fixture pairs (.elo-pair rows) only ever render in tab-tournament's match-display mode
+  // (see control_sidebar.js's _buildGroups/_pairId) — tab-teams has no fixture concept, so this
+  // wiring is a no-op there without needing its own tab check.
+  _eloMain.onFixtureClick = activateFixture;
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
     buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, nativeByCountry: app.nativeByCountry, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },

@@ -69,8 +69,8 @@ class EloRanking extends HTMLElement {
   // direct children are instead per-render <li> "row" wrappers (.elo-solo, or .elo-pair nested
   // inside a shared .elo-pairs block — see show() below): cheap, rebuilt every call, never
   // reused — only the pills inside them persist.
-  #ul; #itemById = new Map(); #itemDataById = new Map(); #activeId = null;
-  #onCountryClick = null; #isClickable = null; #isZoomable = null;
+  #ul; #itemById = new Map(); #itemDataById = new Map(); #activeId = null; #activeFixtureId = null;
+  #onCountryClick = null; #isClickable = null; #isZoomable = null; #onFixtureClick = null;
   // Stage carousel — wraps the whole pill list (like insights/status.html's #statusViz: prev/
   // next controls sit absolutely over the list's left/right edges, indicators below — see
   // css/global.css's .elo-viz). Position/persistence stays owned by control_sidebar.js — this
@@ -157,6 +157,7 @@ class EloRanking extends HTMLElement {
   set onCountryClick(fn) { this.#onCountryClick = fn; }
   set isClickable(fn) { this.#isClickable = fn; }
   set isZoomable(fn) { this.#isZoomable = fn; }
+  set onFixtureClick(fn) { this.#onFixtureClick = fn; }
 
   #handleClick(id) {
     if (!this.#onCountryClick) return;
@@ -169,6 +170,19 @@ class EloRanking extends HTMLElement {
     this.#itemById.get(this.#activeId)?.classList.remove('elo-item--active');
     this.#activeId = id ?? null;
     this.#itemById.get(this.#activeId)?.classList.add('elo-item--active');
+  }
+
+  // Fixture-level selection (a whole .elo-pair row, not a single team pill) — mirrors update()
+  // above but rows aren't persisted across show() calls (they're rebuilt fresh every render, see
+  // show()'s own comment), so instead of tracking one live element we just re-derive the match
+  // from each mounted row's own data-pair-id (set in show()) and re-toggle on demand. #activeFixtureId
+  // is also read directly inside show() so a fixture selection survives a full re-render (filter
+  // change, stage move, resort) the same way #activeId does for a single team.
+  updateFixture(pairId) {
+    this.#activeFixtureId = pairId ?? null;
+    this.#ul.querySelectorAll('li.elo-pair').forEach(row => {
+      row.classList.toggle('elo-pair--active', row.dataset.pairId === this.#activeFixtureId);
+    });
   }
 
   // visibleItems is a flat, already-ordered array (control_sidebar.js's sortAndFilter) — a
@@ -222,6 +236,8 @@ class EloRanking extends HTMLElement {
       row.className = paired ? 'elo-pair' : 'elo-solo';
       place(row, cur);
       if (paired) {
+        row.dataset.pairId = cur._pairId;
+        row.classList.toggle('elo-pair--active', cur._pairId === this.#activeFixtureId);
         const sep = document.createElement('span');
         const score = cur._pairScore; // { home, away, penalties, penaltyHome, penaltyAway } — see sortAndFilter's _pairScore
         const dateLabel = fixtureDateLabel(cur._pairDate); // "day|hour" — see sortAndFilter's _pairDate
@@ -247,6 +263,14 @@ class EloRanking extends HTMLElement {
           // Not yet played — just the kickoff day|hour (single row); falls back to a plain
           // dash if a fixture couple has no date at all (shouldn't normally happen).
           render(dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : html`–`, sep); // en dash — reads cleaner than "vs" at this pill size
+        }
+        // The separator (score/date box), not either team pill, is the fixture's own click
+        // target — the pills already have their own single-team click handler (#handleClick
+        // above), so a click there must keep resolving to that team, never to the fixture as a
+        // whole.
+        if (this.#onFixtureClick) {
+          sep.classList.add('elo-pair-sep--clickable');
+          sep.addEventListener('click', () => this.#onFixtureClick(cur.id, next.id, cur._pairId));
         }
         row.appendChild(sep);
         place(row, next);

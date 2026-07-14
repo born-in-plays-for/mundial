@@ -200,6 +200,15 @@ body { background: var(--page-bg); color: var(--color-default); }
    treatment as the kickoff date above it: small and muted, since the score line stays the
    primary, larger-emphasis result. */
 .elo-pair-sep-pens { font-size: 9px; color: var(--color-default); font-variant-numeric: tabular-nums; }
+/* Fixture selection (activateFixture in wc2026_map.js, click on the separator) — whole-row
+   highlight, the .elo-pair equivalent of .elo-item--active below. Background rather than a
+   border/outline so it doesn't nudge the subgrid's column widths; row-gap around it already
+   gives the highlight visual breathing room without extra padding. */
+.elo-pairs > li.elo-pair.elo-pair--active { background: var(--bg-hover); border-radius: 10px; }
+.elo-pair-sep--clickable { cursor: pointer; }
+.elo-pair-sep--clickable:hover .elo-pair-sep-date,
+.elo-pair-sep--clickable:hover .elo-pair-sep-score,
+.elo-pair-sep--clickable:hover .elo-pair-sep-pens { color: #7b2d8b; }
 .elo-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px 3px 5px; border-radius: 20px; background: #fff; }
 .elo-item--clickable { cursor: pointer; }
 .elo-item--clickable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
