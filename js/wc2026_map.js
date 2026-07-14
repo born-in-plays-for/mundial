@@ -278,38 +278,10 @@ function _highlightConf(ids) {
 }
 
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
-render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, document.getElementById('tab-players'));
+// #tab-players' actual first paint happens once _allPlayerEntries loads (see the data-load
+// callback below, right after that array is built) — nothing to render synchronously here,
+// _playersTableTemplate isn't defined yet at this point in module evaluation.
 
-/* ── Accordion state persistence ─────────────────────────────────────────────
-   Bootstrap's Collapse instances get confused across lit-html renders.
-   We own the state: save before every render, restore after. */
-const _accState = Object.assign({ exp: true, nat: true, imp: true },
-  JSON.parse(localStorage.getItem('accState') ?? '{}'));
-const _saveAccState = ptEl => {
-  ['exp','nat','imp'].forEach(k => {
-    const el = ptEl?.querySelector(`#acc-${k}`);
-    if (el) _accState[k] = el.classList.contains('show');
-  });
-  localStorage.setItem('accState', JSON.stringify(_accState));
-};
-const _ACC_ID = { 'acc-exp': 'exp', 'acc-nat': 'nat', 'acc-imp': 'imp' };
-document.addEventListener('shown.bs.collapse',  e => { const k = _ACC_ID[e.target.id]; if (k) { _accState[k] = true;  localStorage.setItem('accState', JSON.stringify(_accState)); } });
-document.addEventListener('hidden.bs.collapse', e => { const k = _ACC_ID[e.target.id]; if (k) { _accState[k] = false; localStorage.setItem('accState', JSON.stringify(_accState)); } });
-
-const _restoreAccState = ptEl => ['exp','nat','imp'].forEach(k => {
-  const pane = ptEl?.querySelector(`#acc-${k}`);
-  const btn  = ptEl?.querySelector(`[data-bs-target="#acc-${k}"]`);
-  if (!pane || !btn) return;
-  if (_accState[k]) {
-    pane.classList.add('show');
-    btn.classList.remove('collapsed');
-    btn.setAttribute('aria-expanded', 'true');
-  } else {
-    pane.classList.remove('show');
-    btn.classList.add('collapsed');
-    btn.setAttribute('aria-expanded', 'false');
-  }
-});
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloData   = null;
 const _fifaMemberIds = new Set();
@@ -862,10 +834,11 @@ const _applyDimFocus = () => {
 // pid (string) -> { city, lat, lon } — data/v2/birthplace.json, best-effort (not every pid has
 // an entry). Populated once in the main data-load callback further down.
 let _birthplaceByPid = {};
-// Whether #tab-players' current content is the all-players table (vs. a selected country's own
-// player table, or the "click a country" idle hint) — drives whether birth-city dots should be
-// showing on the map at all.
-let _showingAllPlayers = false;
+// Whether #tab-players' current content is the ambient (unfocused) players table — every player
+// on a currently-visible team — rather than a dim-selected team's own subset. Drives whether
+// birth-city dots should be showing on the map at all (only meaningful over the full set). True
+// by default (nothing focused yet); applySelection flips it off, clearDim flips it back on.
+let _showingAllPlayers = true;
 // 'bubbles' (birth-city dots, default) or 'intensity' (KDE production-risk raster) —
 // the two are mutually exclusive alternate views of "where are these players born", both scoped
 // to the same #tab-players context (see _showingAllPlayers above). Persisted like the rest of the
@@ -946,7 +919,7 @@ const _updateKdeIntensityLayer = async () => {
   g.selectAll('.country, .mesh-border').style('stroke', KDE_BORDER_COLOR);
   if (!_kdeData) {
     _kdeBuilding = true;
-    render(_allPlayersTableTemplate(), ptEl);
+    render(_playersTableTemplate(), ptEl);
     _kdeData = await loadKdeData();
     _kdeColorScale = makeKdeColorScale(_kdeData.negMin, _kdeData.posMax);
   }
@@ -960,7 +933,7 @@ const _updateKdeIntensityLayer = async () => {
       .attr('width', _kdeRaster.width).attr('height', _kdeRaster.height)
       .attr('preserveAspectRatio', 'none');
     _kdeBuilding = false;
-    if (ptEl) render(_allPlayersTableTemplate(), ptEl);
+    if (ptEl) render(_playersTableTemplate(), ptEl);
   }
   g.select('.kde-raster').style('display', null);
   if (!_kdeLegendActive) { _swapToKdeLegend(_kdeData); _kdeLegendActive = true; }
@@ -987,6 +960,10 @@ _sidebarCallbacks.renderElo = _renderElo;
 _sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
 // _applyDimFocus is defined further down (near applySelection/clearDim) — safe to reference
 // here since this arrow function is only ever called later, well after that const exists.
+// (_renderPlayersTabIdle is layered on top of this same callback further down, right after its
+// own const is defined — it can't be referenced this early: the very first applyFlagFilter() run
+// happens synchronously during initial setup, well before that point in module evaluation, unlike
+// every later run which is safely post-load.)
 _sidebarCallbacks.afterFlagFilter = () => { _applyGroupFocus(); _applyDimFocus(); };
 // Sidebar collapse/expand no longer affects #page-header's own box (it's position:absolute —
 // see wc2026_map.html), so the map's push-down amount must be recomputed explicitly here.
@@ -1077,15 +1054,6 @@ const _updateSelectionPanel = (onCollapsed) => {
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : nothing;
-const ptWikiRow = p => {
-  const url    = wikiUrl(p.pid);
-  const wikiEn = wikiUrlEn(p.pid);
-  const badge  = coachBadge(p);
-  const dName  = playerDisplayName(p);
-  return url    ? html`<a href="${url}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">${dName}</a>${badge}`
-       : wikiEn ? html`${dName} (<a href="${wikiEn}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)${badge}`
-       : html`${dName}${badge}`;
-};
 
 const SQUAD_SIZE = { 40: 25, 124: 25 }; // Austria, Canada — injuries reduced squad to 25
 
@@ -1113,123 +1081,6 @@ const buildImportColHtml = countryId => {
           <span>${playerDisplayName(p)}${coachBadge(p)}</span>
           <span class="tt-country text-nowrap"><span class="color-imp">←</span> ${countryName(p.birthCountryId, p.birthCountry)}</span>
         </div>`)}
-    </div>`;
-};
-
-const playerTableTemplate = sourceId => {
-  const country       = app.byId[sourceId]?.country ?? QUALIFIED_NAMES[sourceId];
-  const cnt           = app.byId[sourceId]?.count ?? 0;
-  const exportPlayers = app.byId[sourceId]?.players ?? [];
-  const nativePlayers = app.nativeByCountry[sourceId] ?? [];
-  const importPlayers = (app.importByCountry[sourceId] ?? []).slice().sort((a, b) => b.caps - a.caps);
-  const isQualified   = !!QUALIFIED_NAMES[sourceId];
-  const name          = countryName(sourceId, country);
-
-  const exportGroupMap = new Map();
-  exportPlayers.forEach(p => {
-    if (!exportGroupMap.has(p.nation))
-      exportGroupMap.set(p.nation, { nation: p.nation, players: [] });
-    exportGroupMap.get(p.nation).players.push(p);
-  });
-  const exportGroups = [...exportGroupMap.values()].sort((a, b) => b.players.length - a.players.length);
-
-  const importGroupMap = new Map();
-  importPlayers.forEach(p => {
-    const label = countryName(p.birthCountryId, p.birthCountry);
-    if (!importGroupMap.has(label))
-      importGroupMap.set(label, { label, birthCountryId: p.birthCountryId, birthCountry: p.birthCountry, players: [] });
-    importGroupMap.get(label).players.push(p);
-  });
-  const importGroups = [...importGroupMap.values()].sort((a, b) => b.players.length - a.players.length);
-
-  const staticHdr = content => html`<div class="accordion-button pt-acc-btn pt-acc-static">${content}</div>`;
-  const toggleHdr = (id, content) => html`
-    <button class="accordion-button pt-acc-btn" type="button"
-      data-bs-toggle="collapse" data-bs-target="#acc-${id}"
-      aria-expanded="true" aria-controls="acc-${id}">${content}</button>`;
-
-  let exportHeader;
-  if (cnt > 0) {
-    exportHeader = toggleHdr('exp', html`<span class="pt-title color-exp">${cnt} ${T.exported(cnt, name)} ${T.selectedBy(cnt)}</span>`);
-  } else {
-    exportHeader = staticHdr(html`<span class="pt-title color-exp">${T.noExport(name)}</span>`);
-  }
-
-  return html`
-    <div class="accordion accordion-flush mt-2" id="pt-acc">
-
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          ${exportHeader}
-        </h2>
-        ${cnt > 0 ? html`
-        <div id="acc-exp" class="accordion-collapse collapse">
-          <div class="accordion-body px-0 pt-1">
-            ${exportGroups.map(({ nation, players: gp }) => {
-              const destId = QUALIFIED_BY_NAME[nation];
-              const nc = iso2ForId(destId);
-              return html`
-                <div class="pt-country-header d-flex align-items-center" @click=${() => { activateCountry(destId, true); _zoomToActiveDimFlags(); }}>
-                  ${nc ? html`<img src="${FLAG_CDN_RECT(nc)}">` : nothing}
-                  <span class="pt-country-name fw-medium">${countryName(destId, nation)}</span>
-                  <span class="pt-country-count">${gp.length} ${T.players(gp.length)}</span>
-                </div>
-                ${gp.map(p => html`
-                  <div class="pt-player-row d-flex justify-content-between align-items-center">
-                    <span>${ptWikiRow(p)}</span>
-                    <span class="pt-caps text-nowrap">${p.role === 'coach' ? T.coach : html`${p.caps} ${T.caps}`}</span>
-                  </div>`)}`;
-            })}
-          </div>
-        </div>` : nothing}
-      </div>
-
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          ${nativePlayers.length > 0
-            ? toggleHdr('nat', html`<span class="pt-title">${nativePlayers.length} ${T.ptNative(nativePlayers.length, name)}</span>`)
-            : staticHdr(html`<span class="pt-title">${'n/a'}</span>`)}
-        </h2>
-        ${nativePlayers.length > 0 ? html`
-        <div id="acc-nat" class="accordion-collapse collapse">
-          <div class="accordion-body px-0 pt-1">
-            ${nativePlayers.map(p => html`
-              <div class="pt-player-row d-flex justify-content-between align-items-center">
-                <span>${ptWikiRow(p)}</span>
-                <span class="pt-caps text-nowrap">${p.role === 'coach' ? T.coach : html`${p.caps} ${T.caps}`}</span>
-              </div>`)}
-          </div>
-        </div>` : nothing}
-      </div>
-
-      <div class="accordion-item">
-        <h2 class="accordion-header">
-          ${importPlayers.length > 0
-            ? toggleHdr('imp', html`<span class="pt-title color-imp">${importPlayers.length} ${T.ptImportTitle(importPlayers.length, name)}</span>`)
-            : staticHdr(html`<span class="pt-title color-imp">${isQualified ? T.noImport(name) : 'n/a'}</span>`)}
-        </h2>
-        ${importPlayers.length > 0 ? html`
-        <div id="acc-imp" class="accordion-collapse collapse">
-          <div class="accordion-body px-0 pt-1">
-            ${importGroups.map(({ label, birthCountryId, birthCountry, players: gp }) => {
-              const bc = birthCountryId != null ? iso2ForId(birthCountryId) : (_NULL_CODE[birthCountry] ?? null);
-              const clickId = birthCountryId ?? _NULL_CENTROID_ID[birthCountry] ?? null;
-              return html`
-                <div class="pt-country-header d-flex align-items-center${clickId != null ? ' pt-country-clickable' : ''}" @click=${clickId != null ? () => { activateCountry(clickId, true); _zoomToActiveDimFlags(); } : null}>
-                  ${bc ? html`<img src="${FLAG_CDN_RECT(bc)}">` : nothing}
-                  <span class="pt-country-name fw-medium">${label}</span>
-                  <span class="pt-country-count">${gp.length} ${T.players(gp.length)}</span>
-                </div>
-                ${gp.map(p => html`
-                  <div class="pt-player-row d-flex justify-content-between align-items-center">
-                    <span>${ptWikiRow(p)}</span>
-                    <span class="pt-caps text-nowrap">${p.role === 'coach' ? T.coach : html`${p.caps} ${T.caps}`}</span>
-                  </div>`)}`;
-            })}
-          </div>
-        </div>` : nothing}
-      </div>
-
     </div>`;
 };
 
@@ -1285,12 +1136,11 @@ const applySelection = (id, destIds) => {
     applyEmpty(id);
   }
 
-  // Player table
+  // Player table — same flat table the ambient (unfocused) view uses, just narrowed to this
+  // one team (see _playersTableTemplate's own comment on the focusIds set it takes).
   const ptEl = document.getElementById('tab-players');
   if (ptEl) {
-    _saveAccState(ptEl);
-    render(playerTableTemplate(id), ptEl);
-    _restoreAccState(ptEl);
+    render(_playersTableTemplate(new Set([id])), ptEl);
     window.scrollTo({ top: 0 });
   }
 
@@ -1315,16 +1165,16 @@ const applySelection = (id, destIds) => {
   _updateAllPlayersMapLayer();
 };
 
-// ── "All players" table (tab-players-btn's idle state, no country selected) ──────────────────
+// ── Players table (#tab-players' one and only content — see _playersTableTemplate) ────────────
 // Same entries construction as wc2026_players.html's own (export entries from
 // rawData.data[].players, native entries from rawData.natives) — built once below, right after
 // buildIndices(rawData) runs, since that's where rawData is in scope.
 let _allPlayerEntries = [];
 
 // Numeric ids of qualified teams whose flag is currently visible on the map (not hidden by the
-// sidebar's category filter, group focus, or dim focus) — the table only ever shows players/
-// coaches of a team the map itself is currently showing, read fresh every time it's opened
-// rather than kept in sync live.
+// sidebar's category filter, group focus, or dim focus) — the ambient table only ever shows
+// players/coaches of a team the map itself is currently showing, read fresh every time it's
+// opened rather than kept in sync live.
 const _visibleQualifiedIds = () => {
   const ids = new Set();
   g.selectAll('.flag-qualified[data-elo-cat]').each(function() {
@@ -1332,6 +1182,14 @@ const _visibleQualifiedIds = () => {
     if (QUALIFIED_NAMES[id] && this.getAttribute('visibility') !== 'hidden') ids.add(id);
   });
   return ids;
+};
+
+// _allPlayerEntries filtered to whatever's currently visible (Teams' checkboxes or Tournament's
+// stage — whichever tab last drove the map) — the ambient, unfocused view. Shared by the table
+// itself and the nav pill's live count (see _renderPlayersTabIdle).
+const _visiblePlayerEntries = () => {
+  const visibleIds = _visibleQualifiedIds();
+  return _allPlayerEntries.filter(p => visibleIds.has(QUALIFIED_BY_NAME[p.nation]));
 };
 
 const _allPlayersFlag = code => code ? html`<img class="pt-flag" src="${FLAG_CDN_RECT(code)}" alt="" width="18">` : nothing;
@@ -1356,18 +1214,43 @@ const _allPlayersRow = p => {
     </tr>`;
 };
 
+// Every player/coach tied to one of `focusIds` as either birth country or squad country —
+// export+native+import combined, exactly what the old per-country accordion used to split into
+// three sections, just as flat rows instead. Reads the same already-deduped app.byId/
+// nativeByCountry/importByCountry indices the map/tooltips use (not _allPlayerEntries directly —
+// that flat array's own export/import split doesn't carry app.importByCountry's self-import
+// name-mismatch fix, e.g. DR Congo; see CLAUDE.md's app.importByCountry section). Deduped by pid
+// across ids so a future multi-id focus (a fixture's two teams) can't double-list a player who's
+// simultaneously born in one focus team and playing for the other.
+const _focusedPlayers = focusIds => {
+  const byKey = new Map();
+  focusIds.forEach(id => {
+    const country = app.byId[id]?.country ?? QUALIFIED_NAMES[id];
+    const tagged = [
+      ...(app.byId[id]?.players ?? []).map(p => ({ ...p, birthCountryId: id, birthCountry: country })),
+      ...(app.nativeByCountry[id] ?? []).map(p => ({ ...p, nation: country, birthCountryId: id, birthCountry: country })),
+      ...(app.importByCountry[id] ?? []).map(p => ({ ...p, nation: country })),
+    ];
+    tagged.forEach(p => byKey.set(p.pid ?? `${p.name}-${p.nation}-${p.birthCountryId}`, p));
+  });
+  return [...byKey.values()];
+};
+
 const _setMapLayerMode = mode => {
   if (mode === _mapLayerMode) return;
   _mapLayerMode = mode;
   saveSlice('mapLayer', { mode });
   const ptEl = document.getElementById('tab-players');
-  if (ptEl) render(_allPlayersTableTemplate(), ptEl);
+  if (ptEl) render(_playersTableTemplate(dimState.active ? new Set([dimState.sourceId]) : null), ptEl);
   _updateAllPlayersMapLayer();
 };
 
-const _allPlayersTableTemplate = () => {
-  const visibleIds = _visibleQualifiedIds();
-  const filtered = _allPlayerEntries.filter(p => visibleIds.has(QUALIFIED_BY_NAME[p.nation]));
+// The one template #tab-players ever renders — `focusIds` narrows it to one or more teams (a
+// single dim-selected team today; a future fixture's two teams reuses the same path unchanged).
+// null/omitted means the ambient view: every player on a currently-visible team.
+const _playersTableTemplate = (focusIds = null) => {
+  const filtered = (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
+    .sort((a, b) => playerSortKey(a).localeCompare(playerSortKey(b)));
   const coachCount = filtered.filter(p => p.role === 'coach').length;
   return html`
     <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Map layer">
@@ -1389,30 +1272,49 @@ const _allPlayersTableTemplate = () => {
 
 const _showAllPlayers = () => {
   const ptEl = document.getElementById('tab-players');
-  if (ptEl) render(_allPlayersTableTemplate(), ptEl);
+  if (ptEl) render(_playersTableTemplate(), ptEl);
   _showingAllPlayers = true;
   _switchTab('tab-players');
   _updateAllPlayersMapLayer();
 };
 
-// Idle state (no country selected) — a plain, always-clickable icon, unlike the country-pill
-// state applySelection renders above (which needs its own close button since clearing that
-// selection is a distinct action from just switching tabs). Called once at initial setup and
-// every time clearDim runs.
+// Idle state (no country selected) — a plain, always-clickable icon plus a live count of however
+// many players are in the ambient (currently-visible) set, so the pill previews what tab-players
+// will show even before it's opened — the same preview role the dim-selected country pill
+// (applySelection, above) already plays for a one-team focus. No-ops while dim is active: that
+// pill belongs to applySelection instead (see _sidebarCallbacks.afterFlagFilter's own comment on
+// why this is safe to call unconditionally on every filter/stage change). Called once at initial
+// setup and every time clearDim runs.
 const _renderPlayersTabIdle = () => {
+  if (dimState.active) return;
   const _pb = document.getElementById('tab-players-btn');
   if (!_pb) return;
   _pb.className = 'nav-link';
-  render(html`<img class="tab-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" aria-hidden="true" @click=${() => _showAllPlayers()}>`, _pb);
+  const count = _visiblePlayerEntries().filter(p => p.role !== 'coach').length;
+  render(html`
+    <span @click=${() => _showAllPlayers()}>
+      <img class="tab-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" aria-hidden="true">
+      <span class="elo-item taxonomy"><span class="elo-name">${count} ${T.players(count)}</span></span>
+    </span>`, _pb);
 };
 _renderPlayersTabIdle();
+// Layers the nav pill's live-count refresh onto the same callback assigned near initSidebar()
+// (that first assignment already runs _applyGroupFocus/_applyDimFocus; see its own comment on
+// why _renderPlayersTabIdle couldn't be included there directly). Every applyFlagFilter() call
+// from here on — checkbox toggles, stage carousel moves, confederation filter — keeps the pill
+// in sync; only the one synchronous call during initial setup (before this line runs) misses it,
+// which is harmless since _allPlayerEntries is still empty at that point anyway.
+{
+  const _afterFlagFilterBase = _sidebarCallbacks.afterFlagFilter;
+  _sidebarCallbacks.afterFlagFilter = () => { _afterFlagFilterBase(); _renderPlayersTabIdle(); };
+}
 
 const clearDim = () => {
   dimState.active = false;
   dimState.sourceId = null;
   dimState.destIds = new Map();
   dimState.importIds = new Map();
-  _showingAllPlayers = false;
+  _showingAllPlayers = true;
   _updateAllPlayersMapLayer();
   animateFlagOpacity(g.selectAll('.flag-qualified'), () => 1);
   g.selectAll('.flag-qualified').attr('data-dim-visible', null);
@@ -1425,10 +1327,7 @@ const clearDim = () => {
   // visibility:hidden restored, not left stuck visible.
   sidebar.applyFlagFilter();
   const _ptEl = document.getElementById('tab-players');
-  if (_ptEl) {
-    _saveAccState(_ptEl);
-    render(html`<p class="py-4 text-center sub fst-italic">${T.tabPlayersHint}</p>`, _ptEl);
-  }
+  if (_ptEl) render(_playersTableTemplate(), _ptEl);
   _updateSelectionPanel(() => {
     _renderPlayersTabIdle();
     requestAnimationFrame(() => _positionIndicator(false));
@@ -2054,7 +1953,7 @@ Promise.all([
   );
   eloData.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); });
   buildIndices(rawData);
-  // Same construction as wc2026_players.html's own `entries` — see _allPlayersTableTemplate.
+  // Same construction as wc2026_players.html's own `entries` — see _playersTableTemplate.
   for (const rec of rawData.data ?? []) {
     for (const p of rec.players ?? []) _allPlayerEntries.push({ ...p, native: false, birthCountry: rec.country, birthCountryId: rec.id });
   }
@@ -2070,6 +1969,10 @@ Promise.all([
     fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2,
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations, capeVerdeGeo, curacaoGeo);
+  // First real paint of #tab-players — until now it's been empty (no synchronous render at
+  // module load; see the comment near the top of the file). Needs to run after renderWorld
+  // (_visibleQualifiedIds reads flags it creates), but doesn't depend on anything else below.
+  { const _ptElInit = document.getElementById('tab-players'); if (_ptElInit) render(_playersTableTemplate(), _ptElInit); }
   // Init elo ranking component with centroids now populated
   // Kept as its own named reference (not just assigned inline to _eloMain.onCountryClick) so
   // js/group_stage.js's pills can be wired to the exact same function below — <elo-ranking>'s

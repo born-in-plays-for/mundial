@@ -280,13 +280,15 @@ On portrait mobile only (landscape and desktop are unaffected):
 - **Tab bar fixed at bottom**: `#bottomTabList` gets `position: fixed !important; bottom: 0; left: 0; right: 0` so the navigation stays visible while the tab content scrolls freely above it.
 - **Bottom clearance**: `body { padding-bottom: 48px }` prevents the last line of tab content from being hidden behind the fixed tab bar.
 
-### Player table
-Shown below the map in dim mode. Structure rendered by `playerTableTemplate` via lit-html:
-- Header row: `[flag] Country` left + `pop. xM` right
-- Export section (bordered top): count heading + grouped player rows by destination nation
-- Natives section (conditional): players born there playing for that same country (`app.nativeByCountry`)
-- Import section (bordered top, conditional): count heading + grouped player rows by birth country
-- Player names link to Wikipedia in the UI language when `pid` resolves in the loaded `data/v2/wiki_<lang>.json` (see "Wikipedia links in player table" above)
+### Player table (`#tab-players`)
+One flat `<table>` (`_playersTableTemplate` in `js/wc2026_map.js`, columns: name, born-in, plays-for, caps), rendered every time `#tab-players`' content changes — there is no other rendering path (an earlier per-country accordion and a separate "click a country" hint state were both merged into this single template; don't reintroduce either). It takes an optional `focusIds` (a `Set` of numeric ids):
+- **Omitted/`null`** — the ambient view: every player on a currently-visible team, i.e. whatever's passing tab-teams' checkbox filter or tab-tournament's stage carousel, whichever of the two tabs last drove the map (`_visiblePlayerEntries`/`_visibleQualifiedIds`). This is `#tab-players`' default/idle content.
+- **One id** — a dim-selected team's own players (exports + natives + imports combined, via `_focusedPlayers`, which reads the already-deduped `app.byId`/`app.nativeByCountry`/`app.importByCountry` indices — not `_allPlayerEntries` directly, since that flat array doesn't carry `app.importByCountry`'s self-import name-mismatch fix, e.g. DR Congo; see that section below).
+- `_focusedPlayers` accepts multiple ids and dedupes by `pid` across them, so a future "fixture" focus (both teams in a selected match) can reuse it unchanged — not yet wired up to any UI.
+
+Player names link to Wikipedia in the UI language when `pid` resolves in the loaded `data/v2/wiki_<lang>.json` (see "Wikipedia links in player table" above).
+
+**Signaling which view is active** — `#tab-players-btn` (the bottom-nav pill) previews what the tab will show *before* it's opened, rather than needing an in-panel label: a plain icon + live player count in the ambient case (kept in sync with every filter/stage/confederation change via `_renderPlayersTabIdle`, hooked into `_sidebarCallbacks.afterFlagFilter`), or the selected team's flag+name pill once dim-selected (`applySelection`). `_renderPlayersTabIdle` no-ops while a team is dim-selected (that pill belongs to `applySelection` instead).
 
 ### Auth bar (`<mundial-auth-bar>`)
 `js/auth-bar.js` defines a custom element loaded as `<script type="module">` on every page. It renders a fixed 32px navbar with navigation icons (home, france, live game) and an auth section (sign-in/sign-out/admin). All HTML generation uses lit-html `render()` + `html` templates; SVG icons use the `unsafeHTML` directive.
