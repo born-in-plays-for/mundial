@@ -2,7 +2,7 @@ import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/l
 import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
 import { renderChain } from '../chains/wc2026_chain_render.js';
 import { pillClasses, pillContent, pillStyle, initEloRanking } from './elo_ranking.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildImportByCountry, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initGroupStage } from './group_stage.js';
 import { initSidebar } from './control_sidebar.js';
@@ -11,18 +11,16 @@ import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
 import { loadKdeData, makeKdeColorScale, buildKdeRaster, kdeLegendTicks } from './kde_layer.js';
 import { CONF_BOUNDS } from './conf.js';
 import { ISO2_REVERSE, iso2ForId, _NULL_CODE } from './iso2.js';
-import { color, choroFill, divergingOutlierColor, getDivergingParams, setDivergingParams,
-         themeName, currentTheme, themeNames, setTheme, onThemeChange,
-         FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT,
-         W, H } from './map-container.js';
+import { choroFill, getDivergingParams, setDivergingParams, currentTheme, onThemeChange,
+         FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT, W, H,
+         buildChoroplethIndex, paintChoropleth, wireLegend,
+         CENTROID_OVERRIDE, dotCentroid, zoomToCentroid as _sharedZoomToCentroid,
+         drawCountryArcs, rescaleArcs, computeImportIds, _NULL_CENTROID_ID } from './map-container.js';
 
 const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
   selection: true,  // #selection-panel — capital/pop for active dim country
-  chain:     true,  // #chain-panel — chain visualization
 };
-
-const RATIO_MIN = 0; // used by legend only
 
 // Map infrastructure from <world-map> web component (defined in map-container.js)
 const _wm       = document.querySelector('world-map');
@@ -32,40 +30,8 @@ const path      = _wm.path;
 
 let _worldTopo = null; // set once world-atlas JSON loads
 
-// Single source of truth for the export/import color pair is css/taxonomy.css's :root-level
-// --exp-accent/--imp-accent — also used by the elo-ranking pills' own ▶/◀ indicators, so the
-// map's arcs and the pills read as the same concept instead of two independently-tuned blues/
-// reds (see conversation: they used to be two hardcoded, drifting-apart pairs). Read once here
-// rather than in drawArc() itself, which runs per-arc.
-const _rootStyle = getComputedStyle(document.documentElement);
-const ARC_EXPORT_COLOR = _rootStyle.getPropertyValue('--exp-accent').trim(); // blue
-const ARC_IMPORT_COLOR = _rootStyle.getPropertyValue('--imp-accent').trim(); // red
-const ARC_OFFSET = 1.0; // lateral separation: visual offset = sw * ARC_OFFSET / k
-const ARC_MID_T  = 0.65; // arrow at 65% toward destination — separates bidirectional pairs along the arc
-
-const arcOffset = (sw, sx, sy, tx, ty, k) => {
-  const ddx = tx-sx, ddy = ty-sy, dist = Math.sqrt(ddx*ddx+ddy*ddy);
-  const pnx = -ddy/dist, pny = ddx/dist;
-  const off = sw * ARC_OFFSET / k;
-  return {
-    ofx: sx + pnx*off, ofy: sy + pny*off,
-    otx: tx + pnx*off, oty: ty + pny*off,
-    oqx: (sx+tx)/2 + pnx*off, oqy: (sy+ty)/2 - dist*0.3 + pny*off,
-  };
-};
-
-const arrowPoints = (sw, ofx, ofy, otx, oty, oqx, oqy, k) => {
-  const mt = ARC_MID_T, ms = 1 - mt;
-  const mx = ms*ms*ofx + 2*ms*mt*oqx + mt*mt*otx;
-  const my = ms*ms*ofy + 2*ms*mt*oqy + mt*mt*oty;
-  const tdx = 2*ms*(oqx-ofx) + 2*mt*(otx-oqx);
-  const tdy = 2*ms*(oqy-ofy) + 2*mt*(oty-oqy);
-  const tLen = Math.sqrt(tdx*tdx+tdy*tdy);
-  const mux = tdx/tLen, muy = tdy/tLen, mnx = -muy, mny = mux;
-  const mah = Math.sqrt(sw)*5/k, maw = Math.sqrt(sw)*2.5/k;
-  const bx = mx-mux*mah/2, by = my-muy*mah/2;
-  return `${mx+mux*mah/2},${my+muy*mah/2} ${bx+mnx*maw},${by+mny*maw} ${bx-mnx*maw},${by-mny*maw}`;
-};
+// Arc geometry/colors (arcOffset/arrowPoints/appendArc/drawCountryArcs/rescaleArcs) now
+// live in map-container.js, shared with the chain page's own dim/arc click handling.
 
 const g = _wm.g;
 const tt = document.getElementById('tooltip');
@@ -73,23 +39,15 @@ let lastTipKey = null;
 const hideTip = () => { tt.style.display = 'none'; tt.classList.remove('tt-non-qualified'); lastTipKey = null; };
 
 
-// Fixes arc endpoint when path.centroid() lands outside the country polygon.
-const CENTROID_OVERRIDE = {
-  250:  [2.5,  46.5],   // France (without overseas territories)
-  840:  [-98,  38],     // USA (without Alaska/Hawaii)
-  8261: [-4.2, 56.8],  // Scotland (centroid pulled north by islands)
-  191:  [16.8, 45.8],  // Croatia (coastal strip drags centroid south into Bosnia)
-};
+// CENTROID_OVERRIDE / dotCentroid now live in map-container.js (shared with the chain
+// page's own zoomToCentroid) — fixes arc/zoom endpoints when path.centroid() lands
+// outside the country polygon (or somewhere unrepresentative, e.g. dragged by overseas
+// territories/outlying islands).
 
 // Visual flag position — overrides where the flag icon is drawn (data-cx/data-cy + x/y).
 // Arcs still connect to the geographic centroid (via CENTROID_OVERRIDE / dotCentroid).
 const FLAG_POS_OVERRIDE = {
   191: [16.8, 45.8],    // Croatia — flag placed in Slavonia, away from the coastal strip
-};
-
-const dotCentroid = d => {
-  const ov = CENTROID_OVERRIDE[+d.id];
-  return ov ? projection(ov) : path.centroid(d);
 };
 
 svg.on('click', () => { clearDim(); });
@@ -129,22 +87,7 @@ _wm.onZoom = e => {
     const cx = +this.getAttribute('data-cx'), cy = +this.getAttribute('data-cy');
     return `translate(${cx},${cy}) scale(${1 / k})`;
   });
-  g.selectAll('path.arc-line')
-    .attr('stroke-width', function() { return +this.getAttribute('data-sw') / k; })
-    .attr('d', function() {
-      const sw = +this.getAttribute('data-sw');
-      const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
-      const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
-      const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
-      return `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`;
-    });
-  g.selectAll('polygon.arc-mid').attr('points', function() {
-    const sw = +this.getAttribute('data-sw');
-    const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
-    const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
-    const {ofx,ofy,otx,oty,oqx,oqy} = arcOffset(sw, sx, sy, tx, ty, k);
-    return arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k);
-  });
+  rescaleArcs(g, k);
   _syncResetBtn(e.transform);
   const zoomEl = document.getElementById('zoom-level');
   if (zoomEl) zoomEl.textContent = `k=${e.transform.k.toFixed(2)}`;
@@ -166,10 +109,8 @@ g.append('path').datum(d3.geoGraticule()())
 
 const DOCUMENT_TITLE = "Thiebaud's Mundial";
 
-// Null-ID birth countries → numeric topojson ID (for centroid lookup and flag dimming)
-const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840, 'Kingdom of the Netherlands': 528 };
-
-
+// _NULL_CENTROID_ID (null-ID birth countries → numeric topojson ID) now lives in
+// map-container.js, shared with the chain page's own computeImportIds().
 
 // Apply locale to static page elements
 document.title = DOCUMENT_TITLE;
@@ -302,7 +243,6 @@ _zoomHintEl.textContent = T.zoomHint;
 let _initialTransform = d3.zoomIdentity;
 const _zoomResetBtn = document.getElementById('zoom-reset');
 const _zoomSpanBtn  = document.getElementById('zoom-span');
-const _themeToggleBtn = document.getElementById('theme-toggle');
 const _syncResetBtn = t => {
   if (!_zoomResetBtn) return;
   _zoomResetBtn.disabled = Math.abs(t.k - _initialTransform.k) < 0.001
@@ -408,12 +348,15 @@ const _renderChain = () => {
     chainContent.id = 'chain-content';
     document.getElementById('tab-chain').appendChild(chainContent);
   }
+  // No headerContainer — #chain-panel was cut from wc2026_map.html (moved to
+  // chains/wc2026_chain_longest.html as a fixed, always-visible footer). renderChain's
+  // own fallback (headerContainer ?? wrapper) now renders the legend/subtitle/nav-
+  // buttons header inline, at the top of the chain content, instead of pinned below.
   _chainUpdate = renderChain(_chainData, chainContent, {
     onCountryClick:   _chainOnClick,
     getSelectedIndex: _chainGetIndex,
     getPlayerWikiUrl: _chainWikiUrl,
     labels:           { ...T.chainLegend, subtitle: T.chainSubtitle },
-    headerContainer:  document.getElementById('chain-panel'),
   });
 };
 // On selection change: surgical update only — no SVG rebuild, no flicker.
@@ -743,21 +686,6 @@ let _renderEloBase = null;
 
 let _worldFeatures, _ukFeatures;
 
-// For MultiPolygon features (France, Russia, USA…), path.bounds() spans all territories
-// including overseas ones. Use only the largest sub-polygon by projected bbox area.
-const _mainlandBounds = feature => {
-  const geom = feature.geometry;
-  if (geom.type !== 'MultiPolygon') return path.bounds(feature);
-  let best = null, bestArea = 0;
-  for (const coords of geom.coordinates) {
-    const sub = { type: 'Feature', geometry: { type: 'Polygon', coordinates: coords } };
-    const [[x0, y0], [x1, y1]] = path.bounds(sub);
-    const area = (x1 - x0) * (y1 - y0);
-    if (area > bestArea) { bestArea = area; best = [[x0, y0], [x1, y1]]; }
-  }
-  return best ?? path.bounds(feature);
-};
-
 const _zoomToActiveDimFlags = () => {
   // Stage 1: zoom to source country boundaries
   zoomToCentroid(dimState.sourceId, 1200);
@@ -812,28 +740,12 @@ const _zoomToVisibleFlags = () => {
 };
 
 
-const zoomToCentroid = (id, duration = 2000) => {
-  const c = centroids[id];
-  if (!c) return;
-  const [cx, cy] = c;
-  const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
-  const feature = _worldFeatures?.find(f => +f.id === id) ?? _ukFeatures?.find(f => +f._id === id);
-  let k = 15, tx, ty;
-  if (feature) {
-    try {
-      const [[bx0, by0], [bx1, by1]] = _mainlandBounds(feature);
-      const bw = bx1 - bx0, bh = by1 - by0;
-      if (bw > 0 && bh > 0) {
-        const pad = 10;
-        k = Math.max(1, Math.min(vbW / (bw + 2 * pad), vbH / (bh + 2 * pad)));
-        tx = vbX + vbW / 2 - k * (bx0 + bx1) / 2;
-        ty = vbY + vbH / 2 - k * (by0 + by1) / 2;
-      }
-    } catch(e) { /* fall through */ }
-  }
-  if (tx == null) { tx = vbX + vbW / 2 - k * cx; ty = vbY + vbH / 2 - k * cy; }
-  svg.transition().duration(duration).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
-};
+// Thin adapter over map-container.js's shared zoomToCentroid (also used, unadapted, by
+// the chain page) — bundles this page's own D3 handles/feature arrays into the context
+// object it expects, so every existing call site here (zoomToCentroid(id[, duration]))
+// keeps working unchanged.
+const zoomToCentroid = (id, duration = 2000) =>
+  _sharedZoomToCentroid({ svg, zoom, path, centroids, worldFeatures: _worldFeatures, ukFeatures: _ukFeatures }, id, duration);
 
 const _renderElo = (onAnimationDone) => {
   if (!_renderEloBase) return;
@@ -884,14 +796,9 @@ const _switchTab = name => {
   document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
     pane.hidden = pane.id !== name;
   });
-  if (name === 'tab-chain') {
-    if (_chainData) {
-      _renderChain();
-      requestAnimationFrame(() => _chainUpdate?.scrollActive());
-    }
-    _expandPanel(_chainPanelEl);
-  } else {
-    _collapsePanel(_chainPanelEl);
+  if (name === 'tab-chain' && _chainData) {
+    _renderChain();
+    requestAnimationFrame(() => _chainUpdate?.scrollActive());
   }
   if (isEloTab) {
     _expandPanel(_eloMetaPanel);
@@ -1224,7 +1131,6 @@ const _collapsePanel = (panel, onDone) => {
 };
 
 const _selectionPanelEl = FOOTER_PANELS.selection ? document.getElementById('selection-panel') : null;
-const _chainPanelEl     = FOOTER_PANELS.chain     ? document.getElementById('chain-panel')     : null;
 
 // Restore whichever #bottomTabList tab was last active (see _switchTab's own saveSlice call) —
 // tab-teams (the HTML's own static default) is used whenever nothing's saved yet, or the saved
@@ -1233,8 +1139,8 @@ const _chainPanelEl     = FOOTER_PANELS.chain     ? document.getElementById('cha
 // it resolves to the same default already shown, so the sidebar mode/carousel/group-stage-view
 // wiring _switchTab performs is applied exactly once, from exactly one code path, regardless of
 // whether this is a fresh visit or a restored one. Placed here, not right after sidebar is
-// built above — _switchTab's body also touches _expandPanel/_collapsePanel/_chainPanelEl,
-// which aren't defined until this point in the script.
+// built above — _switchTab's body also touches _expandPanel/_collapsePanel, which aren't
+// defined until this point in the script.
 const _RESTORABLE_TABS = new Set(['tab-teams', 'tab-tournament', 'tab-chain']);
 const _savedActiveTab = loadSlice('bottomTab')?.active;
 _switchTab(_RESTORABLE_TABS.has(_savedActiveTab) ? _savedActiveTab : 'tab-teams');
@@ -1419,12 +1325,7 @@ const applyDim = (sourceId, destIds) => {
   dimState.destIds = destIds;
 
   // Build import ids: birth countries Y whose players represent country sourceId
-  dimState.importIds = new Map();
-  (app.importByCountry[sourceId] ?? []).forEach(p => {
-    const cId = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
-    if (cId == null) return;
-    dimState.importIds.set(cId, (dimState.importIds.get(cId) ?? 0) + 1);
-  });
+  dimState.importIds = computeImportIds(sourceId, app.importByCountry);
 
   // Flag opacity + data-dim-visible for cursor/click control. data-dim-visible is just a
   // marker other code reads (e.g. _applyDimFocus, _zoomToVisibleFlags) — set instantly, not
@@ -1443,45 +1344,7 @@ const applyDim = (sourceId, destIds) => {
     return dimVisibleIds.has(id) ? '' : null;
   });
 
-  // Arc drawing helper — smooth quadratic Bézier, laterally offset by type, mid arrowhead
-  const drawArc = (from, to, count, type) => {
-    const color = type === 'export' ? ARC_EXPORT_COLOR : ARC_IMPORT_COLOR;
-    const sw = Math.max(1, Math.sqrt(count));
-    const {ofx, ofy, otx, oty, oqx, oqy} = arcOffset(sw, from[0], from[1], to[0], to[1], dimState.k);
-
-    dimState.arcsGroup.append('path')
-      .attr('class', 'arc-line')
-      .attr('d', `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`)
-      .attr('fill', 'none').attr('stroke', color)
-      .attr('stroke-width', sw/dimState.k).attr('opacity', 0.7)
-      .attr('data-sw', sw)
-      .attr('data-sx', from[0]).attr('data-sy', from[1])
-      .attr('data-tx', to[0]).attr('data-ty', to[1]);
-
-    dimState.arcsGroup.append('polygon')
-      .attr('class', 'arc-line arc-mid')
-      .attr('points', arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, dimState.k))
-      .attr('fill', color).attr('opacity', 0.8)
-      .attr('data-sw', sw)
-      .attr('data-sx', from[0]).attr('data-sy', from[1])
-      .attr('data-tx', to[0]).attr('data-ty', to[1]);
-  };
-
-  if (dimState.arcsGroup) {
-    dimState.arcsGroup.selectAll('.arc-line').remove();
-    const src = centroids[sourceId];
-    if (src) {
-      destIds.forEach((count, destId) => {
-        const dst = centroids[destId];
-        if (dst) drawArc(src, dst, count, 'export');
-      });
-      dimState.importIds.forEach((count, birthId) => {
-        if (birthId === sourceId) return;
-        const ySrc = centroids[birthId];
-        if (ySrc) drawArc(ySrc, src, count, 'import');
-      });
-    }
-  }
+  if (dimState.arcsGroup) drawCountryArcs(dimState.arcsGroup, sourceId, destIds, dimState.importIds, centroids, dimState.k);
 
   g.selectAll('.flag-qualified').raise();
   g.selectAll('.flag-qualified').filter(function() {
@@ -1684,43 +1547,24 @@ const placeFlag = (sel) => {
 };
 
 // ── Main render ───────────────────────────────────────────────────────────────
-// GU_A3 code (Natural Earth) → synthetic country ID
-const UK_GU_TO_ID = {ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263};
 
 // ── Data index builder ──────────────────────────────────────────────────────
+// Core loop (count/nativeCount/importCount per country) shared with the chain page via
+// map-container.js's buildChoroplethIndex() — pop/totalCount/eloRank/capital are
+// tooltip/player-table-only fields that stay page-specific, layered on afterward.
 const buildIndices = rawData => {
-const DATA = rawData.data;
-if (rawData.natives) {
-  Object.entries(rawData.natives).forEach(([name, players]) => {
-    const nId = QUALIFIED_BY_NAME[name];
-    if (nId != null) app.nativeByCountry[nId] = players;
+  const { byId, nativeByCountry, importByCountry } = buildChoroplethIndex(rawData);
+  app.nativeByCountry = nativeByCountry;
+  app.importByCountry = importByCountry;
+  Object.values(byId).forEach(d => {
+    d.pop        = rawData.pop[iso2ForId(d.id)] || null;
+    d.totalCount = d.count + d.nativeCount;
+    app.byId[d.id] = d;
   });
-}
-// Built before the byId loops below — both need importCount per country, and
-// this only needs rawData.data (already in hand), not anything byId sets up.
-app.importByCountry = buildImportByCountry(rawData, countryName);
-DATA.forEach(d => {
-  d.pop        = rawData.pop[iso2ForId(d.id)] || null;
-  d.nativeCount = (app.nativeByCountry[d.id] ?? []).length;
-  d.importCount = (app.importByCountry[d.id] ?? []).length;
-  d.totalCount  = d.count + d.nativeCount;
-  app.byId[d.id] = d;
-});
-// Add coloring entries for qualified countries all of whose players play for their own country
-Object.entries(app.nativeByCountry).forEach(([nId, players]) => {
-  const id = +nId;
-  if (app.byId[id]) return;
-  const name = QUALIFIED_NAMES[id];
-  const pop  = rawData.pop[iso2ForId(id)] || null;
-  const importCount = (app.importByCountry[id] ?? []).length;
-  app.byId[id] = { id, country: name, count: 0, nativeCount: players.length, importCount,
-               totalCount: players.length, pop,
-               players: [], top: [], nations: [] };
-});
-app.pop      = rawData.pop;
-app.capital  = rawData.capital ?? {};
-app.eloRank = {};  // populated by wc2026_elo_rank.json fetch below
-_updateLegendOutlier();
+  app.pop      = rawData.pop;
+  app.capital  = rawData.capital ?? {};
+  app.eloRank = {};  // populated by wc2026_elo_rank.json fetch below
+  legend.refresh();
 };
 
 
@@ -1922,13 +1766,6 @@ const onCountryClick = (event, id) => {
 // ── World render ────────────────────────────────────────────────────────────
 const renderWorld = (world, ukNations, capeVerdeGeo, curacaoGeo) => {
 
-// Patch topojson geometries that have no numeric id but a known name.
-// Kosovo appears in the 110m dataset with only {properties:{name:'Kosovo'}} — no id field.
-const _topoNameToId = { Kosovo: 383 };
-world.objects.countries.geometries.forEach(g => {
-  if (!g.id) { const mapped = _topoNameToId[g.properties?.name]; if (mapped) g.id = mapped; }
-});
-
 // ── Ocean background — fills the full projection area before land paths ──────
 // Neutral gray, not blue — the violet theme's diverging scale (map-container.js's
 // _divergingParams) uses blue for its positive/export side, and a blue ocean competed with
@@ -1943,47 +1780,27 @@ world.objects.countries.geometries.forEach(g => {
 g.append('path').datum({type:'Sphere'}).attr('d', path).attr('fill','#b0c4c4').attr('stroke','none')
   .on('mousemove', () => { hideTip(); });
 
-// ── World choropleth (skip UK polygon — rendered separately below) ────────────
-g.selectAll('.country')
-  .data(topojson.feature(world, world.objects.countries).features
-    .filter(d => +d.id !== 826))
-  .join('path')
-  .attr('class','country')
-  .attr('data-id', d => +d.id)
-  .attr('d', path)
-  .attr('fill', d => choroFill(+d.id, app.byId))
-  .attr('stroke','#ccc8c0').attr('stroke-width',.3)
+// World choropleth + mesh borders + UK home nations — shared with the chain page via
+// map-container.js's paintChoropleth() (Kosovo id patch included). Only the drawing
+// itself is shared; mousemove/click/cursor/dim wiring (all page-specific — tooltips,
+// dim mode, sidebar filters) is chained onto the returned selections below.
+const { worldFeatures, ukFeatures, countryPaths, ukPaths } = paintChoropleth(g, path, world, ukNations, app.byId);
+_worldFeatures = worldFeatures;
+_ukFeatures = ukFeatures;
+
+countryPaths
   .attr('data-enables-dim', d => enablesDim(+d.id) ? '' : null)
   .style('cursor', d => sidebar.isClickable(+d.id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, +d.id, d.properties?.name))
   .on('mouseleave', () => { if (!dimState.active) { hideTip(); } })
   .on('click',     (event, d) => onCountryClick(event, +d.id));
 
-g.append('path')
-  .attr('class', 'mesh-border')
-  .datum(topojson.mesh(world, world.objects.countries, (a,b) => a!==b))
-  .attr('fill','none').attr('stroke','#b8b0a8').attr('stroke-width',.3).attr('d', path);
-
-// ── UK home nations (separate polygons from uk-nations.geojson) ───────────────
-const ukFeatures = ukNations.features.map(f => ({...f, _id: UK_GU_TO_ID[f.properties.GU_A3]}));
-_ukFeatures = ukFeatures;
-
-g.selectAll('.country-uk')
-  .data(ukFeatures)
-  .join('path')
-  .attr('class','country country-uk')
-  .attr('data-id', d => d._id)
-  .attr('d', path)
-  .attr('fill', d => choroFill(d._id, app.byId))
-  .attr('stroke','#ccc8c0').attr('stroke-width',.3)
+ukPaths
   .attr('data-enables-dim', d => enablesDim(d._id) ? '' : null)
   .style('cursor', d => sidebar.isClickable(d._id) ? 'pointer' : 'default')
   .on('mousemove', (event, d) => onCountryMousemove(event, d._id))
   .on('mouseleave', () => { if (!dimState.active) hideTip(); })
   .on('click',     (event, d) => onCountryClick(event, d._id));
-
-const worldFeatures = topojson.feature(world, world.objects.countries).features;
-_worldFeatures = worldFeatures;
 
 // Ocean-only clip path: sphere − land (even-odd rule punches out land areas)
 svg.append('defs').append('clipPath').attr('id', 'ocean-clip')
@@ -2243,7 +2060,7 @@ const buildBlendedInset = ({ id, geo, corner = 'bottom-right' }) => {
 worldFeatures.forEach(d => {
   const fp = FLAG_POS_OVERRIDE[+d.id];
   if (!fp) return;
-  const [cx, cy] = dotCentroid(d);
+  const [cx, cy] = dotCentroid(d, projection, path);
   const [fx, fy] = projection(fp);
   appendLeaderLine(cx, cy, fx, fy);
 });
@@ -2253,7 +2070,7 @@ worldFeatures
   .filter(d => { const id = +d.id; return id !== 826 && _eloItemsById.has(id); })
   .forEach(d => {
     const id = +d.id;
-    const [cx, cy] = dotCentroid(d);
+    const [cx, cy] = dotCentroid(d, projection, path);
     const fp = FLAG_POS_OVERRIDE[id];
     const [fx, fy] = fp ? projection(fp) : [cx, cy];
     const sel = g.append('image')
@@ -2309,7 +2126,7 @@ sidebar.applyFlagFilter();
 // ── Centroids map (for arc drawing) ──────────────────────────────────────────
 topojson.feature(world, world.objects.countries).features
   .filter(f => +f.id !== 826)
-  .forEach(f => { centroids[+f.id] = dotCentroid(f); });
+  .forEach(f => { centroids[+f.id] = dotCentroid(f, projection, path); });
 // UK nation centroids set above when placing flags
 
 
@@ -2451,118 +2268,28 @@ Promise.all([
   });
 });
 
-// ── Legend gradient + ticks + outlier count ─────────────────────────────────────
-// All three are keyed off the active theme's own ratioMax/outlierIds/metric (or,
-// for diverging themes, ratioMaxPos/Neg + outlierIdsPos/Neg) — see
-// map-container.js's THEMES for why that varies per theme (different metric,
-// different country tops it, different ceiling — and for violet, two ceilings
-// either side of a neutral 0).
-// Diverging bar position (0-1) for a value v — proportional to the *combined* -ratioMaxNeg..
-// ratioMaxPos domain, not "each side gets 50% of the width regardless of its own span". The
-// two ceilings are wildly different (e.g. 21 vs 42): giving each half equal pixel width made
-// 0 sit at the visual midpoint while the two sides silently ran at different units-per-pixel,
-// which read as "blue starting before zero" even though the underlying color math was correct
-// at the exact same v — the eye has no way to know the two halves don't share a scale. A single
-// continuous position formula fixes that: 0 now sits at its true proportional spot (e.g. ~33%
-// when ratioMaxNeg=21/ratioMaxPos=42), and ticks (below) use the same formula so they still
-// line up with the color transitions they're labeling.
-const _divergingPos = (v, theme) => (v + theme.ratioMaxNeg) / (theme.ratioMaxNeg + theme.ratioMaxPos);
-
-const _legendBar = document.getElementById('legend-bar');
-const _buildLegendGradient = () => {
-  const theme = currentTheme();
-  const stops = theme.diverging
-    // Negative extreme (left) -> neutral 0 (middle) -> positive extreme (right) —
-    // a number-line reading, not the sequential themes' "high/dark on the left"
-    // convention (which has no single "high side" once values can go negative).
-    // Each stop carries its own explicit position (v's real proportional spot in the combined
-    // domain), not left as an unpositioned/evenly-distributed stop.
-    ? [
-        ...Array.from({length: 30}, (_, i) => {
-            const v = -theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg;
-            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
-          }),
-        ...Array.from({length: 30}, (_, i) => {
-            const v = (i / 29) * theme.ratioMaxPos;
-            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
-          }),
-      ]
-    : Array.from({length: 60}, (_, i) => color(RATIO_MIN + (i / 59) * (theme.ratioMax - RATIO_MIN), theme));
-  _legendBar.style.background = `linear-gradient(to ${theme.diverging ? 'right' : 'left'}, ${stops.join(',')})`;
-  _legendBar.style.borderRadius = '5px';
-};
-_buildLegendGradient();
-
-// Ticks are absolutely positioned (percent, matching #legend-bar's own width — see
-// css/map-container.css) rather than flexbox-evenly-spaced, specifically so a diverging theme's
-// ticks land exactly on the color transitions _buildLegendGradient() now draws at those same
-// proportional positions — flex space-between assumed all 5 ticks were equally far apart, which
-// was only ever true for the sequential themes' single continuous 0..ratioMax scale.
-const _legendTicksEl = document.getElementById('legend-ticks');
-const _updateLegendTicks = () => {
-  if (!_legendTicksEl) return;
-  const theme = currentTheme();
-  const ticks = theme.diverging
-    ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
-    : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
-  // Sequential bar direction is 'to left' (high/dark value on the left, 0 on the right — see
-  // _buildLegendGradient) — the reverse of diverging's left-to-right number line, so position
-  // is inverted (1 - t/ratioMax) to match.
-  const pct = t => theme.diverging ? _divergingPos(t, theme) * 100 : (1 - t / theme.ratioMax) * 100;
-  render(html`${ticks.map(t => html`<span style="position:absolute; left:${pct(t)}%; transform:translateX(-50%)">${t}</span>`)}`, _legendTicksEl);
-};
-_updateLegendTicks();
-
-const _legendOutlierPosWrapEl = document.getElementById('legend-outlier-pos-wrap');
-const _legendOutlierDotEl    = document.getElementById('legend-outlier-dot');
-const _legendOutlierDotPosEl = document.getElementById('legend-outlier-dot-pos');
-const _updateLegendOutlier = () => {
-  const el = document.getElementById('legend-outlier-count');
-  if (!el) return;
-  const theme = currentTheme();
-  if (theme.diverging) {
-    // Negative outlier keeps the original (pre-diverging) slot before the bar;
-    // positive outlier is the mirrored slot after it — see wc2026_map.html.
-    // Each dot is tinted with its own arm's outlier color (map-container.js's
-    // divergingOutlierColor()), not the shared flat black the sequential
-    // themes' single dot uses.
-    const [negId] = theme.outlierIdsNeg, [posId] = theme.outlierIdsPos;
-    const negRec = app.byId[negId], posRec = app.byId[posId];
-    el.textContent = negRec ? theme.metric(negRec) : '';
-    if (_legendOutlierDotEl) _legendOutlierDotEl.style.background = divergingOutlierColor('neg');
-    if (_legendOutlierPosWrapEl) {
-      _legendOutlierPosWrapEl.classList.remove('d-none');
-      document.getElementById('legend-outlier-count-pos').textContent = posRec ? theme.metric(posRec) : '';
-      if (_legendOutlierDotPosEl) _legendOutlierDotPosEl.style.background = divergingOutlierColor('pos');
-    }
-  } else {
-    const [outlierId] = theme.outlierIds;
-    const rec = app.byId[outlierId];
-    el.textContent = rec ? theme.metric(rec) : '';
-    if (_legendOutlierDotEl) _legendOutlierDotEl.style.background = theme.outlier;
-    if (_legendOutlierPosWrapEl) _legendOutlierPosWrapEl.classList.add('d-none');
-  }
-};
-
-const _legendBornFullEl  = document.getElementById('legend-born-full');
-const _legendBornBriefEl = document.getElementById('legend-born-brief');
-const _updateLegendBorn = () => {
-  const { full, brief } = T.legendMetric[currentTheme().legendKey];
-  // full carries an inline <em> (i18n.js) around the operator word ("minus"/"moins"/etc.) for
-  // emphasis without shouting in all-caps — rendered via unsafeHTML since it's a developer-
-  // authored translation string, never user input. title (the ellipsis-truncation fallback,
-  // native tooltips can't render HTML) strips the tag back out to plain text.
-  if (_legendBornFullEl) {
-    render(html`${unsafeHTML(full)}`, _legendBornFullEl);
-    _legendBornFullEl.title = full.replace(/<[^>]+>/g, '');
-  }
-  if (_legendBornBriefEl) _legendBornBriefEl.textContent = brief;
-};
+// ── Legend + theme toggle ─────────────────────────────────────────────────────
+// Gradient/ticks/outlier-count/born-text + theme-toggle swatch/click, and the
+// onThemeChange registration for repainting all of that, now live in
+// map-container.js's wireLegend() (shared with the chain page). legend.refresh() is
+// called at the end of buildIndices() (below, once app.byId is populated) and by
+// _restoreNormalLegend() just below (the KDE toggle stays page-specific — it grabs
+// its own #legend-bar/#legend-ticks/etc DOM refs directly to repurpose them for a
+// different display, bypassing wireLegend entirely). The map's own theme repaint
+// (not the legend widget) stays a separate onThemeChange listener here.
+const legend = wireLegend({ getById: () => app.byId });
+onThemeChange(() => {
+  g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });
+  g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
+});
 
 // ── KDE legend swap — #legend's normal choropleth-gradient content is moot once country fills
 // are suppressed (_updateKdeIntensityLayer), so it's repurposed in place rather than adding a
-// second floating legend element. Restored via the same _buildLegendGradient/_updateLegendTicks/
-// _updateLegendOutlier calls the theme system itself already uses.
+// second floating legend element. Restored via legend.refresh() (map-container.js's wireLegend).
+const _legendBar              = document.getElementById('legend-bar');
+const _legendTicksEl          = document.getElementById('legend-ticks');
+const _legendOutlierDotEl     = document.getElementById('legend-outlier-dot');
+const _legendOutlierPosWrapEl = document.getElementById('legend-outlier-pos-wrap');
 const _swapToKdeLegend = ({ negMin, posMax }) => {
   const ticks = kdeLegendTicks(negMin, posMax);
   const pct = log2 => ((log2 - negMin) / (posMax - negMin) * 100).toFixed(2);
@@ -2580,39 +2307,9 @@ const _swapToKdeLegend = ({ negMin, posMax }) => {
   if (_legendOutlierPosWrapEl) _legendOutlierPosWrapEl.classList.add('d-none');
 };
 const _restoreNormalLegend = () => {
-  _buildLegendGradient();
-  _updateLegendTicks();
-  _updateLegendOutlier();
+  legend.refresh();
   if (_legendOutlierDotEl) _legendOutlierDotEl.style.visibility = '';
 };
-_updateLegendBorn();
-
-// ── Map colour theme (cycled via #theme-toggle, floating over the map) ─────────
-const _paintThemeToggle = () => {
-  if (!_themeToggleBtn) return;
-  const theme = currentTheme();
-  // Diverging: each arm's own outlier color (already the darkest point of that
-  // arm — see map-container.js), so the swatch hints at the two-sided scale.
-  // Sequential: two stops from the one ramp, as before.
-  const at = f => theme.ramp[Math.round(f * (theme.ramp.length - 1))];
-  const stops = theme.diverging ? [divergingOutlierColor('neg'), divergingOutlierColor('pos')] : [at(0.55), at(0.9)];
-  _themeToggleBtn.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${stops[0]}, ${stops[1]})`);
-};
-_paintThemeToggle();
-_themeToggleBtn?.addEventListener('click', () => {
-  const names = themeNames();
-  const next  = names[(names.indexOf(themeName()) + 1) % names.length];
-  setTheme(next);
-});
-onThemeChange(() => {
-  g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });
-  g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
-  _buildLegendGradient();
-  _updateLegendTicks();
-  _updateLegendOutlier();
-  _updateLegendBorn();
-  _paintThemeToggle();
-});
 
 // ── Diverging scale debug panel (#diverging-debug, wc2026_map.html) ─────────
 // Live-tunes map-container.js's _divergingParams via getDivergingParams()/

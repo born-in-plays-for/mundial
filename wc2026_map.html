@@ -95,8 +95,8 @@
         <div id="legend-ticks"></div>
       </div>
       <!-- Diverging themes only (see map-container.js's THEMES.*.diverging) — the positive-
-           side outlier (negative's is the block above, reused; see _updateLegendOutlier in
-           wc2026_map.js). Hidden for sequential themes, which have just the one outlier.
+           side outlier (negative's is the block above, reused; see map-container.js's
+           wireLegend()/updateOutlier). Hidden for sequential themes, which have just the one outlier.
            d-none+d-flex pair (not a plain `hidden` attribute) — Bootstrap's .d-flex carries
            !important, which always beats the UA stylesheet's non-important [hidden] rule, so a
            bare `hidden` attribute here would silently never actually hide it. Same pattern
@@ -114,7 +114,7 @@
 
 <!-- Debug tool for tuning the violet theme's diverging color scale live — see
      map-container.js's getDivergingParams()/setDivergingParams() and the
-     wiring right after _paintThemeToggle in js/wc2026_map.js. Only has a
+     wiring right after the legend/theme-toggle setup in js/wc2026_map.js. Only has a
      visible effect while the Violet theme is active. -->
 <details id="diverging-debug" class="container-xxl my-2 sub" open style="display:none">
   <summary style="cursor:pointer;">Diverging scale debug (Violet theme only)</summary>
@@ -172,7 +172,6 @@
 <footer id="bottom-panel" class="container-xxl ">
   <button id="scroll-top-btn" aria-label="Scroll to top"><svg width="10" height="7" viewBox="-4 -4 18 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6L5 2L9 6"/></svg></button>
   <div id="selection-panel" class="tab-footer-panel collapsed"></div>
-  <div id="chain-panel" class="tab-footer-panel collapsed"></div>
   <nav id="bottomTabList" class="py-2 d-flex justify-content-between gap-2">
     <button class="nav-link active" id="tab-teams-btn" data-tab="tab-teams" type="button"><img class="tab-icon" src="images/solar_linear/ranking-svgrepo-com.svg" aria-hidden="true"></button>
     <button class="nav-link" id="tab-tournament-btn" data-tab="tab-tournament" type="button"><img class="tab-icon" src="images/world-cup-svgrepo-com.svg" aria-hidden="true"></button>

@@ -8,11 +8,14 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="../css/global.css">
 <link rel="stylesheet" href="../css/map-container.css">
+<!-- :root's --exp-accent/--imp-accent — map-container.js's arc-drawing (appendArc) reads
+     these once at module-eval time for the arc/arrowhead colors, same tokens the main
+     map's dim mode and the elo-ranking pills already share. -->
+<link rel="stylesheet" href="../css/taxonomy.css">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
 #container { width: 100%; }
-#source { font-size: 10px; color: #ccc; text-align: center; padding: 4px 0 16px; }
 /* Duplicated from css/wc2026_map.css (.legend-outlier-wrap/.legend-outlier-dot/
    #legend-outlier-count) rather than linking that whole stylesheet — it's the main
    map page's primary CSS file, full of #page-header/tooltip/dim/sidebar rules with
@@ -23,6 +26,22 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
 .legend-outlier-wrap { height: 10px; }
 .legend-outlier-dot { width: 10px; height: 10px; border-radius: 50%; background: #000; }
 #legend-outlier-count, #legend-outlier-count-pos { font-size: 9px; color: var(--text-muted); margin-top: 3px; }
+/* #chain-panel — moved here from wc2026_map.html (cut, not shared/duplicated), where it
+   was one of #bottom-panel's collapsible .tab-footer-panel children, expanding only
+   while the chain tab was active. Here it's the only footer on the page, so it's just
+   its own always-visible position:fixed bar — no .tab-footer-panel/.collapsed max-height
+   transition, no tab list to sit alongside. Styling mirrors #bottom-panel's own
+   (css/wc2026_map.css) rather than linking that stylesheet wholesale (same reasoning as
+   the legend-outlier rules just above). Holds wc2026_chain_render.js's own header
+   (né en/joue pour legend + subtitle + prev/next nav buttons) via renderChain's
+   headerContainer option — see the module script below. */
+#chain-panel {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  background: var(--fixed-element-bg);
+  border-top: 1px solid var(--border);
+  padding: 4px var(--vert-gutter);
+}
 </style>
 </head>
 <body>
@@ -76,49 +95,31 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
   </div>
 </div>
 <div id="container" class="container-xxl"></div>
-<div id="source"></div>
+<footer id="chain-panel" class="container-xxl"></footer>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <script type="module">
+// One module now (previously two): the chain snake and the #map-container widget
+// above it are interlinked — clicking a flag in the snake dims/arcs and pans/zooms
+// the map — so both need to share scope (byId/importByCountry/centroids/
+// worldFeatures/ukFeatures, the chain's own render/selection state). A trimmed copy
+// of wc2026_map.html's own map widget: world choropleth + zoom/theme controls +
+// legend + collapsible/draggable-resize bar + dim/arc mode, with no tooltips, player
+// table, or Elo sidebar (none of that applies to this page — its only per-country
+// interaction is "click a flag in the snake, or on the map itself, to dim+arc and
+// zoom there"). Everything importable from shared modules is imported, not copied;
+// the rest (not exported anywhere) is a deliberate, documented duplication of small
+// pieces of js/wc2026_map.js — see chains/DUP.md for the full accounting of what's
+// copied vs. shared.
 import { renderChain } from './wc2026_chain_render.js';
-
-const container = document.getElementById('container');
-const sourceEl  = document.getElementById('source');
-let chainData = null, resizeTimer = null;
-const dataFile = new URLSearchParams(location.search).get('data') || 'subgraphs/longest_both.json';
-fetch(dataFile)
-  .then(r => r.json())
-  .then(chain => {
-    chainData = chain;
-    renderChain(chain, container);
-    if (chain.source) sourceEl.textContent = chain.source;
-  })
-  .catch(e => { container.textContent = 'Error: ' + e.message; });
-
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    if (!chainData) return;
-    renderChain(chainData, container);
-  }, 150);
-});
-</script>
-
-<script type="module">
-// ── #map-container wiring ───────────────────────────────────────────────────────
-// A trimmed copy of wc2026_map.html's own map widget: world choropleth + zoom/theme
-// controls + legend + collapsible/draggable-resize bar, with no per-country
-// interaction (no tooltips, no dim/arc mode, no player table, no Elo sidebar — none
-// of that applies to this page). Everything importable from shared modules is
-// imported, not copied; the rest (not exported anywhere) is a deliberate, documented
-// duplication of small pieces of js/wc2026_map.js — see the duplication report in
-// the PR description for the full accounting of what's copied vs. shared.
-import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
-import { choroFill, color, currentTheme, themeName, themeNames, setTheme, onThemeChange,
-         divergingOutlierColor, FLAG_CDN, FLAG } from '../js/map-container.js';
-import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildImportByCountry } from '../js/qualified.js';
-import { T, countryName } from '../js/i18n.js';
+import { choroFill, currentTheme, onThemeChange, FLAG_CDN, FLAG,
+         buildChoroplethIndex, paintChoropleth, wireLegend,
+         CENTROID_OVERRIDE, dotCentroid, zoomToCentroid,
+         drawCountryArcs, rescaleArcs, computeImportIds } from '../js/map-container.js';
+import { animateFlagOpacity } from '../js/flag_visibility.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME } from '../js/qualified.js';
+import { T } from '../js/i18n.js';
+import { ISO2_REVERSE } from '../js/iso2.js';
 
 const _wm = document.querySelector('world-map');
 const { svg, g, projection, path, zoom } = _wm;
@@ -131,67 +132,34 @@ const [mapData, eloData, ukNations, world] = await Promise.all([
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
 ]);
 
-// Kosovo has no numeric id in the 110m topojson (see CLAUDE.md's "Kosovo" section;
-// same 4-line patch duplicated in insights/perf.html for the same reason).
-world.objects.countries.geometries.forEach(geo => {
-  if (!geo.id && geo.properties?.name === 'Kosovo') geo.id = 383;
+// byId/importByCountry — only what choroFill()/THEMES.*.metric and the dim/arc mode
+// below actually read; see map-container.js's buildChoroplethIndex for what it
+// deliberately leaves out (pop/totalCount/tooltip indices — wc2026_map.js-only concerns).
+const { byId, importByCountry } = buildChoroplethIndex(mapData);
+
+// World choropleth + mesh borders + UK home nations (Kosovo id patch included) —
+// same shared painter wc2026_map.js's renderWorld() now calls too. No mousemove/
+// click/cursor wiring chained on afterward (no tooltip or dim mode on this page).
+const { worldFeatures, ukFeatures } = paintChoropleth(g, path, world, ukNations, byId);
+
+// ── Centroids (for zoomToCentroid — flags below, and chain-flag clicks further
+// down) — dotCentroid applies the same France/USA/Croatia overrides wc2026_map.js's
+// own flag placement does; UK features go through their own direct CENTROID_OVERRIDE
+// lookup by _id instead (dotCentroid only checks .id), mirroring wc2026_map.js. ─────
+const centroids = {};
+worldFeatures.forEach(f => { if (f.id) centroids[+f.id] = dotCentroid(f, projection, path); });
+ukFeatures.forEach(f => {
+  if (!f._id) return;
+  const ov = CENTROID_OVERRIDE[f._id];
+  centroids[f._id] = ov ? projection(ov) : path.centroid(f);
 });
 
-// byId — a trimmed reimplementation of wc2026_map.js's buildIndices() (not exported,
-// and entangled there with tooltip/player-table indices this page has no use for):
-// only the fields choroFill()/THEMES.*.metric actually read (count/nativeCount/importCount).
-const nativeByCountry = {};
-Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
-  const nId = QUALIFIED_BY_NAME[name];
-  if (nId != null) nativeByCountry[nId] = players;
-});
-const importByCountry = buildImportByCountry(mapData, countryName);
-const byId = {};
-(mapData.data ?? []).forEach(d => {
-  d.nativeCount = (nativeByCountry[d.id] ?? []).length;
-  d.importCount = (importByCountry[d.id] ?? []).length;
-  byId[d.id] = d;
-});
-Object.entries(nativeByCountry).forEach(([nId, players]) => {
-  const id = +nId;
-  if (byId[id]) return;
-  byId[id] = { id, count: 0, nativeCount: players.length, importCount: (importByCountry[id] ?? []).length };
-});
-
-// ── World choropleth + UK nations + mesh — trimmed js/wc2026_map.js renderWorld():
-// same painting, none of the mousemove/click/cursor wiring (no tooltip or dim mode
-// on this page). ───────────────────────────────────────────────────────────────
-const UK_GU_TO_ID = { ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263 };
-
-g.append('path').datum({ type: 'Sphere' }).attr('d', path).attr('fill', '#b0c4c4').attr('stroke', 'none');
-
-g.selectAll('.country')
-  .data(topojson.feature(world, world.objects.countries).features.filter(d => +d.id !== 826))
-  .join('path')
-  .attr('class', 'country')
-  .attr('d', path)
-  .attr('fill', d => choroFill(+d.id, byId))
-  .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
-
-g.append('path')
-  .datum(topojson.mesh(world, world.objects.countries, (a, b) => a !== b))
-  .attr('fill', 'none').attr('stroke', '#b8b0a8').attr('stroke-width', .3).attr('d', path);
-
-const ukFeatures = ukNations.features.map(f => ({ ...f, _id: UK_GU_TO_ID[f.properties.GU_A3] }));
-g.selectAll('.country-uk')
-  .data(ukFeatures)
-  .join('path')
-  .attr('class', 'country country-uk')
-  .attr('d', path)
-  .attr('fill', d => choroFill(d._id, byId))
-  .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
+// Arc group — below flags so arcs never cover flag icons (see CLAUDE.md's "Render
+// ordering in renderWorld"). Filled in by _applyDim() below, once a flag is clicked.
+const arcsGroup = g.append('g').attr('class', 'arcs-group');
 
 // ── Qualified-country flags only — mirrors insights/perf.html's own simplification:
 // no non-qualified exporters, no Cape Verde/Curaçao fixed-zoom insets. ─────────────
-const centroids = {};
-topojson.feature(world, world.objects.countries).features.forEach(f => { if (f.id) centroids[+f.id] = path.centroid(f); });
-ukFeatures.forEach(f => { if (f._id) centroids[f._id] = path.centroid(f); });
-
 const ALL_QUALIFIED = eloData.rankings
   .filter(r => QUALIFIED_NAMES[r.id] && r.iso2)
   .map(r => ({ id: r.id, iso2: r.iso2.toLowerCase() }));
@@ -207,7 +175,9 @@ ALL_QUALIFIED.forEach(({ id, iso2 }) => {
     .attr('href', FLAG_CDN(iso2))
     .attr('x', cx - FLAG / 2).attr('y', cy - FLAG / 2)
     .attr('width', FLAG).attr('height', FLAG)
-    .attr('clip-path', 'inset(0% round 50%)');
+    .attr('clip-path', 'inset(0% round 50%)')
+    .style('cursor', 'pointer')
+    .on('click', event => { event.stopPropagation(); _zoomAndSelect(id); });
 });
 
 // ── Zoom controls — trimmed js/wc2026_map.js (#zoom-reset wiring + a dim-mode-free
@@ -215,18 +185,22 @@ ALL_QUALIFIED.forEach(({ id, iso2 }) => {
 // since nothing on this page ever hides a flag). ──────────────────────────────────
 const _zoomResetBtn = document.getElementById('zoom-reset');
 const _zoomSpanBtn  = document.getElementById('zoom-span');
-const _themeToggleBtn = document.getElementById('theme-toggle');
 const _initialTransform = d3.zoomIdentity;
+let _dimK = 1;
 const _syncResetBtn = t => {
   _zoomResetBtn.disabled = Math.abs(t.k - _initialTransform.k) < 0.001
     && Math.abs(t.x - _initialTransform.x) < 0.5
     && Math.abs(t.y - _initialTransform.y) < 0.5;
 };
 _syncResetBtn(_initialTransform);
-_wm.onZoom = e => _syncResetBtn(e.transform);
+_wm.onZoom = e => {
+  _dimK = e.transform.k;
+  rescaleArcs(g, _dimK);
+  _syncResetBtn(e.transform);
+};
 _zoomResetBtn.addEventListener('click', e => {
   e.stopPropagation();
-  svg.transition().duration(400).call(zoom.transform, _initialTransform);
+  _clearSelection();
 });
 _zoomSpanBtn.addEventListener('click', e => {
   e.stopPropagation();
@@ -244,89 +218,93 @@ _zoomSpanBtn.addEventListener('click', e => {
     d3.zoomIdentity.translate(vbX + vbW / 2 - k * (x0 + x1) / 2, vbY + vbH / 2 - k * (y0 + y1) / 2).scale(k));
 });
 
-// ── Legend gradient/ticks/outlier + theme toggle paint — near-verbatim copy of
-// js/wc2026_map.js's _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/
-// _updateLegendBorn/_paintThemeToggle (none exported; app.byId → local byId). ─────
-const _divergingPos = (v, theme) => (v + theme.ratioMaxNeg) / (theme.ratioMaxNeg + theme.ratioMaxPos);
-const _legendBar = document.getElementById('legend-bar');
-const _buildLegendGradient = () => {
-  const theme = currentTheme();
-  const stops = theme.diverging
-    ? [
-        ...Array.from({ length: 30 }, (_, i) => {
-            const v = -theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg;
-            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
-          }),
-        ...Array.from({ length: 30 }, (_, i) => {
-            const v = (i / 29) * theme.ratioMaxPos;
-            return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
-          }),
-      ]
-    : Array.from({ length: 60 }, (_, i) => color((i / 59) * theme.ratioMax, theme));
-  _legendBar.style.background = `linear-gradient(to ${theme.diverging ? 'right' : 'left'}, ${stops.join(',')})`;
-  _legendBar.style.borderRadius = '5px';
-};
-
-const _legendTicksEl = document.getElementById('legend-ticks');
-const _updateLegendTicks = () => {
-  const theme = currentTheme();
-  const ticks = theme.diverging
-    ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
-    : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
-  const pct = t => theme.diverging ? _divergingPos(t, theme) * 100 : (1 - t / theme.ratioMax) * 100;
-  render(html`${ticks.map(t => html`<span style="position:absolute; left:${pct(t)}%; transform:translateX(-50%)">${t}</span>`)}`, _legendTicksEl);
-};
-
-const _legendOutlierPosWrapEl = document.getElementById('legend-outlier-pos-wrap');
-const _legendOutlierDotEl     = document.getElementById('legend-outlier-dot');
-const _legendOutlierDotPosEl  = document.getElementById('legend-outlier-dot-pos');
-const _updateLegendOutlier = () => {
-  const el = document.getElementById('legend-outlier-count');
-  const theme = currentTheme();
-  if (theme.diverging) {
-    const [negId] = theme.outlierIdsNeg, [posId] = theme.outlierIdsPos;
-    const negRec = byId[negId], posRec = byId[posId];
-    el.textContent = negRec ? theme.metric(negRec) : '';
-    _legendOutlierDotEl.style.background = divergingOutlierColor('neg');
-    _legendOutlierPosWrapEl.classList.remove('d-none');
-    document.getElementById('legend-outlier-count-pos').textContent = posRec ? theme.metric(posRec) : '';
-    _legendOutlierDotPosEl.style.background = divergingOutlierColor('pos');
-  } else {
-    const [outlierId] = theme.outlierIds;
-    const rec = byId[outlierId];
-    el.textContent = rec ? theme.metric(rec) : '';
-    _legendOutlierDotEl.style.background = theme.outlier;
-    _legendOutlierPosWrapEl.classList.add('d-none');
-  }
-};
-
-const _legendBornFullEl  = document.getElementById('legend-born-full');
-const _legendBornBriefEl = document.getElementById('legend-born-brief');
-const _updateLegendBorn = () => {
-  const { full, brief } = T.legendMetric[currentTheme().legendKey];
-  render(html`${unsafeHTML(full)}`, _legendBornFullEl);
-  _legendBornFullEl.title = full.replace(/<[^>]+>/g, '');
-  _legendBornBriefEl.textContent = brief;
-};
-
-const _paintThemeToggle = () => {
-  const theme = currentTheme();
-  const at = f => theme.ramp[Math.round(f * (theme.ramp.length - 1))];
-  const stops = theme.diverging ? [divergingOutlierColor('neg'), divergingOutlierColor('pos')] : [at(0.55), at(0.9)];
-  _themeToggleBtn.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${stops[0]}, ${stops[1]})`);
-};
-
-_buildLegendGradient(); _updateLegendTicks(); _updateLegendOutlier(); _updateLegendBorn(); _paintThemeToggle();
-
-_themeToggleBtn.addEventListener('click', () => {
-  const names = themeNames();
-  setTheme(names[(names.indexOf(themeName()) + 1) % names.length]);
-});
+// ── Legend + theme toggle — map-container.js's wireLegend() (shared with
+// wc2026_map.js). The map's own theme repaint (not the legend widget) is this
+// page's own onThemeChange listener, same split wc2026_map.js uses. ─────────────
+const legend = wireLegend({ getById: () => byId });
 onThemeChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(+d.id, byId); });
   g.selectAll('.country-uk').attr('fill', function(d) { return choroFill(d._id, byId); });
-  _buildLegendGradient(); _updateLegendTicks(); _updateLegendOutlier(); _updateLegendBorn(); _paintThemeToggle();
 });
+
+// ── Chain snake ← → map: click a flag (in the snake, on the map above, or via the
+// ocean/Escape to clear) to dim+arc and pan/zoom there, mirroring wc2026_map.js's own
+// _chainOnClick/activateCountry/_zoomToActiveDimFlags/clearDim — minus the tooltip/
+// player-table/Elo-sidebar integration those pull in, none of which exists on this
+// page (see chains/DUP.md). Dim (opacity fade on non-linked flags) and arcs (one per
+// export destination + import origin, from byId[id].nations/importByCountry) reuse
+// map-container.js's drawCountryArcs/computeImportIds — the same data + arc geometry
+// wc2026_map.js's own dim mode uses, just without its sidebar/tooltip-aware flag
+// visibility layer (nothing on this page ever hides a flag outright). ─────────────
+let chainData = null, _chainUpdate = null, _selectedId = null, resizeTimer = null;
+const _getSelectedIndex = () => {
+  if (!chainData || _selectedId == null) return -1;
+  return chainData.nodes.findIndex(n => ISO2_REVERSE[n.code] === _selectedId);
+};
+const _clearDim = () => {
+  animateFlagOpacity(flagsG.selectAll('.flag-qualified'), () => 1);
+  arcsGroup.selectAll('.arc-line').remove();
+};
+const _applyDim = sourceId => {
+  const rec = byId[sourceId];
+  const destIds = rec ? new Map((rec.nations ?? []).flatMap(([n, c]) => {
+    const did = QUALIFIED_BY_NAME[n];
+    return did !== undefined ? [[did, c]] : [];
+  })) : new Map();
+  const importIds = computeImportIds(sourceId, importByCountry);
+  const linkedIds = new Set([...destIds.keys(), ...importIds.keys()]);
+  animateFlagOpacity(flagsG.selectAll('.flag-qualified'), el => {
+    const id = +el.getAttribute('data-id');
+    return (id === sourceId || linkedIds.has(id)) ? 1 : 0.35;
+  });
+  drawCountryArcs(arcsGroup, sourceId, destIds, importIds, centroids, _dimK);
+};
+const _clearSelection = () => {
+  if (_selectedId == null) return;
+  _selectedId = null;
+  _clearDim();
+  _chainUpdate?.(_getSelectedIndex());
+  svg.transition().duration(400).call(zoom.transform, _initialTransform);
+};
+const _zoomAndSelect = id => {
+  if (_selectedId === id) { _clearSelection(); return; }
+  _selectedId = id;
+  _applyDim(id);
+  zoomToCentroid({ svg, zoom, path, centroids, worldFeatures, ukFeatures }, id, 1200);
+  _chainUpdate?.(_getSelectedIndex());
+  requestAnimationFrame(() => _chainUpdate?.scrollActive());
+};
+const _chainOnClick = node => {
+  const id = ISO2_REVERSE[node.code];
+  if (id != null) _zoomAndSelect(id);
+};
+svg.on('click', () => _clearSelection());
+document.addEventListener('keydown', e => { if (e.key === 'Escape') _clearSelection(); });
+
+const container = document.getElementById('container');
+const chainPanelEl = document.getElementById('chain-panel');
+const _renderChainOpts = { onCountryClick: _chainOnClick, getSelectedIndex: _getSelectedIndex, headerContainer: chainPanelEl };
+const dataFile = new URLSearchParams(location.search).get('data') || 'subgraphs/longest_both.json';
+fetch(dataFile)
+  .then(r => r.json())
+  .then(chain => {
+    chainData = chain;
+    _chainUpdate = renderChain(chain, container, _renderChainOpts);
+  })
+  .catch(e => { container.textContent = 'Error: ' + e.message; });
+
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (!chainData) return;
+    _chainUpdate = renderChain(chainData, container, _renderChainOpts);
+  }, 150);
+});
+
+// #chain-panel is position:fixed (bottom) — body needs matching padding-bottom so
+// #container's own last rows never end up hidden underneath it, same idea
+// #map-container's own _syncBodyPadding (above) already applies at the top.
+new ResizeObserver(() => { document.body.style.paddingBottom = chainPanelEl.getBoundingClientRect().height + 'px'; }).observe(chainPanelEl);
 
 // ── Map-toggle-bar collapse + body padding-top sync — trimmed js/wc2026_map.js
 // (Bootstrap Collapse wiring + _syncPaddingTop). This page has no bottom-tab-bar/

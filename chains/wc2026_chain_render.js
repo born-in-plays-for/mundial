@@ -28,7 +28,7 @@ const _defaultLabels = { pre: 'Le plus long', bornIn: 'né en', playsFor: 'joue 
 
 // Returns an updateSelection(newIdx) function for surgical selection updates.
 export function renderChain(chain, container, opts = {}) {
-  const { onCountryClick = null, getSelectedIndex = null, getPlayerWikiUrl = null, labels = null, headerContainer = null } = opts;
+  const { onCountryClick = null, getSelectedIndex = null, getPlayerWikiUrl = null, labels = null, headerContainer = null, showHeader = true } = opts;
   const L = labels ?? _defaultLabels;
   const PAD  = 0;
   const SIDE = 90;
@@ -76,28 +76,30 @@ export function renderChain(chain, container, opts = {}) {
   container.appendChild(wrapper);
 
   const hdrParent = headerContainer ?? wrapper;
-  const subtitleText = L.subtitle ? L.subtitle(links.length, nodes.length) : chain.subtitle;
-  const _btnStyle = dis => `width:28px;height:24px;border-radius:5px;border:none;background:#e8e4de;color:#888;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:${dis ? 'default' : 'pointer'};opacity:${dis ? '0.35' : '1'}`;
-  hdrParent.innerHTML = `
-    <div class="d-flex align-items-center gap-2 py-1 overflow-hidden">
-      <div class="fw-semibold flex-shrink-1 text-truncate" style="font-size:12px;min-width:0">[${_spanHtml(`← ${L.bornIn}`, '#3b82f6')} | ${_spanHtml(`${L.playsFor} →`, '#ef4444')}]</div>
-      <div class="text-truncate" style="flex:1 1 0%;min-width:0;font-size:10px;color:var(--color-dim)">${subtitleText ?? ''}</div>
-      ${onCountryClick ? `<div class="ms-auto d-flex gap-1 flex-shrink-0">
-        <button data-nav="-1" style="${_btnStyle(selIdx >= 0 && selIdx === 0)}">◀</button>
-        <button data-nav="1"  style="${_btnStyle(selIdx >= 0 && selIdx === nn - 1)}">▶</button>
-      </div>` : ''}
-    </div>`;
-  if (onCountryClick) {
-    hdrParent.querySelectorAll('[data-nav]').forEach(btn => {
-      const delta = +btn.dataset.nav;
-      btn.addEventListener('click', () => {
-        const c = getSelectedIndex?.() ?? -1;
-        if (c >= 0 && (delta < 0 ? c === 0 : c === nn - 1)) return;
-        const next = c < 0 ? (delta > 0 ? 0 : nn - 1) : c + delta;
-        if (next >= 0 && next < nn) onCountryClick(nodes[next]);
+  if (showHeader) {
+    const subtitleText = L.subtitle ? L.subtitle(links.length, nodes.length) : chain.subtitle;
+    const _btnStyle = dis => `width:28px;height:24px;border-radius:5px;border:none;background:#e8e4de;color:#888;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:${dis ? 'default' : 'pointer'};opacity:${dis ? '0.35' : '1'}`;
+    hdrParent.innerHTML = `
+      <div class="d-flex align-items-center gap-2 py-1 overflow-hidden">
+        <div class="fw-semibold flex-shrink-1 text-truncate" style="font-size:12px;min-width:0">[${_spanHtml(`← ${L.bornIn}`, '#3b82f6')} | ${_spanHtml(`${L.playsFor} →`, '#ef4444')}]</div>
+        <div class="text-truncate" style="flex:1 1 0%;min-width:0;font-size:10px;color:var(--color-dim)">${subtitleText ?? ''}</div>
+        ${onCountryClick ? `<div class="ms-auto d-flex gap-1 flex-shrink-0">
+          <button data-nav="-1" style="${_btnStyle(selIdx >= 0 && selIdx === 0)}">◀</button>
+          <button data-nav="1"  style="${_btnStyle(selIdx >= 0 && selIdx === nn - 1)}">▶</button>
+        </div>` : ''}
+      </div>`;
+    if (onCountryClick) {
+      hdrParent.querySelectorAll('[data-nav]').forEach(btn => {
+        const delta = +btn.dataset.nav;
+        btn.addEventListener('click', () => {
+          const c = getSelectedIndex?.() ?? -1;
+          if (c >= 0 && (delta < 0 ? c === 0 : c === nn - 1)) return;
+          const next = c < 0 ? (delta > 0 ? 0 : nn - 1) : c + delta;
+          if (next >= 0 && next < nn) onCountryClick(nodes[next]);
+        });
+        _navBtns.push({ btn, delta });
       });
-      _navBtns.push({ btn, delta });
-    });
+    }
   }
 
   // ── SVG ──────────────────────────────────────────────────────────────────────

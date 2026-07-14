@@ -15,7 +15,10 @@
 //   .zoom       — D3 zoom behaviour (already called on svg)
 //   .onZoom     — optional callback(e) for extra page-level zoom work
 
-import { QUALIFIED_NAMES } from './qualified.js';
+import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/unsafe-html.js';
+import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildImportByCountry } from './qualified.js';
+import { T, countryName } from './i18n.js';
 
 // ── Colour themes ───────────────────────────────────────────────────────────
 // Each theme is its own lens on the data, not just a different palette on the
@@ -367,3 +370,397 @@ class WorldMap extends HTMLElement {
 }
 
 customElements.define('world-map', WorldMap);
+
+// ── Choropleth data index ───────────────────────────────────────────────────────
+// Pure function: rawData (data/v2/map.json shape: {data, natives, pop, capital}) → the
+// byId/nativeByCountry/importByCountry indices choroFill()/THEMES.*.metric read (count/
+// nativeCount/importCount). Extracted from wc2026_map.js's buildIndices(), which layers
+// more on top afterward (pop, totalCount, and the eloRank/capital fields the tooltip/
+// player-table UI needs — none of that is choropleth-coloring-relevant, so it stays
+// there rather than growing this function's contract). `rawData.data[]` entries are
+// mutated in place (nativeCount/importCount attached directly), same as the original.
+export const buildChoroplethIndex = rawData => {
+  const nativeByCountry = {};
+  Object.entries(rawData.natives ?? {}).forEach(([name, players]) => {
+    const nId = QUALIFIED_BY_NAME[name];
+    if (nId != null) nativeByCountry[nId] = players;
+  });
+  // Built before the byId loop below — it needs importCount per country, and this only
+  // needs rawData.data (already in hand), not anything byId sets up.
+  const importByCountry = buildImportByCountry(rawData, countryName);
+  const byId = {};
+  (rawData.data ?? []).forEach(d => {
+    d.nativeCount = (nativeByCountry[d.id] ?? []).length;
+    d.importCount = (importByCountry[d.id] ?? []).length;
+    byId[d.id] = d;
+  });
+  // Coloring entries for qualified countries all of whose players play for their own
+  // country (no export/import record at all otherwise).
+  Object.entries(nativeByCountry).forEach(([nId, players]) => {
+    const id = +nId;
+    if (byId[id]) return;
+    const importCount = (importByCountry[id] ?? []).length;
+    byId[id] = { id, country: QUALIFIED_NAMES[id], count: 0, nativeCount: players.length,
+                  importCount, totalCount: players.length, players: [], top: [], nations: [] };
+  });
+  return { byId, nativeByCountry, importByCountry };
+};
+
+// ── World choropleth painting ───────────────────────────────────────────────────
+// GU_A3 code (Natural Earth) → synthetic country ID (UK home nations — see CLAUDE.md).
+export const UK_GU_TO_ID = { ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263 };
+
+// Paints the world choropleth + mesh borders + UK home nations into `g` (a D3 selection,
+// typically <world-map>.g) and returns the D3 selections plus the two feature arrays
+// (worldFeatures/ukFeatures) callers need for centroid/bounds lookups (zoomToCentroid
+// below, flag placement). Deliberately just the drawing calls — no mousemove/click/
+// cursor/dim wiring, which stays with the caller (chain onto the returned selections;
+// see wc2026_map.js's renderWorld for the pattern) since that's all page-specific
+// (tooltips, dim mode, sidebar filters) with nothing generic left to share. `topojson`
+// is read as a global (script tag), same convention <world-map> itself uses for `d3`.
+export const paintChoropleth = (g, path, world, ukNations, byId) => {
+  // Kosovo has no numeric id in the 110m topojson — only {properties:{name:'Kosovo'}} —
+  // patched here, before the topojson.feature() call below needs it (see CLAUDE.md's
+  // "Kosovo" section).
+  const _topoNameToId = { Kosovo: 383 };
+  world.objects.countries.geometries.forEach(geo => {
+    if (!geo.id) { const mapped = _topoNameToId[geo.properties?.name]; if (mapped) geo.id = mapped; }
+  });
+
+  const worldFeatures = topojson.feature(world, world.objects.countries).features;
+  const countryPaths = g.selectAll('.country')
+    .data(worldFeatures.filter(d => +d.id !== 826)) // skip UK polygon, rendered separately below
+    .join('path')
+    .attr('class', 'country')
+    .attr('data-id', d => +d.id)
+    .attr('d', path)
+    .attr('fill', d => choroFill(+d.id, byId))
+    .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
+
+  const meshPath = g.append('path')
+    .attr('class', 'mesh-border')
+    .datum(topojson.mesh(world, world.objects.countries, (a, b) => a !== b))
+    .attr('fill', 'none').attr('stroke', '#b8b0a8').attr('stroke-width', .3).attr('d', path);
+
+  const ukFeatures = ukNations.features.map(f => ({ ...f, _id: UK_GU_TO_ID[f.properties.GU_A3] }));
+  const ukPaths = g.selectAll('.country-uk')
+    .data(ukFeatures)
+    .join('path')
+    .attr('class', 'country country-uk')
+    .attr('data-id', d => d._id)
+    .attr('d', path)
+    .attr('fill', d => choroFill(d._id, byId))
+    .attr('stroke', '#ccc8c0').attr('stroke-width', .3);
+
+  return { worldFeatures, ukFeatures, countryPaths, meshPath, ukPaths };
+};
+
+// ── Centroid overrides + zoom-to-country ────────────────────────────────────────
+// Fixes arc/zoom endpoints when path.centroid() lands outside the country polygon
+// (or somewhere unrepresentative), e.g. dragged by overseas territories/outlying islands.
+export const CENTROID_OVERRIDE = {
+  250:  [2.5,  46.5],  // France (without overseas territories)
+  840:  [-98,  38],    // USA (without Alaska/Hawaii)
+  8261: [-4.2, 56.8],  // Scotland (centroid pulled north by islands)
+  191:  [16.8, 45.8],  // Croatia (coastal strip drags centroid south into Bosnia)
+};
+
+export const dotCentroid = (feature, projection, path) => {
+  const ov = CENTROID_OVERRIDE[+feature.id];
+  return ov ? projection(ov) : path.centroid(feature);
+};
+
+// For MultiPolygon features (France, Russia, USA…), path.bounds() spans all territories
+// including overseas ones. Use only the largest sub-polygon by projected bbox area.
+export const mainlandBounds = (feature, path) => {
+  const geom = feature.geometry;
+  if (geom.type !== 'MultiPolygon') return path.bounds(feature);
+  let best = null, bestArea = 0;
+  for (const coords of geom.coordinates) {
+    const sub = { type: 'Feature', geometry: { type: 'Polygon', coordinates: coords } };
+    const [[x0, y0], [x1, y1]] = path.bounds(sub);
+    const area = (x1 - x0) * (y1 - y0);
+    if (area > bestArea) { bestArea = area; best = [[x0, y0], [x1, y1]]; }
+  }
+  return best ?? path.bounds(feature);
+};
+
+// Pans/zooms `svg`'s zoom transform to frame country `id`'s mainland bounds (tight fit
+// via mainlandBounds), falling back to a fixed k=15 zoom centered on its centroid if no
+// matching feature/usable bounds are found (e.g. Cape Verde/Curaçao — absent from the
+// 110m topojson, see CLAUDE.md). `ctx` bundles the D3 handles this needs: { svg, zoom,
+// path, centroids, worldFeatures, ukFeatures } — worldFeatures/ukFeatures typically the
+// same ones paintChoropleth() returned, centroids the caller's own id→[x,y] map (flag
+// placement owns that; see CLAUDE.md's "Zoom-stable flags and arcs").
+export const zoomToCentroid = (ctx, id, duration = 2000) => {
+  const { svg, zoom, path, centroids, worldFeatures, ukFeatures } = ctx;
+  const c = centroids[id];
+  if (!c) return;
+  const [cx, cy] = c;
+  const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
+  const feature = worldFeatures?.find(f => +f.id === id) ?? ukFeatures?.find(f => +f._id === id);
+  let k = 15, tx, ty;
+  if (feature) {
+    try {
+      const [[bx0, by0], [bx1, by1]] = mainlandBounds(feature, path);
+      const bw = bx1 - bx0, bh = by1 - by0;
+      if (bw > 0 && bh > 0) {
+        const pad = 10;
+        k = Math.max(1, Math.min(vbW / (bw + 2 * pad), vbH / (bh + 2 * pad)));
+        tx = vbX + vbW / 2 - k * (bx0 + bx1) / 2;
+        ty = vbY + vbH / 2 - k * (by0 + by1) / 2;
+      }
+    } catch (e) { /* fall through */ }
+  }
+  if (tx == null) { tx = vbX + vbW / 2 - k * cx; ty = vbY + vbH / 2 - k * cy; }
+  svg.transition().duration(duration).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
+};
+
+// ── Legend gradient + ticks + outlier count + theme-toggle swatch ──────────────
+// Wires up #legend-bar/#legend-ticks/#legend-outlier-*/#legend-born-*/#theme-toggle (the
+// markup block in wc2026_map.html and chains/wc2026_chain_longest.html — same ids on
+// both pages) and the theme-cycling click handler, self-registering an onThemeChange
+// listener so every piece repaints on theme switch. `getById()` is called lazily on
+// every repaint (not read once) so callers can populate/replace their byId index after
+// wireLegend() runs (map data loads asynchronously) — see refresh() below. Extracted
+// from wc2026_map.js's _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/
+// _updateLegendBorn/_paintThemeToggle — wc2026_map.js's own KDE-intensity-layer legend
+// swap (#legend repurposed for a different display) stays there, out of scope here: it
+// grabs its own #legend-bar/#legend-ticks/etc. references directly rather than going
+// through this module, so it needs no access to anything returned below.
+export const wireLegend = ({ getById }) => {
+  const els = {
+    bar:             document.getElementById('legend-bar'),
+    ticks:           document.getElementById('legend-ticks'),
+    outlierCount:    document.getElementById('legend-outlier-count'),
+    outlierDot:      document.getElementById('legend-outlier-dot'),
+    outlierPosWrap:  document.getElementById('legend-outlier-pos-wrap'),
+    outlierDotPos:   document.getElementById('legend-outlier-dot-pos'),
+    outlierCountPos: document.getElementById('legend-outlier-count-pos'),
+    bornFull:        document.getElementById('legend-born-full'),
+    bornBrief:       document.getElementById('legend-born-brief'),
+    themeToggle:     document.getElementById('theme-toggle'),
+  };
+
+  // Diverging bar position (0-1) for a value v — proportional to the *combined*
+  // -ratioMaxNeg..ratioMaxPos domain (see the original comment history in wc2026_map.js
+  // for why: giving each side equal pixel width regardless of its own span made 0 sit at
+  // the visual midpoint while the two sides silently ran at different units-per-pixel).
+  const _divergingPos = (v, theme) => (v + theme.ratioMaxNeg) / (theme.ratioMaxNeg + theme.ratioMaxPos);
+
+  const buildGradient = () => {
+    if (!els.bar) return;
+    const theme = currentTheme();
+    const stops = theme.diverging
+      ? [
+          ...Array.from({ length: 30 }, (_, i) => {
+              const v = -theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg;
+              return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
+            }),
+          ...Array.from({ length: 30 }, (_, i) => {
+              const v = (i / 29) * theme.ratioMaxPos;
+              return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
+            }),
+        ]
+      : Array.from({ length: 60 }, (_, i) => color((i / 59) * theme.ratioMax, theme));
+    els.bar.style.background = `linear-gradient(to ${theme.diverging ? 'right' : 'left'}, ${stops.join(',')})`;
+    els.bar.style.borderRadius = '5px';
+  };
+
+  const updateTicks = () => {
+    if (!els.ticks) return;
+    const theme = currentTheme();
+    const ticks = theme.diverging
+      ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
+      : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
+    const pct = t => theme.diverging ? _divergingPos(t, theme) * 100 : (1 - t / theme.ratioMax) * 100;
+    render(html`${ticks.map(t => html`<span style="position:absolute; left:${pct(t)}%; transform:translateX(-50%)">${t}</span>`)}`, els.ticks);
+  };
+
+  const updateOutlier = () => {
+    if (!els.outlierCount) return;
+    const theme = currentTheme();
+    const byId = getById();
+    if (theme.diverging) {
+      const [negId] = theme.outlierIdsNeg, [posId] = theme.outlierIdsPos;
+      const negRec = byId[negId], posRec = byId[posId];
+      els.outlierCount.textContent = negRec ? theme.metric(negRec) : '';
+      if (els.outlierDot) els.outlierDot.style.background = divergingOutlierColor('neg');
+      if (els.outlierPosWrap) {
+        els.outlierPosWrap.classList.remove('d-none');
+        if (els.outlierCountPos) els.outlierCountPos.textContent = posRec ? theme.metric(posRec) : '';
+        if (els.outlierDotPos) els.outlierDotPos.style.background = divergingOutlierColor('pos');
+      }
+    } else {
+      const [outlierId] = theme.outlierIds;
+      const rec = byId[outlierId];
+      els.outlierCount.textContent = rec ? theme.metric(rec) : '';
+      if (els.outlierDot) els.outlierDot.style.background = theme.outlier;
+      if (els.outlierPosWrap) els.outlierPosWrap.classList.add('d-none');
+    }
+  };
+
+  const updateBorn = () => {
+    const { full, brief } = T.legendMetric[currentTheme().legendKey];
+    // full carries an inline <em> (i18n.js) around the operator word for emphasis
+    // without shouting in all-caps — rendered via unsafeHTML since it's a developer-
+    // authored translation string, never user input. title (the ellipsis-truncation
+    // fallback, native tooltips can't render HTML) strips the tag back out to plain text.
+    if (els.bornFull) {
+      render(html`${unsafeHTML(full)}`, els.bornFull);
+      els.bornFull.title = full.replace(/<[^>]+>/g, '');
+    }
+    if (els.bornBrief) els.bornBrief.textContent = brief;
+  };
+
+  const paintThemeToggle = () => {
+    if (!els.themeToggle) return;
+    const theme = currentTheme();
+    // Diverging: each arm's own outlier color (already the darkest point of that arm),
+    // so the swatch hints at the two-sided scale. Sequential: two stops from the ramp.
+    const at = f => theme.ramp[Math.round(f * (theme.ramp.length - 1))];
+    const stops = theme.diverging ? [divergingOutlierColor('neg'), divergingOutlierColor('pos')] : [at(0.55), at(0.9)];
+    els.themeToggle.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${stops[0]}, ${stops[1]})`);
+  };
+
+  const refresh = () => { buildGradient(); updateTicks(); updateOutlier(); updateBorn(); paintThemeToggle(); };
+
+  els.themeToggle?.addEventListener('click', () => {
+    const names = themeNames();
+    setTheme(names[(names.indexOf(themeName()) + 1) % names.length]);
+  });
+  onThemeChange(refresh);
+  refresh();
+
+  return { refresh };
+};
+
+// ── Dim/arc mode — export/import connection arcs ────────────────────────────────
+// Extracted from wc2026_map.js's arc drawing (module-level arcOffset/arrowPoints/
+// ARC_EXPORT_COLOR/ARC_IMPORT_COLOR + applyDim's drawArc/onZoom's arc-rescale block)
+// — now shared with the chain page's own dim/arc click handling. Only the arc
+// geometry/painting is here: the "which flags dim to 35% opacity" decision and the
+// tooltip/sidebar/player-table integration around it stay page-specific (both pages
+// already have animateFlagOpacity from js/flag_visibility.js for the opacity side,
+// no extraction needed there — it's already shared).
+//
+// Colors read once from CSS custom properties (css/taxonomy.css's :root block — any
+// page using these must link that stylesheet), matching the elo-ranking pills' own
+// --exp-accent/--imp-accent tokens so arcs, pills, and tooltip counts all agree.
+const _rootStyle = getComputedStyle(document.documentElement);
+export const ARC_EXPORT_COLOR = _rootStyle.getPropertyValue('--exp-accent').trim(); // blue
+export const ARC_IMPORT_COLOR = _rootStyle.getPropertyValue('--imp-accent').trim(); // red
+const ARC_OFFSET = 1.0; // lateral separation: visual offset = sw * ARC_OFFSET / k
+const ARC_MID_T  = 0.65; // arrow at 65% toward destination — separates bidirectional pairs along the arc
+
+export const arcOffset = (sw, sx, sy, tx, ty, k) => {
+  const ddx = tx - sx, ddy = ty - sy, dist = Math.sqrt(ddx * ddx + ddy * ddy);
+  const pnx = -ddy / dist, pny = ddx / dist;
+  const off = sw * ARC_OFFSET / k;
+  return {
+    ofx: sx + pnx * off, ofy: sy + pny * off,
+    otx: tx + pnx * off, oty: ty + pny * off,
+    oqx: (sx + tx) / 2 + pnx * off, oqy: (sy + ty) / 2 - dist * 0.3 + pny * off,
+  };
+};
+
+export const arrowPoints = (sw, ofx, ofy, otx, oty, oqx, oqy, k) => {
+  const mt = ARC_MID_T, ms = 1 - mt;
+  const mx = ms * ms * ofx + 2 * ms * mt * oqx + mt * mt * otx;
+  const my = ms * ms * ofy + 2 * ms * mt * oqy + mt * mt * oty;
+  const tdx = 2 * ms * (oqx - ofx) + 2 * mt * (otx - oqx);
+  const tdy = 2 * ms * (oqy - ofy) + 2 * mt * (oty - oqy);
+  const tLen = Math.sqrt(tdx * tdx + tdy * tdy);
+  const mux = tdx / tLen, muy = tdy / tLen, mnx = -muy, mny = mux;
+  const mah = Math.sqrt(sw) * 5 / k, maw = Math.sqrt(sw) * 2.5 / k;
+  const bx = mx - mux * mah / 2, by = my - muy * mah / 2;
+  return `${mx + mux * mah / 2},${my + muy * mah / 2} ${bx + mnx * maw},${by + mny * maw} ${bx - mnx * maw},${by - mny * maw}`;
+};
+
+// Appends one arc (a smooth quadratic-Bézier path + a mid-arrow polygon), laterally
+// offset by type so a bidirectional pair (country A exports to B, B also exports to
+// A) never fully overlaps. `type` picks the color: 'export' (blue) or 'import' (red).
+export const appendArc = (arcsGroup, from, to, count, type, k) => {
+  const color = type === 'export' ? ARC_EXPORT_COLOR : ARC_IMPORT_COLOR;
+  const sw = Math.max(1, Math.sqrt(count));
+  const { ofx, ofy, otx, oty, oqx, oqy } = arcOffset(sw, from[0], from[1], to[0], to[1], k);
+
+  arcsGroup.append('path')
+    .attr('class', 'arc-line')
+    .attr('d', `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`)
+    .attr('fill', 'none').attr('stroke', color)
+    .attr('stroke-width', sw / k).attr('opacity', 0.7)
+    .attr('data-sw', sw)
+    .attr('data-sx', from[0]).attr('data-sy', from[1])
+    .attr('data-tx', to[0]).attr('data-ty', to[1]);
+
+  arcsGroup.append('polygon')
+    .attr('class', 'arc-line arc-mid')
+    .attr('points', arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k))
+    .attr('fill', color).attr('opacity', 0.8)
+    .attr('data-sw', sw)
+    .attr('data-sx', from[0]).attr('data-sy', from[1])
+    .attr('data-tx', to[0]).attr('data-ty', to[1]);
+};
+
+// Clears and redraws every arc for `sourceId`: one per export destination (destIds,
+// a Map<countryId, playerCount>) and one per import origin (importIds, same shape —
+// see computeImportIds below). No-op (leaves arcsGroup empty) if sourceId has no
+// centroid at all.
+export const drawCountryArcs = (arcsGroup, sourceId, destIds, importIds, centroids, k) => {
+  arcsGroup.selectAll('.arc-line').remove();
+  const src = centroids[sourceId];
+  if (!src) return;
+  destIds.forEach((count, destId) => {
+    const dst = centroids[destId];
+    if (dst) appendArc(arcsGroup, src, dst, count, 'export', k);
+  });
+  importIds.forEach((count, birthId) => {
+    if (birthId === sourceId) return;
+    const ySrc = centroids[birthId];
+    if (ySrc) appendArc(arcsGroup, ySrc, src, count, 'import', k);
+  });
+};
+
+// Rescales every existing arc's width/geometry for the current zoom k (call from the
+// page's own onZoom handler) — arcs use data-sw/data-sx/data-sy/data-tx/data-ty
+// (set by appendArc above) as their zoom-stable source of truth, same convention
+// flags/leader-lines use (see CLAUDE.md's "Zoom-stable flags and arcs").
+export const rescaleArcs = (g, k) => {
+  g.selectAll('path.arc-line')
+    .attr('stroke-width', function() { return +this.getAttribute('data-sw') / k; })
+    .attr('d', function() {
+      const sw = +this.getAttribute('data-sw');
+      const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
+      const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
+      const { ofx, ofy, otx, oty, oqx, oqy } = arcOffset(sw, sx, sy, tx, ty, k);
+      return `M${ofx},${ofy} Q${oqx},${oqy} ${otx},${oty}`;
+    });
+  g.selectAll('polygon.arc-mid').attr('points', function() {
+    const sw = +this.getAttribute('data-sw');
+    const sx = +this.getAttribute('data-sx'), sy = +this.getAttribute('data-sy');
+    const tx = +this.getAttribute('data-tx'), ty = +this.getAttribute('data-ty');
+    const { ofx, ofy, otx, oty, oqx, oqy } = arcOffset(sw, sx, sy, tx, ty, k);
+    return arrowPoints(sw, ofx, ofy, otx, oty, oqx, oqy, k);
+  });
+};
+
+// A handful of export-record country names have no numeric id of their own (id=null
+// in the raw data — ambiguous/historical names) but DO correspond to a real qualified
+// country for arc-drawing purposes; maps those specific names to the id whose
+// centroid an import arc should actually point at. Same table wc2026_map.js's own
+// tooltip birth-country resolution uses.
+export const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840, 'Kingdom of the Netherlands': 528 };
+
+// Builds sourceId's import-arc data: Map<birthCountryId, playerCount> from
+// importByCountry[sourceId] (buildChoroplethIndex's own return, or wc2026_map.js's
+// app.importByCountry — same shape either way).
+export const computeImportIds = (sourceId, importByCountry) => {
+  const importIds = new Map();
+  (importByCountry[sourceId] ?? []).forEach(p => {
+    const cId = p.birthCountryId != null ? p.birthCountryId : (_NULL_CENTROID_ID[p.birthCountry] ?? null);
+    if (cId == null) return;
+    importIds.set(cId, (importIds.get(cId) ?? 0) + 1);
+  });
+  return importIds;
+};
