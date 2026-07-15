@@ -275,11 +275,11 @@
     </div>
     <div id="debugControls">
       <label class="debug-label" for="speedSlider">Speed</label>
-      <input type="range" id="speedSlider" min="0.1" max="4" step="0.05" value="0.8">
+      <input type="range" id="speedSlider" min="0.1" max="4" step="0.05" value="0.1">
       <button type="button" id="stepBack">← Prev team</button>
       <button type="button" id="stepForward">Next team →</button>
       <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="squeezeSwitch">
+        <input class="form-check-input" type="checkbox" role="switch" id="squeezeSwitch" checked>
         <label class="form-check-label" for="squeezeSwitch">Squeeze</label>
       </div>
     </div>
@@ -443,6 +443,7 @@ const allNames = new Set(sorted.map(i => i.name));
 const afterGroupStage = aliveAfter(1);
 const afterRoundOf32 = aliveAfter(2);
 const afterRoundOf16 = aliveAfter(3);
+const afterQuerterFinals = aliveAfter(4);
 
 const outAtGroupStage = allNames.size - afterGroupStage.size;
 const outAtRoundOf32 = afterGroupStage.size - afterRoundOf32.size;
@@ -474,9 +475,15 @@ const STATES = [
   },
   {
     alive: afterRoundOf16,
-    title: `Round of 8`,
+    title: `Querter-Finals`,
     subtitle: `${afterRoundOf32.size-afterRoundOf16.size} eliminated in the Round of 16 - ${afterRoundOf16.size} teams remain.`,
     liveSubtitle: count => `${afterRoundOf32.size-count} eliminated in the Round of 16 - ${count} teams remain.`,
+  },
+  {
+    alive: afterQuerterFinals,
+    title: `Semi finals`,
+    subtitle: `${afterRoundOf16.size-afterQuerterFinals.size} eliminated in the Querter-Finals - ${afterQuerterFinals.size} teams remain.`,
+    liveSubtitle: count => `${afterRoundOf16.size-count} eliminated in the Querter-Finals - ${count} teams remain.`,
   },
 ];
 
