@@ -8,7 +8,6 @@ import { initGroupStage } from './group_stage.js';
 import { initSidebar } from './control_sidebar.js';
 import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
-import { loadKdeData, makeKdeColorScale, buildKdeRaster, kdeLegendTicks } from './kde_layer.js';
 import { CONF_BOUNDS } from './conf.js';
 import { iso2ForId, _NULL_CODE } from './iso2.js';
 import { choroFill, getDivergingParams, setDivergingParams, currentTheme, onThemeChange,
@@ -70,10 +69,6 @@ const zoom = _wm.zoom;
 _wm.onZoomPre = e => { _blendedInsets.forEach(fn => fn(e.transform.k)); };
 
 const COUNTRY_STROKE_W = 0.3; // world-space base for .country/.mesh-border — see onZoom's 1/k compensation
-// Once country fills are suppressed (KDE intensity mode — see _updateKdeIntensityLayer), borders
-// are the only cue left for where one country ends and the next begins, so they're drawn bolder
-// than the normal, fill-backed weight.
-const KDE_BORDER_STROKE_W = 1.0;
 _wm.onZoom = e => {
   dimState.k = e.transform.k;
   const k = dimState.k;
@@ -83,8 +78,7 @@ _wm.onZoom = e => {
   // already do below. (.country-extra — the blended-zoom island insets — is
   // excluded here since it lives inside its own extra-scaled group and
   // compensates for that separately, in buildBlendedInset's own update().)
-  const _borderStrokeW = (_showingAllPlayers && _mapLayerMode === 'intensity') ? KDE_BORDER_STROKE_W : COUNTRY_STROKE_W;
-  g.selectAll('.country:not(.country-extra), .mesh-border').attr('stroke-width', _borderStrokeW / k);
+  g.selectAll('.country:not(.country-extra), .mesh-border').attr('stroke-width', COUNTRY_STROKE_W / k);
   // Fixed-zoom insets (Cape Verde, Curaçao…) — counter-scale by 1/k so their
   // content stays a constant on-screen size regardless of the main map's zoom.
   g.selectAll('.inset-fixed-scale').attr('transform', function() {
@@ -902,11 +896,6 @@ let _showingAllPlayers = true;
 // _renderPlayersTabIdle, which reads it, runs synchronously at module init time, before that
 // point in the file; see _showingAllPlayers just above for the same reason.
 let _activeFixture = null; // { pairId, idA, idB } or null
-// 'bubbles' (birth-city dots, default) or 'intensity' (KDE production-risk raster) —
-// the two are mutually exclusive alternate views of "where are these players born", both scoped
-// to the same #tab-players context (see _showingAllPlayers above). Persisted like the rest of the
-// map's own UI state.
-let _mapLayerMode = /* loadSlice('mapLayer')?.mode === 'intensity' ? 'intensity' : */ 'bubbles';
 // True exactly while #tab-players is the visible bottom-tab pane — ambient roster or a focused
 // team/fixture's roster alike. The map has exactly two mutually exclusive modes, switched purely
 // by which bottom tab is active, never by what's selected within it: tab-teams/tab-tournament
@@ -976,8 +965,8 @@ const _cityRecForPid = pid => {
 };
 const _updatePlayerCityDots = () => {
   if (typeof d3 === 'undefined') return;
-  g.classed('city-mode', _playersMapActive());
-  const show = _playersMapActive() && _mapLayerMode === 'bubbles';
+  const show = _playersMapActive();
+  g.classed('city-mode', show);
   if (!show) {
     g.select('.city-dots').remove();
     return;
@@ -1004,61 +993,14 @@ const _updatePlayerCityDots = () => {
     .attr('stroke-width', 0.5 / k);
 };
 
-// ── KDE "production intensity" layer — the Intensity half of the bubbles/intensity toggle ──────
-let _kdeData = null;      // { kde, posMax, negMin } — lazy-loaded once, cached after
-let _kdeColorScale = null;
-let _kdeRaster = null;    // { url, x, y, width, height } — built once, cached after
-let _kdeBuilding = false; // true while the raster is being computed — drives a brief busy state
-let _kdeLegendActive = false; // whether #legend currently shows the KDE x-factor version
-
-// Country borders get a bolder stroke while this layer is active (see KDE_BORDER_STROKE_W above)
-// — with fills suppressed, they're the only geography cue left. Width itself is handled per
-// zoom-tick in _wm.onZoom (reads _mapLayerMode live); color is static, so it's just toggled here
-// alongside the fill — halfway between the normal border color (#ccc8c0) and near-black, not
-// full-strength dark (read as too heavy/harsh against the soft raster gradient).
-const KDE_BORDER_COLOR = '#918f8b';
-
-// Dispatcher — replaces the old direct _updatePlayerCityDots() call at every one of its 4 call
-// sites, so the two mutually-exclusive layers (bubbles/intensity) stay lifecycle-mirrored: same
-// gating shape (_showingAllPlayers && #tab-players visible), same call sites, easy to compare.
-const _updateKdeIntensityLayer = async () => {
-  if (typeof d3 === 'undefined') return;
-  const ptEl = document.getElementById('tab-players');
-  const show = _showingAllPlayers && ptEl && !ptEl.hidden && _mapLayerMode === 'intensity';
-  if (!show) {
-    g.select('.kde-raster').style('display', 'none');
-    g.selectAll('.country').style('fill', null);
-    g.selectAll('.country, .mesh-border').style('stroke', null);
-    if (_kdeLegendActive) { _restoreNormalLegend(); _kdeLegendActive = false; }
-    return;
-  }
-  g.selectAll('.country').style('fill', 'none');
-  g.selectAll('.country, .mesh-border').style('stroke', KDE_BORDER_COLOR);
-  if (!_kdeData) {
-    _kdeBuilding = true;
-    render(_playersTableTemplate(), ptEl);
-    _kdeData = await loadKdeData();
-    _kdeColorScale = makeKdeColorScale(_kdeData.negMin, _kdeData.posMax);
-  }
-  if (!_kdeRaster) {
-    _kdeRaster = await buildKdeRaster({ projection, svg, kde: _kdeData.kde, colorScale: _kdeColorScale });
-    let img = g.select('.kde-raster');
-    if (img.empty()) img = g.insert('image', '.country');
-    img.attr('class', 'kde-raster')
-      .attr('href', _kdeRaster.url)
-      .attr('x', _kdeRaster.x).attr('y', _kdeRaster.y)
-      .attr('width', _kdeRaster.width).attr('height', _kdeRaster.height)
-      .attr('preserveAspectRatio', 'none');
-    _kdeBuilding = false;
-    if (ptEl) render(_playersTableTemplate(), ptEl);
-  }
-  g.select('.kde-raster').style('display', null);
-  if (!_kdeLegendActive) { _swapToKdeLegend(_kdeData); _kdeLegendActive = true; }
-};
-
+// The "production intensity" KDE raster that used to live here (the Intensity half of a
+// Bubbles/Intensity toggle) moved to its own standalone page, insights/heat-map.html — it was
+// dead code on this page for a while (the toggle UI shipped hidden, display:none, never
+// reachable), and had nothing left in common with the birth-city dots once tab-players stopped
+// being a togglable pair of alternate views and became just "birth-city dots, always". The
+// engine itself (js/kde_layer.js) is unchanged and still what that page imports.
 const _updateAllPlayersMapLayer = () => {
   _updatePlayerCityDots();
-  _updateKdeIntensityLayer();
 };
 
 const app = {
@@ -1386,15 +1328,6 @@ const _focusedPlayers = focusIds => {
   return [...byKey.values()];
 };
 
-const _setMapLayerMode = mode => {
-  if (mode === _mapLayerMode) return;
-  _mapLayerMode = mode;
-  saveSlice('mapLayer', { mode });
-  const ptEl = document.getElementById('tab-players');
-  if (ptEl) render(_playersTableTemplate(dimState.active ? new Set([dimState.sourceId]) : null), ptEl);
-  _updateAllPlayersMapLayer();
-};
-
 // #tab-players' own column-header sort state — independent of players_sidebar.js's team-
 // standing sort (elo/pop/delta/alpha) used by wc2026_players.html's full-page table; this one's
 // columns are simple direct fields (name/bornIn/playsFor/caps), no team-lookup indirection
@@ -1453,14 +1386,6 @@ const _playersTableTemplate = (focusIds = null) => {
     .sort((a, b) => dir * _PT_SORT_FNS[_ptSortKey](a, b));
   const coachCount = filtered.filter(p => p.role === 'coach').length;
   return html`
-    <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Map layer" style="display: none;">
-      <input type="radio" class="btn-check" name="map-layer-mode" id="map-layer-bubbles" autocomplete="off"
-        ?checked=${_mapLayerMode === 'bubbles'} @change=${() => _setMapLayerMode('bubbles')}>
-      <label class="btn btn-outline-secondary" for="map-layer-bubbles">Bubbles</label>
-      <input type="radio" class="btn-check" name="map-layer-mode" id="map-layer-intensity" autocomplete="off"
-        ?checked=${_mapLayerMode === 'intensity'} ?disabled=${_kdeBuilding} @change=${() => _setMapLayerMode('intensity')}>
-      <label class="btn btn-outline-secondary" for="map-layer-intensity">${_kdeBuilding ? 'Rendering…' : 'Intensity'}</label>
-    </div>
     <p class="sub mb-2">${filtered.length - coachCount} players · ${coachCount} coaches</p>
     <table class="table table-sm table-striped table-hover pt-table" style="font-size:12px">
       <thead><tr>
@@ -2384,44 +2309,16 @@ Promise.all([
 // Gradient/ticks/outlier-count/born-text + theme-toggle swatch/click, and the
 // onThemeChange registration for repainting all of that, now live in
 // map-container.js's wireLegend() (shared with the chain page). legend.refresh() is
-// called at the end of buildIndices() (below, once app.byId is populated) and by
-// _restoreNormalLegend() just below (the KDE toggle stays page-specific — it grabs
-// its own #legend-bar/#legend-ticks/etc DOM refs directly to repurpose them for a
-// different display, bypassing wireLegend entirely). The map's own theme repaint
-// (not the legend widget) stays a separate onThemeChange listener here.
+// called at the end of buildIndices() (below, once app.byId is populated). The
+// map's own theme repaint (not the legend widget) stays a separate onThemeChange
+// listener here. (The KDE-intensity legend swap that used to live here moved to
+// insights/heat-map.html along with the rest of that layer — see
+// _updateAllPlayersMapLayer's own comment.)
 const legend = wireLegend({ getById: () => app.byId });
 onThemeChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });
   g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
 });
-
-// ── KDE legend swap — #legend's normal choropleth-gradient content is moot once country fills
-// are suppressed (_updateKdeIntensityLayer), so it's repurposed in place rather than adding a
-// second floating legend element. Restored via legend.refresh() (map-container.js's wireLegend).
-const _legendBar              = document.getElementById('legend-bar');
-const _legendTicksEl          = document.getElementById('legend-ticks');
-const _legendOutlierDotEl     = document.getElementById('legend-outlier-dot');
-const _legendOutlierPosWrapEl = document.getElementById('legend-outlier-pos-wrap');
-const _swapToKdeLegend = ({ negMin, posMax }) => {
-  const ticks = kdeLegendTicks(negMin, posMax);
-  const pct = log2 => ((log2 - negMin) / (posMax - negMin) * 100).toFixed(2);
-  const factorLabel = f => f >= 1 ? `×${Math.round(f)}` : `×${f.toFixed(2)}`;
-  if (_legendBar) {
-    _legendBar.style.background = `linear-gradient(to right, ${ticks.map(t => `${t.color} ${pct(t.log2)}%`).join(',')})`;
-    _legendBar.style.borderRadius = '5px';
-  }
-  if (_legendTicksEl) {
-    render(html`${ticks.map(t => html`<span style="position:absolute; left:${pct(t.log2)}%; transform:translateX(-50%)">${factorLabel(t.factor)}</span>`)}`, _legendTicksEl);
-  }
-  if (_legendOutlierDotEl) _legendOutlierDotEl.style.visibility = 'hidden';
-  const _outlierCountEl = document.getElementById('legend-outlier-count');
-  if (_outlierCountEl) _outlierCountEl.textContent = '';
-  if (_legendOutlierPosWrapEl) _legendOutlierPosWrapEl.classList.add('d-none');
-};
-const _restoreNormalLegend = () => {
-  legend.refresh();
-  if (_legendOutlierDotEl) _legendOutlierDotEl.style.visibility = '';
-};
 
 // ── Diverging scale debug panel (#diverging-debug, wc2026_map.html) ─────────
 // Live-tunes map-container.js's _divergingParams via getDivergingParams()/

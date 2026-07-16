@@ -18,8 +18,8 @@ const NEUTRAL = '#f2f0ea';
 const WARM    = '#5b1a8c'; // positive — overproduces relative to population
 const COOL    = '#2f6f6f'; // negative — underproduces relative to population
 
-export const loadKdeData = async () => {
-  const kde = await fetch('data/kde_risk.json').then(r => r.json());
+export const loadKdeData = async (basePath = '') => {
+  const kde = await fetch(`${basePath}data/kde_risk.json`).then(r => r.json());
   let posMax = 0, negMin = 0;
   for (const v of kde.values) {
     if (v == null) continue;

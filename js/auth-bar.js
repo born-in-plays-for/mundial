@@ -11,6 +11,7 @@ const ICON_PLAYERS = _icon(`<circle cx="12" cy="9" r="3" stroke="#1C274C" stroke
 const ICON_COUNTRIES = _icon(`<path d="M5 22V14M5 14V4M5 14L7.47067 13.5059C9.1212 13.1758 10.8321 13.3328 12.3949 13.958C14.0885 14.6354 15.9524 14.7619 17.722 14.3195L17.9364 14.2659C18.5615 14.1096 19 13.548 19 12.9037V5.53669C19 4.75613 18.2665 4.18339 17.5092 4.3727C15.878 4.78051 14.1597 4.66389 12.5986 4.03943L12.3949 3.95797C10.8321 3.33284 9.1212 3.17576 7.47067 3.50587L5 4M5 4V2" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>`);
 const ICON_GUIDE = _icon(`<circle cx="12" cy="12" r="10" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="#1C274C" stroke-width="1.5"/><path d="M15 9L19 5" stroke="#1C274C" stroke-width="1.5"/><path d="M5 19L9 15" stroke="#1C274C" stroke-width="1.5"/><path d="M9 9L5 5" stroke="#1C274C" stroke-width="1.5"/><path d="M19 19L15 15" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_STATUS = _icon(`<path d="M4 4H20L14 12V19L10 21V12L4 4Z" stroke="#1C274C" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`);
+const ICON_HEATMAP = _icon(`<path d="M12 2C12 2 6 8 6 14C6 17.3137 8.68629 20 12 20C15.3137 20 18 17.3137 18 14C18 12 17 10 17 10C17 10 16 12 14 12C14 12 15 8 12 2Z" stroke="#1C274C" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`);
 const ICON_CARD = _icon(`<rect x="6" y="3" width="12" height="18" rx="2" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_CHAIN = `<svg class="chain-icon" width="24" height="24" viewBox="62 49 388 414" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
@@ -136,6 +137,7 @@ class MundialAuthBar extends HTMLElement {
               ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD)}
               ${_dropdownItem('/insights/france.html', _t.navFrance, ICON_FRANCE)}
               ${_dropdownItem('/insights/status.html', _t.navStatus, ICON_STATUS)}
+              ${_dropdownItem('/insights/heat-map.html', _t.navHeatmap, ICON_HEATMAP)}
               ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
@@ -160,6 +162,7 @@ class MundialAuthBar extends HTMLElement {
       '/insights/france.html': ['france.html'],
       '/insights/discipline.html': ['discipline.html'],
       '/insights/status.html': ['status.html'],
+      '/insights/heat-map.html': ['heat-map.html'],
       '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
       '/wc2026_live.html': ['wc2026_live.html'],
       'guide.html': ['guide.html'],
