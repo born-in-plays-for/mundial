@@ -50,7 +50,11 @@ const FLAG_POS_OVERRIDE = {
   191: [16.8, 45.8],    // Croatia — flag placed in Slavonia, away from the coastal strip
 };
 
-svg.on('click', () => { clearDim(); clearFixtureSelection(); });
+// While tab-players is active there's nothing on the map to click (flags are hidden, no
+// click-to-select/deselect affordance) — _playersMapActive() defined further down, safe to
+// reference here since this callback only ever runs later, on an actual click. The
+// #tab-players-btn close (✕) is the only way to clear a selection while that tab is showing.
+svg.on('click', () => { if (_playersMapActive()) return; clearDim(); clearFixtureSelection(); });
 // The mouse leaving the map entirely (not just moving to open ocean, still inside the SVG —
 // see the ocean's own mousemove above) is the other spot nothing was hiding the tooltip from
 // during dim mode, for the same reason: every country/flag's mouseleave skips hideTip() while
@@ -635,6 +639,30 @@ const _zoomToVisibleFlags = () => {
 const zoomToCentroid = (id, duration = 2000) =>
   _sharedZoomToCentroid({ svg, zoom, path, centroids, worldFeatures: _worldFeatures, ukFeatures: _ukFeatures }, id, duration);
 
+// Pans/zooms to a birth city at the zoom behavior's own scaleExtent ceiling (map-container.js's
+// d3.zoom().scaleExtent([1, 200])) — a city is a single point, not a country with mainland
+// bounds to fit, so "as close as the map allows" is the only sensible target ("max value" per
+// the #tab-players "born in" cell click this was built for — see _allPlayersRow). Shows that
+// city's own tooltip once the transition settles, anchored to the dot's real on-screen position
+// (getBoundingClientRect() on the actual circle, found via its data-key — see
+// _updatePlayerCityDots) rather than re-deriving screen coordinates from the projection + zoom
+// transform by hand.
+const _zoomToCity = rec => {
+  const key = `${rec.lat.toFixed(3)},${rec.lon.toFixed(3)}`;
+  const [cx, cy] = projection([rec.lon, rec.lat]);
+  const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
+  const k = 200;
+  const tx = vbX + vbW / 2 - k * cx;
+  const ty = vbY + vbH / 2 - k * cy;
+  svg.transition().duration(1200).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k))
+    .on('end', () => {
+      const dotEl = g.select(`.city-dots circle[data-key="${key}"]`).node();
+      if (!dotEl) return;
+      const r = dotEl.getBoundingClientRect();
+      showCityTip({ pageX: r.left + r.width / 2 + window.scrollX, pageY: r.top + r.height / 2 + window.scrollY }, rec);
+    });
+};
+
 const _renderElo = (onAnimationDone) => {
   if (!_renderEloBase) return;
   _renderEloBase(onAnimationDone);
@@ -672,13 +700,13 @@ const _switchTab = name => {
   // actually pick directly.
   if (name !== 'tab-players') saveSlice('bottomTab', { active: name });
   const isEloTab = name === 'tab-teams' || name === 'tab-tournament';
-  // Switching to Teams/Tournament abandons whatever country (or fixture) was selected — that
-  // focus only makes sense while looking at tab-players (the tab that actually renders it; see
-  // applySelection/clearDim and activateFixture/clearFixtureSelection below). tab-players itself
-  // is excluded (switching *to* it, e.g. via the dim-selected pill in its own nav button, is how
-  // you view that very selection — clearing it there would undo the click that just requested it).
-  if (isEloTab && dimState.active) clearDim();
-  if (isEloTab && _activeFixture) clearFixtureSelection();
+  // A country/fixture selection is *never* cleared just by switching tabs, in either direction —
+  // only an explicit user action does that (clicking the same pill/flag again, the map
+  // background while tab-teams/tab-tournament is active, or #tab-players-btn's own close ✕).
+  // dimState/_activeFixture simply keep existing underneath whichever tab is currently showing;
+  // _playersMapActive() (see _updatePlayerCityDots) is what decides whether the map actually
+  // renders that state (flags+arcs) or hides it (birth-city dots instead) — switching tabs only
+  // ever changes which of those two renderings is visible, never the selection itself.
   if (isEloTab) {
     // Same shared <elo-ranking> + sidebar for both — moved into whichever pane is now active
     // rather than duplicated (see its own declaration comment above).
@@ -851,42 +879,95 @@ let _activeFixture = null; // { pairId, idA, idB } or null
 // to the same #tab-players context (see _showingAllPlayers above). Persisted like the rest of the
 // map's own UI state.
 let _mapLayerMode = /* loadSlice('mapLayer')?.mode === 'intensity' ? 'intensity' : */ 'bubbles';
+// True exactly while #tab-players is the visible bottom-tab pane — ambient roster or a focused
+// team/fixture's roster alike. The map has exactly two mutually exclusive modes, switched purely
+// by which bottom tab is active, never by what's selected within it: tab-teams/tab-tournament
+// get the full flags+dim+arcs treatment (unchanged); tab-players gets birth-city dots only, no
+// flags, no arcs, no click-to-select/deselect on the map itself. dimState/_ptFocusIds are left
+// untouched by this rule itself, so moving between the ambient and a focused view without
+// leaving tab-players never has to rebuild anything (_switchTab separately clears any active
+// selection on the way *out* to tab-teams/tab-tournament — see its own comment; unrelated to
+// this guard, which only ever hides/shows, never clears, a selection).
+// Shared by _updatePlayerCityDots (build/teardown the dots, toggle g.city-mode), onCountryMousemove
+// (suppress every ordinary country/flag tooltip), onCountryClick (block entering/leaving a
+// selection from the map — the #tab-players-btn close (✕) is the only way out while here), and
+// the background svg click handler (same reason).
+const _playersMapActive = () => {
+  const ptEl = document.getElementById('tab-players');
+  return !!ptEl && !ptEl.hidden;
+};
 // A separate marker layer alongside the country flags, shown only while the all-players table is
 // the active content of #tab-players. Reuses .standalone-dot (map-container.js's existing,
 // previously-unused zoom-tick mechanism: cx/cy ride along with the map's own pan/zoom transform
 // for free, only r/stroke-width get counter-scaled each tick to stay a constant size) —
 // data-r-base lets each dot request its own radius instead of that mechanism's single global default.
+// While tab-players is active, every country flag AND the dim-mode arcs group are hidden via the
+// g.city-mode CSS class (see css/wc2026_map.css) — a plain display:none, deliberately NOT
+// animateFlagHidden's own visibility/data-hidden-target mechanism: that pair of attributes is
+// also _visibleQualifiedIds()'s source of truth for "which teams currently pass the sidebar
+// filter" (read by the ambient player table too) — routing this hide through it would zero out
+// that filter-visible set for every later caller, not just this one paint.
 const CITY_DOT_COLOR = '#7c3aed';
-const _updatePlayerCityDots = () => {
-  if (typeof d3 === 'undefined') return;
-  const ptEl = document.getElementById('tab-players');
-  const show = _showingAllPlayers && ptEl && !ptEl.hidden && _mapLayerMode === 'bubbles';
-  if (!show) {
-    g.select('.city-dots').remove();
-    return;
-  }
-  const visibleIds = _visibleQualifiedIds();
+// Groups the currently-shown player set (ambient or focused — same source _playersTableTemplate
+// itself uses) by birth-city coordinate. Shared by _updatePlayerCityDots (draws the dots) and
+// _cityRecForPid (looks up one city's record when a "born in" table cell is clicked — see
+// _allPlayersRow) — a fresh rebuild each call rather than a cached map, but the underlying
+// player counts here are small enough (hundreds, not thousands) that this is never worth caching.
+const _buildCityRecords = () => {
+  const players = _ptFocusIds ? _focusedPlayers(_ptFocusIds) : _visiblePlayerEntries();
   const byCoord = new Map();
-  for (const p of _allPlayerEntries) {
-    if (!visibleIds.has(QUALIFIED_BY_NAME[p.nation])) continue;
+  for (const p of players) {
     const bp = _birthplaceByPid[p.pid];
     if (!bp) continue;
     const key = `${bp.lat.toFixed(3)},${bp.lon.toFixed(3)}`;
     let rec = byCoord.get(key);
-    if (!rec) { rec = { lat: bp.lat, lon: bp.lon, city: bp.city, count: 0 }; byCoord.set(key, rec); }
-    rec.count++;
+    if (!rec) {
+      rec = {
+        // actualCityName, present only for the minority of entries whose own `city` is really a
+        // sub-city administrative unit ("12th arrondissement of Paris", "Bodø Municipality"),
+        // is the name people actually recognize — prefer it wherever a birthplace's city is
+        // displayed. lat/lon stay `city`'s own regardless; only the label changes.
+        lat: bp.lat, lon: bp.lon, city: bp.actualCityName ?? bp.city, population: bp.population,
+        countryId: p.birthCountryId, countryLabel: p.birthCountry,
+        players: [],
+      };
+      byCoord.set(key, rec);
+    }
+    rec.players.push(p);
   }
+  return byCoord;
+};
+// pid -> its birth city's record (same shape _buildCityRecords produces), or null if that
+// player's birthplace never geocoded, or isn't part of the currently-shown player set at all
+// (e.g. a stale click after the focus changed). Used by _allPlayersRow's "born in" cell click.
+const _cityRecForPid = pid => {
+  const bp = _birthplaceByPid[pid];
+  if (!bp) return null;
+  const key = `${bp.lat.toFixed(3)},${bp.lon.toFixed(3)}`;
+  return _buildCityRecords().get(key) ?? null;
+};
+const _updatePlayerCityDots = () => {
+  if (typeof d3 === 'undefined') return;
+  g.classed('city-mode', _playersMapActive());
+  const show = _playersMapActive() && _mapLayerMode === 'bubbles';
+  if (!show) {
+    g.select('.city-dots').remove();
+    return;
+  }
+  const byCoord = _buildCityRecords();
   g.select('.city-dots').remove();
   const dotsGroup = g.append('g').attr('class', 'city-dots');
-  for (const { lat, lon, city, count } of byCoord.values()) {
-    const [cx, cy] = projection([lon, lat]);
+  for (const [key, rec] of byCoord) {
+    const [cx, cy] = projection([rec.lon, rec.lat]);
     dotsGroup.append('circle')
       .attr('class', 'standalone-dot')
+      .attr('data-key', key)
       .attr('cx', cx).attr('cy', cy)
-      .attr('data-r-base', Math.max(2, 2 * Math.sqrt(count)))
+      .attr('data-r-base', Math.max(2, 2 * Math.sqrt(rec.players.length)))
       .attr('fill', CITY_DOT_COLOR).attr('fill-opacity', 0.7)
       .attr('stroke', '#fff')
-      .append('title').text(count > 1 ? `${city} (${count})` : city);
+      .on('mousemove', event => showCityTip(event, rec))
+      .on('mouseleave', () => hideTip());
   }
   const k = d3.zoomTransform(svg.node()).k;
   dotsGroup.selectAll('circle')
@@ -1228,12 +1309,18 @@ const _allPlayersRow = p => {
     : en ? html`${dName} (<a href="${en}" target="_blank" rel="noopener" class="pt-wiki text-decoration-none">en</a>)`
     : dName;
   const birthIso2 = p.birthCountryId != null ? iso2ForId(p.birthCountryId) : (_NULL_CODE[p.birthCountry] ?? null);
+  const _bp = p.pid != null ? _birthplaceByPid[p.pid] : null;
+  // actualCityName ?? city — see _buildCityRecords' own comment; same rule applies here.
+  const birthCity = _bp ? (_bp.actualCityName ?? _bp.city) : null;
+  const bornInLabel = birthCity ? `${birthCity}, ${p.birthCountry}` : p.birthCountry;
+  // Only clickable when the birthplace actually geocoded — nothing to pan/zoom to otherwise.
+  const onBornInClick = () => { const rec = birthCity ? _cityRecForPid(p.pid) : null; if (rec) _zoomToCity(rec); };
   const teamId = QUALIFIED_BY_NAME[p.nation];
   const teamIso2 = teamId != null ? _eloItemsById.get(teamId)?.iso2 : null;
   return html`
     <tr>
       <td>${nameCell}${p.role === 'coach' ? html` <span class="coach-badge">${T.coach}</span>` : nothing}</td>
-      <td class="pt-born" title=${p.birthCountry}>${_allPlayersFlag(birthIso2)}${p.birthCountry}</td>
+      <td class="pt-born${birthCity ? ' pt-born--clickable' : ''}" title=${bornInLabel} @click=${onBornInClick}>${_allPlayersFlag(birthIso2)}${bornInLabel}</td>
       <td class="pt-caps" title=${p.nation}>${_allPlayersFlag(teamIso2)}${p.nation}</td>
       <td class="pt-num text-end">${p.role === 'coach' ? nothing : p.caps}</td>
     </tr>`;
@@ -1281,9 +1368,21 @@ let _ptSortKey = 'name'; // 'name' | 'bornIn' | 'playsFor' | 'caps'
 let _ptSortDir = 'asc';  // 'asc' | 'desc'
 let _ptFocusIds = null;
 
+// pid != null guard, never truthiness — pid 0 (Jordan Ayew) is valid. Matches _allPlayersRow's
+// own lookup for the same "born-in" cell content.
+// actualCityName ?? city — sorts by the same label the cell displays, not the raw (sometimes
+// bureaucratic, e.g. "12th arrondissement of Paris") city field; see _buildCityRecords' comment.
+const _ptBirthCity = p => {
+  const bp = p.pid != null ? _birthplaceByPid[p.pid] : null;
+  return bp ? (bp.actualCityName ?? bp.city) : '';
+};
+
 const _PT_SORT_FNS = {
   name:     (a, b) => playerSortKey(a).localeCompare(playerSortKey(b)),
-  bornIn:   (a, b) => (a.birthCountry ?? '').localeCompare(b.birthCountry ?? ''),
+  // Country first, city as the tie-break within it — matches the cell's own "flag / city,
+  // country" display order conceptually (country is the primary grouping), even though the
+  // country name reads second in the cell itself.
+  bornIn:   (a, b) => (a.birthCountry ?? '').localeCompare(b.birthCountry ?? '') || _ptBirthCity(a).localeCompare(_ptBirthCity(b)),
   playsFor: (a, b) => (a.nation ?? '').localeCompare(b.nation ?? ''),
   // Coaches don't display a caps count (see _allPlayersRow) — treated as -1 (lowest) so they
   // consistently trail the capped-players list regardless of sort direction.
@@ -1391,7 +1490,6 @@ const clearDim = () => {
   dimState.destIds = new Map();
   dimState.importIds = new Map();
   _showingAllPlayers = true;
-  _updateAllPlayersMapLayer();
   animateFlagOpacity(g.selectAll('.flag-qualified'), () => 1);
   g.selectAll('.flag-qualified').attr('data-dim-visible', null);
   g.selectAll('.country').attr('data-dim-visible', null);
@@ -1404,6 +1502,10 @@ const clearDim = () => {
   sidebar.applyFlagFilter();
   const _ptEl = document.getElementById('tab-players');
   if (_ptEl) render(_playersTableTemplate(), _ptEl);
+  // Must run after the render above, not before — _updatePlayerCityDots reads _ptFocusIds,
+  // which that render is what just reset to null; calling this any earlier would rebuild the
+  // city-dot layer from the selection that's being cleared, not the ambient view it's clearing to.
+  _updateAllPlayersMapLayer();
   _updateSelectionPanel(() => {
     _renderPlayersTabIdle();
     requestAnimationFrame(() => _positionIndicator(false));
@@ -1661,7 +1763,40 @@ const showSimpleTip = (event, id, topoName) => {
   positionTip(event, 60, false);
 };
 
+// The birth-city bubble layer's own tooltip (see _updatePlayerCityDots) — same #tooltip element
+// and positionTip()/hideTip() mechanics as every country tooltip, mirrored header layout: city
+// name + its (opaque, possibly malformed — see data/v2/birthplace.json's own doc comment) raw
+// population string on the left, the birth country's flag + name on the right (every player in
+// `rec` shares one birth coordinate, hence one country — never mixed). Every player born there
+// is listed, not just a top-N slice — this is a single city, not a whole country's export list,
+// so it never grows large enough to need the top-5-plus-"more" treatment those use.
+const showCityTip = (event, rec) => {
+  const key = `${rec.lat},${rec.lon}`;
+  if (lastTipKey !== key) {
+    lastTipKey = key;
+    const iso2 = rec.countryId != null ? iso2ForId(rec.countryId) : (_NULL_CODE[rec.countryLabel] ?? null);
+    const sorted = rec.players.slice().sort((a, b) => playerSortKey(a).localeCompare(playerSortKey(b)));
+    render(html`
+      <div class="tt-name tt-name-inner d-flex align-items-center justify-content-between gap-2">
+        <span class="d-inline-flex flex-column lh-sm gap-1">
+          <span class="tt-name-inner">${rec.city}</span>
+          ${rec.population ? html`<small class="tt-pop fst-italic">${T.pop} ${rec.population}</small>` : nothing}
+        </span>
+        <span class="tt-name-inner d-flex align-items-center gap-2 flex-shrink-0 ms-2">${flagImg(iso2)}${countryName(rec.countryId, rec.countryLabel)}</span>
+      </div>
+      <div class="tt-players">
+        ${sorted.map(p => html`
+          <div class="tt-player">
+            <span>${playerDisplayName(p)}${coachBadge(p)}</span>
+            <span class="tt-country text-nowrap"><span class="color-exp">→</span> ${countryName(QUALIFIED_BY_NAME[p.nation], p.nation)}</span>
+          </div>`)}
+      </div>`, tt);
+  }
+  positionTip(event, Math.min(480, 90 + rec.players.length * 22), false);
+};
+
 const onCountryMousemove = (event, id, topoName = '') => {
+  if (_playersMapActive()) { hideTip(); return; }
   if (!_eloItemsById.has(id) && !QUALIFIED_NAMES[id]) { hideTip(); return; }
   const _flagEl = g.select(`.flag-qualified[data-id="${id}"]`).node();
   if (_flagEl?.getAttribute('visibility') === 'hidden') { hideTip(); return; }
@@ -1687,9 +1822,12 @@ const onCountryMousemove = (event, id, topoName = '') => {
 
 const onCountryClick = (event, id) => {
   event.stopPropagation();
-  if (!sidebar.isClickable(id)) { 
-    if (dimState.active) clearDim(); 
-    return; 
+  // No entering, switching, or clearing a selection from the map itself while tab-players is
+  // active — flags are hidden there, and the #tab-players-btn close (✕) is the only way out.
+  if (_playersMapActive()) return;
+  if (!sidebar.isClickable(id)) {
+    if (dimState.active) clearDim();
+    return;
   }
   if (dimState.sourceId === id) { 
     clearDim(); 

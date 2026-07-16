@@ -126,7 +126,27 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    own treatment there. */
 .pt-num { width: 10%; white-space: nowrap; }
 
+/* "born in" cell, only when its birthplace actually geocoded (js/wc2026_map.js's
+   _allPlayersRow) — click pans/zooms the map to that city at max zoom and shows its tooltip
+   (_zoomToCity). No visual affordance beyond the cursor — .pt-born's existing muted styling
+   already reads as secondary/interactive-adjacent next to the name column's own Wikipedia link. */
+.pt-born--clickable { cursor: pointer; }
+
 #bottomTabList .nav-link:hover { background-color: var(--bg-hover); color: #000; }
 #tab-players-btn:hover { background-color: transparent !important; }
 #bottomTabList .nav-link.active { color: #000; }
 #tab-indicator { position: absolute; bottom: 6px; height: 0; border-bottom: 1.5px dotted #888; pointer-events: none; transition: left 0.3s ease, width 0.3s ease; }
+
+/* #tab-players active (js/wc2026_map.js's _playersMapActive) — hides every country flag and the
+   dim-mode arcs group, whether or not a selection is active underneath; the map is birth-city
+   dots only while this tab is showing. Deliberately a plain display:none via a class toggle on
+   the zoom transform group, NOT animateFlagHidden's visibility/data-hidden-target mechanism:
+   that attribute pair is also _visibleQualifiedIds()'s own source of truth for "which teams
+   currently pass the sidebar filter" (read by the ambient player table too) — hiding every flag
+   through it would permanently zero out that filter-visible set for every later caller, not just
+   this one paint. A separate CSS-only hide leaves it untouched, so dimState/_ptFocusIds are
+   still exactly what they were the instant this class is toggled off — e.g. switching between
+   the ambient and a focused view while staying on tab-players never has to rebuild anything
+   this rule was hiding. (_switchTab itself already clears any active selection on the way *out*
+   to tab-teams/tab-tournament, unrelated to this rule — see its own comment.) */
+g.city-mode .flag-qualified, g.city-mode .arcs-group { display: none; }
