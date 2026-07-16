@@ -71,6 +71,9 @@ class EloRanking extends HTMLElement {
   // reused — only the pills inside them persist.
   #ul; #itemById = new Map(); #itemDataById = new Map(); #activeId = null; #activeFixtureId = null;
   #onCountryClick = null; #isClickable = null; #isZoomable = null; #onFixtureClick = null;
+  // 3rd Place Final's own list + heading — see connectedCallback and show()'s _pairThirdPlace
+  // partitioning below. Only ever populated on the 'final' carousel slide.
+  #ulThirdPlace; #thirdPlaceHeading;
   // Stage carousel — wraps the whole pill list (like insights/status.html's #statusViz: prev/
   // next controls sit absolutely over the list's left/right edges, indicators below — see
   // css/global.css's .elo-viz). Position/persistence stays owned by control_sidebar.js — this
@@ -97,6 +100,22 @@ class EloRanking extends HTMLElement {
     this.#ul = document.createElement('ul');
     this.#ul.className = 'elo-list';
     wrap.appendChild(this.#ul);
+
+    // 3rd Place Final (Semi-finals losers' own fixture) gets a second, separately headed list
+    // below the main one instead of sharing .elo-pairs with the real Final pair — two different
+    // matches on the same carousel slide read as two matches, not one mixed list. Hidden by
+    // default; show() below is the only thing that ever reveals it.
+    this.#thirdPlaceHeading = document.createElement('div');
+    this.#thirdPlaceHeading.className = 'elo-list-heading';
+    this.#thirdPlaceHeading.textContent = T.thirdPlaceHeading;
+    this.#thirdPlaceHeading.hidden = true;
+    wrap.appendChild(this.#thirdPlaceHeading);
+
+    this.#ulThirdPlace = document.createElement('ul');
+    this.#ulThirdPlace.className = 'elo-list';
+    this.#ulThirdPlace.hidden = true;
+    wrap.appendChild(this.#ulThirdPlace);
+
     this.appendChild(wrap);
     this.#viz = wrap;
   }
@@ -139,6 +158,7 @@ class EloRanking extends HTMLElement {
     this.#itemById.clear();
     this.#itemDataById.clear();
     this.#ul.innerHTML = '';
+    this.#ulThirdPlace.innerHTML = '';
     for (const item of list) {
       const { id } = item;
       const pill = document.createElement('span');
@@ -180,61 +200,55 @@ class EloRanking extends HTMLElement {
   // change, stage move, resort) the same way #activeId does for a single team.
   updateFixture(pairId) {
     this.#activeFixtureId = pairId ?? null;
-    this.#ul.querySelectorAll('li.elo-pair').forEach(row => {
+    // Covers both #ul and #ulThirdPlace — both are descendants of this element.
+    this.querySelectorAll('li.elo-pair').forEach(row => {
       row.classList.toggle('elo-pair--active', row.dataset.pairId === this.#activeFixtureId);
     });
   }
 
-  // visibleItems is a flat, already-ordered array (control_sidebar.js's sortAndFilter) — a
-  // country not present here is simply not rendered at all (fully detached, not just hidden;
-  // nothing in this app currently counts hidden-vs-visible pills in the DOM, so this is safe).
-  // Adjacent items sharing the same `_pairId` (match-display mode's fixture couples — see
-  // sortAndFilter) are placed into ONE <li class="elo-pair"> row instead of two separate rows,
-  // so they can never be split across a flex-wrap line break — and every .elo-pair row lives
-  // inside a single shared .elo-pairs wrapper (css/global.css), not as a direct <ul> child,
-  // so match-display mode's fixture grid gets its own column-track sizing independent of
-  // whatever .elo-solo rows follow it. sortAndFilter always sorts pairs ahead of lone teams, so
-  // building .elo-pairs first (on the first paired row encountered) and appending solos
-  // straight to the <ul> after it keeps that ordering automatic, no separate pass needed.
-  show(visibleItems, onAnimationDone) {
-    const before = new Map();
-    for (const [id, pill] of this.#itemById)
-      if (pill.isConnected) before.set(id, pill.getBoundingClientRect().top);
+  // .elo-item-wrap: a fresh (never reused, rebuilt every render like the row wrappers
+  // themselves) span around each pill. Exists solely so a decoration anchored to it (see
+  // taxonomy.css's fixture-winner check mark) can escape .elo-item's own overflow:hidden
+  // (global.css's width-clamp on paired pills) — a sibling of the clipped element isn't
+  // clipped by it, whereas a pseudo-element on .elo-item itself always would be. Several
+  // selectors in global.css/taxonomy.css that used to read `li.elo-pair > .elo-item:first-
+  // child` now go through an anonymous `li.elo-pair :first-child .elo-item` instead, since
+  // .elo-item is no longer li.elo-pair's direct child — :first-child there matches whichever
+  // element (the wrapper) actually sits first among the row's children.
+  #place(row, { id, pts, pending, _lost }) {
+    const pill = this.#itemById.get(id);
+    const data = this.#itemDataById.get(id);
+    if (!pill || !data) return;
+    pill.classList.toggle('elo-item--clickable', this.#onCountryClick != null && (this.#isClickable == null || this.#isClickable(id)));
+    pill.classList.toggle('elo-item--zoomable', this.#onCountryClick != null && this.#isZoomable != null && this.#isZoomable(id) && !(this.#isClickable == null || this.#isClickable(id)));
+    pill.classList.toggle('elo-item--pending', !!pending);
+    pill.classList.toggle('elo-item--lost', !!_lost);
+    const wrap = document.createElement('span');
+    wrap.className = 'elo-item-wrap';
+    wrap.appendChild(pill);
+    row.appendChild(wrap);
+    data.pts = pts;
+    render(pillContent(data), pill);
+  }
 
-    this.#ul.innerHTML = ''; // clears old row wrappers only — pills persist via #itemById
+  // Builds <li> row wrappers for `items` into `ulEl` — shared by the main list and the 3rd
+  // Place Final's own list (see show() below). Adjacent items sharing the same `_pairId`
+  // (match-display mode's fixture couples — see sortAndFilter) are placed into ONE
+  // <li class="elo-pair"> row instead of two separate rows, so they can never be split across a
+  // flex-wrap line break — and every .elo-pair row lives inside a single shared .elo-pairs
+  // wrapper (css/global.css) local to `ulEl`, not as a direct <ul> child, so match-display
+  // mode's fixture grid gets its own column-track sizing independent of whatever .elo-solo rows
+  // follow it. sortAndFilter always sorts pairs ahead of lone teams, so building .elo-pairs
+  // first (on the first paired row encountered) and appending solos straight to `ulEl` after it
+  // keeps that ordering automatic, no separate pass needed.
+  #buildRows(items, ulEl) {
     let pairsWrap = null;
-
-    // .elo-item-wrap: a fresh (never reused, rebuilt every render like the row wrappers
-    // themselves) span around each pill. Exists solely so a decoration anchored to it (see
-    // taxonomy.css's fixture-winner check mark) can escape .elo-item's own overflow:hidden
-    // (global.css's width-clamp on paired pills) — a sibling of the clipped element isn't
-    // clipped by it, whereas a pseudo-element on .elo-item itself always would be. Several
-    // selectors in global.css/taxonomy.css that used to read `li.elo-pair > .elo-item:first-
-    // child` now go through an anonymous `li.elo-pair :first-child .elo-item` instead, since
-    // .elo-item is no longer li.elo-pair's direct child — :first-child there matches whichever
-    // element (the wrapper) actually sits first among the row's children.
-    const place = (row, { id, pts, pending, _lost }) => {
-      const pill = this.#itemById.get(id);
-      const data = this.#itemDataById.get(id);
-      if (!pill || !data) return;
-      pill.classList.toggle('elo-item--clickable', this.#onCountryClick != null && (this.#isClickable == null || this.#isClickable(id)));
-      pill.classList.toggle('elo-item--zoomable', this.#onCountryClick != null && this.#isZoomable != null && this.#isZoomable(id) && !(this.#isClickable == null || this.#isClickable(id)));
-      pill.classList.toggle('elo-item--pending', !!pending);
-      pill.classList.toggle('elo-item--lost', !!_lost);
-      const wrap = document.createElement('span');
-      wrap.className = 'elo-item-wrap';
-      wrap.appendChild(pill);
-      row.appendChild(wrap);
-      data.pts = pts;
-      render(pillContent(data), pill);
-    };
-
-    for (let i = 0; i < visibleItems.length; i++) {
-      const cur = visibleItems[i], next = visibleItems[i + 1];
+    for (let i = 0; i < items.length; i++) {
+      const cur = items[i], next = items[i + 1];
       const paired = cur._pairId != null && next?._pairId === cur._pairId;
       const row = document.createElement('li');
       row.className = paired ? 'elo-pair' : 'elo-solo';
-      place(row, cur);
+      this.#place(row, cur);
       if (paired) {
         row.dataset.pairId = cur._pairId;
         row.classList.toggle('elo-pair--active', cur._pairId === this.#activeFixtureId);
@@ -273,18 +287,42 @@ class EloRanking extends HTMLElement {
           sep.addEventListener('click', () => this.#onFixtureClick(cur.id, next.id, cur._pairId));
         }
         row.appendChild(sep);
-        place(row, next);
+        this.#place(row, next);
         i++;
         if (!pairsWrap) {
           pairsWrap = document.createElement('div');
           pairsWrap.className = 'elo-pairs';
-          this.#ul.appendChild(pairsWrap);
+          ulEl.appendChild(pairsWrap);
         }
         pairsWrap.appendChild(row);
       } else {
-        this.#ul.appendChild(row);
+        ulEl.appendChild(row);
       }
     }
+  }
+
+  // visibleItems is a flat, already-ordered array (control_sidebar.js's sortAndFilter) — a
+  // country not present here is simply not rendered at all (fully detached, not just hidden;
+  // nothing in this app currently counts hidden-vs-visible pills in the DOM, so this is safe).
+  // Items belonging to the Semi-finals losers' own pair (`_pairThirdPlace`, set only in match-
+  // display mode, only at the 'final' carousel stage — see control_sidebar.js's sortAndFilter)
+  // are split out into #ulThirdPlace/#thirdPlaceHeading, its own list below the main one,
+  // instead of sharing .elo-pairs with the real Final pair: two different fixtures on the same
+  // carousel slide read as two matches, not one mixed list.
+  show(visibleItems, onAnimationDone) {
+    const before = new Map();
+    for (const [id, pill] of this.#itemById)
+      if (pill.isConnected) before.set(id, pill.getBoundingClientRect().top);
+
+    const thirdPlaceItems = visibleItems.filter(item => item._pairThirdPlace);
+    const mainItems = thirdPlaceItems.length ? visibleItems.filter(item => !item._pairThirdPlace) : visibleItems;
+
+    this.#ul.innerHTML = ''; // clears old row wrappers only — pills persist via #itemById
+    this.#buildRows(mainItems, this.#ul);
+
+    this.#ulThirdPlace.innerHTML = '';
+    this.#thirdPlaceHeading.hidden = this.#ulThirdPlace.hidden = thirdPlaceItems.length === 0;
+    if (thirdPlaceItems.length) this.#buildRows(thirdPlaceItems, this.#ulThirdPlace);
 
     let animating = 0;
     for (const { id } of visibleItems) {

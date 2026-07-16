@@ -75,6 +75,11 @@ export const loadEloData = async (basePath = '') => {
 // Knockout rounds only (excludes 'Group Stage' — round-robin group play has no bracket slot).
 const BRACKET_ROUNDS = ELIM_ROUNDS.slice(1);
 
+// The two Semi-finals losers play a 3rd Place Final at the same carousel stop as the real
+// Final (see buildEloItems' playsThirdPlace / visibleThroughIndex below).
+const SF_IDX = ELIM_ROUNDS.indexOf('Semi-finals');
+const FINAL_IDX = ELIM_ROUNDS.indexOf('Final');
+
 // ── Export/import indicator intensity (▶ / ◀ color in the Elo list, see taxonomy.css) ──
 // Colors scale with raw count relative to the tournament-wide max (France's export count,
 // Curaçao's import count as of writing — recomputed live, never hardcoded). Squared curve with
@@ -154,11 +159,16 @@ export const buildEloItems = ({ rankings, byId, importByCountry, nativeByCountry
       // to be uncertain about) or once it's actually won the Final (already the champion).
       const furthest = wonUpTo[iso2] ?? -1;
       const pendingFrom = QUALIFIED_NAMES[id] && !status && furthest < BRACKET_ROUNDS.length - 1 ? furthest + 2 : null;
-      // Last carousel stage this team is shown at all: its elimination boundary, or its one
-      // blurred "waiting for fixture" appearance, or Infinity once it has nothing left to prove
-      // (won the Final). A team's blurred appearance is its last — it doesn't carry forward
-      // into stages beyond it while still undecided.
-      const visibleThroughIndex = eliminatedAtIndex ?? pendingFrom ?? Infinity;
+      // Semi-finals losers play the 3rd Place Final at the carousel's 'final' stop — one stage
+      // further than eliminatedAtIndex alone would allow. The only deliberate exception to
+      // "eliminated at index N stops appearing after N"; eliminatedAtIndex itself stays at
+      // Semi-finals, so the elimination badge/tooltip still reports their real exit correctly.
+      const playsThirdPlace = eliminatedAtIndex === SF_IDX;
+      // Last carousel stage this team is shown at all: its elimination boundary (extended by
+      // one for a 3rd-place-bound team), its one blurred "waiting for fixture" appearance, or
+      // Infinity once it has nothing left to prove (won the Final). A team's blurred appearance
+      // is its last — it doesn't carry forward into stages beyond it while still undecided.
+      const visibleThroughIndex = playsThirdPlace ? FINAL_IDX : (eliminatedAtIndex ?? pendingFrom ?? Infinity);
       return {
         id, rank, pts: pts ?? '—', iso2, name: countryNameFn(id, name),
         fifaMember,
@@ -169,6 +179,7 @@ export const buildEloItems = ({ rankings, byId, importByCountry, nativeByCountry
         eliminatedDate: status?.date ?? null,
         eliminatedLostTo: status?.lostTo ? (nameByIso2[status.lostTo] ?? status.lostTo) : null,
         pendingFrom,
+        playsThirdPlace,
         visibleThroughIndex,
         exp: (byId[id]?.count ?? 0) > 0,
         imp: (importByCountry[id]?.length ?? 0) > 0,
@@ -250,6 +261,16 @@ export const buildBracketState = (statusByIso2, all48Iso2) => {
 // fixtures.json yet) — `app.matchInfoByIso2[iso2]?.[stage]` is simply absent then, and the
 // control sidebar's match-display mode (js/control_sidebar.js's _buildGroups) renders it as a
 // lone row instead of a couple.
+// "3rd Place Final" is data/fixtures.json's own round name for the Semi-finals losers'
+// consolation match — it shares the 'Final' index rather than getting a bracket slot of its
+// own (see qualified.js's SF_IDX/FINAL_IDX and buildEloItems' playsThirdPlace). Only matters
+// for fixtures.json lookups below: status.json never records a "3rd Place Final" round itself
+// (both losers' single per-iso2 slot is already occupied by their real 'Semi-finals' exit), so
+// this alias is applied defensively everywhere a round string is resolved to an ELIM_ROUNDS
+// index in this function, not just where it's currently known to matter.
+const _ROUND_ALIASES = { '3rd Place Final': 'Final' };
+const _roundIndex = round => ELIM_ROUNDS.indexOf(_ROUND_ALIASES[round] ?? round);
+
 export const buildMatchInfo = (statusByIso2, fixturesData, nameByIso2) => {
   const out = {};
   const record = (iso2, roundIdx, opponentIso2, date, won, myGoals = null, oppGoals = null, penalties = false, myPenGoals = null, oppPenGoals = null) => {
@@ -260,14 +281,14 @@ export const buildMatchInfo = (statusByIso2, fixturesData, nameByIso2) => {
   // can look up its actual goal tally below.
   const fixtureByRoundPair = new Map();
   for (const f of fixturesData?.fixtures ?? []) {
-    const roundIdx = ELIM_ROUNDS.indexOf(f.round); // "Group Stage - N" never matches — excluded
+    const roundIdx = _roundIndex(f.round); // "Group Stage - N" never matches — excluded
     if (roundIdx < 1) continue;
     fixtureByRoundPair.set(`${roundIdx}_${[f.home, f.away].sort().join('|')}`, f);
   }
 
   for (const [iso2, info] of Object.entries(statusByIso2 ?? {})) {
     if (!info.lostTo) continue; // Group Stage exits: round-robin, no single deciding fixture
-    const roundIdx = ELIM_ROUNDS.indexOf(info.round);
+    const roundIdx = _roundIndex(info.round);
     if (roundIdx < 0) continue;
     const f = fixtureByRoundPair.get(`${roundIdx}_${[iso2, info.lostTo].sort().join('|')}`);
     const penalties = f?.status === 'PEN';
@@ -286,11 +307,23 @@ export const buildMatchInfo = (statusByIso2, fixturesData, nameByIso2) => {
     record(info.lostTo, roundIdx, iso2, date, true, winnerGoals, loserGoals, penalties, winnerPen, loserPen);
   }
   for (const f of fixturesData?.fixtures ?? []) {
-    const roundIdx = ELIM_ROUNDS.indexOf(f.round);
+    const roundIdx = _roundIndex(f.round);
     if (roundIdx < 1) continue;
     if (out[f.home]?.[roundIdx] || out[f.away]?.[roundIdx]) continue; // status.json already decided this one
-    record(f.home, roundIdx, f.away, f.date, null);
-    record(f.away, roundIdx, f.home, f.date, null);
+    // status.json will never produce an entry for a fixture like the 3rd Place Final (both
+    // sides' single per-iso2 slot is already occupied by their real bracket elimination — see
+    // buildEloItems' playsThirdPlace), so this is the only path that will ever record it and
+    // has to read fixtures.json's own goals/status directly, unlike the lostTo-derived loop
+    // above. Only safe when the goal difference is unambiguous and it didn't go to penalties —
+    // a tied PEN/AET result has no reliable winner signal in fixtures.json (see this function's
+    // top comment) — so `won`/goals stay null there, the same "no verdict yet" treatment an
+    // unplayed fixture gets.
+    const decided = f.goals?.home != null && f.goals?.away != null;
+    const penalties = f.status === 'PEN';
+    const homeWon = decided && !penalties && f.goals.home !== f.goals.away ? f.goals.home > f.goals.away : null;
+    const myGoals = decided ? f.goals.home : null, oppGoals = decided ? f.goals.away : null;
+    record(f.home, roundIdx, f.away, f.date, homeWon, myGoals, oppGoals, penalties);
+    record(f.away, roundIdx, f.home, f.date, homeWon == null ? null : !homeWon, oppGoals, myGoals, penalties);
   }
   return out;
 };

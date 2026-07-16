@@ -815,9 +815,13 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           ? { home: infoA.myGoals, away: infoA.oppGoals, penalties: infoA.penalties, penaltyHome: infoA.myPenGoals, penaltyAway: infoA.oppPenGoals }
           : null;
         const pairDate = infoA?.date ?? null;
+        // True only for the Semi-finals losers' own pair (see qualified.js's playsThirdPlace) —
+        // distinguishes their row from the real Final pair, which lands on the same carousel
+        // slide. elo_ranking.js resolves the actual label text (it already imports T).
+        const pairThirdPlace = !!(a.playsThirdPlace && b.playsThirdPlace);
         return [
-          { ...a, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate, _lost: infoA?.won === false },
-          { ...b, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate, _lost: infoB?.won === false },
+          { ...a, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate, _lost: infoA?.won === false, _pairThirdPlace: pairThirdPlace },
+          { ...b, _pairId: pairId, _pairScore: pairScore, _pairDate: pairDate, _lost: infoB?.won === false, _pairThirdPlace: pairThirdPlace },
         ];
       });
     } else {

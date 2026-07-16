@@ -98,6 +98,12 @@ body { background: var(--page-bg); color: var(--color-default); }
 .elo-stage-carousel .carousel-indicators button.csb-stage-locked { opacity: 0.3; pointer-events: none; }
 
 .elo-list { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+/* 3rd Place Final's own heading (js/elo_ranking.js's #thirdPlaceHeading, above its own #ulThirdPlace
+   .elo-list) — echoes the carousel's own stage-title ("Final") styling but deliberately weaker
+   (smaller, muted, uppercase+tracking instead of a plain word) since it's a subordinate section
+   within the same slide, not a second stage title of its own. Hidden whenever no item carries
+   _pairThirdPlace — see show(). */
+.elo-list-heading { text-align: center; font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--border-strong); margin: 10px 0 4px; }
 /* Row wrapper — the <ul>'s actual flex-wrap children (see js/elo_ranking.js's EloRanking.show()).
    Two zones, structurally: .elo-pairs (below), a single block-level wrapper holding every
    fixture couple, is the <ul>'s first child whenever match-display mode has at least one
