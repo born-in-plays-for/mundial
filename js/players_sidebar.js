@@ -320,7 +320,12 @@ export function initPlayersSidebar({ T, rawById, callbacks = {}, confIds: confId
     {
       key: 'fifaconf',
       get: () => _confKey ?? '',
-      apply: raw => { setConfFilter(confIdsOverride[raw] ?? null, raw || null); return true; },
+      apply: raw => {
+        if (raw === '') { setConfFilter(null, null); return true; }
+        if (!confIdsOverride[raw]) return false;
+        setConfFilter(confIdsOverride[raw], raw);
+        return true;
+      },
     },
     {
       key: 'pconfscope',

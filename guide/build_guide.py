@@ -29,16 +29,16 @@ I18N_DIR    = GUIDE_DIR / 'i18n'
 LANGUAGES   = ['fr', 'de', 'it', 'es']
 BASE_URL    = 'http://localhost:4040'
 
-# Section name → source template. 'map' and 'countries' are the 2 real guide topics (see
+# Section name → source template. 'map' and 'api' are the 2 real guide topics (see
 # js/guide-mode.js's own _GUIDE_IDS comment) — 'players'/'france'/'live' were WIP
 # placeholders with no real content and are gone for good. 'auth' is real content again
 # (offline/no-server-connection help, reachable via the profile icon). 'default' is the
 # single shared fallback for any page with no guide topic of its own.
 GUIDES = {
-    'map':       GUIDE_DIR / 'guide-map.md',
-    'countries': GUIDE_DIR / 'guide-countries.md',
-    'auth':      GUIDE_DIR / 'guide-auth.md',
-    'default':   GUIDE_DIR / 'guide-default.md',
+    'map':     GUIDE_DIR / 'guide-map.md',
+    'api':     GUIDE_DIR / 'guide-api.md',
+    'auth':    GUIDE_DIR / 'guide-auth.md',
+    'default': GUIDE_DIR / 'guide-default.md',
 }
 
 # Language → Playwright locale

@@ -1,1 +1,0 @@
-../guide-countries.md

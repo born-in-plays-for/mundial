@@ -97,9 +97,9 @@ class MundialAuthBar extends HTMLElement {
 
   connectedCallback() {
     const page = location.pathname.split('/').pop() || 'index.html';
-    // 'map' (the User's Guide, off the home icon) and 'countries' (the API Guide — URL query
-    // parameters for both sidebars — off the Players icon, since wc2026_countries.html is no
-    // longer linked from the UI; see guide/guide-countries.md's own header comment) are the 2
+    // 'map' (the User's Guide, off the home icon) and 'api' (the API Guide — the app's URL
+    // query parameter API — off the Players icon, since wc2026_countries.html is no
+    // longer linked from the UI; see guide/guide-api.md's own header comment) are the 2
     // real, page-tied guide topics. Any page with no entry here falls back to 'default' (a
     // single shared "nothing here yet" placeholder) rather than disabling the guide button —
     // covers wc2026_countries.html, wc2026_live.html, insights/*.html, and anything added later
@@ -107,7 +107,7 @@ class MundialAuthBar extends HTMLElement {
     // separate — it's reachable via the profile icon on any page, not tied to a page at all.
     const _guideIdMap = {
       '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
-      'wc2026_players.html': 'countries',
+      'wc2026_players.html': 'api',
     };
     this._currentGuideId = _guideIdMap[page] ?? 'default';
     const _guideHref = new URL(location.href);
@@ -132,8 +132,8 @@ class MundialAuthBar extends HTMLElement {
               <!-- Superseded by #tab-players-btn (wc2026_map.html's bottom panel) as the map's
                    own all-players view — kept reachable here rather than dropped outright, since
                    wc2026_players.html is still a real, independent standalone page. -->
-              ${_dropdownItem('/wc2026_countries.html', _t.navCountries, ICON_COUNTRIES, 'countries')}
-              ${_dropdownItem('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, 'countries')}
+              ${_dropdownItem('/wc2026_countries.html', _t.navCountries, ICON_COUNTRIES, 'api')}
+              ${_dropdownItem('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, 'api')}
               ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD)}
               ${_dropdownItem('/insights/france.html', _t.navFrance, ICON_FRANCE)}
               ${_dropdownItem('/insights/status.html', _t.navStatus, ICON_STATUS)}
@@ -189,7 +189,7 @@ class MundialAuthBar extends HTMLElement {
     // ?guide[=section] — auto-open guide panel on load
     const _sp = new URLSearchParams(location.search);
     if (_sp.has('guide')) {
-      const _validGuide = new Set(['map', 'countries', 'auth', 'default']);
+      const _validGuide = new Set(['map', 'api', 'auth', 'default']);
       const _target = _sp.get('guide') || this._currentGuideId;
       if (_target && _validGuide.has(_target)) {
         this._currentGuideId = _target;

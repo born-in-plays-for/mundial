@@ -924,8 +924,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   // ── Explain panel (badge · panel · console) ─────────────────────────────
 
-  // Fuller descriptive names for the explain panel — T.csbParams.{sortNames,displayNames,
-  // confNames} — distinct from T.sortLabels/T.stageLabels' terse column/pill labels.
+  // Fuller descriptive names for the explain panel — T.csbParams.{sortNames,confNames} —
+  // distinct from T.sortLabels/T.stageLabels' terse column/pill labels.
   // Stage names reuse T.stageLabels directly (same wording the carousel pill itself shows).
   const _badge = _el.querySelector('#params-badge');
   let _panelEl = null;
@@ -953,19 +953,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       onApply: _updateSortCol,
     }),
     dirEntry('dir', { getDir: () => _sortDir, setDir: v => { _sortDir = v; _updateSortCol(); } }),
-    // Before 'display' — _setDisplayMode('match') self-guards against _stage === 0, and _stage
-    // is still its initial 0 until _setStage runs (see _restoreState's own note above).
-    // createParamTable's applyFrom walks entries in array order, so this ordering is load-bearing.
     stageEntry('stage', { getStageIndex: () => _stage, setStage: _setStage }),
-    {
-      key: 'display',
-      get: () => _displayMode,
-      apply: raw => {
-        if (raw !== 'team' && raw !== 'match') return false;
-        _setDisplayMode(raw);
-        return true;
-      },
-    },
     {
       key: 'show',
       get: () => _describeCells(Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k)),
@@ -989,7 +977,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // _confIds/_confKey, not two copies drifting apart.
       key: 'fifaconf',
       get: () => _confKey ?? '',
-      apply: raw => { setConfFilter(CONF_IDS[raw] ?? null, raw || null); return true; },
+      apply: raw => {
+        if (raw === '') { setConfFilter(null, null); return true; }
+        if (!CONF_IDS[raw]) return false;
+        setConfFilter(CONF_IDS[raw], raw);
+        return true;
+      },
     },
   ]);
 
@@ -1016,9 +1009,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       _confKey
         ? { param: `fifaconf=${_paramTable.get('fifaconf')}`, desc: P.confDesc(P.confNames[_confKey] ?? _confKey) }
         : { param: 'fifaconf=', desc: P.confDefault },
-      _displayMode === 'match'
-        ? { param: `display=${_paramTable.get('display')}`, desc: P.displayDesc(P.displayNames.match) }
-        : { param: `display=${_paramTable.get('display')}`, desc: P.displayDefault(P.displayNames.team) },
     ];
   };
 

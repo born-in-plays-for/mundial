@@ -62,7 +62,7 @@ Die Auswahl einer Konföderation hebt zudem ihre Außengrenze auf der Karte herv
 
 ## URL-Parameter
 
-Der Filter- und Sortierstatus kann auch direkt über die URL konfiguriert werden — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Fügen Sie `?explain` zu einer beliebigen URL hinzu, um ein Panel zu öffnen, das die aktuellen Einstellungen des Panels zusammenfasst — siehe *„?explain“ — die aktuelle Konfiguration einsehen* im [Länderseiten-Guide](?guide=countries) für die genaue Erklärung, was dort angezeigt wird und warum. Die vollständige Referenz mit allen Zellcodes, Gruppenaliasen und Beispielen findet sich dort ebenfalls.
+Der Filter- und Sortierstatus kann auch direkt über die URL konfiguriert werden — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Fügen Sie `?explain` zu einer beliebigen URL hinzu, um ein Panel zu öffnen, das die aktuellen Einstellungen des Panels zusammenfasst — siehe *„?explain“ — die aktuelle Konfiguration einsehen* im [API-Leitfaden](?guide=api) für die genaue Erklärung, was dort angezeigt wird und warum. Die vollständige Referenz mit allen Zellcodes, Gruppenaliasen und Beispielen findet sich dort ebenfalls.
 
 ## Zur Länderreferenz
 
