@@ -132,6 +132,21 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    already reads as secondary/interactive-adjacent next to the name column's own Wikipedia link. */
 .pt-born--clickable { cursor: pointer; }
 
+/* Persistent "selected" row(s) in #tab-players' table (js/wc2026_map.js's _selectedPids,
+   rendered declaratively per-row by _allPlayersRow — not toggled imperatively, so a re-render
+   for any other reason never drops it). Clicking a "born in" cell selects just that one row (and
+   pans/zooms the map there); clicking a city dot on the map selects every row sharing that city
+   instead. Either action replaces the previous selection outright.
+   Background tint + a left accent bar on the first cell — the same purple as the map's own city
+   dots (CITY_DOT_COLOR), tying a selected row visually back to "the dot that selected it". This
+   pairing (tinted row + left bar) is the standard selected-row treatment in most data-grid/table
+   UIs (e.g. Gmail's read/unread bar): distinct from hover, doesn't reflow the row like a real
+   border would, and reads correctly against table-striped's own alternating background.
+   box-shadow: inset, not border-left — a real border shifts cell content/width; inset doesn't. */
+#tab-players .pt-table tbody tr { transition: background-color 0.3s ease; }
+#tab-players .pt-table tbody tr.pt-row-selected { background-color: rgba(124, 58, 237, 0.12); }
+#tab-players .pt-table tbody tr.pt-row-selected > td:first-child { box-shadow: inset 3px 0 0 #7c3aed; }
+
 #bottomTabList .nav-link:hover { background-color: var(--bg-hover); color: #000; }
 #tab-players-btn:hover { background-color: transparent !important; }
 #bottomTabList .nav-link.active { color: #000; }

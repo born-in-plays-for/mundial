@@ -663,6 +663,34 @@ const _zoomToCity = rec => {
     });
 };
 
+// Persistent "selected" row(s) in #tab-players' table, by pid — driven declaratively (see
+// _allPlayersRow's own class binding) rather than imperative classList toggling, so a re-render
+// for any unrelated reason (sort click, focus change) can never silently drop the selection's
+// styling the way a manually-added class would. Either _selectRows (a city dot click, below) or
+// a "born in" cell click (see _allPlayersRow) replaces this outright — there's only ever one
+// selection, from whichever source set it last.
+let _selectedPids = new Set();
+const _selectRows = pids => {
+  _selectedPids = new Set(pids.filter(pid => pid != null).map(String));
+  const ptEl = document.getElementById('tab-players');
+  if (ptEl) render(_playersTableTemplate(_ptFocusIds), ptEl);
+};
+
+// The reverse direction of _zoomToCity — clicking a city dot on the map selects every player
+// born there and scrolls the first match, in the table's own current order, into view. A city
+// can hold several players who may not be adjacent in whatever order the table's currently
+// sorted by (only sorting by "born in" guarantees that — see _PT_SORT_FNS), so rather than guess
+// which one to scroll to, this selects (and so visually flags) every match and scrolls to
+// whichever happens to land first — deliberately not switching the sort itself, which would
+// silently override whatever the user picked it for.
+const _scrollToCityRow = rec => {
+  _selectRows(rec.players.map(p => p.pid));
+  const ptEl = document.getElementById('tab-players');
+  if (!ptEl) return;
+  const row = [...ptEl.querySelectorAll('tr[data-pid]')].find(tr => _selectedPids.has(tr.dataset.pid));
+  row?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
 const _renderElo = (onAnimationDone) => {
   if (!_renderEloBase) return;
   _renderEloBase(onAnimationDone);
@@ -967,7 +995,8 @@ const _updatePlayerCityDots = () => {
       .attr('fill', CITY_DOT_COLOR).attr('fill-opacity', 0.7)
       .attr('stroke', '#fff')
       .on('mousemove', event => showCityTip(event, rec))
-      .on('mouseleave', () => hideTip());
+      .on('mouseleave', () => hideTip())
+      .on('click', event => { event.stopPropagation(); _scrollToCityRow(rec); });
   }
   const k = d3.zoomTransform(svg.node()).k;
   dotsGroup.selectAll('circle')
@@ -1314,11 +1343,20 @@ const _allPlayersRow = p => {
   const birthCity = _bp ? (_bp.actualCityName ?? _bp.city) : null;
   const bornInLabel = birthCity ? `${birthCity}, ${p.birthCountry}` : p.birthCountry;
   // Only clickable when the birthplace actually geocoded — nothing to pan/zoom to otherwise.
-  const onBornInClick = () => { const rec = birthCity ? _cityRecForPid(p.pid) : null; if (rec) _zoomToCity(rec); };
+  // Selects just this one row (see _selectRows) — the map-side equivalent, _scrollToCityRow,
+  // selects every player sharing that birth city instead; the two triggers deliberately differ
+  // in scope (one specific player here vs. "everyone at this dot" there).
+  const onBornInClick = () => {
+    const rec = birthCity ? _cityRecForPid(p.pid) : null;
+    if (!rec) return;
+    _selectRows([p.pid]);
+    _zoomToCity(rec);
+  };
   const teamId = QUALIFIED_BY_NAME[p.nation];
   const teamIso2 = teamId != null ? _eloItemsById.get(teamId)?.iso2 : null;
+  const isSelected = p.pid != null && _selectedPids.has(String(p.pid));
   return html`
-    <tr>
+    <tr data-pid=${p.pid ?? nothing} class=${isSelected ? 'pt-row-selected' : nothing}>
       <td>${nameCell}${p.role === 'coach' ? html` <span class="coach-badge">${T.coach}</span>` : nothing}</td>
       <td class="pt-born${birthCity ? ' pt-born--clickable' : ''}" title=${bornInLabel} @click=${onBornInClick}>${_allPlayersFlag(birthIso2)}${bornInLabel}</td>
       <td class="pt-caps" title=${p.nation}>${_allPlayersFlag(teamIso2)}${p.nation}</td>
