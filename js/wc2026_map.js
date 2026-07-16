@@ -1270,12 +1270,50 @@ const _setMapLayerMode = mode => {
   _updateAllPlayersMapLayer();
 };
 
+// #tab-players' own column-header sort state — independent of players_sidebar.js's team-
+// standing sort (elo/pop/delta/alpha) used by wc2026_players.html's full-page table; this one's
+// columns are simple direct fields (name/bornIn/playsFor/caps), no team-lookup indirection
+// needed. _ptFocusIds mirrors whatever `focusIds` produced the table currently on screen (set
+// as a side effect every time _playersTableTemplate runs) so a header click re-renders the same
+// view — ambient, one dim-selected team, or a fixture's two teams — instead of always falling
+// back to the ambient one.
+let _ptSortKey = 'name'; // 'name' | 'bornIn' | 'playsFor' | 'caps'
+let _ptSortDir = 'asc';  // 'asc' | 'desc'
+let _ptFocusIds = null;
+
+const _PT_SORT_FNS = {
+  name:     (a, b) => playerSortKey(a).localeCompare(playerSortKey(b)),
+  bornIn:   (a, b) => (a.birthCountry ?? '').localeCompare(b.birthCountry ?? ''),
+  playsFor: (a, b) => (a.nation ?? '').localeCompare(b.nation ?? ''),
+  // Coaches don't display a caps count (see _allPlayersRow) — treated as -1 (lowest) so they
+  // consistently trail the capped-players list regardless of sort direction.
+  caps:     (a, b) => (a.role === 'coach' ? -1 : a.caps ?? -1) - (b.role === 'coach' ? -1 : b.caps ?? -1),
+};
+
+const _ptSetSort = key => {
+  // Clicking the active column reverses it; switching columns starts fresh — caps defaults to
+  // highest-first (the common "leaderboard" reading of a numeric column), the others to A→Z.
+  _ptSortDir = _ptSortKey === key ? (_ptSortDir === 'asc' ? 'desc' : 'asc') : (key === 'caps' ? 'desc' : 'asc');
+  _ptSortKey = key;
+  const ptEl = document.getElementById('tab-players');
+  if (ptEl) render(_playersTableTemplate(_ptFocusIds), ptEl);
+};
+
+// ▾/▴ — same glyphs as wc2026_players.html's own _sortArrow, for a consistent look between the
+// map's ambient table and the standalone players page.
+const _ptSortArrow = () => _ptSortDir === 'asc' ? ' ▾' : ' ▴';
+const _ptTh = (key, label, extraClass = '') => html`<th
+    class="pt-th${extraClass ? ' ' + extraClass : ''}${_ptSortKey === key ? ' pt-th-active' : ''}"
+    @click=${() => _ptSetSort(key)}>${label}${_ptSortKey === key ? _ptSortArrow() : ''}</th>`;
+
 // The one template #tab-players ever renders — `focusIds` narrows it to one or more teams (a
 // single dim-selected team today; a future fixture's two teams reuses the same path unchanged).
 // null/omitted means the ambient view: every player on a currently-visible team.
 const _playersTableTemplate = (focusIds = null) => {
+  _ptFocusIds = focusIds;
+  const dir = _ptSortDir === 'desc' ? -1 : 1;
   const filtered = (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
-    .sort((a, b) => playerSortKey(a).localeCompare(playerSortKey(b)));
+    .sort((a, b) => dir * _PT_SORT_FNS[_ptSortKey](a, b));
   const coachCount = filtered.filter(p => p.role === 'coach').length;
   return html`
     <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Map layer" style="display: none;">
@@ -1289,7 +1327,7 @@ const _playersTableTemplate = (focusIds = null) => {
     <p class="sub mb-2">${filtered.length - coachCount} players · ${coachCount} coaches</p>
     <table class="table table-sm table-striped table-hover pt-table" style="font-size:12px">
       <thead><tr>
-        <th></th><th class="pt-born">${T.chainLegend.bornIn}</th><th class="pt-caps">${T.chainLegend.playsFor}</th><th class="pt-num text-end">${T.caps}</th>
+        ${_ptTh('name', T.psbLabels.byPlayer)}${_ptTh('bornIn', T.chainLegend.bornIn, 'pt-born')}${_ptTh('playsFor', T.chainLegend.playsFor, 'pt-caps')}${_ptTh('caps', T.caps, 'pt-num text-end')}
       </tr></thead>
       <tbody>${filtered.map(_allPlayersRow)}</tbody>
     </table>`;
