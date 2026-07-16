@@ -4,8 +4,8 @@
 
 <!-- i18n:intro -->
 This map visualises the 2026 FIFA World Cup squads through the lens of birthplace.
-Each country is shaded by a player-migration metric you choose — see *The Legend*, below —
-covering players born there, players who play there, or the balance between the two.
+Each country is shaded by its net talent balance — see *The Legend*, below —
+weighing players born there against players who play there.
 <!-- /i18n:intro -->
 
 <!-- i18n:quotes -->
@@ -63,7 +63,7 @@ Selecting a confederation also highlights its external boundary on the map and z
 
 ## URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?display=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* in the [API Guide](?guide=countries) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* in the [API Guide](?guide=countries) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
 
 ## About the country reference
 
@@ -134,21 +134,21 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/it.svg" alt="">
     <span class="elo-name" data-id="380">Italy</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#3b82f6">▶</span> <!-- i18n:tax_desc_exp -->Players born in this country play for another qualified country.<!-- /i18n:tax_desc_exp --></span>
+  <span style="font-size:.875rem"><span style="color:#1d4ed8">▶</span> <!-- i18n:tax_desc_exp -->Players born in this country play for another qualified country.<!-- /i18n:tax_desc_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--imp" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" alt="">
     <span class="elo-name" data-id="531">Curaçao</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#ef4444">◀</span> <!-- i18n:tax_desc_imp -->Players born in another country play for this country.<!-- /i18n:tax_desc_imp --></span>
+  <span style="font-size:.875rem"><span style="color:#dc2626">◀</span> <!-- i18n:tax_desc_imp -->Players born in another country play for this country.<!-- /i18n:tax_desc_imp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" alt="">
     <span class="elo-name" data-id="250">France</span>
   </span>
-  <span style="font-size:.875rem"><span style="color:#ef4444">◀</span><span style="color:#3b82f6">▶</span> <!-- i18n:tax_desc_both -->Players born elsewhere play for this country, and players born here play for other countries.<!-- /i18n:tax_desc_both --></span>
+  <span style="font-size:.875rem"><span style="color:#dc2626">◀</span><span style="color:#1d4ed8">▶</span> <!-- i18n:tax_desc_both -->Players born elsewhere play for this country, and players born here play for other countries.<!-- /i18n:tax_desc_both --></span>
 </div>
 <div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->The pill's background is itself a red (imports) → white (native) → blue (exports) gradient — the wider a colour's band, the larger that group's share of the country's total player pool.<!-- /i18n:tax_note_gradient --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
@@ -185,7 +185,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" alt="">
     <span class="elo-name" data-id="702">Singapore</span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap -->Dimmed flag — too small to appear on the map.<!-- /i18n:tax_desc_nomap --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_nomap -->Dimmed flag — not present in the map's underlying geographic data (typically because the territory is too small).<!-- /i18n:tax_desc_nomap --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--nonfifa elo-item--no-map" style="flex-shrink:0">
@@ -235,30 +235,21 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 
 ## Choropleth & Flags
 
-Each country is shaded by the active colour theme's metric (see *The Legend*, below) —
-the darker the shade, the higher the value. Countries with no data for that metric appear in a neutral pale tone.
+Each country is shaded by its net talent balance — home-grown contribution (exports plus native-born players) minus imports (see *The Legend*, below). The more one-sided that balance, in either direction, the darker the shade; a country close to a neutral balance appears pale. Countries with no data for that metric appear in a neutral pale tone.
 Countries currently included in the filter display a circular flag marker.
 
 ## Zoom & Pan
 
-Scroll (or pinch) to zoom · drag to pan. Three round buttons float over the map's bottom-left corner:
+Scroll (or pinch) to zoom · drag to pan. Two round buttons sit in the bar below the map, at the left of the legend:
 
-- <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="reset"> zooms back out to fit all countries in view.
-- <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> — when a country is selected, zooms and pans to fit all highlighted countries at once.
-- A small circular colour swatch cycles the map's colour theme — see *The Legend*, below.
+- <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="reset"> zooms back out to the default view — every country the map actually shows, fit into frame. A handful of small territories have no map presence at all and are never included; see *Off the map*, above.
+- <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> zooms and pans to fit whatever's currently visible on the map — every shown flag by default, or just the highlighted set while a country is selected (or a group-stage focus is active).
 
 ## The Legend
 
-The map has three colour themes, cycled via the swatch button described in *Zoom & Pan* above — each shades countries by a different metric:
+The map shades every country by its net talent balance — home-grown contribution (exports plus native-born players) minus imports. Net exporters and net importers read as two different colours either side of a neutral midpoint.
 
-| Theme | Colours by |
-|---|---|
-| **Diverging** (default) | Net talent balance — home-grown contribution (exports + native-born players) minus imports. Net exporters and net importers read as two different colours either side of a neutral midpoint. |
-| **Forest** | Export count — players born here, now playing elsewhere. |
-| **Earthy** | Import count — players born elsewhere, now playing here. |
-
-For **Diverging**, the colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, and a standalone dot *at each end* for the country furthest off scale on that side (biggest net importer, biggest net exporter). For **Forest** and **Earthy**, the bar instead runs dark-to-pale from left to right, with a single standalone dot for the one country furthest off scale.
-Whichever theme is selected persists across visits.
+The colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, and a standalone dot *at each end* for the country furthest off scale on that side (biggest net importer, biggest net exporter).
 
 ## Tooltips
 
@@ -272,7 +263,7 @@ Hover any country to see details. Tooltips are not shown on mobile.
 <!-- i18n:bottom_panel -->
 # The Bottom Panel
 
-The scrollable area below the map has four tabs.
+The scrollable area below the map has three tabs.
 
 ## <img class="gp-icon" src="images/solar_linear/ranking-svgrepo-com.svg" alt=""> The Country List
 
@@ -287,10 +278,9 @@ For countries with **born-in / plays-for** connections, coloured arrows also app
 - {{ARROW_BLUE}} **blue arrows**: squads that include players born in the selected country
 - {{ARROW_RED}} **red arrows**: countries where players born elsewhere play for this squad
 
-*Arrow thickness is proportional to the number of players.*
+*Arrow thickness scales with the number of players.*
 
-The <img class="gp-icon" src="images/solar_linear/maximize-square-2-svgrepo-com.svg" alt="span"> button then fits all connected countries in view at once.
-The <img class="gp-icon" src="images/solar_linear/global-svgrepo-com.svg" alt="reset"> button restores the initial pan/zoom, optimised to fit every country in view.
+The zoom buttons described in *Zoom & Pan*, above, behave the same way here: **span** now fits the highlighted countries specifically, **reset** returns to the default view.
 
 Click the active badge a second time, click anywhere else on the map, or press **Esc** to deselect.
 
@@ -306,46 +296,36 @@ The carousel acts as an additional filter, layered on top of the Control Panel �
 show only Round of 16 teams that are also exporters by advancing the carousel and unchecking the non-exporter column in the panel.
 It only filters the four **qualified** rows (importer / non-importer × exporter / non-exporter); the four **non-qualified** rows have no tournament stage of their own to reach.
 
-At **Group stage**, the badge list is replaced by group standings — one selectable group (A–L) at a time, with each match's result and the teams through to the Round of 32 highlighted based on the actual outcomes (a draw earns no checkmark either way).
+At **Group stage**, the badge list is replaced by group standings — all 12 groups (A–L) at once by default, or narrowed to one at a time via the selector, with each match's result and the teams through to the Round of 32 highlighted based on the actual outcomes (a draw earns no checkmark either way).
 
 Past Group stage, countries are instead grouped by fixture automatically: each row pairs both opponents either side of the kickoff date/score —
 
 - Not yet played: the kickoff date, and a wavy top/bottom border on both pills — a "some assembly required" look for a fixture that could still go either way.
 - Played: the score (plus penalty shootout result, if it went that far) in place of the date, and the losing team's flag greyed out.
 
+At the **Final** position, the two Semi-finals losers get their own pairing — the 3rd Place Final — in a separate, headed list below the real Final, so the two matches are never mixed together.
+
 Clicking a badge, arrows, and the zoom buttons all behave the same way here as in *The Country List*, above.
 
-## The Player Table
+## <img class="gp-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" alt=""> The Player Table
 
-When a country is selected, the player table shows three sections:
+Always the same flat table — **name**, **born-in**, **plays-for**, **caps** — no matter what's selected. Click a column header to sort by it; click again to reverse the order. Player names link to their Wikipedia page in the current interface language when available.
 
-| Section | Contents |
-|---|---|
-| **Born here / plays for another** | Players born in this country, grouped by the squad they represent |
-| **Born here / plays for this country** | Players born here who also represent this country |
-| **Born elsewhere / plays for this country** | Players born in another country who represent this squad, grouped by birth country |
+Only the rows change with the current selection:
 
-Player names link to their Wikipedia page in the current interface language when available.
+- **Nothing selected**: every player and coach on all 48 qualified squads currently visible on the map.
+- **One country selected**: every player and coach tied to it — born there, born and selected there, or born elsewhere and selected there.
+- **A fixture selected**: both teams' players combined.
 
-## <img class="gp-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" alt=""> All Players
-
-Click the same tab's person icon with **no** country selected to instead list every player and coach across all 48 qualified squads in one flat table, filtered to whichever teams are currently visible on the map.
-
-A **Bubbles / Intensity** switch above the table changes how their birth cities are plotted on the map itself:
+With nothing selected, birth cities are also plotted on the map itself as bubbles — one dot per unique birth city among the listed players, bigger where more players share a city:
 
 ![Birth-city bubbles](screenshots/bubbles.png)
 
-**Bubbles** (the default) places one dot per unique birth city among the listed players — bigger where more players share a city. Hover a dot for the city name and player count.
-
-![Talent-production heat map](screenshots/heatmap.png)
-
-**Intensity** instead shades the whole map with a smooth heat-map surface answering a different question: does this part of the world produce *more* World Cup talent than its population alone would predict? Purple means well above the global average, teal means below it, pale means roughly what you'd expect. It's normalised by population, not a raw player-count map — a place needs an unusually large number of players *for its population* to stand out, which is why the result isn't simply dominated by the biggest cities. Country shading is hidden while this view is active so the gradient reads clearly, and borders are drawn a little bolder to compensate; the legend swaps to the same scale, converted to plain "×N the expected rate" ticks.
+Hover a dot for the city name and player count.
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Chains
 
-The chain tab shows sequences of countries linked by born-in / plays-for connections:
-a player born in A plays for B, a player born in B plays for C — and so on,
-forming a chain of nationalities across the tournament.
+Sequences of countries linked by born-in / plays-for connections — a player born in A plays for B, a player born in B plays for C, and so on, forming a chain of nationalities across the tournament — are explored on their own [standalone page](/chains/wc2026_chain_longest.html).
 <!-- /i18n:bottom_panel -->
 
 <!-- i18n:data_sources -->

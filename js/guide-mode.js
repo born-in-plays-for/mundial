@@ -27,8 +27,8 @@ const _guideToPage = {
   countries: 'wc2026_players.html',
 };
 
-const _ARROW_BLUE = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#3b82f6" stroke-width="2.5"/><path d="M17,2.5 L24,6 L17,9.5Z" fill="#3b82f6"/></svg>';
-const _ARROW_RED  = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#ef4444" stroke-width="2.5"/><path d="M23,2.5 L16,6 L23,9.5Z" fill="#ef4444"/></svg>';
+const _ARROW_BLUE = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#1d4ed8" stroke-width="2.5"/><path d="M17,2.5 L24,6 L17,9.5Z" fill="#1d4ed8"/></svg>';
+const _ARROW_RED  = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#dc2626" stroke-width="2.5"/><path d="M23,2.5 L16,6 L23,9.5Z" fill="#dc2626"/></svg>';
 
 marked.use({
   hooks: {
@@ -188,7 +188,10 @@ async function _showSection(guideId) {
 }
 
 function _buildToc(body) {
-  const headings = [...body.querySelectorAll('h2, h3')];
+  // h1 covers both the page title and this guide's own major section dividers ("The Control
+  // Panel", "The Map", "The Bottom Panel", "Data Sources") — treated as top-level entries
+  // alongside h2, same as h2 itself; only h3 nests under the preceding top-level entry.
+  const headings = [...body.querySelectorAll('h1, h2, h3')];
   if (headings.length < 2) return null;
   const _TOC_LABELS = { fr: 'Sur cette page', de: 'Auf dieser Seite', it: 'In questa pagina', es: 'En esta página' };
   const nav = document.createElement('nav');
@@ -196,13 +199,13 @@ function _buildToc(body) {
   nav.innerHTML = `<strong class="gp-toc-title">${_TOC_LABELS[_LANG] ?? 'On this page'}</strong>`;
   const root = document.createElement('ul');
   root.className = 'gp-toc-list';
-  let h2Li = null, subUl = null;
+  let topLi = null, subUl = null;
   headings.forEach(h => {
     const li = document.createElement('li');
     li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-    if (h.tagName === 'H2') { root.appendChild(li); h2Li = li; subUl = null; }
+    if (h.tagName === 'H1' || h.tagName === 'H2') { root.appendChild(li); topLi = li; subUl = null; }
     else {
-      if (!subUl) { subUl = document.createElement('ul'); (h2Li ?? root).appendChild(subUl); }
+      if (!subUl) { subUl = document.createElement('ul'); (topLi ?? root).appendChild(subUl); }
       subUl.appendChild(li);
     }
   });
