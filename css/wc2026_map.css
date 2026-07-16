@@ -132,6 +132,12 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    already reads as secondary/interactive-adjacent next to the name column's own Wikipedia link. */
 .pt-born--clickable { cursor: pointer; }
 
+/* Birth-city dots (js/wc2026_map.js's _updatePlayerCityDots) — hover shows a tooltip, click
+   selects the matching table row(s) below; a plain pointer signals that without needing to
+   touch .standalone-dot's own (unstyled) default, which is also reused by Cape Verde/Curaçao's
+   unrelated country markers. */
+.city-dots circle { cursor: pointer; }
+
 /* Persistent "selected" row(s) in #tab-players' table (js/wc2026_map.js's _selectedPids,
    rendered declaratively per-row by _allPlayersRow — not toggled imperatively, so a re-render
    for any other reason never drops it). Clicking a "born in" cell selects just that one row (and
