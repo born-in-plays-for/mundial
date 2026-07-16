@@ -446,6 +446,7 @@ const afterGroupStage = aliveAfter(1);
 const afterRoundOf32 = aliveAfter(2);
 const afterRoundOf16 = aliveAfter(3);
 const afterQuerterFinals = aliveAfter(4);
+const afterSemiFinals = aliveAfter(5);
 
 const outAtGroupStage = allNames.size - afterGroupStage.size;
 const outAtRoundOf32 = afterGroupStage.size - afterRoundOf32.size;
@@ -486,6 +487,12 @@ const STATES = [
     title: `Semi finals`,
     subtitle: `${afterRoundOf16.size-afterQuerterFinals.size} eliminated in the Querter-Finals - ${afterQuerterFinals.size} teams remain.`,
     liveSubtitle: count => `${afterRoundOf16.size-count} eliminated in the Querter-Finals - ${count} teams remain.`,
+  },
+  {
+    alive: afterSemiFinals,
+    title: `Final`,
+    subtitle: `${afterQuerterFinals.size-afterSemiFinals.size} eliminated in the Semi-finals - ${afterSemiFinals.size} teams remain.`,
+    liveSubtitle: count => `${afterQuerterFinals.size-count} eliminated in the Semi-finals - ${count} teams remain.`,
   },
 ];
 
