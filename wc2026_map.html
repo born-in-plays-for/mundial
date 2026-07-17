@@ -177,7 +177,17 @@
       <button class="nav-link" id="tab-teams-btn" data-tab="tab-teams" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#tab-teams" aria-controls="tab-teams" aria-selected="false"><img class="tab-icon" src="images/solar_linear/ranking-svgrepo-com.svg" aria-hidden="true"></button>
     </div>
     <div class="nav-item">
-      <button class="nav-link" id="tab-players-btn" data-tab="tab-players" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#tab-players" aria-controls="tab-players" aria-selected="false"></button>
+      <!-- No data-bs-toggle="tab" here, deliberately — Bootstrap registers its tab click-to-show
+           listener on document with useCapture:true (see its EventHandler.on delegation code),
+           so it fires *before* any stopPropagation() called by a descendant's own bubble-phase
+           click handler. #tab-players-btn nests a close (✕) button (js/wc2026_map.js's
+           _tabPlayersLabel) whose click must NOT switch tabs, and capture-phase delegation makes
+           that unstoppable from here. This button's own "switch to me" click is instead wired
+           explicitly via _tabPlayersLabel's own @click (_switchTab/_showAllPlayers), so Bootstrap's
+           auto-delegation isn't needed — data-bs-target/role="tab" stay, since Tab.show() (called
+           programmatically via _switchTab) still needs them to find/activate the #tab-players pane
+           and to recognize this button as part of the tab group (_getActiveElem/_getChildren). -->
+      <button class="nav-link" id="tab-players-btn" data-tab="tab-players" type="button" role="tab" data-bs-target="#tab-players" aria-controls="tab-players" aria-selected="false"></button>
     </div>
     <div  class="nav-item">
       <button class="nav-link" id="tab-tournament-btn" data-tab="tab-tournament" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#tab-tournament" aria-controls="tab-tournament" aria-selected="false"><img class="tab-icon" src="images/world-cup-svgrepo-com.svg" aria-hidden="true"></button>
