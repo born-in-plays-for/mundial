@@ -1039,7 +1039,7 @@ const _updateSelectionPanel = (onCollapsed) => {
     pop && html`<span>${fmtPop(pop)}</span>`,
   ].filter(Boolean);
 
-  render(html`<div class="d-flex justify-content-center align-items-center gap-1 pt-1 sub">
+  render(html`<div class="d-flex justify-content-center align-items-center gap-1 py-1 sub" style="background-color: var(--page-bg);">
     ${join(items, () => html`<span>·</span>`)}
   </div>`, _selectionPanelEl);
   _expandPanel(_selectionPanelEl);
