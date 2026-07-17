@@ -1217,13 +1217,7 @@ const applySelection = (id, destIds) => {
   if (_playersBtn) {
     const wasActive = _playersBtn.classList.contains('active');
     _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
-    const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
-    render(html`
-      <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>
-      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.countries(1)}`, () => _switchTab('tab-players'))}
-      <span class="btn-close" style="cursor:pointer;${_closeStyle}" aria-label="Close"
-            @click=${() => clearDim()}></span>
-    `, _playersBtn);
+    render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.countries(1)}`, () => _switchTab('tab-players'), () => clearDim()), _playersBtn);
     requestAnimationFrame(() => _positionIndicator());
   }
 
@@ -1407,15 +1401,17 @@ const _showAllPlayers = () => {
 };
 
 // One shared layout for every #tab-players-btn mode (idle count, one-team focus, and eventually
-// a fixture's two teams) — label + icon packed together and right-aligned as a unit inside
-// .tab-players-label (justify-content:flex-end, css/wc2026_map.css), so any extra width
-// #tab-players-btn's own flex-grow-1 (see wc2026_map.css) picks up shows up as blank space
-// before the label, not as a gap between the label and the icon — neither one's position shifts
-// with the other's width.
-const _tabPlayersLabel = (iconSrc, label, onClick) => html`
+// a fixture's two teams) — label + icon packed together as a unit inside .tab-players-label,
+// with the close button (dim-selected/fixture modes only) as its last child rather than a
+// sibling spacer pair, so there's exactly one close button in the DOM, ever. onClose's click
+// stops propagation since it's now nested inside .tab-players-label's own onClick handler.
+const _tabPlayersLabel = (iconSrc, label, onClick, onClose) => html`
   <span class="tab-players-label" @click=${onClick}>
     <span class="elo-item"><span class="elo-name">${label}</span></span>
     <img class="tab-icon" src="${iconSrc}" aria-hidden="true">
+    ${onClose ? html`
+      <span class="btn-close" style="cursor:pointer; margin-left: 0.5rem;" aria-label="Close"
+            @click=${e => { e.stopPropagation(); onClose(); }}></span>` : nothing}
   </span>`;
 
 // Same icon regardless of mode — the label text (a plain "N team(s)" count, see _tabPlayersLabel
@@ -1528,13 +1524,7 @@ const activateFixture = (idA, idB, pairId) => {
   if (_playersBtn) {
     const wasActive = _playersBtn.classList.contains('active');
     _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
-    const _closeStyle = 'font-size:0.45rem;align-self:flex-start';
-    render(html`
-      <span class="btn-close" style="visibility:hidden;${_closeStyle}" aria-label=""></span>
-      ${_tabPlayersLabel(_PLAYERS_TAB_ICON, `2 ${T.countries(2)}`, () => _switchTab('tab-players'))}
-      <span class="btn-close" style="cursor:pointer;${_closeStyle}" aria-label="Close"
-            @click=${() => clearFixtureSelection()}></span>
-    `, _playersBtn);
+    render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `2 ${T.countries(2)}`, () => _switchTab('tab-players'), () => clearFixtureSelection()), _playersBtn);
     requestAnimationFrame(() => _positionIndicator());
   }
 
