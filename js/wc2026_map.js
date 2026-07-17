@@ -1406,11 +1406,11 @@ const _showAllPlayers = () => {
 // sibling spacer pair, so there's exactly one close button in the DOM, ever. onClose's click
 // stops propagation since it's now nested inside .tab-players-label's own onClick handler.
 const _tabPlayersLabel = (iconSrc, label, onClick, onClose) => html`
-  <span class="tab-players-label" @click=${onClick}>
+  <span class="tab-players-label d-flex gap-1 text-nowrap" @click=${onClick}>
     <span class="elo-item"><span class="elo-name">${label}</span></span>
     <img class="tab-icon" src="${iconSrc}" aria-hidden="true">
     ${onClose ? html`
-      <span class="btn-close" style="cursor:pointer; margin-left: 0.5rem;" aria-label="Close"
+      <span class="btn-close" style="cursor:pointer; font-size: 8pt;" aria-label="Close"
             @click=${e => { e.stopPropagation(); onClose(); }}></span>` : nothing}
   </span>`;
 
