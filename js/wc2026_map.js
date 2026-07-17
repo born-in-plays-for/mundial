@@ -691,9 +691,16 @@ const _renderElo = (onAnimationDone) => {
   if (dimState.sourceId) _eloMain.update(dimState.sourceId);
 };
 const _updateEloSelection = () => {
-  if (_eloMain.hasItems && _eloMain.closest('#tab-teams, #tab-tournament')?.classList.contains('active'))
-    _eloMain.update(dimState.sourceId);
+  if (_eloMain.hasItems && !_playersTabActive) _eloMain.update(dimState.sourceId);
 };
+
+// Which #bottomTabList tab is actually showing right now — the single explicit source of truth
+// for that fact, set only by the 'show.bs.tab' listener just below (see its own comment on why
+// that has to be an explicit assignment from `name` rather than a #tab-players.classList read).
+// False until the very first 'show.bs.tab' fires (the initial restore-or-default _switchTab
+// call further down), which is always tab-teams/tab-tournament, never tab-players — see that
+// call's own comment.
+let _playersTabActive = false;
 
 // Bootstrap's own Tab component (data-bs-toggle="tab" on each button, see wc2026_map.html) now
 // owns activating/deactivating both the trigger buttons' .active class and their data-bs-target
@@ -705,8 +712,18 @@ const _updateEloSelection = () => {
 // restoring the last-active tab on load, or one of this file's own programmatic switches
 // (applySelection, activateFixture, _showAllPlayers, clearFixtureSelection) — see _switchTab
 // just below, now just a thin `.show()` trigger.
+//
+// _playersTabActive (see _playersMapActive further down) is set explicitly right here from
+// `name`, the one unambiguous fact this listener already has — deliberately NOT derived by
+// reading #tab-players' own .active class back off the DOM. Bootstrap's Tab.show() fires
+// 'show.bs.tab' *before* it calls _activate/_deactivate (the class flip happens after), so a
+// classList read at this point in the listener would still reflect the *previous* tab, one step
+// behind — exactly the inverted-toggle bug this replaced (dim mode's map layer visibly lagged
+// a full click behind whichever tab was actually active). No DOM read, no ordering to get
+// wrong, ever — a plain boolean this listener itself sets is the single source of truth.
 _bottomTabNav.addEventListener('show.bs.tab', e => {
   const name = e.target.dataset.tab;
+  _playersTabActive = name === 'tab-players';
   // tab-players isn't a real, standalone user choice (its own button never drives this listener
   // for a *user*-picked reason the way tab-teams/tab-tournament do — it only ever becomes active
   // via activateCountry's dim-mode selection, which itself isn't persisted), so restoring it on a
@@ -841,10 +858,7 @@ let _activeFixture = null; // { pairId, idA, idB } or null
 // (suppress every ordinary country/flag tooltip), onCountryClick (block entering/leaving a
 // selection from the map — the #tab-players-btn close (✕) is the only way out while here), and
 // the background svg click handler (same reason).
-const _playersMapActive = () => {
-  const ptEl = document.getElementById('tab-players');
-  return !!ptEl && ptEl.classList.contains('active');
-};
+const _playersMapActive = () => _playersTabActive;
 // A separate marker layer alongside the country flags, shown only while the all-players table is
 // the active content of #tab-players. Reuses .standalone-dot (map-container.js's existing,
 // previously-unused zoom-tick mechanism: cx/cy ride along with the map's own pan/zoom transform
