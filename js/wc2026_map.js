@@ -697,16 +697,19 @@ const _updateEloSelection = () => {
 
 const _tabIndicator = document.getElementById('tab-indicator');
 const _tabNav = document.getElementById('bottomTabList');
+// Overshoot beyond the target's own bounding rect on each side — box-sizing:border-box
+// (Bootstrap's global reset) means padding/margin tricks on #tab-indicator can't grow it past
+// the width set below, so the inset has to be baked into left/width directly.
+const _TAB_INDICATOR_INSET = 6;
 const _positionIndicator = (animate = true) => {
   const active = _tabNav.querySelector('.nav-link.active');
   if (!active || !_tabIndicator) return;
   if (!animate) _tabIndicator.style.transition = 'none';
-  const pill = active.querySelector('.elo-item');
-  const target = pill || active;
+  const target = active.firstElementChild || active;
   const navRect = _tabNav.getBoundingClientRect();
   const targetRect = target.getBoundingClientRect();
-  _tabIndicator.style.left = (targetRect.left - navRect.left) + 'px';
-  _tabIndicator.style.width = targetRect.width + 'px';
+  _tabIndicator.style.left = (targetRect.left - navRect.left - _TAB_INDICATOR_INSET) + 'px';
+  _tabIndicator.style.width = (targetRect.width + _TAB_INDICATOR_INSET * 2) + 'px';
   if (!animate) requestAnimationFrame(() => { _tabIndicator.style.transition = ''; });
 };
 _positionIndicator(false);
