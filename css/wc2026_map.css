@@ -47,13 +47,42 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   bottom: 0; left: 0; right: 0;
   z-index: 100;
   background: var(--fixed-element-bg);
-  border-top: 1px solid var(--border);
+  border-top: none;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /*
   padding-left: var(--vert-gutter) !important;
   padding-right: var(--vert-gutter) !important;
+  */
   display: flex; flex-direction: column;
 }
 #selection-panel { order: 2; }
 #bottomTabList { order: 99; }
+/* #bottomTabList sits at the bottom of the screen (content above, tabs below) — Bootstrap's
+   .nav-tabs assumes the opposite (tabs above content, e.g. the docs example), so every
+   top/bottom-relative treatment needs mirroring: the container's baseline border moves from
+   border-bottom to border-top, each .nav-link's rounded corners move from the top pair to the
+   bottom pair, the negative margin that tucks it against that baseline moves from margin-bottom
+   to margin-top, and the active/hover border-color's "hidden edge" (matching the color behind
+   it — body background for the active tab, so it visually merges into the pane above instead of
+   the pane below) moves from the bottom edge to the top edge. Values reuse Bootstrap's own
+   --bs-nav-tabs-* custom properties (the same ones the base .nav-tabs rule reads), just with
+   top/bottom swapped in the 3-value border-color shorthands (top / right&left / bottom).
+   border-*-radius/margin aren't exposed as variables, so those need direct property overrides. */
+#bottomTabList.nav-tabs {
+  border-bottom: 0;
+  border-top: var(--bs-nav-tabs-border-width) solid var(--bs-nav-tabs-border-color);
+  --bs-nav-tabs-link-hover-border-color: var(--bs-border-color) var(--bs-secondary-bg) var(--bs-secondary-bg);
+  --bs-nav-tabs-link-active-border-color: var(--bs-body-bg) var(--bs-border-color) var(--bs-border-color);
+}
+#bottomTabList.nav-tabs .nav-link {
+  margin-bottom: 0;
+  margin-top: calc(-1 * var(--bs-nav-tabs-border-width));
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: var(--bs-nav-tabs-border-radius);
+  border-bottom-right-radius: var(--bs-nav-tabs-border-radius);
+}
 #bottomTabContent {
     padding-left: var(--vert-gutter) !important;
     padding-right: var(--vert-gutter) !important;
@@ -100,7 +129,12 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
 
-#tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+/* display:flex on every nav-link (not just #tab-players-btn) — a plain block .nav-link sizes
+   its auto height off the *line box* (font-size × line-height), not off an inline <img> child's
+   own height, so tab-teams-btn/tab-tournament-btn end up a few px taller than their 24px icon
+   (a vertical-align:middle/line-height artifact). Flex sizing ignores line-height entirely,
+   so this also fixes centering, not just height. */
+#tab-teams-btn, #tab-tournament-btn, #tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 2px 0;}
 
 /* "Caps" column — the players table's own 4th column beyond css/wc2026_players.css's
    name/born-in/plays-for three (see js/wc2026_map.js's _playersTableTemplate), so it lives
