@@ -70,7 +70,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _initBehavior = MODE_BEHAVIOR[mode];
   render(html`<div id="control-sidebar" class="csb-panel ${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
-  <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-2">
+  <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-1">
     <div class="csb-toolbar d-flex align-items-center gap-2">
       ${alwaysOpen ? nothing : html`<button id="csb-close" class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><kbd class="csb-esc-kbd">ESC</kbd></button>`}
       <div class="dropdown dropend csb-conf-dropdown" id="zoom-conf-dropdown">
@@ -474,6 +474,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _updateCarouselTitle();
     callbacks.renderElo?.();
     applyFlagFilter();
+    // showDisplayToggle/showCarousel above change the sidebar's own natural content height —
+    // --csb-h (read by .csb-toggle's min-height and .csb-body's height, see
+    // measureControlSidebar's own comment) is otherwise only ever refreshed on init and on
+    // window resize, so without this it goes stale the moment a mode switch shows/hides either
+    // row, leaving .csb-toggle taller or shorter than the sidebar's actual current content.
+    // rAF-deferred since renderElo/applyFlagFilter's own DOM writes need a frame to land before
+    // measuring.
+    requestAnimationFrame(measureControlSidebar);
   };
 
   const _updateAlphaLabel = () => {
