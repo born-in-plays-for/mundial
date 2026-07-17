@@ -1145,7 +1145,7 @@ const applySelection = (id, destIds) => {
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     const wasActive = _playersBtn.classList.contains('active');
-    _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
+    _playersBtn.className = 'nav-link dim-selected' + (wasActive ? ' active' : '');
     render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.countries(1)}`, () => _switchTab('tab-players'), () => clearDim()), _playersBtn);
   }
 
@@ -1334,8 +1334,8 @@ const _showAllPlayers = () => {
 // sibling spacer pair, so there's exactly one close button in the DOM, ever. onClose's click
 // stops propagation since it's now nested inside .tab-players-label's own onClick handler.
 const _tabPlayersLabel = (iconSrc, label, onClick, onClose) => html`
-  <span class="tab-players-label d-flex gap-1 text-nowrap" @click=${onClick}>
-    <span class="elo-item"><span class="elo-name">${label}</span></span>
+  <span class="tab-players-label d-flex gap-1 text-nowrap mx-1 mt-1" @click=${onClick}>
+    <span style="color: var(--text-muted); font-size: 11px; margin: auto;">${label}</span>
     <img class="tab-icon" src="${iconSrc}" aria-hidden="true">
     ${onClose ? html`
       <span class="btn-close" style="cursor:pointer; font-size: 8pt;" aria-label="Close"
