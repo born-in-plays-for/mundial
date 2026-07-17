@@ -113,7 +113,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    its right edge — any extra width shows up as blank space before the pill, not as a gap between
    the pill and the icon, so neither the pill's text nor the icon shifts independently. */
 #tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; }
-#tab-players-btn .tab-players-label { display: flex; align-items: center; justify-content: flex-end; flex: 1 1 auto; min-width: 0; gap: 4px; }
+#tab-players-btn .tab-players-label { min-width: 0; gap: 4px; }
 #tab-players-btn .elo-item { cursor: pointer; }
 #tab-players-btn .btn-close { cursor: pointer; }
 #tab-players-btn.dim-selected { cursor: default; }
