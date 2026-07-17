@@ -97,28 +97,10 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #scroll-top-btn:hover { color: #000; }
 #zoom-reset, #zoom-span, #theme-toggle { cursor: pointer; }
 #zoom-reset:hover:not(:disabled), #zoom-span:hover:not(:disabled), #theme-toggle:hover { color: #000; opacity: 0.8; }
-#tab-players-btn .btn-close:hover { opacity: 1; }
 
-/* nav pills */
-#bottomTabList { align-items: center; flex-wrap: nowrap; height: 46px; position: relative; }
-#bottomTabList .nav-link { display: flex; align-items: center; color: #444; min-width: 0; white-space: nowrap; font-size: 13px; position: relative; z-index: 12; }
 #bottomTabList .nav-link .tab-icon { height: 24px; min-height: 24px; max-height: 24px; width: auto; flex-shrink: 0; }
-/* Always visible/clickable now — idle state (no country selected) shows a live "N teams" count;
-   dim-selected shows "1 team" (a single country) or "2 teams" (a fixture, via activateFixture)
-   plus a close button — same generic _tabPlayersLabel layout every time (js/wc2026_map.js), never
-   the focused team(s)' own name/flag. .flex-grow-1 (Bootstrap
-   utility, applied by JS alongside every className write) is what absorbs the label's own width
-   changes, so the other two nav buttons never shift; .tab-players-label's own flex-grow then
-   fills the button's box, and justify-content:flex-end packs the pill + icon together against
-   its right edge — any extra width shows up as blank space before the pill, not as a gap between
-   the pill and the icon, so neither the pill's text nor the icon shifts independently. */
+
 #tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; }
-#tab-players-btn .tab-players-label { min-width: 0;}
-#tab-players-btn .elo-item { cursor: pointer; }
-#tab-players-btn .btn-close { cursor: pointer; }
-#tab-players-btn.dim-selected { cursor: default; }
-#tab-players-btn .elo-name { overflow: hidden; text-overflow: ellipsis; }
-#tab-players-btn:hover .elo-item { background: var(--bg-hover); border-color: var(--border-strong); }
 
 /* "Caps" column — the players table's own 4th column beyond css/wc2026_players.css's
    name/born-in/plays-for three (see js/wc2026_map.js's _playersTableTemplate), so it lives
@@ -153,10 +135,11 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #tab-players .pt-table tbody tr.pt-row-selected { background-color: rgba(124, 58, 237, 0.12); }
 #tab-players .pt-table tbody tr.pt-row-selected > td:first-child { box-shadow: inset 3px 0 0 #7c3aed; }
 
-#bottomTabList .nav-link:hover { background-color: var(--bg-hover); color: #000; }
-#tab-players-btn:hover { background-color: transparent !important; }
-#bottomTabList .nav-link.active { color: #000; }
-#tab-indicator { position: absolute; top: 3px; bottom: 3px; border-radius: 6px 6px 0 0; background-color: var(--bg-hover); border-bottom: 1.5px solid #888; pointer-events: none; transition: left 0.3s ease, width 0.3s ease; }
+/* #bottomTabContent panes — shown/hidden purely off the .active class Bootstrap's Tab component
+   toggles on data-bs-target (js/wc2026_map.js's show.bs.tab listener), replacing the old
+   pane.hidden attribute toggle. */
+#bottomTabContent > [id] { display: none; }
+#bottomTabContent > [id].active { display: block; }
 
 /* #tab-players active (js/wc2026_map.js's _playersMapActive) — hides every country flag and the
    dim-mode arcs group, whether or not a selection is active underneath; the map is birth-city

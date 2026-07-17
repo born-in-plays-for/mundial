@@ -691,38 +691,27 @@ const _renderElo = (onAnimationDone) => {
   if (dimState.sourceId) _eloMain.update(dimState.sourceId);
 };
 const _updateEloSelection = () => {
-  if (_eloMain.hasItems && !_eloMain.closest('#tab-teams, #tab-tournament')?.hidden)
+  if (_eloMain.hasItems && _eloMain.closest('#tab-teams, #tab-tournament')?.classList.contains('active'))
     _eloMain.update(dimState.sourceId);
 };
 
-const _tabIndicator = document.getElementById('tab-indicator');
-const _tabNav = document.getElementById('bottomTabList');
-// Overshoot beyond the target's own bounding rect on each side — box-sizing:border-box
-// (Bootstrap's global reset) means padding/margin tricks on #tab-indicator can't grow it past
-// the width set below, so the inset has to be baked into left/width directly.
-const _TAB_INDICATOR_INSET = 6;
-const _positionIndicator = (animate = true) => {
-  const active = _tabNav.querySelector('.nav-link.active');
-  if (!active || !_tabIndicator) return;
-  if (!animate) _tabIndicator.style.transition = 'none';
-  const target = active.firstElementChild || active;
-  const navRect = _tabNav.getBoundingClientRect();
-  const targetRect = target.getBoundingClientRect();
-  _tabIndicator.style.left = (targetRect.left - navRect.left - _TAB_INDICATOR_INSET) + 'px';
-  _tabIndicator.style.width = (targetRect.width + _TAB_INDICATOR_INSET * 2) + 'px';
-  if (!animate) requestAnimationFrame(() => { _tabIndicator.style.transition = ''; });
-};
-_positionIndicator(false);
-
-const _switchTab = name => {
-  document.querySelectorAll('#bottomTabList button[data-tab]').forEach(b => {
-    b.classList.toggle('active', b.dataset.tab === name);
-  });
-  // tab-players isn't a real, standalone user choice (its own button is excluded from the
-  // click-wiring below — it only ever becomes active via activateCountry's dim-mode selection,
-  // which itself isn't persisted), so restoring it on a fresh page load with no selected
-  // country would just show the empty "click a country" hint. Persist only the tabs a user can
-  // actually pick directly.
+// Bootstrap's own Tab component (data-bs-toggle="tab" on each button, see wc2026_map.html) now
+// owns activating/deactivating both the trigger buttons' .active class and their data-bs-target
+// pane's .active class (css/wc2026_map.css shows/hides #bottomTabContent panes off that same
+// class) — no more manual class-toggling, pane.hidden flips, or a custom sliding indicator/swipe
+// gesture to keep in sync with them. All the side effects that used to live inline in a single
+// _switchTab function now hang off the 'show.bs.tab' event instead, so they fire uniformly
+// whether the tab was activated by a direct click (Bootstrap's own delegated listener),
+// restoring the last-active tab on load, or one of this file's own programmatic switches
+// (applySelection, activateFixture, _showAllPlayers, clearFixtureSelection) — see _switchTab
+// just below, now just a thin `.show()` trigger.
+_bottomTabNav.addEventListener('show.bs.tab', e => {
+  const name = e.target.dataset.tab;
+  // tab-players isn't a real, standalone user choice (its own button never drives this listener
+  // for a *user*-picked reason the way tab-teams/tab-tournament do — it only ever becomes active
+  // via activateCountry's dim-mode selection, which itself isn't persisted), so restoring it on a
+  // fresh page load with no selected country would just show the empty "click a country" hint.
+  // Persist only the tabs a user can actually pick directly.
   if (name !== 'tab-players') saveSlice('bottomTab', { active: name });
   const isEloTab = name === 'tab-teams' || name === 'tab-tournament';
   // A country/fixture selection is *never* cleared just by switching tabs, in either direction —
@@ -740,10 +729,6 @@ const _switchTab = name => {
     _activeTab = name;
     _updateGroupStageVisibility();
   }
-  _positionIndicator();
-  document.querySelectorAll('#bottomTabContent > [id]').forEach(pane => {
-    pane.hidden = pane.id !== name;
-  });
   if (isEloTab) {
     _expandPanel(_eloMetaPanel);
   } else {
@@ -755,68 +740,12 @@ const _switchTab = name => {
     _scrollToActiveElo();
   }
   _updateAllPlayersMapLayer();
-};
-document.querySelectorAll('#bottomTabList button[data-tab]').forEach(btn => {
-  if (btn.id === 'tab-players-btn') return;
-  btn.addEventListener('click', () => _switchTab(btn.dataset.tab));
 });
-
-// ── Swipe between tabs on mobile ──
-{
-  const _tabContent = document.getElementById('bottomTabContent');
-  const _TAB_IDS = ['tab-teams', 'tab-tournament', 'tab-players'];
-  // tab-players is always usable now (idle state shows the all-players table, dim-selected
-  // shows the selected country's) — no longer conditional on a country being selected.
-  const _availableTabs = () => _TAB_IDS;
-  const _btnRect = id => {
-    const btn = document.getElementById(id + '-btn');
-    if (!btn) return null;
-    const pill = btn.querySelector('.elo-item');
-    return (pill || btn).getBoundingClientRect();
-  };
-  let _swipeX0 = null, _swipeCurIdx = -1, _swipeAvail = [], _swipeOrigin = null;
-  _tabContent.addEventListener('touchstart', e => {
-    if (!_isLandscapeMobile()) return;
-    _swipeX0 = e.touches[0].clientX;
-    _swipeAvail = _availableTabs();
-    const activeTab = _tabNav.querySelector('.nav-link.active')?.dataset.tab;
-    _swipeCurIdx = _swipeAvail.indexOf(activeTab);
-    _swipeOrigin = _swipeCurIdx >= 0 ? _btnRect(_swipeAvail[_swipeCurIdx]) : null;
-  }, { passive: true });
-  _tabContent.addEventListener('touchmove', e => {
-    if (!_isLandscapeMobile()) return;
-    if (_swipeX0 == null || _swipeCurIdx < 0 || !_swipeOrigin) return;
-    const dx = e.touches[0].clientX - _swipeX0;
-    const dir = dx < 0 ? 1 : -1;
-    const targetIdx = _swipeCurIdx + dir;
-    if (targetIdx < 0 || targetIdx >= _swipeAvail.length) return;
-    const targetRect = _btnRect(_swipeAvail[targetIdx]);
-    if (!targetRect) return;
-    const navRect = _tabNav.getBoundingClientRect();
-    const t = Math.min(1, Math.abs(dx) / 80);
-    const fromL = _swipeOrigin.left - navRect.left, fromW = _swipeOrigin.width;
-    const toL = targetRect.left - navRect.left, toW = targetRect.width;
-    _tabIndicator.style.transition = 'none';
-    _tabIndicator.style.left = (fromL + (toL - fromL) * t) + 'px';
-    _tabIndicator.style.width = (fromW + (toW - fromW) * t) + 'px';
-  }, { passive: true });
-  _tabContent.addEventListener('touchend', e => {
-    if (!_isLandscapeMobile()) return;
-    if (_swipeX0 == null) return;
-    const dx = e.changedTouches[0].clientX - _swipeX0;
-    _swipeX0 = null;
-    _tabIndicator.style.transition = '';
-    if (Math.abs(dx) < 50 || _swipeCurIdx < 0) { _positionIndicator(); return; }
-    const next = _swipeCurIdx + (dx < 0 ? 1 : -1);
-    if (next >= 0 && next < _swipeAvail.length) _switchTab(_swipeAvail[next]);
-    else _positionIndicator();
-  }, { passive: true });
-}
+const _switchTab = name => bootstrap.Tab.getOrCreateInstance(document.getElementById(`${name}-btn`)).show();
 
 window.addEventListener('resize', () => {
   _syncMapHeight();
   sidebar.measureControlSidebar();
-  _positionIndicator(false);
 });
 
 // ── Tooltip helpers ───────────────────────────────────────────────────────────
@@ -914,7 +843,7 @@ let _activeFixture = null; // { pairId, idA, idB } or null
 // the background svg click handler (same reason).
 const _playersMapActive = () => {
   const ptEl = document.getElementById('tab-players');
-  return !!ptEl && !ptEl.hidden;
+  return !!ptEl && ptEl.classList.contains('active');
 };
 // A separate marker layer alongside the country flags, shown only while the all-players table is
 // the active content of #tab-players. Reuses .standalone-dot (map-container.js's existing,
@@ -1218,7 +1147,6 @@ const applySelection = (id, destIds) => {
     const wasActive = _playersBtn.classList.contains('active');
     _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
     render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.countries(1)}`, () => _switchTab('tab-players'), () => clearDim()), _playersBtn);
-    requestAnimationFrame(() => _positionIndicator());
   }
 
   _updateEloSelection();
@@ -1430,7 +1358,8 @@ const _renderPlayersTabIdle = () => {
   if (dimState.active || _activeFixture) return;
   const _pb = document.getElementById('tab-players-btn');
   if (!_pb) return;
-  _pb.className = 'nav-link flex-grow-1';
+  const wasActive = _pb.classList.contains('active');
+  _pb.className = 'nav-link flex-grow-1' + (wasActive ? ' active' : '');
   const count = _visibleQualifiedIds().size;
   render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `${count} ${T.countries(count)}`, () => _showAllPlayers()), _pb);
 };
@@ -1468,10 +1397,7 @@ const clearDim = () => {
   // which that render is what just reset to null; calling this any earlier would rebuild the
   // city-dot layer from the selection that's being cleared, not the ambient view it's clearing to.
   _updateAllPlayersMapLayer();
-  _updateSelectionPanel(() => {
-    _renderPlayersTabIdle();
-    requestAnimationFrame(() => _positionIndicator(false));
-  });
+  _updateSelectionPanel(_renderPlayersTabIdle);
   _updateEloSelection();
   _updateSelectionPanel();
 };
@@ -1525,7 +1451,6 @@ const activateFixture = (idA, idB, pairId) => {
     const wasActive = _playersBtn.classList.contains('active');
     _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
     render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `2 ${T.countries(2)}`, () => _switchTab('tab-players'), () => clearFixtureSelection()), _playersBtn);
-    requestAnimationFrame(() => _positionIndicator());
   }
 
   _updateAllPlayersMapLayer();
