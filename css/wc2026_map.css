@@ -148,6 +148,12 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    already reads as secondary/interactive-adjacent next to the name column's own Wikipedia link. */
 .pt-born--clickable { cursor: pointer; }
 
+/* "plays for" cell, only when that team is a qualified country (js/wc2026_map.js's
+   _allPlayersRow) — click selects it via activateCountry, same as clicking its flag on the map
+   or its Elo pill. Non-qualified nations (p.nation with no QUALIFIED_BY_NAME entry) aren't
+   selectable, so the cell stays inert there — same reasoning as .pt-born--clickable above. */
+.pt-caps--clickable { cursor: pointer; }
+
 /* Birth-city dots (js/wc2026_map.js's _updatePlayerCityDots) — hover shows a tooltip, click
    selects the matching table row(s) below; a plain pointer signals that without needing to
    touch .standalone-dot's own (unstyled) default, which is also reused by Cape Verde/Curaçao's

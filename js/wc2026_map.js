@@ -1221,12 +1221,16 @@ const _allPlayersRow = p => {
   };
   const teamId = QUALIFIED_BY_NAME[p.nation];
   const teamIso2 = teamId != null ? _eloItemsById.get(teamId)?.iso2 : null;
+  // Only clickable for a qualified country — same "nothing to do otherwise" rule as
+  // onBornInClick above. Selects that country (map flags/arcs + selection panel), same as
+  // clicking its flag on the map or its Elo pill.
+  const onPlaysForClick = () => { if (teamId != null) activateCountry(teamId); };
   const isSelected = p.pid != null && _selectedPids.has(String(p.pid));
   return html`
     <tr data-pid=${p.pid ?? nothing} class=${isSelected ? 'pt-row-selected' : nothing}>
       <td>${nameCell}${p.role === 'coach' ? html` <span class="coach-badge">${T.coach}</span>` : nothing}</td>
       <td class="pt-born${birthCity ? ' pt-born--clickable' : ''}" title=${bornInLabel} @click=${onBornInClick}>${_allPlayersFlag(birthIso2)}${bornInLabel}</td>
-      <td class="pt-caps" title=${p.nation}>${_allPlayersFlag(teamIso2)}${p.nation}</td>
+      <td class="pt-caps${teamId != null ? ' pt-caps--clickable' : ''}" title=${p.nation} @click=${onPlaysForClick}>${_allPlayersFlag(teamIso2)}${p.nation}</td>
       <td class="pt-num text-end">${p.role === 'coach' ? nothing : p.caps}</td>
     </tr>`;
 };
