@@ -1236,9 +1236,17 @@ const _allPlayersRow = p => {
   const teamId = QUALIFIED_BY_NAME[p.nation];
   const teamIso2 = teamId != null ? _eloItemsById.get(teamId)?.iso2 : null;
   // Only clickable for a qualified country — same "nothing to do otherwise" rule as
-  // onBornInClick above. Selects that country (map flags/arcs + selection panel), same as
-  // clicking its flag on the map or its Elo pill.
-  const onPlaysForClick = () => { if (teamId != null) activateCountry(teamId); };
+  // onBornInClick above. Selects that country (map flags/arcs + selection panel) and pans/zooms
+  // to it, same as clicking its flag on the map or its Elo pill (see _onCountryClick) — even
+  // though flags/arcs themselves stay hidden while #tab-players is the active tab
+  // (_playersMapActive), the camera move itself is still meaningful (it's what you'll see on
+  // switching back to tab-teams/tab-tournament, and the birth-city dots pan/zoom along with it).
+  const onPlaysForClick = () => {
+    if (teamId == null) return;
+    activateCountry(teamId);
+    if (enablesDim(teamId) && centroids[teamId]) _zoomToActiveDimFlags();
+    else if (centroids[teamId]) zoomToCentroid(teamId);
+  };
   const isSelected = p.pid != null && _selectedPids.has(String(p.pid));
   return html`
     <tr data-pid=${p.pid ?? nothing} class=${isSelected ? 'pt-row-selected' : nothing}>
