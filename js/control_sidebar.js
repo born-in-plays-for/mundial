@@ -353,6 +353,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _saveState();
   };
 
+  // Deterministic counterpart to _filterToggle, used by the `v`/`x` keyboard leaders below —
+  // toggle is fine for a mouse click (the checkbox states are right there on screen), but from
+  // the keyboard the same chord would show or hide depending on state you can't see without
+  // looking away from the keys. Setting an explicit target state makes every chord idempotent:
+  // typing it twice in a row is a no-op the second time, never a flip-back.
+  const _filterSet = (chks, checked) => {
+    chks.forEach(c => c.checked = checked);
+    callbacks.renderElo?.();
+    applyFlagFilter();
+    _saveState();
+  };
+
   _panel.querySelector('[data-row="QB"]'  ).addEventListener('click', () => _filterToggle([_fltIE, _fltIK, _fltHE, _fltHK]));
   _panel.querySelector('[data-row="IB"]'  ).addEventListener('click', () => _filterToggle([_fltIE, _fltIK]));
   _panel.querySelector('[data-row="HB"]'  ).addEventListener('click', () => _filterToggle([_fltHE, _fltHK]));
@@ -851,9 +863,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // scope (I=qualified importers, H=qualified homegrown/no imports, Q=all qualified,
   // F=FIFA non-qualified, N=non-FIFA, U=all unqualified, A=absolutely everything), position
   // 2 selects the column (E=exporters, K=keeps its players/non-exporters, B=both columns).
-  // Fixed length means no code is ever a prefix of another — _ACTIONS below relies on that
-  // property so the `f`-leader keyboard chord (see its own comment) always commits after
-  // exactly 2 more keystrokes, no ambiguity, no wait.
+  // Fixed length means no code is ever a prefix of another — _ACTIONS_SHOW/_ACTIONS_HIDE below
+  // rely on that property so the `v`/`x`-leader keyboard chord (see its own comment) always
+  // commits after exactly 2 more keystrokes, no ambiguity, no wait.
   const _ALIASES    = {
     QB:  ['IE','IK','HE','HK'],
     UB:  ['FE','NE','FK','NK'],
@@ -885,20 +897,38 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     return parts.join(',');
   };
 
-  // ── `f`-leader keyboard shortcut — f, then any 2-letter code from _CELL_MAP/_ALIASES ──
+  // ── `v`/`x`-leader keyboard shortcut — v or x, then any 2-letter code from
+  // _CELL_MAP/_ALIASES ── v shows (checks) the named cells, x hides (unchecks) them; cells
+  // outside the 2-letter code's own scope are never touched. Two leaders with a fixed target
+  // state, rather than one leader that toggles (`f`, an earlier version of this shortcut), since
+  // a keyboard chord can't see the checkbox states it's about to flip — the same `f IE` could
+  // show or hide IE depending on what was already checked, unlike a mouse click on the visible
+  // checkbox. v/x borrow the copy-paste mnemonic (paste-in / cut-out) rather than spelling out
+  // "show"/"hide", and neither letter collides with the row/column vocabulary itself
+  // (I/H/Q/F/N/U/A/E/K/B) the way an `s` or `h` leader would have.
   // No modifier: Ctrl/Cmd+<letter> risks a mistyped Cmd-Q on macOS, which quits the whole
   // browser at the OS level before any page JS ever sees the keystroke — unrecoverable and
   // unrelated to this feature, but a real risk for any modifier-based leader. A bare leader
   // (same pattern as GitHub's `g` `i`, `g` `p` navigation) sidesteps that class of mistake
   // entirely. Guarded to only fire when focus isn't in a text field, same guard any such
-  // global shortcut needs. _ACTIONS is derived from _CELL_MAP/_ALIASES rather than hand-listed,
-  // so the shortcut layer can never drift from the filter vocabulary those two already define.
-  const _ACTIONS = {};
-  Object.entries(_CELL_MAP).forEach(([code, el]) => { _ACTIONS[code] = () => _filterToggle([el]); });
-  Object.entries(_ALIASES).forEach(([code, cells]) => { _ACTIONS[code] = () => _filterToggle(cells.map(c => _CELL_MAP[c])); });
+  // global shortcut needs. _ACTIONS_SHOW/_ACTIONS_HIDE are derived from _CELL_MAP/_ALIASES
+  // rather than hand-listed, so the shortcut layer can never drift from the filter vocabulary
+  // those two already define.
+  const _ACTIONS_SHOW = {};
+  const _ACTIONS_HIDE = {};
+  Object.entries(_CELL_MAP).forEach(([code, el]) => {
+    _ACTIONS_SHOW[code] = () => _filterSet([el], true);
+    _ACTIONS_HIDE[code] = () => _filterSet([el], false);
+  });
+  Object.entries(_ALIASES).forEach(([code, cells]) => {
+    const els = cells.map(c => _CELL_MAP[c]);
+    _ACTIONS_SHOW[code] = () => _filterSet(els, true);
+    _ACTIONS_HIDE[code] = () => _filterSet(els, false);
+  });
 
   const _isEditableTarget = el => !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
   let _chordArmed = false;
+  let _chordShow = false; // which leader armed the chord — true: v (show), false: x (hide)
   let _chordBuf = '';
   let _chordTimer = null;
   const _resetChord = () => { _chordArmed = false; _chordBuf = ''; clearTimeout(_chordTimer); };
@@ -907,8 +937,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (_isEditableTarget(document.activeElement)) return;
     if (!_chordArmed) {
-      if (e.key.toLowerCase() !== 'f') return;
+      const leader = e.key.toLowerCase();
+      if (leader !== 'v' && leader !== 'x') return;
       _chordArmed = true;
+      _chordShow = leader === 'v';
       _chordBuf = '';
       _armChordTimer();
       return;
@@ -917,7 +949,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (!/^[a-zA-Z]$/.test(e.key)) { _resetChord(); return; }
     _chordBuf += e.key.toUpperCase();
     if (_chordBuf.length < 2) { _armChordTimer(); return; }
-    const action = _ACTIONS[_chordBuf];
+    const action = (_chordShow ? _ACTIONS_SHOW : _ACTIONS_HIDE)[_chordBuf];
     _resetChord();
     action?.();
   });

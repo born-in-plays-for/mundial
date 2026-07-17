@@ -3,7 +3,7 @@
 <!-- /i18n:api_page_title -->
 
 <!-- i18n:api_intro -->
-Référence technique pour l'API de paramètres d'URL de l'application — comment créer un lien pointant directement vers une configuration de filtre/tri précise sur la page Carte. (Note historique : ce guide a été écrit à l'origine pour `wc2026_countries.html`, qui n'est plus accessible depuis la barre de navigation — son cube de filtres vit désormais sur la page Carte elle-même.)
+Référence technique pour l'API de paramètres d'URL de l'application — comment créer un lien pointant directement vers une configuration de filtre/tri précise sur la page Carte.
 <!-- /i18n:api_intro -->
 
 <!-- i18n:api_url_params -->
@@ -57,7 +57,9 @@ S'applique uniquement à la clé de tri primaire. `?sort=alpha&dir=desc` donne Z
 ?stage=winner      Vainqueur uniquement
 ```
 
-Reflète le carrousel d'étapes du panneau de filtre (Phase de groupes → Seizièmes de finale → Huitièmes de finale → Quarts de finale → Demi-finales → Finale → Vainqueur). Chaque position filtre les pays qualifiés sur ceux qui ont « atteint » cette étape — encore en lice en l'abordant, ou l'ayant déjà remportée. Les pays exportateurs non qualifiés (cellules `FE`/`NE`) ne sont pas affectés, de même que les pays non exportateurs, non qualifiés (cellules `FK`/`NK`) — aucun des deux n'a de position dans le tournoi à « atteindre ».
+Reflète le carrousel d'étapes du panneau de filtre (Phase de groupes → Seizièmes de finale → Huitièmes de finale → Quarts de finale → Demi-finales → Finale → Vainqueur).
+
+**Ne filtre la liste que lorsque l'onglet Tournoi est actif.** Là, c'est le seul filtre : les pays qualifiés sont réduits à ceux ayant « atteint » cette étape — encore en lice en l'abordant, ou l'ayant déjà remportée — et tout pays non qualifié est masqué d'office, quels que soient `?show`/`?fifaconf`. Sur la liste des pays (l'onglet par défaut), `?stage` déplace quand même le carrousel pour le préparer au prochain changement d'onglet, mais n'a aucun effet de filtrage là — c'est `?show` qui filtre sur cet onglet. Voir « Portée par onglet » ci-dessous.
 
 Les valeurs inconnues sont silencieusement ignorées et les valeurs par défaut sont conservées.
 
@@ -72,7 +74,7 @@ Les valeurs inconnues sont silencieusement ignorées et les valeurs par défaut 
 ?fifaconf=ofc        OFC — Océanie
 ```
 
-Filtre la liste sur les seuls membres FIFA de la confédération indiquée. Les pays non-FIFA ne sont pas affectés — ils restent visibles ou masqués selon les réglages `?show` et `?stage`. Met aussi en évidence la frontière de la confédération et effectue un zoom pour l'ajuster à la vue.
+Filtre la liste sur les seuls membres FIFA de la confédération indiquée — sur la liste des pays ; sur l'onglet Tournoi, ce filtrage de liste est totalement contourné, tout comme `?show` (voir « Portée par onglet » ci-dessous). Les pays non-FIFA ne sont pas affectés par le filtre lui-même — ils restent visibles ou masqués selon `?show`. Mettre en évidence la frontière de la confédération et y effectuer un zoom se produit quel que soit l'onglet actif.
 
 Les valeurs inconnues sont silencieusement ignorées et les valeurs par défaut sont conservées.
 
@@ -83,6 +85,8 @@ Les valeurs inconnues sont silencieusement ignorées et les valeurs par défaut 
 ```
 
 Codes de cellule et/ou alias de groupe séparés par des virgules. Quand `show` est présent, il **remplace** entièrement les valeurs par défaut — toute cellule non listée est décochée. En son absence, les valeurs par défaut s'appliquent.
+
+Ne filtre la liste que sur la liste des pays — sur l'onglet Tournoi, `?stage` est le seul filtre et `?show` est totalement ignoré ; voir « Portée par onglet » ci-dessous.
 
 ## Codes de cellule
 
@@ -139,41 +143,44 @@ Le cadre officiel de ce projet est **Né dans / Joue pour** : un joueur est *né
 
 Les alias et les codes individuels peuvent être librement combinés ; le résultat est une union. Les jetons inconnus sont silencieusement ignorés — si tous les jetons sont non reconnus, le paramètre est ignoré entièrement et les valeurs par défaut sont conservées.
 
-## Combiner `?stage` et `?show`
+## Portée par onglet — `?stage`, `?show` et `?fifaconf` ne se combinent pas tous
 
-- `?stage=r16&show=QB` → uniquement les pays qualifiés ayant atteint les Huitièmes de finale
-- `?stage=winner&show=QB` → uniquement le champion final
-- `?stage=r32&show=AE` → colonne exportateur, exportateurs qualifiés filtrés sur les Seizièmes de finale, exportateurs non qualifiés non affectés
-- `?stage` n'a aucun effet sur les lignes non qualifiées (`FE`/`NE`/`FK`/`NK`) — aucune d'elles n'a de position dans le tournoi à atteindre
+Ces trois-là ne s'empilent pas en un seul filtre combiné — chacun des deux onglets de la page Carte ne lit qu'un seul d'entre eux pour le filtrage effectif de la liste :
+
+- **La liste des pays** (l'onglet par défaut) : `?show` et `?fifaconf` filtrent ensemble comme d'habitude ; `?stage` se contente de garer le carrousel pour plus tard — aucun effet de filtrage pour l'instant.
+- **Onglet Tournoi** : `?stage` est le seul filtre — les pays qualifiés sont réduits à ceux ayant atteint cette étape, tout pays non qualifié est masqué d'office ; `?show` et `?fifaconf` sont tous deux ignorés.
+
+L'onglet actif au chargement de la page provient de votre dernière visite (`localStorage`), ou de la liste des pays en l'absence de préférence enregistrée — jamais de l'URL elle-même. Un lien combinant `?stage=r16&show=QB`, par exemple, prérègle les deux valeurs, mais une seule des deux moitiés filtre réellement quelque chose, selon l'onglet sur lequel vous atterrissez.
 
 ## Raccourci clavier
 
-Chaque code de cellule et alias ci-dessus fonctionne aussi comme raccourci clavier dans le panneau de filtre : appuyez sur **`f`**, puis tapez le code à 2 lettres. Pas de touche modificatrice — les raccourcis basés sur Ctrl/Cmd risquent de tomber sur `Cmd-Q` (qui quitte tout le navigateur sur macOS) en cas d'erreur de frappe, donc ceci utilise un préfixe simple à la place, le même schéma que GitHub utilise pour sa propre navigation en `g` `i`. Il ne se déclenche que lorsque le focus n'est pas dans un champ de texte.
+Chaque code de cellule et alias ci-dessus fonctionne aussi comme raccourci clavier dans le panneau de filtre : appuyez sur **`v`** ou **`x`**, puis tapez le code à 2 lettres. `v` **affiche** (coche) les cellules indiquées ; `x` **masque** (décoche) ces mêmes cellules — les cellules hors de la portée du code ne sont jamais touchées. Deux préfixes avec un état cible fixe, plutôt qu'un seul préfixe qui bascule, car un raccourci clavier ne voit pas l'état des cases à cocher qu'il s'apprête à modifier, contrairement à un clic de souris sur la case visible — le même raccourci afficherait ou masquerait selon ce qui était déjà coché. `v`/`x` reprennent le mnémonique copier-coller (coller = insérer / couper = retirer) plutôt que d'épeler « afficher »/« masquer ». Pas de touche modificatrice — les raccourcis basés sur Ctrl/Cmd risquent de tomber sur `Cmd-Q` (qui quitte tout le navigateur sur macOS) en cas d'erreur de frappe, donc ceci utilise un préfixe simple à la place, le même schéma que GitHub utilise pour sa propre navigation en `g` `i`. Il ne se déclenche que lorsque le focus n'est pas dans un champ de texte.
 
 Comme chaque code fait exactement 2 lettres, le raccourci se résout toujours dès que la deuxième lettre est tapée — pas d'attente, pas d'ambiguïté entre par exemple `IE` et un code plus long qui commencerait pareil (il n'y en a pas).
 
 ```
-f I E    bascule la cellule IE (qualifié, imports, exports)
-f Q B    bascule toutes les lignes qualifiées
-f F B    bascule la ligne FIFA
-f A B    bascule tout (comme cliquer sur « tout »)
+v I E    affiche la cellule IE (qualifié, imports, exports)
+x I E    masque la cellule IE
+v Q B    affiche toutes les lignes qualifiées
+x A B    masque tout
 ```
+
+Enchaîner deux raccourcis permet d'atteindre un état cible exact quel que soit l'état de départ — par exemple, « uniquement `FK`, quel que soit l'état initial » s'obtient avec `x A B` (tout masquer) puis `v F K` (afficher seulement `FK`).
 
 `Échap` à tout moment pendant un raccourci l'annule ; un raccourci inactif se réinitialise aussi automatiquement après ~1,5 s.
 
 ## Exemples
 
 ```
-?stage=r16&show=QB              Pays qualifiés ayant atteint les Huitièmes de finale.
-?stage=winner&show=QB           Uniquement le champion final.
-?show=QB                        Les 48 pays qualifiés ; non qualifiés masqués.
-?show=QB&sort=pop&dir=asc       Pays qualifiés triés par population croissante.
-?show=IE                        Uniquement les pays qui importent et exportent des joueurs.
-?stage=r32&show=AE              Colonne exportateur, exportateurs qualifiés filtrés sur les Seizièmes de finale, exportateurs non qualifiés non affectés.
-?sort=delta&dir=asc&show=QB     Pays qualifiés avec le plus faible écart joue-pour / né-dans en premier.
-?show=AB                        Les 8 cellules, y compris FK et NK normalement masquées.
-?show=QB,FE                     Pays qualifiés + exportateurs FIFA non qualifiés.
-?fifaconf=uefa                  Membres UEFA uniquement (filtre FIFA ; non-FIFA non affectés).
-?fifaconf=caf&show=AE           Exportateurs africains uniquement.
+?show=QB                        Liste des pays : les 48 pays qualifiés ; non qualifiés masqués.
+?show=QB&sort=pop&dir=asc       Liste des pays : pays qualifiés triés par population croissante.
+?show=IE                        Liste des pays : uniquement les pays qui importent et exportent des joueurs.
+?sort=delta&dir=asc&show=QB     Liste des pays : pays qualifiés avec le plus faible écart joue-pour / né-dans en premier.
+?show=AB                        Liste des pays : les 8 cellules, y compris FK et NK normalement masquées.
+?show=QB,FE                     Liste des pays : pays qualifiés + exportateurs FIFA non qualifiés.
+?fifaconf=uefa                  Liste des pays : membres UEFA uniquement (filtre FIFA ; non-FIFA non affectés).
+?fifaconf=caf&show=AE           Liste des pays : exportateurs africains uniquement.
+?stage=r16                      Onglet Tournoi : pays qualifiés ayant atteint les Huitièmes de finale.
+?stage=winner                   Onglet Tournoi : uniquement le champion final.
 ```
 <!-- /i18n:api_url_params -->

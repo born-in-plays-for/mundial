@@ -3,7 +3,7 @@
 <!-- /i18n:api_page_title -->
 
 <!-- i18n:api_intro -->
-Technical reference for the app's URL query parameter API — how to link directly into a specific filter/sort configuration on the Map page. (Historical note: this guide was originally written for `wc2026_countries.html`, which is no longer linked from the navbar — its filter cube lives on the Map page itself these days.)
+Technical reference for the app's URL query parameter API — how to link directly into a specific filter/sort configuration on the Map page.
 <!-- /i18n:api_intro -->
 
 <!-- i18n:api_url_params -->
@@ -57,7 +57,9 @@ Applies to the primary sort key only. `?sort=alpha&dir=desc` yields Z–A.
 ?stage=winner      Winner only
 ```
 
-Mirrors the stage carousel in the filter panel (Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner). Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it. Non-qualified exporter countries (`FE`/`NE` cells) are unaffected, same as non-exporter, non-qualified countries (`FK`/`NK` cells) — neither has a tournament position to "reach".
+Mirrors the stage carousel in the filter panel (Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner).
+
+**Only filters the list while the Tournament tab is active.** There, it's the sole gate: qualified countries are narrowed to those that "reached" that stage — still alive going into it, or having already won it — and every non-qualified country is hidden outright, regardless of `?show`/`?fifaconf`. On the Country List (the default tab), `?stage` still moves the carousel into position for whenever you switch tabs, but has no filtering effect there — `?show` is what filters on that tab instead. See "Tab scoping" below.
 
 Unknown values are silently ignored and defaults are kept.
 
@@ -72,7 +74,7 @@ Unknown values are silently ignored and defaults are kept.
 ?fifaconf=ofc        OFC — Oceania
 ```
 
-Filters the list to FIFA members of the named confederation only. Non-FIFA countries are unaffected — they remain visible or hidden according to the `?show` and `?stage` settings. Also highlights the confederation boundary and pans/zooms to it.
+Filters the list to FIFA members of the named confederation only — on the Country List; on the Tournament tab this list-filtering is bypassed entirely, same as `?show` (see "Tab scoping" below). Non-FIFA countries are unaffected by the filter itself — they remain visible or hidden according to `?show`. Highlighting the confederation boundary and panning/zooming to it happens regardless of which tab is active.
 
 Unknown values are silently ignored and defaults are kept.
 
@@ -83,6 +85,8 @@ Unknown values are silently ignored and defaults are kept.
 ```
 
 Comma-separated cell codes and/or group aliases. When `show` is present it **replaces** the defaults entirely — every cell not listed is unchecked. When absent, defaults apply.
+
+Only filters the list on the Country List — on the Tournament tab, `?stage` is the sole gate and `?show` is ignored entirely; see "Tab scoping" below.
 
 ## Cell codes
 
@@ -139,41 +143,44 @@ The official framing of this project is **Born In / Plays For**: a player is *bo
 
 Aliases and individual codes may be freely mixed; the result is a union. Unknown tokens are silently ignored — if all tokens are unrecognized the parameter is ignored entirely and defaults are kept.
 
-## Combining `?stage` with `?show`
+## Tab scoping — `?stage`, `?show`, and `?fifaconf` don't all combine
 
-- `?stage=r16&show=QB` → only qualified countries that reached the Round of 16
-- `?stage=winner&show=QB` → only the eventual champion
-- `?stage=r32&show=AE` → qualified exporters that reached the Round of 32, plus all non-qualified exporters (unaffected by stage)
-- `?stage` has no effect on non-qualified rows (`FE`/`NE`/`FK`/`NK`) — none of them have a tournament position to reach
+These three don't stack into one combined filter — each of the Map page's two tabs reads only one of them for actual list-filtering:
+
+- **The Country List** (the default tab): `?show` and `?fifaconf` filter together as usual; `?stage` only parks the carousel for later — no filtering effect yet.
+- **Tournament tab**: `?stage` is the sole filter — qualified countries narrowed to those that reached that stage, every non-qualified country hidden outright; `?show` and `?fifaconf` are both ignored.
+
+Which tab is active on page load comes from your last visit (`localStorage`), or the Country List if there's no saved preference — never from the URL itself. A link combining `?stage=r16&show=QB`, for example, pre-sets both values, but only one half actually filters anything, depending on which tab you land on.
 
 ## Keyboard shortcut
 
-Every cell code and alias above is also a keyboard shortcut inside the filter sidebar: press **`f`**, then type the 2-letter code. No modifier key — Ctrl/Cmd-based leaders risk landing on `Cmd-Q` (quits the whole browser on macOS) if mistyped, so this uses a bare leader instead, the same pattern GitHub uses for its own `g` `i`-style navigation. It only fires when focus isn't in a text field.
+Every cell code and alias above is also a keyboard shortcut inside the filter sidebar: press **`v`** or **`x`**, then type the 2-letter code. `v` **shows** (checks) the named cells; `x` **hides** (unchecks) them — cells outside the code's own scope are never touched. Two leaders with a fixed target state, rather than one leader that toggles, since a keyboard chord can't see the checkbox states it's about to flip the way a mouse click on the visible checkbox can — the same chord would show or hide depending on whatever was already checked. `v`/`x` borrow the copy-paste mnemonic (paste-in / cut-out) rather than spelling out "show"/"hide". No modifier key — Ctrl/Cmd-based leaders risk landing on `Cmd-Q` (quits the whole browser on macOS) if mistyped, so this uses a bare leader instead, the same pattern GitHub uses for its own `g` `i`-style navigation. It only fires when focus isn't in a text field.
 
 Because every code is exactly 2 letters, the shortcut always resolves the instant the second letter is typed — no waiting, no ambiguity between e.g. `IE` and a longer code that starts the same way (there isn't one).
 
 ```
-f I E    toggle the IE cell (qualified, imports, exports)
-f Q B    toggle all qualified rows
-f F B    toggle the FIFA row
-f A B    toggle everything (same as clicking "all")
+v I E    show the IE cell (qualified, imports, exports)
+x I E    hide the IE cell
+v Q B    show all qualified rows
+x A B    hide everything
 ```
+
+Chaining two chords reaches an exact target state regardless of what was checked before it — e.g. "only `FK`, whatever the starting state" is `x A B` (hide everything) then `v F K` (show just `FK`).
 
 `Esc` at any point during a shortcut cancels it; an idle chord also resets itself automatically after ~1.5s.
 
 ## Examples
 
 ```
-?stage=r16&show=QB              Qualified countries that reached the Round of 16.
-?stage=winner&show=QB           Only the eventual champion.
-?show=QB                        All 48 qualified countries; non-qualified hidden.
-?show=QB&sort=pop&dir=asc       Qualified countries sorted by population ascending.
-?show=IE                        Only countries that both import and export players.
-?stage=r32&show=AE              Exporter column, qualified exporters filtered to the Round of 32, non-qualified exporters unaffected.
-?sort=delta&dir=asc&show=QB     Qualified countries with fewest plays-for vs. born-in first.
-?show=AB                        All 8 cells including normally-hidden FK and NK.
-?show=QB,FE                     Qualified countries + non-qualified FIFA exporters.
-?fifaconf=uefa                  UEFA members only (FIFA filter; non-FIFA unaffected).
-?fifaconf=caf&show=AE           African exporters only.
+?show=QB                        Country List: all 48 qualified countries; non-qualified hidden.
+?show=QB&sort=pop&dir=asc       Country List: qualified countries sorted by population ascending.
+?show=IE                        Country List: only countries that both import and export players.
+?sort=delta&dir=asc&show=QB     Country List: qualified countries with fewest plays-for vs. born-in first.
+?show=AB                        Country List: all 8 cells including normally-hidden FK and NK.
+?show=QB,FE                     Country List: qualified countries + non-qualified FIFA exporters.
+?fifaconf=uefa                  Country List: UEFA members only (FIFA filter; non-FIFA unaffected).
+?fifaconf=caf&show=AE           Country List: African exporters only.
+?stage=r16                      Tournament tab: qualified countries that reached the Round of 16.
+?stage=winner                   Tournament tab: only the eventual champion.
 ```
 <!-- /i18n:api_url_params -->

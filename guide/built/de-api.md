@@ -3,7 +3,7 @@
 <!-- /i18n:api_page_title -->
 
 <!-- i18n:api_intro -->
-Technische Referenz für die URL-Query-Parameter-API der App — wie man direkt zu einer bestimmten Filter-/Sortierkonfiguration auf der Karten-Seite verlinkt. (Historischer Hinweis: Dieser Leitfaden wurde ursprünglich für `wc2026_countries.html` geschrieben, das nicht mehr aus der Navigationsleiste verlinkt ist — sein Filterwürfel lebt heute auf der Karten-Seite selbst.)
+Technische Referenz für die URL-Query-Parameter-API der App — wie man direkt zu einer bestimmten Filter-/Sortierkonfiguration auf der Karten-Seite verlinkt.
 <!-- /i18n:api_intro -->
 
 <!-- i18n:api_url_params -->
@@ -57,7 +57,9 @@ Gilt nur für den primären Sortierschlüssel. `?sort=alpha&dir=desc` ergibt Z�
 ?stage=winner      Nur der Sieger
 ```
 
-Spiegelt das Phasen-Karussell im Filterpanel wider (Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger). Jede Position filtert qualifizierte Länder auf die, die diese Phase "erreicht" haben — beim Einstieg noch im Rennen, oder sie bereits gewonnen. Nicht qualifizierte Exporteur-Länder (Zellen `FE`/`NE`) sind nicht betroffen, ebenso wenig wie nicht exportierende, nicht qualifizierte Länder (Zellen `FK`/`NK`) — keines von beiden hat eine Turnierposition zu "erreichen".
+Spiegelt das Phasen-Karussell im Filterpanel wider (Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger).
+
+**Filtert die Liste nur, während der Turnier-Tab aktiv ist.** Dort ist es das alleinige Kriterium: qualifizierte Länder werden auf die eingegrenzt, die diese Phase „erreicht" haben — beim Einstieg noch im Rennen, oder sie bereits gewonnen —, und jedes nicht qualifizierte Land wird ausnahmslos ausgeblendet, unabhängig von `?show`/`?fifaconf`. Auf der Länderliste (dem Standard-Tab) bewegt `?stage` das Karussell weiterhin in Position für den nächsten Tab-Wechsel, hat dort aber keine Filterwirkung — dort filtert stattdessen `?show`. Siehe „Tab-Geltungsbereich" unten.
 
 Unbekannte Werte werden stillschweigend ignoriert, und die Standardwerte bleiben erhalten.
 
@@ -72,7 +74,7 @@ Unbekannte Werte werden stillschweigend ignoriert, und die Standardwerte bleiben
 ?fifaconf=ofc        OFC — Ozeanien
 ```
 
-Filtert die Liste auf FIFA-Mitglieder der genannten Konföderation. Nicht-FIFA-Länder sind nicht betroffen — sie bleiben je nach den Einstellungen `?show` und `?stage` sichtbar oder ausgeblendet. Hebt außerdem die Konföderationsgrenze hervor und zoomt darauf.
+Filtert die Liste auf FIFA-Mitglieder der genannten Konföderation — auf der Länderliste; auf dem Turnier-Tab wird diese Listenfilterung vollständig umgangen, genau wie `?show` (siehe „Tab-Geltungsbereich" unten). Nicht-FIFA-Länder sind vom Filter selbst nicht betroffen — sie bleiben je nach `?show` sichtbar oder ausgeblendet. Das Hervorheben der Konföderationsgrenze und das Heranzoomen geschieht unabhängig davon, welcher Tab aktiv ist.
 
 Unbekannte Werte werden stillschweigend ignoriert, und die Standardwerte bleiben erhalten.
 
@@ -83,6 +85,8 @@ Unbekannte Werte werden stillschweigend ignoriert, und die Standardwerte bleiben
 ```
 
 Kommagetrennte Zellcodes und/oder Gruppenaliase. Wenn `show` vorhanden ist, **ersetzt** es die Standardwerte vollständig — jede nicht aufgeführte Zelle wird abgewählt. Wenn es fehlt, gelten die Standardwerte.
+
+Filtert die Liste nur auf der Länderliste — auf dem Turnier-Tab ist `?stage` das alleinige Kriterium, und `?show` wird vollständig ignoriert; siehe „Tab-Geltungsbereich" unten.
 
 ## Zellcodes
 
@@ -139,41 +143,44 @@ Der offizielle Rahmen dieses Projekts ist **Geboren in / Spielt für**: Ein Spie
 
 Aliase und einzelne Codes können frei gemischt werden; das Ergebnis ist eine Vereinigung. Unbekannte Token werden stillschweigend ignoriert — sind alle Token unbekannt, wird der Parameter vollständig ignoriert und die Standardwerte bleiben erhalten.
 
-## `?stage` mit `?show` kombinieren
+## Tab-Geltungsbereich — `?stage`, `?show` und `?fifaconf` kombinieren sich nicht alle
 
-- `?stage=r16&show=QB` → nur qualifizierte Länder, die das Achtelfinale erreicht haben
-- `?stage=winner&show=QB` → nur der eventuelle Champion
-- `?stage=r32&show=AE` → Exporteur-Spalte, qualifizierte Exporteure gefiltert auf das Sechzehntelfinale, nicht qualifizierte Exporteure nicht betroffen
-- `?stage` hat keine Auswirkung auf nicht qualifizierte Zeilen (`FE`/`NE`/`FK`/`NK`) — keine von ihnen hat eine Turnierposition zu erreichen
+Diese drei stapeln sich nicht zu einem kombinierten Filter — jeder der beiden Tabs der Karten-Seite liest für die tatsächliche Listenfilterung nur einen von ihnen:
+
+- **Die Länderliste** (der Standard-Tab): `?show` und `?fifaconf` filtern wie gewohnt zusammen; `?stage` parkt das Karussell nur für später — noch keine Filterwirkung.
+- **Turnier-Tab**: `?stage` ist der alleinige Filter — qualifizierte Länder werden auf die eingegrenzt, die diese Phase erreicht haben, jedes nicht qualifizierte Land wird ausnahmslos ausgeblendet; `?show` und `?fifaconf` werden beide ignoriert.
+
+Welcher Tab beim Laden der Seite aktiv ist, stammt von Ihrem letzten Besuch (`localStorage`), oder ist die Länderliste, falls keine gespeicherte Einstellung vorliegt — niemals von der URL selbst. Ein Link, der `?stage=r16&show=QB` kombiniert, setzt zum Beispiel beide Werte vorab, aber nur eine der beiden Hälften filtert tatsächlich etwas, je nachdem, auf welchem Tab Sie landen.
 
 ## Tastaturkürzel
 
-Jeder Zellcode und Alias oben funktioniert auch als Tastaturkürzel im Filterpanel: Drücken Sie **`f`**, dann geben Sie den 2-Buchstaben-Code ein. Keine Modifikatortaste — Ctrl/Cmd-basierte Kürzel riskieren bei einem Tippfehler ein `Cmd-Q` (beendet den gesamten Browser unter macOS), daher wird hier stattdessen ein einfacher Präfix verwendet, dasselbe Muster, das GitHub für seine eigene `g` `i`-Navigation nutzt. Es löst nur aus, wenn der Fokus nicht in einem Textfeld liegt.
+Jeder Zellcode und Alias oben funktioniert auch als Tastaturkürzel im Filterpanel: Drücken Sie **`v`** oder **`x`**, dann geben Sie den 2-Buchstaben-Code ein. `v` **zeigt** die genannten Zellen (aktiviert sie); `x` **blendet** sie **aus** (deaktiviert sie) — Zellen außerhalb des Codes bleiben unberührt. Zwei Präfixe mit einem festen Zielzustand statt eines einzigen umschaltenden Präfixes, da ein Tastaturkürzel die Kontrollkästchen-Zustände, die es gleich ändert, nicht sehen kann — anders als ein Mausklick auf das sichtbare Kontrollkästchen. Dasselbe Kürzel würde je nach bereits aktiviertem Zustand anzeigen oder ausblenden. `v`/`x` greifen die Kopieren-Ausschneiden-Eselsbrücke auf (Einfügen / Ausschneiden) statt „anzeigen"/„ausblenden" auszubuchstabieren. Keine Modifikatortaste — Ctrl/Cmd-basierte Kürzel riskieren bei einem Tippfehler ein `Cmd-Q` (beendet den gesamten Browser unter macOS), daher wird hier stattdessen ein einfacher Präfix verwendet, dasselbe Muster, das GitHub für seine eigene `g` `i`-Navigation nutzt. Es löst nur aus, wenn der Fokus nicht in einem Textfeld liegt.
 
 Da jeder Code aus genau 2 Buchstaben besteht, löst sich das Kürzel immer sofort nach Eingabe des zweiten Buchstabens auf — kein Warten, keine Mehrdeutigkeit zwischen z. B. `IE` und einem längeren Code, der genauso beginnt (den es nicht gibt).
 
 ```
-f I E    schaltet die Zelle IE um (qualifiziert, Importe, Exporte)
-f Q B    schaltet alle qualifizierten Zeilen um
-f F B    schaltet die FIFA-Zeile um
-f A B    schaltet alles um (wie Klick auf „alle")
+v I E    zeigt die Zelle IE (qualifiziert, Importe, Exporte)
+x I E    blendet die Zelle IE aus
+v Q B    zeigt alle qualifizierten Zeilen
+x A B    blendet alles aus
 ```
+
+Zwei Kürzel nacheinander erreichen unabhängig vom Ausgangszustand einen exakten Zielzustand — z. B. „nur `FK`, egal vom Ausgangszustand" mit `x A B` (alles ausblenden) gefolgt von `v F K` (nur `FK` anzeigen).
 
 `Esc` bricht ein Kürzel jederzeit während der Eingabe ab; ein untätiges Kürzel setzt sich nach ~1,5s auch automatisch zurück.
 
 ## Beispiele
 
 ```
-?stage=r16&show=QB              Qualifizierte Länder, die das Achtelfinale erreicht haben.
-?stage=winner&show=QB           Nur der eventuelle Champion.
-?show=QB                        Alle 48 qualifizierten Länder; nicht qualifizierte ausgeblendet.
-?show=QB&sort=pop&dir=asc       Qualifizierte Länder nach Bevölkerung aufsteigend sortiert.
-?show=IE                        Nur Länder, die sowohl importieren als auch exportieren.
-?stage=r32&show=AE              Exporteur-Spalte, qualifizierte Exporteure gefiltert auf das Sechzehntelfinale, nicht qualifizierte Exporteure nicht betroffen.
-?sort=delta&dir=asc&show=QB     Qualifizierte Länder mit dem geringsten Überschuss spielt-für gegenüber geboren-in zuerst.
-?show=AB                        Alle 8 Zellen, einschließlich der normalerweise ausgeblendeten FK und NK.
-?show=QB,FE                     Qualifizierte Länder + nicht qualifizierte FIFA-Exporteure.
-?fifaconf=uefa                  Nur UEFA-Mitglieder (FIFA-Filter; Nicht-FIFA nicht betroffen).
-?fifaconf=caf&show=AE           Nur afrikanische Exporteure.
+?show=QB                        Länderliste: alle 48 qualifizierten Länder; nicht qualifizierte ausgeblendet.
+?show=QB&sort=pop&dir=asc       Länderliste: qualifizierte Länder nach Bevölkerung aufsteigend sortiert.
+?show=IE                        Länderliste: nur Länder, die sowohl importieren als auch exportieren.
+?sort=delta&dir=asc&show=QB     Länderliste: qualifizierte Länder mit dem geringsten Überschuss spielt-für gegenüber geboren-in zuerst.
+?show=AB                        Länderliste: alle 8 Zellen, einschließlich der normalerweise ausgeblendeten FK und NK.
+?show=QB,FE                     Länderliste: qualifizierte Länder + nicht qualifizierte FIFA-Exporteure.
+?fifaconf=uefa                  Länderliste: nur UEFA-Mitglieder (FIFA-Filter; Nicht-FIFA nicht betroffen).
+?fifaconf=caf&show=AE           Länderliste: nur afrikanische Exporteure.
+?stage=r16                      Turnier-Tab: qualifizierte Länder, die das Achtelfinale erreicht haben.
+?stage=winner                   Turnier-Tab: nur der eventuelle Champion.
 ```
 <!-- /i18n:api_url_params -->

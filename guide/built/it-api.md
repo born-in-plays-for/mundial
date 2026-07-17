@@ -3,7 +3,7 @@
 <!-- /i18n:api_page_title -->
 
 <!-- i18n:api_intro -->
-Riferimento tecnico per l'API dei parametri URL dell'app — come creare un link diretto a una specifica configurazione di filtro/ordinamento nella pagina Mappa. (Nota storica: questa guida è stata originariamente scritta per `wc2026_countries.html`, non più collegata dalla barra di navigazione — il suo cubo di filtri vive oggi nella pagina Mappa stessa.)
+Riferimento tecnico per l'API dei parametri URL dell'app — come creare un link diretto a una specifica configurazione di filtro/ordinamento nella pagina Mappa.
 <!-- /i18n:api_intro -->
 
 <!-- i18n:api_url_params -->
@@ -57,7 +57,9 @@ Si applica solo alla chiave di ordinamento primaria. `?sort=alpha&dir=desc` rest
 ?stage=winner      Solo il vincitore
 ```
 
-Rispecchia il carosello delle fasi nel pannello del filtro (Fase a gironi → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore). Ogni posizione filtra i paesi qualificati su quelli che hanno "raggiunto" quella fase — ancora in corsa entrandovi, o già vincitori. I paesi esportatori non qualificati (celle `FE`/`NE`) non sono interessati, così come i paesi non esportatori e non qualificati (celle `FK`/`NK`) — nessuno dei due ha una posizione nel torneo da "raggiungere".
+Rispecchia il carosello delle fasi nel pannello del filtro (Fase a gironi → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore).
+
+**Filtra l'elenco solo quando la scheda Torneo è attiva.** Lì è l'unico filtro: i paesi qualificati vengono ridotti a quelli che hanno "raggiunto" quella fase — ancora in corsa entrandovi, o già vincitori — e ogni paese non qualificato viene nascosto a prescindere, indipendentemente da `?show`/`?fifaconf`. Sull'elenco dei paesi (la scheda predefinita), `?stage` sposta comunque il carosello in posizione per il prossimo cambio di scheda, ma lì non ha alcun effetto di filtro — è `?show` a filtrare su quella scheda. Vedi "Ambito per scheda" più sotto.
 
 I valori sconosciuti vengono ignorati silenziosamente e i valori predefiniti vengono mantenuti.
 
@@ -72,7 +74,7 @@ I valori sconosciuti vengono ignorati silenziosamente e i valori predefiniti ven
 ?fifaconf=ofc        OFC — Oceania
 ```
 
-Filtra l'elenco ai soli membri FIFA della confederazione indicata. I paesi non FIFA non sono interessati — restano visibili o nascosti secondo le impostazioni `?show` e `?stage`. Evidenzia anche il confine della confederazione ed esegue lo zoom per adattarlo alla vista.
+Filtra l'elenco ai soli membri FIFA della confederazione indicata — sull'elenco dei paesi; sulla scheda Torneo questo filtraggio dell'elenco viene completamente bypassato, come `?show` (vedi "Ambito per scheda" più sotto). I paesi non FIFA non sono interessati dal filtro in sé — restano visibili o nascosti secondo `?show`. Evidenziare il confine della confederazione ed eseguirvi lo zoom avviene indipendentemente da quale scheda sia attiva.
 
 I valori sconosciuti vengono ignorati silenziosamente e i valori predefiniti vengono mantenuti.
 
@@ -83,6 +85,8 @@ I valori sconosciuti vengono ignorati silenziosamente e i valori predefiniti ven
 ```
 
 Codici di cella e/o alias di gruppo separati da virgola. Quando `show` è presente **sostituisce** interamente i valori predefiniti — ogni cella non elencata viene deselezionata. In sua assenza, si applicano i valori predefiniti.
+
+Filtra l'elenco solo sull'elenco dei paesi — sulla scheda Torneo, `?stage` è l'unico filtro e `?show` viene ignorato del tutto; vedi "Ambito per scheda" più sotto.
 
 ## Codici di cella
 
@@ -139,41 +143,44 @@ L'inquadratura ufficiale di questo progetto è **Nato in / Gioca per**: un gioca
 
 Alias e codici singoli possono essere liberamente combinati; il risultato è un'unione. I token sconosciuti vengono ignorati silenziosamente — se tutti i token non sono riconosciuti, il parametro viene ignorato interamente e i valori predefiniti vengono mantenuti.
 
-## Combinare `?stage` con `?show`
+## Ambito per scheda — `?stage`, `?show` e `?fifaconf` non si combinano tutti insieme
 
-- `?stage=r16&show=QB` → solo i paesi qualificati che hanno raggiunto gli Ottavi di finale
-- `?stage=winner&show=QB` → solo il campione finale
-- `?stage=r32&show=AE` → colonna esportatore, esportatori qualificati filtrati sui Sedicesimi di finale, esportatori non qualificati non interessati
-- `?stage` non ha alcun effetto sulle righe non qualificate (`FE`/`NE`/`FK`/`NK`) — nessuna di esse ha una posizione nel torneo da raggiungere
+Questi tre non si sommano in un unico filtro combinato — ciascuna delle due schede della pagina Mappa legge solo uno di essi per il filtraggio effettivo dell'elenco:
+
+- **L'elenco dei paesi** (la scheda predefinita): `?show` e `?fifaconf` filtrano insieme come al solito; `?stage` si limita a parcheggiare il carosello per dopo — nessun effetto di filtro per ora.
+- **Scheda Torneo**: `?stage` è l'unico filtro — i paesi qualificati vengono ridotti a quelli che hanno raggiunto quella fase, ogni paese non qualificato viene nascosto a prescindere; `?show` e `?fifaconf` vengono entrambi ignorati.
+
+Quale scheda sia attiva al caricamento della pagina dipende dall'ultima visita (`localStorage`), o dall'elenco dei paesi se non c'è una preferenza salvata — mai dall'URL stesso. Un link che combina `?stage=r16&show=QB`, ad esempio, preimposta entrambi i valori, ma solo una delle due metà filtra effettivamente qualcosa, a seconda della scheda su cui si atterra.
 
 ## Scorciatoia da tastiera
 
-Ogni codice di cella e alias sopra funziona anche come scorciatoia da tastiera nel pannello del filtro: premi **`f`**, poi digita il codice a 2 lettere. Nessun tasto modificatore — le scorciatoie basate su Ctrl/Cmd rischiano di finire su `Cmd-Q` (chiude l'intero browser su macOS) in caso di errore di battitura, quindi qui si usa un prefisso semplice, lo stesso schema che GitHub usa per la propria navigazione `g` `i`. Si attiva solo quando il focus non è in un campo di testo.
+Ogni codice di cella e alias sopra funziona anche come scorciatoia da tastiera nel pannello del filtro: premi **`v`** oppure **`x`**, poi digita il codice a 2 lettere. `v` **mostra** (seleziona) le celle indicate; `x` le **nasconde** (deseleziona) — le celle fuori dall'ambito del codice non vengono mai toccate. Due prefissi con uno stato di destinazione fisso, invece di un unico prefisso che attiva/disattiva, perché una scorciatoia da tastiera non vede lo stato delle caselle che sta per modificare, a differenza di un clic del mouse sulla casella visibile — la stessa scorciatoia mostrerebbe o nasconderebbe a seconda di cosa era già selezionato. `v`/`x` riprendono il mnemonico copia-incolla-taglia (incolla = inserisci / taglia = rimuovi) invece di scrivere per esteso "mostra"/"nascondi". Nessun tasto modificatore — le scorciatoie basate su Ctrl/Cmd rischiano di finire su `Cmd-Q` (chiude l'intero browser su macOS) in caso di errore di battitura, quindi qui si usa un prefisso semplice, lo stesso schema che GitHub usa per la propria navigazione `g` `i`. Si attiva solo quando il focus non è in un campo di testo.
 
 Poiché ogni codice è di esattamente 2 lettere, la scorciatoia si risolve sempre non appena viene digitata la seconda lettera — nessuna attesa, nessuna ambiguità tra ad esempio `IE` e un codice più lungo che inizia allo stesso modo (non ce n'è uno).
 
 ```
-f I E    attiva/disattiva la cella IE (qualificato, import, export)
-f Q B    attiva/disattiva tutte le righe qualificate
-f F B    attiva/disattiva la riga FIFA
-f A B    attiva/disattiva tutto (come cliccare su "tutto")
+v I E    mostra la cella IE (qualificato, import, export)
+x I E    nasconde la cella IE
+v Q B    mostra tutte le righe qualificate
+x A B    nasconde tutto
 ```
+
+Concatenare due scorciatoie permette di raggiungere uno stato esatto indipendentemente da quello di partenza — ad esempio, "solo `FK`, qualunque sia lo stato iniziale" si ottiene con `x A B` (nascondi tutto) seguito da `v F K` (mostra solo `FK`).
 
 `Esc` in qualsiasi momento durante una scorciatoia la annulla; una sequenza inattiva si azzera automaticamente anche dopo ~1,5s.
 
 ## Esempi
 
 ```
-?stage=r16&show=QB              Paesi qualificati che hanno raggiunto gli Ottavi di finale.
-?stage=winner&show=QB           Solo il campione finale.
-?show=QB                        Tutti i 48 paesi qualificati; non qualificati nascosti.
-?show=QB&sort=pop&dir=asc       Paesi qualificati ordinati per popolazione crescente.
-?show=IE                        Solo i paesi che importano ed esportano giocatori.
-?stage=r32&show=AE              Colonna esportatore, esportatori qualificati filtrati sui Sedicesimi di finale, esportatori non qualificati non interessati.
-?sort=delta&dir=asc&show=QB     Paesi qualificati con il minor scarto gioca-per/nato-in per primi.
-?show=AB                        Tutte le 8 celle, incluse FK e NK normalmente nascoste.
-?show=QB,FE                     Paesi qualificati + esportatori FIFA non qualificati.
-?fifaconf=uefa                  Solo membri UEFA (filtro FIFA; non-FIFA non interessati).
-?fifaconf=caf&show=AE           Solo esportatori africani.
+?show=QB                        Elenco dei paesi: tutti i 48 paesi qualificati; non qualificati nascosti.
+?show=QB&sort=pop&dir=asc       Elenco dei paesi: paesi qualificati ordinati per popolazione crescente.
+?show=IE                        Elenco dei paesi: solo i paesi che importano ed esportano giocatori.
+?sort=delta&dir=asc&show=QB     Elenco dei paesi: paesi qualificati con il minor scarto gioca-per/nato-in per primi.
+?show=AB                        Elenco dei paesi: tutte le 8 celle, incluse FK e NK normalmente nascoste.
+?show=QB,FE                     Elenco dei paesi: paesi qualificati + esportatori FIFA non qualificati.
+?fifaconf=uefa                  Elenco dei paesi: solo membri UEFA (filtro FIFA; non-FIFA non interessati).
+?fifaconf=caf&show=AE           Elenco dei paesi: solo esportatori africani.
+?stage=r16                      Scheda Torneo: paesi qualificati che hanno raggiunto gli Ottavi di finale.
+?stage=winner                   Scheda Torneo: solo il campione finale.
 ```
 <!-- /i18n:api_url_params -->

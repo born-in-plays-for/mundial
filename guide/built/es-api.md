@@ -3,7 +3,7 @@
 <!-- /i18n:api_page_title -->
 
 <!-- i18n:api_intro -->
-Referencia técnica de la API de parámetros de URL de la app — cómo enlazar directamente a una configuración concreta de filtro/orden en la página Mapa. (Nota histórica: esta guía se escribió originalmente para `wc2026_countries.html`, que ya no está enlazada desde la barra de navegación — su cubo de filtros vive ahora en la propia página Mapa.)
+Referencia técnica de la API de parámetros de URL de la app — cómo enlazar directamente a una configuración concreta de filtro/orden en la página Mapa.
 <!-- /i18n:api_intro -->
 
 <!-- i18n:api_url_params -->
@@ -57,7 +57,9 @@ Se aplica solo a la clave de ordenación primaria. `?sort=alpha&dir=desc` da Z�
 ?stage=winner      Solo el campeón
 ```
 
-Refleja el carrusel de fases del panel de filtro (Fase de grupos → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón). Cada posición filtra los países clasificados a los que "alcanzaron" esa fase — todavía en juego al entrar en ella, o habiéndola ya ganado. Los países exportadores no clasificados (celdas `FE`/`NE`) no se ven afectados, igual que los países no exportadores y no clasificados (celdas `FK`/`NK`) — ninguno de los dos tiene una posición en el torneo que "alcanzar".
+Refleja el carrusel de fases del panel de filtro (Fase de grupos → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón).
+
+**Solo filtra la lista mientras la pestaña Torneo está activa.** Allí es el único filtro: los países clasificados se reducen a los que "alcanzaron" esa fase — todavía en juego al entrar en ella, o habiéndola ya ganado — y cualquier país no clasificado queda oculto sin excepción, sin importar `?show`/`?fifaconf`. En la lista de países (la pestaña predeterminada), `?stage` sigue moviendo el carrusel a su posición para el próximo cambio de pestaña, pero no tiene efecto de filtrado allí — es `?show` lo que filtra en esa pestaña. Ver "Alcance por pestaña" más abajo.
 
 Los valores desconocidos se ignoran silenciosamente y se mantienen los valores predeterminados.
 
@@ -72,7 +74,7 @@ Los valores desconocidos se ignoran silenciosamente y se mantienen los valores p
 ?fifaconf=ofc        OFC — Oceanía
 ```
 
-Filtra la lista a los miembros FIFA de la confederación indicada únicamente. Los países no FIFA no se ven afectados — permanecen visibles u ocultos según los ajustes `?show` y `?stage`. También resalta el límite de la confederación y hace zoom para ajustarse a ella.
+Filtra la lista a los miembros FIFA de la confederación indicada únicamente — en la lista de países; en la pestaña Torneo este filtrado de lista se omite por completo, igual que `?show` (ver "Alcance por pestaña" más abajo). Los países no FIFA no se ven afectados por el filtro en sí — permanecen visibles u ocultos según `?show`. Resaltar el límite de la confederación y hacer zoom sobre ella ocurre sin importar qué pestaña esté activa.
 
 Los valores desconocidos se ignoran silenciosamente y se mantienen los valores predeterminados.
 
@@ -83,6 +85,8 @@ Los valores desconocidos se ignoran silenciosamente y se mantienen los valores p
 ```
 
 Códigos de celda y/o alias de grupo separados por comas. Cuando `show` está presente, **reemplaza** los valores predeterminados por completo — cualquier celda no listada queda desmarcada. Cuando está ausente, se aplican los valores predeterminados.
+
+Solo filtra la lista en la lista de países — en la pestaña Torneo, `?stage` es el único filtro y `?show` se ignora por completo; ver "Alcance por pestaña" más abajo.
 
 ## Códigos de celda
 
@@ -139,41 +143,44 @@ El planteamiento oficial de este proyecto es **Nacido en / Juega para**: un juga
 
 Los alias y los códigos individuales pueden combinarse libremente; el resultado es una unión. Los tokens desconocidos se ignoran silenciosamente — si todos los tokens no son reconocidos, el parámetro se ignora por completo y se mantienen los valores predeterminados.
 
-## Combinar `?stage` con `?show`
+## Alcance por pestaña — `?stage`, `?show` y `?fifaconf` no se combinan todos
 
-- `?stage=r16&show=QB` → solo países clasificados que alcanzaron los Octavos de final
-- `?stage=winner&show=QB` → solo el campeón final
-- `?stage=r32&show=AE` → columna exportadora, exportadores clasificados filtrados a los Dieciseisavos de final, exportadores no clasificados no afectados
-- `?stage` no tiene efecto sobre las filas no clasificadas (`FE`/`NE`/`FK`/`NK`) — ninguna de ellas tiene una posición en el torneo que alcanzar
+Estos tres no se apilan en un único filtro combinado — cada una de las dos pestañas de la página Mapa lee solo uno de ellos para el filtrado real de la lista:
+
+- **La lista de países** (la pestaña predeterminada): `?show` y `?fifaconf` filtran juntos como de costumbre; `?stage` solo aparca el carrusel para más tarde — sin efecto de filtrado todavía.
+- **Pestaña Torneo**: `?stage` es el único filtro — los países clasificados se reducen a los que alcanzaron esa fase, cualquier país no clasificado queda oculto sin excepción; `?show` y `?fifaconf` se ignoran ambos.
+
+Qué pestaña está activa al cargar la página proviene de tu última visita (`localStorage`), o de la lista de países si no hay una preferencia guardada — nunca de la propia URL. Un enlace que combine `?stage=r16&show=QB`, por ejemplo, preconfigura ambos valores, pero solo una de las dos mitades filtra realmente algo, según en qué pestaña aterrices.
 
 ## Atajo de teclado
 
-Cada código de celda y alias de arriba también funciona como atajo de teclado dentro del panel de filtro: pulsa **`f`**, luego escribe el código de 2 letras. Sin tecla modificadora — los atajos basados en Ctrl/Cmd corren el riesgo de terminar en `Cmd-Q` (cierra todo el navegador en macOS) si se teclea mal, así que aquí se usa un prefijo simple en su lugar, el mismo patrón que usa GitHub para su propia navegación `g` `i`. Solo se activa cuando el foco no está en un campo de texto.
+Cada código de celda y alias de arriba también funciona como atajo de teclado dentro del panel de filtro: pulsa **`v`** o **`x`**, luego escribe el código de 2 letras. `v` **muestra** (marca) las celdas indicadas; `x` las **oculta** (desmarca) — las celdas fuera del alcance del código nunca se tocan. Dos prefijos con un estado de destino fijo, en lugar de un único prefijo que alterna, porque un atajo de teclado no puede ver el estado de las casillas que está a punto de cambiar, a diferencia de un clic del ratón sobre la casilla visible — el mismo atajo mostraría u ocultaría según lo que ya estuviera marcado. `v`/`x` retoman la mnemotecnia de copiar-pegar (pegar = insertar / cortar = quitar) en lugar de deletrear "mostrar"/"ocultar". Sin tecla modificadora — los atajos basados en Ctrl/Cmd corren el riesgo de terminar en `Cmd-Q` (cierra todo el navegador en macOS) si se teclea mal, así que aquí se usa un prefijo simple en su lugar, el mismo patrón que usa GitHub para su propia navegación `g` `i`. Solo se activa cuando el foco no está en un campo de texto.
 
 Como cada código tiene exactamente 2 letras, el atajo siempre se resuelve en cuanto se escribe la segunda letra — sin espera, sin ambigüedad entre, por ejemplo, `IE` y un código más largo que empiece igual (no lo hay).
 
 ```
-f I E    activa/desactiva la celda IE (clasificado, importaciones, exportaciones)
-f Q B    activa/desactiva todas las filas clasificadas
-f F B    activa/desactiva la fila FIFA
-f A B    activa/desactiva todo (igual que hacer clic en "todo")
+v I E    muestra la celda IE (clasificado, importaciones, exportaciones)
+x I E    oculta la celda IE
+v Q B    muestra todas las filas clasificadas
+x A B    oculta todo
 ```
+
+Encadenar dos atajos permite alcanzar un estado exacto sin importar el estado inicial — por ejemplo, "solo `FK`, sea cual sea el estado de partida" se logra con `x A B` (ocultar todo) seguido de `v F K` (mostrar solo `FK`).
 
 `Esc` en cualquier momento durante un atajo lo cancela; un atajo inactivo también se reinicia automáticamente tras ~1,5s.
 
 ## Ejemplos
 
 ```
-?stage=r16&show=QB              Países clasificados que alcanzaron los Octavos de final.
-?stage=winner&show=QB           Solo el campeón final.
-?show=QB                        Los 48 países clasificados; no clasificados ocultos.
-?show=QB&sort=pop&dir=asc       Países clasificados ordenados por población ascendente.
-?show=IE                        Solo países que importan y exportan jugadores.
-?stage=r32&show=AE              Columna exportadora, exportadores clasificados filtrados a los Dieciseisavos de final, exportadores no clasificados no afectados.
-?sort=delta&dir=asc&show=QB     Países clasificados con menor diferencia juega-para/nacido-en primero.
-?show=AB                        Las 8 celdas, incluidas FK y NK normalmente ocultas.
-?show=QB,FE                     Países clasificados + exportadores FIFA no clasificados.
-?fifaconf=uefa                  Solo miembros UEFA (filtro FIFA; no-FIFA no afectados).
-?fifaconf=caf&show=AE           Solo exportadores africanos.
+?show=QB                        Lista de países: los 48 países clasificados; no clasificados ocultos.
+?show=QB&sort=pop&dir=asc       Lista de países: países clasificados ordenados por población ascendente.
+?show=IE                        Lista de países: solo países que importan y exportan jugadores.
+?sort=delta&dir=asc&show=QB     Lista de países: países clasificados con menor diferencia juega-para/nacido-en primero.
+?show=AB                        Lista de países: las 8 celdas, incluidas FK y NK normalmente ocultas.
+?show=QB,FE                     Lista de países: países clasificados + exportadores FIFA no clasificados.
+?fifaconf=uefa                  Lista de países: solo miembros UEFA (filtro FIFA; no-FIFA no afectados).
+?fifaconf=caf&show=AE           Lista de países: solo exportadores africanos.
+?stage=r16                      Pestaña Torneo: países clasificados que alcanzaron los Octavos de final.
+?stage=winner                   Pestaña Torneo: solo el campeón final.
 ```
 <!-- /i18n:api_url_params -->
