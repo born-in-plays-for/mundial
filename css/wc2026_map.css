@@ -123,7 +123,32 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 
 /* scroll-to-top / zoom controls */
 #scroll-top-btn { position: absolute; right: 12px; top: calc(-26px - 8px); cursor: pointer; }
-#scroll-top-btn:hover { color: #000; }
+/* Same round icon-button look as the stage carousel's prev/next controls (css/global.css's
+   .elo-viz .carousel-control-prev-icon/-next-icon) — border-radius:50%, var(--bg-button)
+   background, opacity 0.35 fading to 0.9 on hover — instead of the plain rounded-square look
+   #zoom-reset/#zoom-span/#theme-toggle share (map-container.css). #bottom-panel #scroll-top-btn
+   (two-ID descendant selector) is needed to out-specificity that shared rule regardless of
+   stylesheet load order — map-container.css loads after this file.
+   color:#1C274C matches those same icons' fixed navy stroke — the shared rule's inherited
+   var(--text-muted) (#999) all but disappeared against var(--bg-button) at opacity 0.35, an
+   effective-contrast problem the carousel icons don't have since theirs is a background-image
+   asset already baked to that navy, not a currentColor SVG inheriting a muted gray. */
+#bottom-panel #scroll-top-btn {
+  width: 16px; height: 16px; padding: 7px; box-sizing: content-box;
+  background-color: var(--bg-button);
+  border: 1px solid var(--border); border-radius: 50%;
+  color: #1C274C;
+  opacity: 0.35;
+}
+/* Fills the same 16x16 content box the carousel icons' background-image fills — the inline SVG
+   had its own tiny hardcoded width/height (10x7) sized for the old plain-icon-no-chrome look, so
+   even once the button box itself matched, the glyph inside stayed too small for it. viewBox is
+   still what preserves the chevron's own proportions within this box (SVG default
+   preserveAspectRatio="xMidYMid meet" — no distortion). */
+#bottom-panel #scroll-top-btn svg {
+  width: 16px; height: 16px;
+}
+#bottom-panel #scroll-top-btn:hover { opacity: 0.9; }
 #zoom-reset, #zoom-span, #theme-toggle { cursor: pointer; }
 #zoom-reset:hover:not(:disabled), #zoom-span:hover:not(:disabled), #theme-toggle:hover { color: #000; opacity: 0.8; }
 
