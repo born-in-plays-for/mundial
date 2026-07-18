@@ -19,7 +19,9 @@ SVG path data is inlined as JS string constants and rendered via `unsafeHTML`. E
 | `ICON_LOGIN` | `solar_linear/square-bottom-up-svgrepo-com.svg` | Square Bottom Up  | Sign-in button |
 | `ICON_LOGOUT` | `solar_linear/square-bottom-down-svgrepo-com.svg` | Square Bottom Down  | Sign-out button |
 | `WA_ICON` | *(custom — no source file)* | WhatsApp logo, `#25D366` fill | Offline contact link |
-| `WARN_ICON` | `solar_linear/shield-warning-svgrepo-com.svg` | Shield with `!`, amber stroke | Offline warning badge |
+| `ICON_SERVER_OFF` | `images/settings-off-svgrepo-com.svg` *(custom — gear from `solar_linear/settings-svgrepo-com.svg` + crossing bar)* | Gear with diagonal slash, Bootstrap info `#0dcaf0` | Offline badge — `server` category (backend not configured) |
+| `ICON_DB_ERROR` | `images/database-error-svgrepo-com.svg` | Database stack with `!`, Bootstrap info `#0dcaf0` stroke | Offline badge — `connection` category (internet OK, backend unreachable) |
+| `ICON_WIFI_OFF` | `images/wifi-off-svgrepo-com.svg` | Wifi signal with diagonal slash, Bootstrap info `#0dcaf0` fill | Offline badge — `offline` category (no internet at all) |
 
 ---
 

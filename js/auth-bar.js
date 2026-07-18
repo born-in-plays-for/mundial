@@ -25,7 +25,12 @@ const ICON_CHAIN = `<svg class="chain-icon" width="24" height="24" viewBox="62 4
 const ICON_LOGIN = _icon(`<path d="M12.9999 21.9994C17.055 21.9921 19.1784 21.8926 20.5354 20.5355C21.9999 19.0711 21.9999 16.714 21.9999 12C21.9999 7.28595 21.9999 4.92893 20.5354 3.46447C19.071 2 16.714 2 11.9999 2C7.28587 2 4.92884 2 3.46438 3.46447C2.10734 4.8215 2.00779 6.94493 2.00049 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M3 21L11 13M11 13H5M11 13V19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 const ICON_LOGOUT = _icon(`<path d="M12.9999 21.9994C17.055 21.9921 19.1784 21.8926 20.5354 20.5355C21.9999 19.0711 21.9999 16.714 21.9999 12C21.9999 7.28595 21.9999 4.92893 20.5354 3.46447C19.071 2 16.714 2 11.9999 2C7.28587 2 4.92884 2 3.46438 3.46447C2.10734 4.8215 2.00779 6.94493 2.00049 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M11 13L3 21M3 21H9M3 21V15" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 const WA_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#25D366" style="width:18px;height:18px;vertical-align:-3px;display:inline-block"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
-const WARN_ICON = `<svg class="warn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;vertical-align:-3px;display:inline-block"><path d="M3 10.4167C3 7.21907 3 5.62028 3.37752 5.08241C3.75503 4.54454 5.25832 4.02996 8.26491 3.00079L8.83772 2.80472C10.405 2.26824 11.1886 2 12 2C12.8114 2 13.595 2.26824 15.1623 2.80472L15.7351 3.00079C18.7417 4.02996 20.245 4.54454 20.6225 5.08241C21 5.62028 21 7.21907 21 10.4167C21 10.8996 21 11.4234 21 11.9914C21 17.6294 16.761 20.3655 14.1014 21.5273C13.38 21.8424 13.0193 22 12 22C10.9807 22 10.62 21.8424 9.89856 21.5273C7.23896 20.3655 3 17.6294 3 11.9914C3 11.4234 3 10.8996 3 10.4167Z" stroke="#f59e0b" stroke-width="1.5"/><path d="M12 8V12" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="15" r="1" fill="#f59e0b"/></svg>`;
+// Backend not configured / not running — images/settings-off-svgrepo-com.svg (gear from solar_linear/settings-svgrepo-com.svg + crossing bar)
+const ICON_SERVER_OFF = `<svg class="warn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;vertical-align:-3px;display:inline-block"><circle cx="12" cy="12" r="3" stroke="#0dcaf0" stroke-width="1.5"/><path d="M13.7654 2.15224C13.3978 2 12.9319 2 12 2C11.0681 2 10.6022 2 10.2346 2.15224C9.74457 2.35523 9.35522 2.74458 9.15223 3.23463C9.05957 3.45834 9.0233 3.7185 9.00911 4.09799C8.98826 4.65568 8.70226 5.17189 8.21894 5.45093C7.73564 5.72996 7.14559 5.71954 6.65219 5.45876C6.31645 5.2813 6.07301 5.18262 5.83294 5.15102C5.30704 5.08178 4.77518 5.22429 4.35436 5.5472C4.03874 5.78938 3.80577 6.1929 3.33983 6.99993C2.87389 7.80697 2.64092 8.21048 2.58899 8.60491C2.51976 9.1308 2.66227 9.66266 2.98518 10.0835C3.13256 10.2756 3.3397 10.437 3.66119 10.639C4.1338 10.936 4.43789 11.4419 4.43786 12C4.43783 12.5581 4.13375 13.0639 3.66118 13.3608C3.33965 13.5629 3.13248 13.7244 2.98508 13.9165C2.66217 14.3373 2.51966 14.8691 2.5889 15.395C2.64082 15.7894 2.87379 16.193 3.33973 17C3.80568 17.807 4.03865 18.2106 4.35426 18.4527C4.77508 18.7756 5.30694 18.9181 5.83284 18.8489C6.07289 18.8173 6.31632 18.7186 6.65204 18.5412C7.14547 18.2804 7.73556 18.27 8.2189 18.549C8.70224 18.8281 8.98826 19.3443 9.00911 19.9021C9.02331 20.2815 9.05957 20.5417 9.15223 20.7654C9.35522 21.2554 9.74457 21.6448 10.2346 21.8478C10.6022 22 11.0681 22 12 22C12.9319 22 13.3978 22 13.7654 21.8478C14.2554 21.6448 14.6448 21.2554 14.8477 20.7654C14.9404 20.5417 14.9767 20.2815 14.9909 19.902C15.0117 19.3443 15.2977 18.8281 15.781 18.549C16.2643 18.2699 16.8544 18.2804 17.3479 18.5412C17.6836 18.7186 17.927 18.8172 18.167 18.8488C18.6929 18.9181 19.2248 18.7756 19.6456 18.4527C19.9612 18.2105 20.1942 17.807 20.6601 16.9999C21.1261 16.1929 21.3591 15.7894 21.411 15.395C21.4802 14.8691 21.3377 14.3372 21.0148 13.9164C20.8674 13.7243 20.6602 13.5628 20.3387 13.3608C19.8662 13.0639 19.5621 12.558 19.5621 11.9999C19.5621 11.4418 19.8662 10.9361 20.3387 10.6392C20.6603 10.4371 20.8675 10.2757 21.0149 10.0835C21.3378 9.66273 21.4803 9.13087 21.4111 8.60497C21.3592 8.21055 21.1262 7.80703 20.6602 7C20.1943 6.19297 19.9613 5.78945 19.6457 5.54727C19.2249 5.22436 18.693 5.08185 18.1671 5.15109C17.9271 5.18269 17.6837 5.28136 17.3479 5.4588C16.8545 5.71959 16.2644 5.73002 15.7811 5.45096C15.2977 5.17191 15.0117 4.65566 14.9909 4.09794C14.9767 3.71848 14.9404 3.45833 14.8477 3.23463C14.6448 2.74458 14.2554 2.35523 13.7654 2.15224Z" stroke="#0dcaf0" stroke-width="1.5"/><path d="M2 2L22 22" stroke="#f5f2ec" stroke-width="5" stroke-linecap="round"/><path d="M2 2L22 22" stroke="#0dcaf0" stroke-width="2" stroke-linecap="round"/></svg>`;
+// Internet confirmed working, backend unreachable — images/database-error-svgrepo-com.svg
+const ICON_DB_ERROR = `<svg class="warn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" style="width:24px;height:24px;vertical-align:-3px;display:inline-block"><line x1="17.05" y1="20.5" x2="16.95" y2="20.5" stroke="#0dcaf0" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.95"/><path d="M21,12V10a1,1,0,0,0-1-1H4a1,1,0,0,0-1,1v4a1,1,0,0,0,1,1h8" stroke="#0dcaf0" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M12,15H4a1,1,0,0,0-1,1v4a1,1,0,0,0,1,1h8" stroke="#0dcaf0" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path d="M20,9H4A1,1,0,0,1,3,8V4A1,1,0,0,1,4,3H20a1,1,0,0,1,1,1V8A1,1,0,0,1,20,9Zm-3,4v3" stroke="#0dcaf0" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/></svg>`;
+// No internet connection at all — images/wifi-off-svgrepo-com.svg
+const ICON_WIFI_OFF = `<svg class="warn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0dcaf0" style="width:24px;height:24px;vertical-align:-3px;display:inline-block"><circle cx="12" cy="19" r="1"/><path d="M12.44 11l-1.9-1.89-2.46-2.44-1.55-1.55-1.82-1.83a1 1 0 0 0-1.42 1.42l1.38 1.37 1.46 1.46 2.23 2.24 1.55 1.54 2.74 2.74 2.79 2.8 3.85 3.85a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.42z"/><path d="M21.72 7.93A13.93 13.93 0 0 0 12 4a14.1 14.1 0 0 0-4.44.73l1.62 1.62a11.89 11.89 0 0 1 11.16 3 1 1 0 0 0 .69.28 1 1 0 0 0 .72-.31 1 1 0 0 0-.03-1.39z"/><path d="M3.82 6.65a14.32 14.32 0 0 0-1.54 1.28 1 1 0 0 0 1.38 1.44 13.09 13.09 0 0 1 1.6-1.29z"/><path d="M17 13.14a1 1 0 0 0 .71.3 1 1 0 0 0 .72-1.69A9 9 0 0 0 12 9h-.16l2.35 2.35A7 7 0 0 1 17 13.14z"/><path d="M7.43 10.26a8.8 8.8 0 0 0-1.9 1.49A1 1 0 0 0 7 13.14a7.3 7.3 0 0 1 2-1.41z"/><path d="M8.53 15.4a1 1 0 1 0 1.39 1.44 3.06 3.06 0 0 1 3.84-.25l-2.52-2.52a5 5 0 0 0-2.71 1.33z"/></svg>`;
 
 const _hoverStyle = 'line-height:0;opacity:.6;transition:opacity .2s';
 const _navLink = (href, label, icon, extra = '', guideId = '', hidden = false) =>
@@ -59,30 +64,36 @@ const _authSectionTemplate = ({onSignIn, onSignOut} = {}) => html`
       @mouseout=${e => e.currentTarget.style.opacity = .6}>${unsafeHTML(ICON_LOGOUT)}</button>
   </div>`;
 
+const _OFFLINE_TITLE = { server: () => _t.offlineTitle, connection: () => _t.offlineTitleConn, offline: () => _t.offlineTitleOffline };
+const _OFFLINE_BODY = { server: () => _t.offlineBody, connection: () => _t.offlineBodyConn, offline: () => _t.offlineBodyOffline };
+const _OFFLINE_ICON = { server: ICON_SERVER_OFF, connection: ICON_DB_ERROR, offline: ICON_WIFI_OFF };
+
 const _offlineSectionTemplate = (category, onWarnClick) => {
-  const tip = category === 'server' ? _t.offlineTitle : _t.offlineTitleConn;
+  const tip = _OFFLINE_TITLE[category]();
   return html`<button class="btn btn-link btn-sm p-0 d-flex align-items-center"
     title=${tip} style="line-height:0"
-    @click=${onWarnClick}>${unsafeHTML(WARN_ICON)}</button>`;
+    @click=${onWarnClick}>${unsafeHTML(_OFFLINE_ICON[category])}</button>`;
 };
 
 const _offlineModalTemplate = (category) => {
-  const title = category === 'server' ? _t.offlineTitle : _t.offlineTitleConn;
-  const body = category === 'server' ? _t.offlineBody : _t.offlineBodyConn;
+  const title = _OFFLINE_TITLE[category]();
+  const body = _OFFLINE_BODY[category]();
+  const icon = _OFFLINE_ICON[category];
   return html`
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header py-2">
-        <h6 class="modal-title d-flex align-items-center gap-2">${unsafeHTML(WARN_ICON)} ${title}</h6>
+        <h6 class="modal-title d-flex align-items-center gap-2">${unsafeHTML(icon)} ${title}</h6>
         <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" style="font-size:14px">
-        <p>${body}</p>
+        <p class="${category === 'connection' ? '' : 'mb-0'}">${body}</p>
+        ${category === 'connection' ? html`
         <p class="mb-0"><strong>${_t.offlineContact}</strong> ${_t.offlineContactBody}<br>
           <a href="https://wa.me/393755042951" target="_blank" rel="noopener"
             class="d-inline-flex align-items-center gap-1 mt-1"
             style="color:#25D366">${unsafeHTML(WA_ICON)} +39 375 504 2951</a>
-        </p>
+        </p>` : nothing}
       </div>
     </div>
   </div>`;
@@ -217,6 +228,7 @@ class MundialAuthBar extends HTMLElement {
 
   _showOffline(category, techDetail) {
     console.warn('[auth-bar]', techDetail);
+    this._offlineCategory = category;
     const nav = this.querySelector('nav');
     // Deliberately matches the page's own background (--page-bg, css/global.css) rather than
     // the navbar's normal one — offline state visually "flattens" the navbar into the page
@@ -251,6 +263,18 @@ class MundialAuthBar extends HTMLElement {
     });
   }
 
+  // navigator.onLine only reflects the network interface (false for airplane mode / wifi off);
+  // it can't detect a dead wifi/captive portal, so a reachable-but-opaque probe confirms those too.
+  async _hasInternet() {
+    if (!navigator.onLine) return false;
+    try {
+      await fetch('https://www.google.com/generate_204', { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(2000) });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   _retryUntilOnline() {
     return new Promise(resolve => {
       const attempt = async () => {
@@ -259,6 +283,12 @@ class MundialAuthBar extends HTMLElement {
           await this._backendCheck();
           resolve();
         } catch {
+          // Re-check which offline category applies on every retry, not just the first —
+          // otherwise "no internet" can never turn into "server unreachable" (or back) while
+          // this loop is still polling for the backend to come back on its own.
+          const online = await this._hasInternet();
+          const category = online ? 'connection' : 'offline';
+          if (category !== this._offlineCategory) this._showOffline(category, 'retry check');
           attempt();
         }
       };
@@ -310,8 +340,12 @@ class MundialAuthBar extends HTMLElement {
       }
       await this._backendCheck();
     } catch (err) {
-      const techDetail = err.name === 'TimeoutError' ? `timed out (${this.BACKEND})` : `unreachable (${this.BACKEND || 'no URL'})`;
-      this._showOffline('connection', techDetail);
+      const online = await this._hasInternet();
+      const category = online ? 'connection' : 'offline';
+      const techDetail = !online ? 'no internet connection'
+        : err.name === 'TimeoutError' ? `timed out (${this.BACKEND})`
+        : `unreachable (${this.BACKEND || 'no URL'})`;
+      this._showOffline(category, techDetail);
       await this._retryUntilOnline();
       this._restoreAuthSection();
     }
@@ -415,9 +449,10 @@ class MundialAuthBar extends HTMLElement {
 
       sock.on('disconnect', (reason) => {
         console.warn('[auth-bar] WebSocket disconnected:', reason);
-        offlineTimer = setTimeout(() => {
+        offlineTimer = setTimeout(async () => {
           this._wsOffline = true;
-          this._showOffline('connection', 'WebSocket disconnected');
+          const online = await this._hasInternet();
+          this._showOffline(online ? 'connection' : 'offline', 'WebSocket disconnected');
         }, 5000);
       });
 
@@ -429,8 +464,17 @@ class MundialAuthBar extends HTMLElement {
         console.log('[auth-bar] WebSocket reconnection attempt', attempt);
       });
 
-      sock.on('connect_error', (err) => {
+      sock.on('connect_error', async (err) => {
         console.warn('[auth-bar] WebSocket connect error:', err.message);
+        // Reconnection keeps retrying (reconnectionAttempts: Infinity) and firing this on every
+        // failed attempt, but a plain 'disconnect' only fires once, when the transport first
+        // drops — so once shown, the offline/connection category never re-evaluated on its own.
+        // Re-checking here catches the internet-comes-back-but-backend-still-down transition.
+        if (this._wsOffline) {
+          const online = await this._hasInternet();
+          const category = online ? 'connection' : 'offline';
+          if (category !== this._offlineCategory) this._showOffline(category, 'WebSocket connect error');
+        }
       });
 
       sock.on('user_kicked', ({email, sid: kickedSid}) => {
