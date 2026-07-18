@@ -62,7 +62,7 @@ Selezionare una confederazione evidenzia anche il suo confine esterno sulla mapp
 
 ## Parametri URL
 
-Lo stato di filtro e ordinamento può essere configurato anche direttamente tramite l'URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Aggiungi `?explain` a qualsiasi URL per aprire un pannello che riepiloga le impostazioni attuali del pannello — vedi *“?explain” — controllare la configurazione attuale* nella [Guida API](?guide=api) per il dettaglio esatto di cosa mostra e perché. Anche il riferimento completo con tutti i codici delle celle, gli alias dei gruppi e gli esempi si trova lì.
+Lo stato di filtro e ordinamento può essere configurato anche direttamente tramite l'URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Aggiungi `?explain` a qualsiasi URL per aprire un pannello che riepiloga le impostazioni attuali del pannello — vedi *“?explain” — controllare la configurazione attuale* nella scheda [Guida API](?guide=api) per il dettaglio esatto di cosa mostra e perché. Anche il riferimento completo con tutti i codici delle celle, gli alias dei gruppi e gli esempi si trova lì.
 
 ## Sulla fonte di riferimento dei paesi
 
@@ -370,68 +370,3 @@ Passa il mouse su un punto per vedere il nome della città e il numero di giocat
 
 Sequenze di paesi collegate da relazioni nato-qui / gioca-per — un giocatore nato in A gioca per B, un giocatore nato in B gioca per C, e così via, formando una catena di nazionalità attraverso il torneo — vengono esplorate nella loro [pagina dedicata](/chains/wc2026_chain_longest.html).
 <!-- /i18n:bottom_panel -->
-
-<!-- i18n:data_sources -->
-## Fonti dei dati
-
-| Fonte | Utilizzo |
-|---|---|
-| [eloratings.net](https://www.eloratings.net/) | Ranking Elo del calcio mondiale |
-| [Wikipedia — rose Mondiali 2026](https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads) | Nomi dei giocatori, presenze in nazionale, numeri di maglia |
-| [API Wikipedia](https://en.wikipedia.org/w/api.php) | Pagina Wikipedia di ogni giocatore e allenatore in 5 lingue (en, fr, de, it, es) |
-| [Wikipedia — codici paese FIFA](https://en.wikipedia.org/wiki/List_of_FIFA_country_codes) | Appartenenza alla FIFA |
-| [Wikidata](https://www.wikidata.org/) | Paesi di nascita; nomi delle capitali in più lingue |
-| [mledoze/countries](https://github.com/mledoze/countries) + [Banca Mondiale](https://data.worldbank.org/) | Popolazioni e capitali dei paesi |
-| [OpenStreetMap Nominatim](https://nominatim.org/) | Geocodifica delle città di nascita, per la vista delle città di nascita sulla mappa |
-| [GeoNames](https://www.geonames.org/) | Punti di popolazione di riferimento per il livello di produzione di talenti |
-| [api-football](https://www.api-football.com/) | Partite in diretta, classifiche di girone, risultati, statistiche disciplinari (falli/cartellini) |
-
-**Il ranking Elo** funziona come il sistema di valutazione degli scacchi da cui prende il nome: ogni
-partita fa salire o scendere il punteggio di entrambe le squadre in base al risultato, alla differenza
-reti e alla forza dell'avversario al momento della partita — battere una squadra molto quotata vale
-molto più che battere una squadra debole. A differenza della classifica ufficiale FIFA, aggiornata
-solo poche volte l'anno, il ranking Elo viene ricalcolato dopo ogni partita e reagisce immediatamente
-ai risultati — per questo qui si usa [eloratings.net](https://www.eloratings.net/) come riferimento
-dei paesi invece della lista ufficiale FIFA.
-
-**La risoluzione del paese di nascita** è il passaggio più delicato del pipeline.
-La pagina Wikipedia delle rose non indica dove sono nati i giocatori — fornisce solo i loro nomi
-e i link alle loro pagine Wikipedia individuali.
-Il pipeline usa quei link come chiavi per interrogare [Wikidata](https://www.wikidata.org/)
-tramite SPARQL, recuperando il luogo di nascita registrato di ogni giocatore e il paese a cui appartiene quel luogo.
-Questa ricerca in due fasi (Wikipedia → Wikidata) è ciò che rende possibile tracciare le connessioni nato-qui / gioca-per sulla mappa.
-
-**Il livello di produzione di talenti** risponde a una domanda diversa da "dove sono nati più
-giocatori" — una mappa di densità grezza si limiterebbe a seguire la popolazione delle megalopoli.
-Chiede invece: "questo luogo produce più talenti per il Mondiale 2026 di quanto la sua popolazione
-farebbe prevedere?" Due superfici gaussiane vengono costruite sulla stessa griglia: una dalle città
-di nascita geocodificate di giocatori e allenatori, l'altra da un set di dati di popolazione di
-riferimento ([GeoNames](https://www.geonames.org/)), usando lo stesso kernel e la stessa larghezza
-di banda in modo che le due siano direttamente confrontabili cella per cella. Dividere l'una per
-l'altra, poi normalizzare rispetto al tasso globale del torneo, dà un rischio *relativo* — un
-valore di 1 significa "produce talenti esattamente proporzionalmente alla popolazione che vi
-abita", non "produce molti talenti in termini assoluti". Ecco perché una megalopoli può risultare
-ordinaria su questa mappa mentre una piccola città nota per il calcio risalta: il livello misura
-deliberatamente la sovra- e sotto-prestazione rispetto alla popolazione, non la produzione grezza.
-
-**Le classifiche in diretta** usano il ranking di girone proprio di api-football invece di uno
-calcolato qui dai risultati, così che gli scontri diretti, i punti disciplina e il resto delle
-regole ufficiali FIFA di spareggio non rischino mai di discostarsi dalla classifica reale proprio
-nel caso limite per cui quelle regole esistono.
-
-Queste fonti alimentano un pipeline automatizzato che unisce, incrocia e arricchisce i dati grezzi prima di pubblicarli su questa pagina.
-I ranking Elo e i dati delle partite in diretta (partite, classifiche, statistiche disciplinari) vengono aggiornati man mano che arrivano i risultati; i dati di rose, città di nascita e produzione di talenti vengono aggiornati manualmente quando le selezioni cambiano.
-<!-- /i18n:data_sources -->
-
-```mermaid
-flowchart LR
-  ELO["eloratings.net\nElo rankings"] --> P
-  WP["Wikipedia\nsquad pages · FIFA codes\nplayer/coach pages × 5 languages"] --> P
-  WD["Wikidata\nbirth countries · capitals"] --> P
-  CTY["mledoze/countries + World Bank\npopulations & capitals"] --> P
-  AF["api-football\nfixtures · standings · discipline"] --> P
-  OSM["OpenStreetMap Nominatim\nbirth-city geocoding"] --> KDE
-  GEO["GeoNames\npopulation points"] --> KDE
-  KDE(["talent-production\nKDE surface"]) --> P
-  P(["data pipeline"]) --> M["this page"]
-```

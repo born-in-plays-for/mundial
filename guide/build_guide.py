@@ -29,14 +29,17 @@ I18N_DIR    = GUIDE_DIR / 'i18n'
 LANGUAGES   = ['fr', 'de', 'it', 'es']
 BASE_URL    = 'http://localhost:4040'
 
-# Section name → source template. 'map' and 'api' are the 2 real guide topics (see
-# js/guide-mode.js's own _GUIDE_IDS comment) — 'players'/'france'/'live' were WIP
-# placeholders with no real content and are gone for good. 'auth' is real content again
-# (offline/no-server-connection help, reachable via the profile icon). 'default' is the
-# single shared fallback for any page with no guide topic of its own.
+# Section name → source template. 'map' is the single real page-tied guide topic (see
+# js/guide-mode.js's own _GUIDE_IDS comment) — 'players'/'france'/'live' were WIP placeholders
+# with no real content and are gone for good. 'api' and 'data' are no longer independently
+# openable panels; js/guide-mode.js fetches and renders them as two of 'map''s own tabs
+# (API Guide, Data Sources), each still built as its own file here for i18n-marker clarity.
+# 'auth' is real content again (offline/no-server-connection help, reachable via the profile
+# icon). 'default' is the single shared fallback for any page with no guide topic of its own.
 GUIDES = {
     'map':     GUIDE_DIR / 'guide-map.md',
     'api':     GUIDE_DIR / 'guide-api.md',
+    'data':    GUIDE_DIR / 'guide-data-sources.md',
     'auth':    GUIDE_DIR / 'guide-auth.md',
     'default': GUIDE_DIR / 'guide-default.md',
 }

@@ -63,7 +63,7 @@ Selecting a confederation also highlights its external boundary on the map and z
 
 ## URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* in the [API Guide](?guide=api) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* on the [API Guide tab](?guide=api) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
 
 ## About the country reference
 
@@ -327,68 +327,3 @@ Hover a dot for the city name and player count.
 
 Sequences of countries linked by born-in / plays-for connections — a player born in A plays for B, a player born in B plays for C, and so on, forming a chain of nationalities across the tournament — are explored on their own [standalone page](/chains/wc2026_chain_longest.html).
 <!-- /i18n:bottom_panel -->
-
-<!-- i18n:data_sources -->
-# Data Sources
-
-| Source | Used for |
-|---|---|
-| [eloratings.net](https://www.eloratings.net/) | World Football Elo rankings |
-| [Wikipedia — 2026 World Cup squads](https://en.wikipedia.org/wiki/2026_FIFA_World_Cup_squads) | Player names, cap counts, shirt numbers |
-| [Wikipedia API](https://en.wikipedia.org/w/api.php) | Each player's and coach's Wikipedia page resolved in 5 languages (en, fr, de, it, es) |
-| [Wikipedia — List of FIFA country codes](https://en.wikipedia.org/wiki/List_of_FIFA_country_codes) | FIFA membership |
-| [Wikidata](https://www.wikidata.org/) | Birth countries; multilingual capital-city names |
-| [mledoze/countries](https://github.com/mledoze/countries) + [World Bank](https://data.worldbank.org/) | Country populations and capitals |
-| [OpenStreetMap Nominatim](https://nominatim.org/) | Birth-city geocoding, for the birthplace map view |
-| [GeoNames](https://www.geonames.org/) | Reference population points for the talent-production map layer |
-| [api-football](https://www.api-football.com/) | Live fixtures, group standings, match results, discipline (fouls/cards) stats |
-
-**Elo ratings** work like the chess rating system they're named after: every match moves both teams'
-scores up or down depending on the result, the goal margin, and how strong the opponent was rated
-going in — beating a highly-rated team gains far more than beating a weak one. Unlike the official
-FIFA World Ranking, which only updates a handful of times a year, Elo recalculates after each match
-and reacts immediately to results, which is why [eloratings.net](https://www.eloratings.net/) is used
-as this site's country reference instead of FIFA's own list.
-
-**Birth country resolution** is the most delicate step in the pipeline.
-The Wikipedia squad page does not list where players were born — it only provides their names
-and links to their individual Wikipedia pages.
-The pipeline uses those links as keys to query [Wikidata](https://www.wikidata.org/)
-via SPARQL, retrieving each player's recorded place of birth and the country that place belongs to.
-This two-step lookup (Wikipedia → Wikidata) is what makes it possible to draw the born-in / plays-for connections on the map.
-
-**The talent-production map layer** answers a different question than "where were the most players
-born" — a raw density map like that would just track megacity population. Instead it asks "does this
-place produce more WC2026 talent than its population would predict?" Two Gaussian surfaces are built
-on the same grid: one from geocoded player/coach birth cities, one from a reference population
-dataset ([GeoNames](https://www.geonames.org/)), using the same kernel and bandwidth so the two are
-directly comparable cell by cell. Dividing one by the other, then normalizing against the tournament's
-own global rate, gives a *relative* risk — a value of 1 means "producing talent exactly proportional
-to the people who live here," not "producing a lot of talent in absolute terms." That's why a
-megacity can register as unremarkable on this map while a small, well-known footballing town lights
-up: the layer is deliberately measuring over- and under-performance relative to population, not raw
-output.
-
-**Live standings** use api-football's own group-table ranking rather than one computed from scores
-here, so head-to-head record, discipline points, and the rest of FIFA's official tie-break rules are
-never at risk of disagreeing with the real classement over an edge case those rules exist for in the
-first place.
-
-These sources feed an automated pipeline that merges, cross-references,
-and enriches the raw data before publishing it to this page.
-Elo ratings and live match data (fixtures, standings, discipline stats) are refreshed as results come
-in; squad, birthplace, and talent-production data are updated manually when squads change.
-<!-- /i18n:data_sources -->
-
-```mermaid
-flowchart LR
-  ELO["eloratings.net\nElo rankings"] --> P
-  WP["Wikipedia\nsquad pages · FIFA codes\nplayer/coach pages × 5 languages"] --> P
-  WD["Wikidata\nbirth countries · capitals"] --> P
-  CTY["mledoze/countries + World Bank\npopulations & capitals"] --> P
-  AF["api-football\nfixtures · standings · discipline"] --> P
-  OSM["OpenStreetMap Nominatim\nbirth-city geocoding"] --> KDE
-  GEO["GeoNames\npopulation points"] --> KDE
-  KDE(["talent-production\nKDE surface"]) --> P
-  P(["data pipeline"]) --> M["this page"]
-```

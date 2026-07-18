@@ -11,8 +11,20 @@ let _panel = null;
 let _navHandler = null;
 let _escHandler = null;
 let _authStateHandler = null;
+let _tabCache = {};
 
 const _CURRENT_STATE_LABEL = { fr: 'État actuel', de: 'Aktueller Status', it: 'Stato attuale', es: 'Estado actual' };
+
+// The 'map' guideId renders as 3 lazily-loaded tabs instead of a single fetch+swap — 'api' and
+// 'data' each keep their own source file/i18n keys (for translation-marker clarity) but are no
+// longer independently openable top-level panels; entry points that used to set guideId 'api'
+// now set guideId 'map' with tab 'api' instead (see auth-bar.js's data-guide-tab attribute).
+const _TAB_ORDER = ['guide', 'api', 'data'];
+const _TAB_CONFIG = {
+  guide: { guideId: 'map', label: { en: "User's Guide", fr: 'Guide utilisateur', de: 'Benutzerhandbuch', it: 'Guida utente', es: 'Guía del usuario' } },
+  api:   { guideId: 'api', label: { en: 'API Guide', fr: 'Guide API', de: 'API-Leitfaden', it: 'Guida API', es: 'Guía de la API' } },
+  data:  { guideId: 'data', label: { en: 'Data Sources', fr: 'Sources de données', de: 'Datenquellen', it: 'Fonti dei dati', es: 'Fuentes de datos' } },
+};
 
 const _WIP_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
   <div class="gp-wip-title">WORK IN PROGRESS</div>
@@ -27,15 +39,16 @@ const _ERROR_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
   <div class="gp-wip-sub">Check your connection and try again.</div>
 </div></div>`;
 
-// 'map' and 'api' are the 2 real, page-tied guide topics — see auth-bar.js's own
-// _guideIdMap comment for why 'api' now points at the Players page rather than the
-// retired wc2026_countries.html. 'auth' and 'default' are deliberately absent here: neither
-// is tied to one specific page (auth is reachable from the profile icon on any page; default
-// is whatever page you're already on), so there's nothing to navigate to when toggling guide
-// mode off from either — see toggleGuide's own `if (dest)` guard below.
+// 'map' is the only real, page-tied guide topic left needing this — 'api'/'data' are now tabs
+// within it (see _TAB_CONFIG above), so _showingId never actually becomes 'api'/'data' on its
+// own anymore; only 'map' itself can diverge from _pageId (e.g. opened from a page that
+// defaults elsewhere, then navigated to Home's guide topic) and need somewhere to go on close.
+// 'auth' and 'default' are deliberately absent: neither is tied to one specific page (auth is
+// reachable from the profile icon on any page; default is whatever page you're already on), so
+// there's nothing to navigate to when toggling guide mode off from either — see toggleGuide's
+// own `if (dest)` guard below.
 const _guideToPage = {
   map: '/',
-  api: 'wc2026_players.html',
 };
 
 const _ARROW_BLUE = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#1d4ed8" stroke-width="2.5"/><path d="M17,2.5 L24,6 L17,9.5Z" fill="#1d4ed8"/></svg>';
@@ -76,7 +89,7 @@ export function toggleGuide(authBar) {
     _pageId = authBar._currentGuideId;
     _showingId = _pageId;
     _ensurePanel();
-    _showSection(_showingId);
+    _showSection(_showingId, authBar._currentGuideTab);
     _installHandler();
   } else {
     if (nav) nav.style.background = '';
@@ -89,7 +102,10 @@ export function toggleGuide(authBar) {
   }
 }
 
-const _GUIDE_IDS = new Set(['map', 'api', 'auth', 'default']);
+// 'api'/'data' are recognized here so in-content `?guide=api` links (e.g. guide-map.md's own
+// cross-link to the API Guide tab) still work, but they no longer become _showingId directly —
+// see the click handler below, which routes them through 'map' + a tab instead.
+const _GUIDE_IDS = new Set(['map', 'api', 'data', 'auth', 'default']);
 
 function _ensurePanel() {
   if (_panel) { _panel.style.display = ''; return; }
@@ -101,11 +117,14 @@ function _ensurePanel() {
     const a = e.target.closest('a[href]');
     if (!a) return;
     const guideParam = new URL(a.href, location.href).searchParams.get('guide');
-    if (guideParam && _GUIDE_IDS.has(guideParam)) {
-      e.preventDefault();
+    if (!guideParam || !_GUIDE_IDS.has(guideParam)) return;
+    e.preventDefault();
+    if (guideParam === 'api' || guideParam === 'data') {
+      _showingId = 'map';
+      _showSection('map', guideParam);
+    } else {
       _showingId = guideParam;
       _showSection(guideParam);
-      _highlightNav(guideParam);
     }
   });
   document.body.appendChild(_panel);
@@ -165,20 +184,42 @@ function _injectStyles() {
 #mundial-guide-panel .ga-feature{margin:1.5rem 0;overflow:hidden}
 #mundial-guide-panel .ga-feature h3{margin-top:0}
 #mundial-guide-panel .ga-icon{float:left;width:2.25rem;height:2.25rem;margin:.1rem 1rem .5rem 0;border-radius:4px}
+#mundial-guide-panel .gp-tab-nav{position:sticky;top:0;background:#faf9f6;z-index:2;display:flex;gap:1.5rem;max-width:960px;margin:0 auto 1.5rem;padding-top:.25rem;border-bottom:1px solid var(--border,#e4e0d8)}
+#mundial-guide-panel .gp-tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:.5rem 0;font-size:.85rem;font-weight:600;color:#999;cursor:pointer}
+#mundial-guide-panel .gp-tab-btn:hover{color:#555}
+#mundial-guide-panel .gp-tab-btn.active{color:var(--color-default,#171715);border-bottom-color:#0dcaf0}
 `;
   document.head.appendChild(s);
 }
 
-async function _showSection(guideId) {
+// guideId 'map' renders as a tab set (_renderTabs, below); everything else keeps the original
+// single fetch+swap. `tab` is only meaningful for 'map' — harmless to pass/omit otherwise.
+async function _showSection(guideId, tab = 'guide') {
   if (!_panel) return;
-  _highlightNav(guideId);
-  _panel.innerHTML = '<div class="gp-body"><p style="color:var(--text-muted,#999);text-align:center;margin-top:5rem;font-size:.875rem">Loading…</p></div>';
+  _highlightNav(guideId, tab);
 
-  const { md, failed } = await _fetchContent(guideId);
+  if (guideId === 'map') {
+    await _renderTabs(tab);
+    return;
+  }
+
+  _panel.innerHTML = '<div class="gp-body"><p style="color:var(--text-muted,#999);text-align:center;margin-top:5rem;font-size:.875rem">Loading…</p></div>';
+  const { layout, mermaidNodes } = await _buildLayout(guideId);
   // _showingId may have moved on to a different topic while this fetch was in flight (e.g. two
   // nav clicks in quick succession) — bail out rather than clobbering the more recent one with
   // this now-stale result.
   if (_showingId !== guideId) return;
+  _panel.innerHTML = '';
+  _panel.appendChild(layout);
+  _panel.scrollTop = 0;
+  if (mermaidNodes.length) mermaid.run({ nodes: mermaidNodes });
+  _refreshAuthState();
+}
+
+// Fetches + builds one topic's { body, toc } as a .gp-layout, shared by both the single-pane
+// path above and each tab pane below — the one piece of real work common to both.
+async function _buildLayout(guideId) {
+  const { md, failed } = await _fetchContent(guideId);
   const body = document.createElement('div');
   body.className = 'gp-body';
   if (md) {
@@ -202,12 +243,79 @@ async function _showSection(guideId) {
   layout.appendChild(body);
   if (toc) layout.appendChild(toc);
 
-  _panel.innerHTML = '';
-  _panel.appendChild(layout);
+  const mermaidNodes = [...layout.querySelectorAll('pre.mermaid')];
+  return { layout, mermaidNodes };
+}
+
+// Builds the 3-tab shell (once per fresh panel) and shows the requested tab, lazily fetching
+// and caching each tab's content on first activation so switching back and forth is instant.
+async function _renderTabs(tab) {
+  let shell = _panel.querySelector('.gp-tabs-wrap');
+  if (!shell) {
+    // A fresh shell means fresh (empty) panes — any cache entry from a previous shell no longer
+    // corresponds to real DOM, so it must be invalidated here, not just left stale.
+    _tabCache = {};
+    _panel.innerHTML = '';
+    shell = _buildTabShell();
+    _panel.appendChild(shell);
+  }
+  shell.querySelectorAll('.gp-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tabKey === tab);
+  });
+  shell.querySelectorAll('.gp-tab-pane').forEach(pane => {
+    pane.style.display = pane.dataset.tabKey === tab ? '' : 'none';
+  });
   _panel.scrollTop = 0;
-  const mermaidNodes = [..._panel.querySelectorAll('pre.mermaid')];
+  await _ensureTabContent(tab);
+}
+
+function _buildTabShell() {
+  const wrap = document.createElement('div');
+  wrap.className = 'gp-tabs-wrap';
+  const nav = document.createElement('div');
+  nav.className = 'gp-tab-nav';
+  const content = document.createElement('div');
+  content.className = 'gp-tab-content';
+
+  _TAB_ORDER.forEach(key => {
+    const cfg = _TAB_CONFIG[key];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'gp-tab-btn';
+    btn.dataset.tabKey = key;
+    btn.textContent = cfg.label[_LANG] ?? cfg.label.en;
+    btn.addEventListener('click', () => {
+      if (_showingId !== 'map') return;
+      _renderTabs(key);
+    });
+    nav.appendChild(btn);
+
+    const pane = document.createElement('div');
+    pane.className = 'gp-tab-pane';
+    pane.dataset.tabKey = key;
+    pane.style.display = 'none';
+    content.appendChild(pane);
+  });
+
+  wrap.appendChild(nav);
+  wrap.appendChild(content);
+  return wrap;
+}
+
+async function _ensureTabContent(tabKey) {
+  if (_tabCache[tabKey]) return;
+  const pane = _panel?.querySelector(`.gp-tab-pane[data-tab-key="${tabKey}"]`);
+  if (!pane) return;
+  pane.innerHTML = '<div class="gp-body"><p style="color:var(--text-muted,#999);text-align:center;margin-top:5rem;font-size:.875rem">Loading…</p></div>';
+
+  const { layout, mermaidNodes } = await _buildLayout(_TAB_CONFIG[tabKey].guideId);
+  // Bail if the panel moved on (closed and reopened elsewhere, or guide mode swapped to a
+  // different topic entirely) while this fetch was in flight — pane may no longer exist/matter.
+  if (!_panel || _showingId !== 'map' || !_panel.contains(pane)) return;
+  pane.innerHTML = '';
+  pane.appendChild(layout);
   if (mermaidNodes.length) mermaid.run({ nodes: mermaidNodes });
-  _refreshAuthState();
+  _tabCache[tabKey] = true;
 }
 
 // The 'auth' guide topic (js/guide-mode.js's _GUIDE_IDS 'auth' entry) describes every possible
@@ -239,7 +347,8 @@ function _refreshAuthState() {
 
 function _buildToc(body) {
   // h1 covers both the page title and this guide's own major section dividers ("The Control
-  // Panel", "The Map", "The Bottom Panel", "Data Sources") — each is a top-level TOC entry.
+  // Panel", "The Map", "The Bottom Panel") — each is a top-level TOC entry. Called once per
+  // tab pane now, not once per whole panel, so each tab gets its own independent TOC.
   // h2 nests one level under the nearest preceding h1; h3 nests under the nearest preceding
   // h2 (or directly under the h1, if this h1 has no h2 of its own yet).
   const headings = [...body.querySelectorAll('h1, h2, h3')];
@@ -312,7 +421,7 @@ function _installHandler() {
       e.preventDefault();
       e.stopImmediatePropagation();
       _showingId = el.dataset.guide;
-      _showSection(_showingId);
+      _showSection(_showingId, el.dataset.guideTab || undefined);
       return;
     }
     // Any other navbar link (Live, Countries, Goodies dropdown items, …) has no guide
@@ -369,18 +478,26 @@ function _uninstallHandler() {
   }
 }
 
-function _highlightNav(activeGuideId) {
+// `activeTab` distinguishes nav elements tied to a specific tab (data-guide-tab="api" on the
+// Countries/Players dropdown items) from ones tied to the topic as a whole regardless of tab
+// (Home's data-guide="map", no data-guide-tab) — the latter always matches once activeGuideId
+// matches, the former only when its own tab is the one actually showing.
+function _highlightNav(activeGuideId, activeTab) {
   const authBar = document.querySelector('mundial-auth-bar');
   if (!authBar) return;
   authBar.querySelectorAll('nav a[data-guide]').forEach(a => {
-    a.style.opacity = a.dataset.guide === activeGuideId ? '1' : '.4';
+    const matches = a.dataset.guide === activeGuideId &&
+      (!a.dataset.guideTab || a.dataset.guideTab === activeTab);
+    a.style.opacity = matches ? '1' : '.4';
   });
 }
 
 function _sectionIcon(guideId) {
-  // 'auth' already carries a .ga-icon on every one of its own sections (see guide-auth.md) —
-  // a second, much larger floating icon at the very top read as redundant.
-  if (guideId === 'auth') return null;
+  // 'auth' already carries a .ga-icon on every one of its own sections (see guide-auth.md).
+  // 'api'/'data' have no nav element of their own to derive an icon from anymore now that
+  // they're tabs, not independently-linked topics — see _TAB_CONFIG. Either way, a second,
+  // much larger floating icon at the very top would read as redundant with the tab bar itself.
+  if (guideId === 'auth' || guideId === 'api' || guideId === 'data') return null;
   const authBar = document.querySelector('mundial-auth-bar');
   if (!authBar) return null;
   const source = authBar.querySelector(`nav a[data-guide="${guideId}"]`);

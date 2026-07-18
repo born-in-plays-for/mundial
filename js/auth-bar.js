@@ -40,10 +40,10 @@ const _navLink = (href, label, icon, extra = '', guideId = '', hidden = false) =
     @mouseover=${e => e.currentTarget.style.opacity = 1}
     @mouseout=${e => e.currentTarget.style.opacity = .6}>${unsafeHTML(icon)}</a>`;
 
-const _dropdownItem = (href, label, icon, guideId = '') =>
+const _dropdownItem = (href, label, icon, guideId = '', guideTab = '') =>
   html`<li><a href=${href} class="dropdown-item d-flex align-items-center gap-2"
     aria-label=${label} title=${label} style=${_hoverStyle}
-    data-guide=${guideId || nothing}
+    data-guide=${guideId || nothing} data-guide-tab=${guideTab || nothing}
     @mouseover=${e => e.currentTarget.style.opacity = 1}
     @mouseout=${e => e.currentTarget.style.opacity = .6}>${unsafeHTML(icon)} ${label}</a></li>`;
 
@@ -115,21 +115,29 @@ class MundialAuthBar extends HTMLElement {
 
   connectedCallback() {
     const page = location.pathname.split('/').pop() || 'index.html';
-    // 'map' (the User's Guide, off the home icon) and 'api' (the API Guide — the app's URL
-    // query parameter API — off the Players icon, since wc2026_countries.html is no
-    // longer linked from the UI; see guide/guide-api.md's own header comment) are the 2
-    // real, page-tied guide topics. Any page with no entry here falls back to 'default' (a
-    // single shared "nothing here yet" placeholder) rather than disabling the guide button —
-    // covers wc2026_countries.html, wc2026_live.html, insights/*.html, and anything added later
-    // without needing its own explicit mapping. 'auth' (offline/no-server-connection help) is
-    // separate — it's reachable via the profile icon on any page, not tied to a page at all.
+    // 'map' (the User's Guide, off the home icon) is the only real, page-tied guide topic —
+    // the API Guide (the app's URL query parameter API, off the Players icon, since
+    // wc2026_countries.html is no longer linked from the UI; see guide/guide-api.md's own
+    // header comment) and Data Sources are both tabs *within* 'map' now (see
+    // js/guide-mode.js's _TAB_CONFIG), not independent topics of their own — reached via
+    // _guideTabMap, below, rather than their own _guideIdMap entry. Any page with no entry
+    // here falls back to 'default' (a single shared "nothing here yet" placeholder) rather
+    // than disabling the guide button — covers wc2026_countries.html, wc2026_live.html,
+    // insights/*.html, and anything added later without needing its own explicit mapping.
+    // 'auth' (offline/no-server-connection help) is separate — it's reachable via the profile
+    // icon on any page, not tied to a page at all.
     const _guideIdMap = {
       '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
+      'wc2026_players.html': 'map',
+    };
+    const _guideTabMap = {
       'wc2026_players.html': 'api',
     };
     this._currentGuideId = _guideIdMap[page] ?? 'default';
+    this._currentGuideTab = _guideTabMap[page] ?? 'guide';
     const _guideHref = new URL(location.href);
     _guideHref.searchParams.set('guide', this._currentGuideId);
+    if (this._currentGuideTab !== 'guide') _guideHref.searchParams.set('tab', this._currentGuideTab);
 
     render(html`
       <nav class="navbar navbar-light bg-white border-bottom py-0 px-2"
@@ -150,8 +158,8 @@ class MundialAuthBar extends HTMLElement {
               <!-- Superseded by #tab-players-btn (wc2026_map.html's bottom panel) as the map's
                    own all-players view — kept reachable here rather than dropped outright, since
                    wc2026_players.html is still a real, independent standalone page. -->
-              ${_dropdownItem('/wc2026_countries.html', _t.navCountries, ICON_COUNTRIES, 'api')}
-              ${_dropdownItem('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, 'api')}
+              ${_dropdownItem('/wc2026_countries.html', _t.navCountries, ICON_COUNTRIES, 'map', 'api')}
+              ${_dropdownItem('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, 'map', 'api')}
               ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD)}
               ${_dropdownItem('/insights/france.html', _t.navFrance, ICON_FRANCE)}
               ${_dropdownItem('/insights/status.html', _t.navStatus, ICON_STATUS)}
@@ -207,13 +215,19 @@ class MundialAuthBar extends HTMLElement {
     this._offsetSibling();
     this._init();
 
-    // ?guide[=section] — auto-open guide panel on load
+    // ?guide[=section][&tab=api|data] — auto-open guide panel on load
     const _sp = new URLSearchParams(location.search);
     if (_sp.has('guide')) {
-      const _validGuide = new Set(['map', 'api', 'auth', 'default']);
-      const _target = _sp.get('guide') || this._currentGuideId;
+      const _validGuide = new Set(['map', 'api', 'data', 'auth', 'default']);
+      let _target = _sp.get('guide') || this._currentGuideId;
+      let _targetTab = _sp.get('tab') || 'guide';
+      // Legacy/old-bookmark support: 'api'/'data' used to be independent top-level guideIds —
+      // they're tabs within 'map' now (see js/guide-mode.js's _TAB_CONFIG), so a bare
+      // ?guide=api link still opens the right thing instead of silently doing nothing.
+      if (_target === 'api' || _target === 'data') { _targetTab = _target; _target = 'map'; }
       if (_target && _validGuide.has(_target)) {
         this._currentGuideId = _target;
+        this._currentGuideTab = _targetTab;
         requestAnimationFrame(async () => {
           this._guideActive = true;
           const { toggleGuide } = await import('./guide-mode.js');
