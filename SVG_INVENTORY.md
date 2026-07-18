@@ -44,15 +44,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 4. Inline SVG — `guide.html`
-
-| Location | Description | Source file |
-|---|---|---|
-| Line 17 | GitHub Octocat logo, `fill="currentColor"` | *(custom — no source file)* |
-
----
-
-## 5. `<img>` tags — `wc2026_map.html`
+## 4. `<img>` tags — `wc2026_map.html`
 
 | Element | Source file | Description |
 |---|---|---|
@@ -63,7 +55,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 6. `<img>` tags — `js/control_sidebar.js` (lit-html template)
+## 5. `<img>` tags — `js/control_sidebar.js` (lit-html template)
 
 | Element | Source file | Description |
 |---|---|---|
@@ -71,7 +63,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 7. `<img>` tags — `wc2026_live.html`
+## 6. `<img>` tags — `wc2026_live.html`
 
 | Element | Source file | Description |
 |---|---|---|
@@ -92,7 +84,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 8. CSS background-image — `css/control-sidebar.css`
+## 7. CSS background-image — `css/control-sidebar.css`
 
 | Selector | Source file | Description |
 |---|---|---|
@@ -101,7 +93,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 9. CSS mask — `css/taxonomy.css`
+## 8. CSS mask — `css/taxonomy.css`
 
 | Selector | Source file | Description |
 |---|---|---|
@@ -124,7 +116,7 @@ genuinely unused now, alongside `solar_linear/power-svgrepo-com.svg` (never used
 
 `solar_linear/radio-minimalistic-svgrepo-com.svg` and `solar_linear/link-svgrepo-com.svg` — previously
 listed here as unused — were actually already referenced by filename in the same `setBadge()` calls; this
-inventory just hadn't been kept in sync with that dynamic (non-`<img src>`) usage. See section 7, above.
+inventory just hadn't been kept in sync with that dynamic (non-`<img src>`) usage. See section 6, above.
 
 `solar_linear/` files still genuinely unused, intentionally left as-is (kept for the icon collection's own sake):
 

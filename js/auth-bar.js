@@ -194,7 +194,6 @@ class MundialAuthBar extends HTMLElement {
       '/insights/heat-map.html': ['heat-map.html'],
       '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
       '/wc2026_live.html': ['wc2026_live.html'],
-      'guide.html': ['guide.html'],
     };
     this.querySelectorAll('nav a[href]').forEach(a => {
       const href = a.getAttribute('href');

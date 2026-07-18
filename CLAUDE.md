@@ -33,7 +33,6 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 **OG tags:** Both `index.html` and `wc2026_map.html` carry identical OG meta tags. Always update **both files** together when any OG tag changes (og:image, og:url, og:title, og:description, etc.).
 | `insights/france.html` | France departments choropleth page |
 | `wc2026_live.html` | Live game tracking page (Socket.IO, backend-dependent) |
-| `guide.html` | User guide page |
 | `js/wc2026_map.js` | ES module — D3 rendering, zoom, tooltips (lit-html), filter sidebar, Elo tab, dim/arc logic |
 | `js/auth-bar.js` | ES module — `<mundial-auth-bar>` Web Component: navbar, auth, offline modal, WebSocket reconnection (lit-html + unsafeHTML) |
 | `js/elo_ranking.js` | ES module — `<elo-ranking>` Web Component, pill helpers, `initEloRanking` wiring helper |
