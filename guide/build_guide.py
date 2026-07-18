@@ -100,17 +100,23 @@ def take_screenshots():
 
             context.close()
 
-        take_bubbles_and_heatmap_screenshots(browser)
+        take_bubbles_screenshot(browser)
         browser.close()
 
 
-def take_bubbles_and_heatmap_screenshots(browser):
-    """Capture the all-players table's two map layer modes (Bubbles / Intensity).
+def take_bubbles_screenshot(browser):
+    """Capture the all-players table's birth-city bubbles map layer.
 
-    English only — neither view has any localized text of its own (the "N players ·
-    M coaches" line and the Bubbles/Intensity toggle labels are hardcoded English in the
-    app itself, unlike the rest of the UI), so there's nothing for per-locale variants to
-    show that a single capture doesn't already cover.
+    English only — the "N players · M coaches" line has no localized text of its own,
+    hardcoded English in the app itself unlike the rest of the UI — so there's nothing for
+    per-locale variants to show that a single capture doesn't already cover.
+
+    Used to also capture an "Intensity" toggle state (heatmap.png) here, back when
+    #tab-players had a Bubbles/Intensity toggle — that raster layer moved permanently to its
+    own standalone page (insights/heat-map.html) and #tab-players became "bubbles, always"
+    with no toggle at all (see js/wc2026_map.js's own comment on _updateAllPlayersMapLayer),
+    so there's no second mode left to capture here; guide-map.md's own "The Player Table"
+    section only ever described/embedded the bubbles view anyway.
     """
     # Taller than the control_sidebar capture's 800px — #map-container's own height is computed
     # from the viewport (_syncMapHeight, reserving space for the fixed header/bottom tab bar); a
@@ -125,15 +131,6 @@ def take_bubbles_and_heatmap_screenshots(browser):
     page.wait_for_timeout(500)
     page.locator('#map-container').screenshot(path=str(SCREENSHOTS / 'bubbles.png'))
     print('  ✓ screenshots/bubbles.png')
-
-    # A plain JS .click() (not Playwright's own click(), even with force=True) — the fixed bottom
-    # tab bar visually overlaps this label depending on scroll position, and Playwright's
-    # dispatched click landed without actually toggling the radio (its 'change' handler never
-    # fired). A real DOM .click() on the <label> reliably activates its associated <input>.
-    page.evaluate('document.querySelector(\'label[for="map-layer-intensity"]\').click()')
-    page.wait_for_timeout(8_000)  # first Intensity build: fetch + offscreen-canvas raster render
-    page.locator('#map-container').screenshot(path=str(SCREENSHOTS / 'heatmap.png'))
-    print('  ✓ screenshots/heatmap.png')
 
     context.close()
 
