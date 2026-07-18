@@ -19,6 +19,14 @@ const _WIP_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
   <div class="gp-wip-sub">This guide section is under construction.</div>
 </div></div>`;
 
+// Distinct from _WIP_HTML: a fetch/network failure (page exists, couldn't load it right now)
+// used to render identically to "genuinely no content yet" (_WIP_HTML), which was
+// indistinguishable in the UI — see _fetchContent's `failed` flag.
+const _ERROR_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
+  <div class="gp-wip-title">COULDN'T LOAD</div>
+  <div class="gp-wip-sub">Check your connection and try again.</div>
+</div></div>`;
+
 // 'map' and 'api' are the 2 real, page-tied guide topics — see auth-bar.js's own
 // _guideIdMap comment for why 'api' now points at the Players page rather than the
 // retired wc2026_countries.html. 'auth' and 'default' are deliberately absent here: neither
@@ -166,7 +174,11 @@ async function _showSection(guideId) {
   _highlightNav(guideId);
   _panel.innerHTML = '<div class="gp-body"><p style="color:var(--text-muted,#999);text-align:center;margin-top:5rem;font-size:.875rem">Loading…</p></div>';
 
-  const md = await _fetchContent(guideId);
+  const { md, failed } = await _fetchContent(guideId);
+  // _showingId may have moved on to a different topic while this fetch was in flight (e.g. two
+  // nav clicks in quick succession) — bail out rather than clobbering the more recent one with
+  // this now-stale result.
+  if (_showingId !== guideId) return;
   const body = document.createElement('div');
   body.className = 'gp-body';
   if (md) {
@@ -179,7 +191,7 @@ async function _showSection(guideId) {
       el.textContent = countryName(Number(el.dataset.id), el.textContent);
     });
   } else {
-    body.innerHTML = _WIP_HTML;
+    body.innerHTML = failed ? _ERROR_HTML : _WIP_HTML;
   }
   const icon = _sectionIcon(guideId);
   if (icon) body.prepend(icon);
@@ -259,19 +271,27 @@ function _buildToc(body) {
   return nav;
 }
 
+// Returns { md, failed }: md is the fetched markdown, or null if unavailable. failed
+// distinguishes "we tried and the network/fetch itself broke" (show _ERROR_HTML) from
+// "the server genuinely has nothing there, both candidates 404'd" (show _WIP_HTML) — these used
+// to be indistinguishable, both silently collapsing to the same null/WIP result.
 async function _fetchContent(guideId) {
   const lang = _LANG ?? 'en';
   const candidates = [
     `guide/built/${lang}-${guideId}.md`,
     `guide/built/en-${guideId}.md`,
   ];
+  let failed = false;
   for (const url of candidates) {
     try {
       const r = await fetch(`${url}?v=${Date.now()}`);
-      if (r.ok) return r.text();
-    } catch {}
+      if (r.ok) return { md: await r.text(), failed: false };
+    } catch (err) {
+      failed = true;
+      console.warn('[guide-mode] failed to fetch', url, err);
+    }
   }
-  return null;
+  return { md: null, failed };
 }
 
 function _installHandler() {
@@ -358,13 +378,12 @@ function _highlightNav(activeGuideId) {
 }
 
 function _sectionIcon(guideId) {
+  // 'auth' already carries a .ga-icon on every one of its own sections (see guide-auth.md) —
+  // a second, much larger floating icon at the very top read as redundant.
+  if (guideId === 'auth') return null;
   const authBar = document.querySelector('mundial-auth-bar');
   if (!authBar) return null;
-  // 'auth' isn't a `nav a` — its trigger is the profile/sign-in area itself (see auth-bar.js's
-  // own `data-guide="auth"` on the auth-section div), so it needs its own lookup.
-  const source = guideId === 'auth'
-    ? authBar.querySelector('[data-ref="sign-in"]')
-    : authBar.querySelector(`nav a[data-guide="${guideId}"]`);
+  const source = authBar.querySelector(`nav a[data-guide="${guideId}"]`);
   const svg = source?.querySelector('svg');
   if (!svg) return null;
   const clone = svg.cloneNode(true);

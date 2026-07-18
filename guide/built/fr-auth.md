@@ -9,7 +9,7 @@ Cette application communique avec un petit serveur — hébergé sur la machine 
 <div class="ga-state" data-ga-state="online">
 
 <!-- i18n:auth_state_online -->
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ## Connecté
 
@@ -21,7 +21,7 @@ Tout fonctionne : vous pouvez vous connecter, la page du match en direct se met 
 <div class="ga-state" data-ga-state="connection">
 
 <!-- i18n:auth_state_connection -->
-<img class="ga-icon" src="images/database-error-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/database-error-svgrepo-com.svg" alt="">
 
 ## Serveur injoignable
 
@@ -35,7 +35,7 @@ Touchez l'icône d'avertissement pour obtenir un lien WhatsApp — envoyez un me
 <div class="ga-state" data-ga-state="server">
 
 <!-- i18n:auth_state_server -->
-<img class="ga-icon" src="images/settings-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/settings-off-svgrepo-com.svg" alt="">
 
 ## Serveur non configuré
 
@@ -47,7 +47,7 @@ Un cas plus rare : l'application n'a même pas d'adresse à essayer pour le serv
 <div class="ga-state" data-ga-state="offline">
 
 <!-- i18n:auth_state_offline -->
-<img class="ga-icon" src="images/wifi-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/wifi-off-svgrepo-com.svg" alt="">
 
 ## Pas de connexion internet
 
@@ -61,7 +61,7 @@ Rien de ce qui nécessite le réseau ne fonctionne en ce moment — pas seulemen
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ### Connexion Google
 
@@ -69,13 +69,13 @@ Pour l'instant, la connexion n'a d'importance que pour Christophe lui-même — 
 
 Pour tout le monde d'autre, se connecter ne fait pour l'instant que mémoriser votre identité entre deux visites — il n'y a aucune fonctionnalité réservée aux administrateurs que vous manqueriez. D'autres fonctionnalités réservées aux visiteurs connectés pourraient arriver plus tard.
 
-Dans la barre de navigation elle-même : avant de vous connecter, vous ne voyez que l'icône de connexion (<img class="gp-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Après vous être connecté, celle-ci est remplacée par votre photo de profil (<img class="gp-icon" src="images/Christophe.jpg" alt="" style="border-radius:50%"> — celle de Christophe lui-même, montrée ici à titre d'exemple ; la vôtre sera votre véritable photo de compte Google) à côté d'une petite icône de déconnexion (<img class="gp-icon" src="images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
+Dans la barre de navigation elle-même : avant de vous connecter, vous ne voyez que l'icône de connexion (<img class="gp-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Après vous être connecté, celle-ci est remplacée par votre photo de profil (<img class="gp-icon" src="/images/Christophe.jpg" alt="" style="border-radius:50%"> — celle de Christophe lui-même, montrée ici à titre d'exemple ; la vôtre sera votre véritable photo de compte Google) à côté d'une petite icône de déconnexion (<img class="gp-icon" src="/images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
 
 </div>
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/tv-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/radio-minimalistic-svgrepo-com.svg" alt="">
 
 ### Mises à jour des matchs en direct
 

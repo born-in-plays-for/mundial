@@ -9,7 +9,7 @@ This app talks to a small backend server — running on the developer's own mach
 <div class="ga-state" data-ga-state="online">
 
 <!-- i18n:auth_state_online -->
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ## Connected
 
@@ -21,7 +21,7 @@ Everything works: you can sign in, the live game page updates in real time, and 
 <div class="ga-state" data-ga-state="connection">
 
 <!-- i18n:auth_state_connection -->
-<img class="ga-icon" src="images/database-error-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/database-error-svgrepo-com.svg" alt="">
 
 ## Server unreachable
 
@@ -35,7 +35,7 @@ Tap the warning icon for a WhatsApp link — message that number and the server 
 <div class="ga-state" data-ga-state="server">
 
 <!-- i18n:auth_state_server -->
-<img class="ga-icon" src="images/settings-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/settings-off-svgrepo-com.svg" alt="">
 
 ## Server not configured
 
@@ -47,7 +47,7 @@ A rarer case: the app doesn't even have an address for the backend to try. This 
 <div class="ga-state" data-ga-state="offline">
 
 <!-- i18n:auth_state_offline -->
-<img class="ga-icon" src="images/wifi-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/wifi-off-svgrepo-com.svg" alt="">
 
 ## No internet connection
 
@@ -61,7 +61,7 @@ Nothing that needs the network works right now — not just signing in, but also
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ### Google sign-in
 
@@ -69,13 +69,13 @@ Right now, signing in mainly matters for Christophe himself — the site's one a
 
 For everyone else, signing in currently just remembers who you are between visits — there's no admin-only feature you're missing. More sign-in-only features for regular visitors may come later.
 
-In the navbar itself: before signing in, you'll see just the sign-in icon (<img class="gp-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). After signing in, that's replaced by your profile picture (<img class="gp-icon" src="images/Christophe.jpg" alt="" style="border-radius:50%"> — Christophe's own, shown here as an example; yours will be your actual Google account photo) next to a small sign-out icon (<img class="gp-icon" src="images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
+In the navbar itself: before signing in, you'll see just the sign-in icon (<img class="gp-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). After signing in, that's replaced by your profile picture (<img class="gp-icon" src="/images/Christophe.jpg" alt="" style="border-radius:50%"> — Christophe's own, shown here as an example; yours will be your actual Google account photo) next to a small sign-out icon (<img class="gp-icon" src="/images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
 
 </div>
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/tv-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/radio-minimalistic-svgrepo-com.svg" alt="">
 
 ### Live match updates
 

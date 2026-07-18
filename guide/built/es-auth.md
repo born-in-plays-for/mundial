@@ -9,7 +9,7 @@ Esta aplicación se comunica con un pequeño servidor backend — que se ejecuta
 <div class="ga-state" data-ga-state="online">
 
 <!-- i18n:auth_state_online -->
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ## Conectado
 
@@ -21,7 +21,7 @@ Todo funciona: puedes iniciar sesión, la página del partido en directo se actu
 <div class="ga-state" data-ga-state="connection">
 
 <!-- i18n:auth_state_connection -->
-<img class="ga-icon" src="images/database-error-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/database-error-svgrepo-com.svg" alt="">
 
 ## Servidor inaccesible
 
@@ -35,7 +35,7 @@ Toca el icono de advertencia para obtener un enlace de WhatsApp — escribe a es
 <div class="ga-state" data-ga-state="server">
 
 <!-- i18n:auth_state_server -->
-<img class="ga-icon" src="images/settings-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/settings-off-svgrepo-com.svg" alt="">
 
 ## Servidor no configurado
 
@@ -47,7 +47,7 @@ Un caso más raro: la aplicación ni siquiera tiene una dirección del servidor 
 <div class="ga-state" data-ga-state="offline">
 
 <!-- i18n:auth_state_offline -->
-<img class="ga-icon" src="images/wifi-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/wifi-off-svgrepo-com.svg" alt="">
 
 ## Sin conexión a internet
 
@@ -61,7 +61,7 @@ Nada de lo que necesita la red funciona en este momento — no solo el inicio de
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ### Inicio de sesión con Google
 
@@ -69,13 +69,13 @@ Por ahora, iniciar sesión importa sobre todo para el propio Christophe — la �
 
 Para todos los demás, iniciar sesión por ahora solo recuerda quién eres entre visitas — no hay ninguna función exclusiva de administrador que te estés perdiendo. Más adelante podrían llegar otras funciones exclusivas para los visitantes con sesión iniciada.
 
-En la propia barra de navegación: antes de iniciar sesión, solo verás el icono de inicio de sesión (<img class="gp-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Después de iniciar sesión, se sustituye por tu foto de perfil (<img class="gp-icon" src="images/Christophe.jpg" alt="" style="border-radius:50%"> — la del propio Christophe, mostrada aquí como ejemplo; la tuya será tu foto real de la cuenta de Google) junto a un pequeño icono de cierre de sesión (<img class="gp-icon" src="images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
+En la propia barra de navegación: antes de iniciar sesión, solo verás el icono de inicio de sesión (<img class="gp-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Después de iniciar sesión, se sustituye por tu foto de perfil (<img class="gp-icon" src="/images/Christophe.jpg" alt="" style="border-radius:50%"> — la del propio Christophe, mostrada aquí como ejemplo; la tuya será tu foto real de la cuenta de Google) junto a un pequeño icono de cierre de sesión (<img class="gp-icon" src="/images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
 
 </div>
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/tv-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/radio-minimalistic-svgrepo-com.svg" alt="">
 
 ### Actualizaciones de partidos en directo
 

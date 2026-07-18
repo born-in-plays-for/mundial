@@ -9,7 +9,7 @@ Questa app comunica con un piccolo server backend — in esecuzione sul computer
 <div class="ga-state" data-ga-state="online">
 
 <!-- i18n:auth_state_online -->
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ## Connesso
 
@@ -21,7 +21,7 @@ Tutto funziona: puoi accedere, la pagina della partita in diretta si aggiorna in
 <div class="ga-state" data-ga-state="connection">
 
 <!-- i18n:auth_state_connection -->
-<img class="ga-icon" src="images/database-error-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/database-error-svgrepo-com.svg" alt="">
 
 ## Server irraggiungibile
 
@@ -35,7 +35,7 @@ Tocca l'icona di avviso per un link WhatsApp — scrivi a quel numero e il serve
 <div class="ga-state" data-ga-state="server">
 
 <!-- i18n:auth_state_server -->
-<img class="ga-icon" src="images/settings-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/settings-off-svgrepo-com.svg" alt="">
 
 ## Server non configurato
 
@@ -47,7 +47,7 @@ Un caso più raro: l'app non ha nemmeno un indirizzo del server da provare. Si t
 <div class="ga-state" data-ga-state="offline">
 
 <!-- i18n:auth_state_offline -->
-<img class="ga-icon" src="images/wifi-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/wifi-off-svgrepo-com.svg" alt="">
 
 ## Nessuna connessione internet
 
@@ -61,7 +61,7 @@ Nulla di ciò che richiede la rete funziona in questo momento — non solo l'acc
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ### Accesso con Google
 
@@ -69,13 +69,13 @@ Al momento, l'accesso è importante soprattutto per Christophe stesso — l'unic
 
 Per tutti gli altri, l'accesso al momento si limita a ricordare chi sei tra una visita e l'altra — non c'è nessuna funzione riservata agli amministratori che ti stia perdendo. In futuro potrebbero arrivare altre funzioni riservate a chi ha effettuato l'accesso.
 
-Nella barra di navigazione stessa: prima di accedere, vedrai solo l'icona di accesso (<img class="gp-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Dopo l'accesso, questa viene sostituita dalla tua immagine del profilo (<img class="gp-icon" src="images/Christophe.jpg" alt="" style="border-radius:50%"> — quella di Christophe stesso, mostrata qui come esempio; la tua sarà la tua vera foto dell'account Google) accanto a una piccola icona di disconnessione (<img class="gp-icon" src="images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
+Nella barra di navigazione stessa: prima di accedere, vedrai solo l'icona di accesso (<img class="gp-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Dopo l'accesso, questa viene sostituita dalla tua immagine del profilo (<img class="gp-icon" src="/images/Christophe.jpg" alt="" style="border-radius:50%"> — quella di Christophe stesso, mostrata qui come esempio; la tua sarà la tua vera foto dell'account Google) accanto a una piccola icona di disconnessione (<img class="gp-icon" src="/images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
 
 </div>
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/tv-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/radio-minimalistic-svgrepo-com.svg" alt="">
 
 ### Aggiornamenti delle partite in diretta
 

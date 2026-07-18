@@ -361,14 +361,14 @@
   "auth_page_title": "# Connessione al server",
   "auth_intro": "Questa app comunica con un piccolo server backend — in esecuzione sul computer dello sviluppatore — per l'accesso, gli aggiornamenti delle partite in diretta e la memorizzazione della sessione tra una visita e l'altra. Questa connessione può trovarsi in uno di quattro stati, dal migliore al peggiore. Quello indicato qui sotto è ciò che sta accadendo in questo momento.",
   "auth_state_online": [
-    "<img class=\"ga-icon\" src=\"images/solar_linear/square-bottom-up-svgrepo-com.svg\" alt=\"\">",
+    "<img class=\"ga-icon\" src=\"/images/solar_linear/square-bottom-up-svgrepo-com.svg\" alt=\"\">",
     "",
     "## Connesso",
     "",
     "Tutto funziona: puoi accedere, la pagina della partita in diretta si aggiorna in tempo reale e la tua sessione viene ricordata alla prossima visita. L'icona in alto a destra mostra la tua immagine del profilo, oppure un semplice pulsante di accesso se non hai effettuato l'accesso — nessuna icona di avviso."
   ],
   "auth_state_connection": [
-    "<img class=\"ga-icon\" src=\"images/database-error-svgrepo-com.svg\" alt=\"\">",
+    "<img class=\"ga-icon\" src=\"/images/database-error-svgrepo-com.svg\" alt=\"\">",
     "",
     "## Server irraggiungibile",
     "",
@@ -377,14 +377,14 @@
     "Tocca l'icona di avviso per un link WhatsApp — scrivi a quel numero e il server può solitamente essere riavviato in pochi minuti. Non è necessario ricaricare la pagina: l'app riprova automaticamente in background e si ristabilisce da sola non appena il server torna a rispondere."
   ],
   "auth_state_server": [
-    "<img class=\"ga-icon\" src=\"images/settings-off-svgrepo-com.svg\" alt=\"\">",
+    "<img class=\"ga-icon\" src=\"/images/settings-off-svgrepo-com.svg\" alt=\"\">",
     "",
     "## Server non configurato",
     "",
     "Un caso più raro: l'app non ha nemmeno un indirizzo del server da provare. Si tratta di un intoppo di distribuzione piuttosto che di un'interruzione in corso, quindi non c'è alcuna scorciatoia WhatsApp per questo caso — serve una correzione lato codice piuttosto che un semplice riavvio. L'effetto pratico è lo stesso di \"server irraggiungibile\" sopra: l'accesso e la pagina della partita in diretta sono in pausa, tutto il resto funziona normalmente."
   ],
   "auth_state_offline": [
-    "<img class=\"ga-icon\" src=\"images/wifi-off-svgrepo-com.svg\" alt=\"\">",
+    "<img class=\"ga-icon\" src=\"/images/wifi-off-svgrepo-com.svg\" alt=\"\">",
     "",
     "## Nessuna connessione internet",
     "",
@@ -395,7 +395,7 @@
     "",
     "<div class=\"ga-feature\">",
     "",
-    "<img class=\"ga-icon\" src=\"images/solar_linear/square-bottom-up-svgrepo-com.svg\" alt=\"\">",
+    "<img class=\"ga-icon\" src=\"/images/solar_linear/square-bottom-up-svgrepo-com.svg\" alt=\"\">",
     "",
     "### Accesso con Google",
     "",
@@ -403,13 +403,13 @@
     "",
     "Per tutti gli altri, l'accesso al momento si limita a ricordare chi sei tra una visita e l'altra — non c'è nessuna funzione riservata agli amministratori che ti stia perdendo. In futuro potrebbero arrivare altre funzioni riservate a chi ha effettuato l'accesso.",
     "",
-    "Nella barra di navigazione stessa: prima di accedere, vedrai solo l'icona di accesso (<img class=\"gp-icon\" src=\"images/solar_linear/square-bottom-up-svgrepo-com.svg\" alt=\"\">). Dopo l'accesso, questa viene sostituita dalla tua immagine del profilo (<img class=\"gp-icon\" src=\"images/Christophe.jpg\" alt=\"\" style=\"border-radius:50%\"> — quella di Christophe stesso, mostrata qui come esempio; la tua sarà la tua vera foto dell'account Google) accanto a una piccola icona di disconnessione (<img class=\"gp-icon\" src=\"images/solar_linear/square-bottom-down-svgrepo-com.svg\" alt=\"\">).",
+    "Nella barra di navigazione stessa: prima di accedere, vedrai solo l'icona di accesso (<img class=\"gp-icon\" src=\"/images/solar_linear/square-bottom-up-svgrepo-com.svg\" alt=\"\">). Dopo l'accesso, questa viene sostituita dalla tua immagine del profilo (<img class=\"gp-icon\" src=\"/images/Christophe.jpg\" alt=\"\" style=\"border-radius:50%\"> — quella di Christophe stesso, mostrata qui come esempio; la tua sarà la tua vera foto dell'account Google) accanto a una piccola icona di disconnessione (<img class=\"gp-icon\" src=\"/images/solar_linear/square-bottom-down-svgrepo-com.svg\" alt=\"\">).",
     "",
     "</div>",
     "",
     "<div class=\"ga-feature\">",
     "",
-    "<img class=\"ga-icon\" src=\"images/solar_linear/tv-svgrepo-com.svg\" alt=\"\">",
+    "<img class=\"ga-icon\" src=\"/images/solar_linear/radio-minimalistic-svgrepo-com.svg\" alt=\"\">",
     "",
     "### Aggiornamenti delle partite in diretta",
     "",

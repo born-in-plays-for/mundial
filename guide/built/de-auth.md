@@ -9,7 +9,7 @@ Diese App kommuniziert mit einem kleinen Backend-Server — der auf dem eigenen 
 <div class="ga-state" data-ga-state="online">
 
 <!-- i18n:auth_state_online -->
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ## Verbunden
 
@@ -21,7 +21,7 @@ Alles funktioniert: Sie können sich anmelden, die Live-Spiel-Seite aktualisiert
 <div class="ga-state" data-ga-state="connection">
 
 <!-- i18n:auth_state_connection -->
-<img class="ga-icon" src="images/database-error-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/database-error-svgrepo-com.svg" alt="">
 
 ## Server nicht erreichbar
 
@@ -35,7 +35,7 @@ Tippen Sie auf das Warnsymbol für einen WhatsApp-Link — schreiben Sie an dies
 <div class="ga-state" data-ga-state="server">
 
 <!-- i18n:auth_state_server -->
-<img class="ga-icon" src="images/settings-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/settings-off-svgrepo-com.svg" alt="">
 
 ## Server nicht konfiguriert
 
@@ -47,7 +47,7 @@ Seltener: Die App hat nicht einmal eine Adresse für den Server, die sie versuch
 <div class="ga-state" data-ga-state="offline">
 
 <!-- i18n:auth_state_offline -->
-<img class="ga-icon" src="images/wifi-off-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/wifi-off-svgrepo-com.svg" alt="">
 
 ## Keine Internetverbindung
 
@@ -61,7 +61,7 @@ Nichts, was das Netzwerk benötigt, funktioniert gerade — nicht nur die Anmeld
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">
 
 ### Google-Anmeldung
 
@@ -69,13 +69,13 @@ Im Moment ist die Anmeldung hauptsächlich für Christophe selbst wichtig — da
 
 Für alle anderen merkt sich die Anmeldung derzeit einfach, wer Sie sind, zwischen den Besuchen — es gibt keine Admin-Funktion, die Ihnen entgeht. Weitere anmeldegebundene Funktionen für normale Besucher könnten später hinzukommen.
 
-In der Navigationsleiste selbst: Vor der Anmeldung sehen Sie nur das Anmeldesymbol (<img class="gp-icon" src="images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Nach der Anmeldung wird dieses durch Ihr Profilbild ersetzt (<img class="gp-icon" src="images/Christophe.jpg" alt="" style="border-radius:50%"> — Christophes eigenes, hier als Beispiel gezeigt; Ihres wird Ihr tatsächliches Google-Konto-Foto sein), daneben ein kleines Abmeldesymbol (<img class="gp-icon" src="images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
+In der Navigationsleiste selbst: Vor der Anmeldung sehen Sie nur das Anmeldesymbol (<img class="gp-icon" src="/images/solar_linear/square-bottom-up-svgrepo-com.svg" alt="">). Nach der Anmeldung wird dieses durch Ihr Profilbild ersetzt (<img class="gp-icon" src="/images/Christophe.jpg" alt="" style="border-radius:50%"> — Christophes eigenes, hier als Beispiel gezeigt; Ihres wird Ihr tatsächliches Google-Konto-Foto sein), daneben ein kleines Abmeldesymbol (<img class="gp-icon" src="/images/solar_linear/square-bottom-down-svgrepo-com.svg" alt="">).
 
 </div>
 
 <div class="ga-feature">
 
-<img class="ga-icon" src="images/solar_linear/tv-svgrepo-com.svg" alt="">
+<img class="ga-icon" src="/images/solar_linear/radio-minimalistic-svgrepo-com.svg" alt="">
 
 ### Live-Spielaktualisierungen
 
