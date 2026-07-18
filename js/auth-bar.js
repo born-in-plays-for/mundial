@@ -167,7 +167,7 @@ class MundialAuthBar extends HTMLElement {
               ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
-          <div class="vr"></div>
+          <div class="vr" style="margin: 0 -0.5rem;"></div>
           <a data-ref="guide-btn" href=${_guideHref.pathname + _guideHref.search}
             class="text-decoration-none d-flex align-items-center"
             aria-label=${_t.navGuide} title=${_t.navGuide} style=${_hoverStyle}
