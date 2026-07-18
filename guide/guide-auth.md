@@ -81,5 +81,11 @@ In the navbar itself: before signing in, you'll see just the sign-in icon (<img 
 
 The live game page shows real-time World Cup 2026 match events, stats, and lineups as they happen — available to everyone, whether signed in or not. It uses the same backend connection described above, so its own status follows the four states above: live and updating when connected, paused with the same warning icon whenever the server is unreachable or you're offline.
 
+Once connected, that badge also reflects a finer live-tracking status:
+
+- **live** *(green)* — a match is being tracked; events, stats, and lineups update in real time.
+- **listening** *(blue)* — the backend is watching for matches, but none are active right now.
+- **Server sees no evil, hears no evil, speaks no evil** *(gray)* — the backend isn't currently watching for matches at all. Click the badge for a WhatsApp link to ask Christophe to turn it back on.
+
 </div>
 <!-- /i18n:auth_after_connect -->

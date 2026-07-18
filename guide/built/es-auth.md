@@ -81,5 +81,11 @@ En la propia barra de navegación: antes de iniciar sesión, solo verás el icon
 
 La página del partido en directo muestra en tiempo real los eventos, estadísticas y alineaciones de los partidos del Mundial 2026 — disponible para todos, con o sin sesión iniciada. Utiliza la misma conexión al servidor descrita arriba, así que su propio estado sigue los cuatro estados anteriores: en directo y actualizada cuando todo funciona, en pausa con el mismo icono de advertencia siempre que el servidor sea inaccesible o estés sin conexión.
 
+Una vez conectado, esa insignia también refleja un estado de seguimiento más preciso:
+
+- **live** *(verde)* — se está siguiendo un partido; los eventos, estadísticas y alineaciones se actualizan en tiempo real.
+- **escuchando** *(azul)* — el servidor está a la espera de partidos, pero ninguno está activo en este momento.
+- **El servidor no ve, no oye, no habla** *(gris)* — el servidor no está siguiendo ningún partido en este momento. Haz clic en la insignia para obtener un enlace de WhatsApp y pedirle a Christophe que lo reactive.
+
 </div>
 <!-- /i18n:auth_after_connect -->

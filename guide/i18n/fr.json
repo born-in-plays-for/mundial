@@ -416,6 +416,12 @@
     "",
     "La page du match en direct affiche en temps réel les événements, statistiques et compositions des matchs de la Coupe du Monde 2026 — accessible à tous, connecté ou non. Elle utilise la même connexion au serveur décrite ci-dessus, donc son propre état suit les quatre états ci-dessus : en direct et à jour lorsque tout fonctionne, en pause avec la même icône d'avertissement dès que le serveur est injoignable ou que vous êtes hors ligne.",
     "",
+    "Une fois connecté, ce badge reflète aussi un état de suivi plus précis :",
+    "",
+    "- **live** *(vert)* — un match est suivi ; les événements, statistiques et compositions se mettent à jour en temps réel.",
+    "- **à l'écoute** *(bleu)* — le serveur surveille les matchs, mais aucun n'est actif pour le moment.",
+    "- **Le serveur ne voit rien, n'entend rien, ne dit rien** *(gris)* — le serveur ne surveille aucun match pour le moment. Cliquez sur le badge pour obtenir un lien WhatsApp et demander à Christophe de le réactiver.",
+    "",
     "</div>"
   ]
 }

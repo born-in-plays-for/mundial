@@ -81,5 +81,11 @@ In der Navigationsleiste selbst: Vor der Anmeldung sehen Sie nur das Anmeldesymb
 
 Die Live-Spiel-Seite zeigt Ereignisse, Statistiken und Aufstellungen der Spiele der Weltmeisterschaft 2026 in Echtzeit — verfügbar für alle, angemeldet oder nicht. Sie nutzt dieselbe oben beschriebene Serververbindung, ihr eigener Status folgt also den vier oben genannten Zuständen: live und aktuell, wenn alles funktioniert, pausiert mit demselben Warnsymbol, sobald der Server nicht erreichbar ist oder Sie offline sind.
 
+Sobald verbunden, zeigt dieses Badge auch einen genaueren Live-Tracking-Status:
+
+- **live** *(grün)* — ein Spiel wird verfolgt; Ereignisse, Statistiken und Aufstellungen werden in Echtzeit aktualisiert.
+- **hört zu** *(blau)* — der Server wartet auf Spiele, aber gerade ist keines aktiv.
+- **Der Server sieht nichts, hört nichts, sagt nichts** *(grau)* — der Server verfolgt gerade gar kein Spiel. Klicken Sie auf das Badge für einen WhatsApp-Link, um Christophe zu bitten, ihn wieder zu aktivieren.
+
 </div>
 <!-- /i18n:auth_after_connect -->

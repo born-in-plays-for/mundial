@@ -415,6 +415,12 @@
     "",
     "La pagina della partita in diretta mostra in tempo reale gli eventi, le statistiche e le formazioni delle partite dei Mondiali 2026 — disponibile per tutti, con o senza accesso effettuato. Utilizza la stessa connessione al server descritta sopra, quindi il suo stato segue i quattro stati sopra indicati: in diretta e aggiornata quando tutto funziona, in pausa con la stessa icona di avviso ogni volta che il server è irraggiungibile o sei offline.",
     "",
+    "Una volta connesso, quel badge riflette anche uno stato di tracciamento più preciso:",
+    "",
+    "- **live** *(verde)* — una partita è monitorata; eventi, statistiche e formazioni si aggiornano in tempo reale.",
+    "- **in ascolto** *(blu)* — il server è in attesa di partite, ma nessuna è attiva al momento.",
+    "- **Il server non vede, non sente, non parla** *(grigio)* — il server non sta monitorando nessuna partita al momento. Clicca sul badge per un link WhatsApp e chiedi a Christophe di riattivarlo.",
+    "",
     "</div>"
   ]
 }
