@@ -77,6 +77,19 @@ Custom geometric shapes, no source file.
 |---|---|---|
 | API-Football logo | `images/api_sports.svg` | API-Football service logo |
 
+`#ws-icon`/`#ws-status` (the connection/poll-status badge) loads its icon dynamically via `setBadge()`'s `icon` argument (a path relative to `images/`), not a static `<img src>`:
+
+| State | Source file | `badge` class |
+|---|---|---|
+| Connecting (initial / retry) | `solar_linear/link-svgrepo-com.svg` | `bg-secondary` |
+| Offline — `server` category | `settings-off-svgrepo-com.svg` | `bg-info` |
+| Offline — `connection` category | `database-error-svgrepo-com.svg` | `bg-info` |
+| Offline — `offline` category | `wifi-off-svgrepo-com.svg` | `bg-info` |
+| Direct REST fetch failure (`_fetchLiveData` catch) | `database-error-svgrepo-com.svg` | `bg-info` |
+| Live (discovering, fixtures found) | `solar_linear/radio-minimalistic-svgrepo-com.svg` | `bg-success` |
+| Listening (discovering, no fixtures yet) | `solar_linear/radio-minimalistic-svgrepo-com.svg` | `bg-info` |
+| Deaf & mute (`!discovering`) | `radio-off-svgrepo-com.svg` *(custom — radio from `solar_linear/radio-minimalistic-svgrepo-com.svg` + crossing bar, replacing the old 🙈🙉🙊 emoji treatment)* | `bg-secondary` |
+
 ---
 
 ## 8. CSS background-image — `css/control-sidebar.css`
@@ -101,19 +114,25 @@ Custom geometric shapes, no source file.
 `images/root-level` unused files were removed (2026-07-08) — `api_sports_svgo-ed.svg`, `chain_tab_icon.svg`,
 `check-svgrepo-com.svg` (superseded by `green-check-mark-icon.svg`), `elo_tab_color_icon.svg`, `elo_tab_icon.svg`,
 `empty_tab_icon.svg`, `france-vector-svgrepo-com.svg`, `home-4-svgrepo-com.svg`, `info-circle-svgrepo-com2.svg`,
-`Schrödinger.avif`, `tombstone-svgrepo-com.svg`, `world-cup-svgrepo-com.svg`, `zoom-svgrepo-com.svg`. (This
-inventory had incorrectly listed `shield-warning-svgrepo-com.svg`'s root copy as unused — it's actually
-referenced directly by filename in `wc2026_live.html`'s `setBadge()` calls.)
+`Schrödinger.avif`, `tombstone-svgrepo-com.svg`, `world-cup-svgrepo-com.svg`, `zoom-svgrepo-com.svg`.
 
-`solar_linear/` unused files were intentionally left as-is (kept for the icon collection's own sake):
+`shield-warning-svgrepo-com.svg` (root copy) and `solar_linear/plug-circle-svgrepo-com.svg` were both
+previously referenced by filename in `wc2026_live.html`'s `setBadge()` calls (the "connection problem" and
+"server unavailable" states) — both dropped when that badge was rewired onto the same 3-category taxonomy
+and icon set as the navbar's own offline badge (`_WS_OFFLINE_ICON` in `wc2026_live.html`), so both are
+genuinely unused now, alongside `solar_linear/power-svgrepo-com.svg` (never used).
+
+`solar_linear/radio-minimalistic-svgrepo-com.svg` and `solar_linear/link-svgrepo-com.svg` — previously
+listed here as unused — were actually already referenced by filename in the same `setBadge()` calls; this
+inventory just hadn't been kept in sync with that dynamic (non-`<img src>`) usage. See section 7, above.
+
+`solar_linear/` files still genuinely unused, intentionally left as-is (kept for the icon collection's own sake):
 
 | File | Description |
 |---|---|
 | `solar_linear/settings-svgrepo-com.svg` | Settings gear |
 | `solar_linear/login-2-svgrepo-com.svg` | Login (variant 2) |
 | `solar_linear/power-svgrepo-com.svg` | Power button |
-| `solar_linear/radio-minimalistic-svgrepo-com.svg` | Radio |
-| `solar_linear/link-svgrepo-com.svg` | Link/chain |
 | `solar_linear/gamepad-svgrepo-com.svg` | Gamepad |
 | `solar_linear/plug-circle-svgrepo-com.svg` | Plug/connection |
 | `solar_linear/logout-2-svgrepo-com.svg` | Logout (variant 2) |

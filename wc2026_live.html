@@ -78,23 +78,34 @@ const loadingText = loadingEl.querySelector('span');
 const badgeEl = document.getElementById('ws-status');
 const iconEl = document.getElementById('ws-icon');
 const setBadge = (text, cls, icon) => {
-  iconEl.innerHTML = icon.includes('.svg') ? `<img src="images/solar_linear/${icon}" width="24" height="24">` : icon;
+  // A bare path (e.g. 'radio-off-svgrepo-com.svg') gets wrapped as an <img>; anything starting
+  // with '<' is raw HTML to use as-is (e.g. the deaf & mute icon+emoji combo, below) — checking
+  // for a literal '<' rather than '.svg' as a substring, since raw HTML can itself contain an
+  // <img src="...svg"> and would otherwise get wrongly re-wrapped.
+  iconEl.innerHTML = icon.trim().startsWith('<') ? icon : `<img src="images/${icon}" width="24" height="24">`;
   badgeEl.textContent = text;
   badgeEl.className = `badge ${cls}`;
 };
-setBadge(T.liveBadgeConnecting, 'bg-secondary', 'link-svgrepo-com.svg');
+setBadge(T.liveBadgeConnecting, 'bg-secondary', 'solar_linear/link-svgrepo-com.svg');
 
 const retryBtn = document.getElementById('ws-retry');
 
+// Same 3-way taxonomy, icons, and bg-info treatment as the navbar's own offline badge
+// (js/auth-bar.js's _OFFLINE_ICON / _showOffline) — reusing its title/body copy too, so the
+// same connection state reads identically in both places.
+const _WS_OFFLINE_ICON = {
+  server: 'settings-off-svgrepo-com.svg',
+  connection: 'database-error-svgrepo-com.svg',
+  offline: 'wifi-off-svgrepo-com.svg',
+};
+const _WS_OFFLINE_TITLE = { server: T.offlineTitle, connection: T.offlineTitleConn, offline: T.offlineTitleOffline };
+const _WS_OFFLINE_BODY = { server: T.offlineBody, connection: T.offlineBodyConn, offline: T.offlineBodyOffline };
+
 authBar.addEventListener('auth-bar-offline', (e) => {
   const cat = e.detail?.category;
-  if (cat === 'connection') {
-    setBadge(T.liveError, 'bg-danger', 'shield-warning-svgrepo-com.svg');
-  } else {
-    setBadge(T.liveNoBackend, 'bg-warning text-dark', 'plug-circle-svgrepo-com.svg');
-  }
+  setBadge(_WS_OFFLINE_TITLE[cat] ?? T.offlineTitleConn, 'bg-info', _WS_OFFLINE_ICON[cat] ?? _WS_OFFLINE_ICON.connection);
   loadingSpinner.classList.add('d-none');
-  loadingText.textContent = T.offlineBodyConn;
+  loadingText.textContent = _WS_OFFLINE_BODY[cat] ?? T.offlineBodyConn;
   loadingEl.classList.remove('d-none');
   retryBtn.classList.remove('d-none');
   document.getElementById('no-match').classList.add('d-none');
@@ -130,7 +141,7 @@ window.addEventListener('message', updateAdminStatus);
 
 retryBtn.addEventListener('click', () => {
   retryBtn.classList.add('d-none');
-  setBadge(T.liveBadgeConnecting, 'bg-secondary', 'link-svgrepo-com.svg');
+  setBadge(T.liveBadgeConnecting, 'bg-secondary', 'solar_linear/link-svgrepo-com.svg');
   loadingSpinner.classList.remove('d-none');
   loadingText.textContent = T.liveConnecting;
   loadingEl.classList.remove('d-none');
@@ -654,13 +665,13 @@ const setPollStatus = (discovering, fixtures = {}) => {
   const active = discovering;
   _pollActive = active;
   if (active && _fixtureCount(fixtures) > 0) {
-    setBadge(T.liveLive, 'bg-success', 'radio-minimalistic-svgrepo-com.svg');
+    setBadge(T.liveLive, 'bg-success', 'solar_linear/radio-minimalistic-svgrepo-com.svg');
     document.getElementById('matches').style.opacity = '';
   } else if (active) {
-    setBadge(T.liveSearching, 'bg-info', 'radio-minimalistic-svgrepo-com.svg');
+    setBadge(T.liveSearching, 'bg-info', 'solar_linear/radio-minimalistic-svgrepo-com.svg');
     document.getElementById('matches').style.opacity = '';
   } else {
-    setBadge(T.liveLastKnown, 'bg-warning text-dark', '<span style="white-space:nowrap">🙈🙉🙊</span>');
+    setBadge(T.liveLastKnown, 'bg-secondary', '<span style="display:inline-flex;align-items:center;gap:4px"><img src="images/radio-off-svgrepo-com.svg" width="24" height="24"><span style="font-size:22px;line-height:1;white-space:nowrap">🙈🙉🙊</span></span>');
     document.getElementById('matches').style.opacity = '0.5';
     document.getElementById('no-match').classList.add('d-none');
   }
@@ -676,7 +687,7 @@ const _fetchLiveData = async () => {
     renderFixtures(liveData);
     loadingEl.classList.add('d-none');
   } catch {
-    setBadge(T.liveError, 'bg-danger', 'shield-warning-svgrepo-com.svg');
+    setBadge(T.liveError, 'bg-info', 'database-error-svgrepo-com.svg');
     document.getElementById('no-match').classList.add('d-none');
   }
 };
