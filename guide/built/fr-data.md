@@ -27,6 +27,7 @@ et des liens vers leurs pages Wikipedia individuelles.
 Le pipeline utilise ces liens comme clés pour interroger [Wikidata](https://www.wikidata.org/)
 via SPARQL, récupérant le lieu de naissance enregistré de chaque joueur et le pays auquel ce lieu appartient.
 Cette recherche en deux étapes (Wikipedia → Wikidata) est ce qui rend possible de tracer les connexions né ici / joue pour sur la carte.
+Le lieu de naissance enregistré dans Wikidata est parfois erroné — pointant vers une entité pays ou région plutôt qu'une ville réelle, parfois même le pays de l'équipe nationale du joueur plutôt que son lieu de naissance réel — ou sans détail au niveau de la ville. Ces cas sont corrigés à la main en se référant à l'infobox Wikipedia du joueur lorsqu'elle est trouvable ; un très petit nombre de joueurs ne disposent encore que d'une donnée de naissance au niveau du pays, voire d'aucun lieu de naissance résolu.
 
 **La couche de production de talents** répond à une question différente de « où sont nés le plus de
 joueurs » — une carte de densité brute se contenterait de suivre la population des mégapoles. Elle
@@ -41,6 +42,7 @@ proportionnellement à la population qui y vit », pas « produit beaucoup de ta
 absolue ». C'est pourquoi une mégapole peut apparaître comme ordinaire sur cette carte tandis qu'une
 petite ville connue pour son football ressort nettement : la couche mesure délibérément la sur- et
 la sous-performance par rapport à la population, pas la production brute.
+Le géocodage en texte libre des villes peut aussi, à l'occasion, faire correspondre le mauvais lieu portant le même nom — des cas repérés et corrigés lors d'une relecture manuelle plutôt que pris pour argent comptant.
 
 **Les classements en direct** utilisent le classement de groupe propre à api-football plutôt qu'un
 classement recalculé à partir des scores ici, de sorte que les confrontations directes, les points

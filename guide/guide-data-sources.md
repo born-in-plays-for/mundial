@@ -26,6 +26,11 @@ and links to their individual Wikipedia pages.
 The pipeline uses those links as keys to query [Wikidata](https://www.wikidata.org/)
 via SPARQL, retrieving each player's recorded place of birth and the country that place belongs to.
 This two-step lookup (Wikipedia → Wikidata) is what makes it possible to draw the born-in / plays-for connections on the map.
+Wikidata's recorded birthplace is occasionally wrong — pointing at a country or region entity rather
+than an actual city, sometimes even a player's national-team country instead of where they were
+really born — or missing city-level detail altogether. Cases like these are corrected by hand against
+the player's own Wikipedia infobox where one can be found; a very small number of players still ship
+with only country-level birth data, or no resolved birthplace at all.
 
 **The talent-production map layer** answers a different question than "where were the most players
 born" — a raw density map like that would just track megacity population. Instead it asks "does this
@@ -37,7 +42,8 @@ own global rate, gives a *relative* risk — a value of 1 means "producing talen
 to the people who live here," not "producing a lot of talent in absolute terms." That's why a
 megacity can register as unremarkable on this map while a small, well-known footballing town lights
 up: the layer is deliberately measuring over- and under-performance relative to population, not raw
-output.
+output. Free-text city geocoding can also occasionally match the wrong place sharing the same name —
+caught and corrected through manual review rather than trusted blindly.
 
 **Live standings** use api-football's own group-table ranking rather than one computed from scores
 here, so head-to-head record, discipline points, and the rest of FIFA's official tie-break rules are

@@ -28,6 +28,7 @@ und Links zu ihren individuellen Wikipedia-Seiten.
 Die Pipeline nutzt diese Links als Schlüssel zur Abfrage von [Wikidata](https://www.wikidata.org/)
 via SPARQL und ruft den eingetragenen Geburtsort jedes Spielers und das Land ab, zu dem dieser Ort gehört.
 Diese zweistufige Suche (Wikipedia → Wikidata) ermöglicht es, die geboren-hier / spielt-für-Verbindungen auf der Karte einzuzeichnen.
+Der in Wikidata erfasste Geburtsort ist gelegentlich falsch — er verweist auf ein Länder- oder Regionsobjekt statt auf eine echte Stadt, manchmal sogar auf das Land der Nationalmannschaft des Spielers statt auf seinen tatsächlichen Geburtsort — oder es fehlt die Angabe auf Stadtebene ganz. Solche Fälle werden von Hand anhand der eigenen Wikipedia-Infobox des Spielers korrigiert, sofern eine auffindbar ist; eine sehr kleine Anzahl Spieler hat weiterhin nur Geburtsdaten auf Länderebene oder gar keinen aufgelösten Geburtsort.
 
 **Die Talentproduktions-Kartenebene** beantwortet eine andere Frage als „wo wurden die meisten
 Spieler geboren" — eine reine Dichtekarte würde nur die Bevölkerung der Megastädte verfolgen.
@@ -42,6 +43,7 @@ gesehen viele Talente". Deshalb kann eine Megastadt auf dieser Karte unauffälli
 während eine kleine, für ihren Fußball bekannte Stadt deutlich hervorsticht: Die Ebene misst
 bewusst Über- und Unterdurchschnittlichkeit im Verhältnis zur Bevölkerung, nicht die absolute
 Produktion.
+Auch die Freitext-Geocodierung von Städten kann gelegentlich den falschen, gleichnamigen Ort treffen — solche Fälle werden durch manuelle Prüfung erkannt und korrigiert, statt blind übernommen zu werden.
 
 **Live-Tabellen** verwenden api-footballs eigene Gruppentabellen-Rangfolge statt einer hier aus den
 Ergebnissen berechneten, sodass direkter Vergleich, Fair-Play-Punkte und die übrigen offiziellen
