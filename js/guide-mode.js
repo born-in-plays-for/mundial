@@ -134,7 +134,7 @@ function _injectStyles() {
 #mundial-guide-panel .gp-body code:not(.taxonomy *){font-size:.82em;background:var(--bg-hover,#f0ede8);padding:.1em .38em;border-radius:3px;color:var(--color-default,#171715)}
 #mundial-guide-panel .gp-body pre:not(.taxonomy *){background:var(--bg-hover,#f0ede8);border-radius:3px;overflow-x:auto}
 #mundial-guide-panel .gp-body pre code:not(.taxonomy *){padding:0;background:transparent;border-radius:0;font-size:inherit}
-#mundial-guide-panel .gp-body img:not(.taxonomy *):not(.gp-icon){border:1px solid var(--border,#e4e0d8);border-radius:6px;margin:.75rem auto .2rem}
+#mundial-guide-panel .gp-body img:not(.taxonomy *):not(.gp-icon):not(.ga-icon){border:1px solid var(--border,#e4e0d8);border-radius:6px;margin:.75rem auto .2rem}
 #mundial-guide-panel .gp-icon{display:inline;vertical-align:middle;width:1.1em;height:1.1em;opacity:.7}
 #mundial-guide-panel .gp-body blockquote{border-left:3px solid var(--border-strong,#c8c4be);background:var(--bg-hover,#f0ede8);padding:.55rem 1rem;border-radius:0 4px 4px 0;margin:1.25rem 0}
 #mundial-guide-panel .gp-body blockquote p{font-size:.875rem;margin:0;color:#444}
@@ -150,10 +150,13 @@ function _injectStyles() {
 @keyframes gp-wip-march{to{background-position:16px 0,100% 16px,-16px 100%,0 -16px}}
 .gp-wip-title{font-size:2.5rem;font-weight:700;color:#888;letter-spacing:.05em;line-height:1.2}
 .gp-wip-sub{font-size:.9rem;color:#999;margin-top:.4rem}
-#mundial-guide-panel .ga-state{border:1px solid var(--border,#e4e0d8);border-radius:6px;padding:.25rem 1.25rem 1rem;margin:1.25rem 0}
-#mundial-guide-panel .ga-state h2{margin-top:1rem;border-bottom:none!important;padding-bottom:0!important;display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+#mundial-guide-panel .ga-state{border:1px solid var(--border,#e4e0d8);border-radius:6px;padding:1.1rem 1.25rem 1rem;margin:1.25rem 0;overflow:hidden}
+#mundial-guide-panel .ga-state h2{margin-top:0;border-bottom:none!important;padding-bottom:0!important;display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
 #mundial-guide-panel .ga-state.ga-current{border-color:#0dcaf0;border-width:2px;background:rgba(13,202,240,.08)}
 #mundial-guide-panel .ga-badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#0e7490;background:rgba(13,202,240,.2);border-radius:999px;padding:.2em .65em}
+#mundial-guide-panel .ga-feature{margin:1.5rem 0;overflow:hidden}
+#mundial-guide-panel .ga-feature h3{margin-top:0}
+#mundial-guide-panel .ga-icon{float:left;width:2.25rem;height:2.25rem;margin:.1rem 1rem .5rem 0;border-radius:4px}
 `;
   document.head.appendChild(s);
 }
@@ -224,8 +227,9 @@ function _refreshAuthState() {
 
 function _buildToc(body) {
   // h1 covers both the page title and this guide's own major section dividers ("The Control
-  // Panel", "The Map", "The Bottom Panel", "Data Sources") — treated as top-level entries
-  // alongside h2, same as h2 itself; only h3 nests under the preceding top-level entry.
+  // Panel", "The Map", "The Bottom Panel", "Data Sources") — each is a top-level TOC entry.
+  // h2 nests one level under the nearest preceding h1; h3 nests under the nearest preceding
+  // h2 (or directly under the h1, if this h1 has no h2 of its own yet).
   const headings = [...body.querySelectorAll('h1, h2, h3')];
   if (headings.length < 2) return null;
   const _TOC_LABELS = { fr: 'Sur cette page', de: 'Auf dieser Seite', it: 'In questa pagina', es: 'En esta página' };
@@ -234,14 +238,21 @@ function _buildToc(body) {
   nav.innerHTML = `<strong class="gp-toc-title">${_TOC_LABELS[_LANG] ?? 'On this page'}</strong>`;
   const root = document.createElement('ul');
   root.className = 'gp-toc-list';
-  let topLi = null, subUl = null;
+  let h1Li = null, h1Ul = null, h2Li = null, h2Ul = null;
   headings.forEach(h => {
     const li = document.createElement('li');
     li.innerHTML = `<a href="#${h.id}">${h.textContent}</a>`;
-    if (h.tagName === 'H1' || h.tagName === 'H2') { root.appendChild(li); topLi = li; subUl = null; }
-    else {
-      if (!subUl) { subUl = document.createElement('ul'); (topLi ?? root).appendChild(subUl); }
-      subUl.appendChild(li);
+    if (h.tagName === 'H1') {
+      root.appendChild(li);
+      h1Li = li; h1Ul = null; h2Li = null; h2Ul = null;
+    } else if (h.tagName === 'H2') {
+      if (!h1Ul) { h1Ul = document.createElement('ul'); (h1Li ?? root).appendChild(h1Ul); }
+      h1Ul.appendChild(li);
+      h2Li = li; h2Ul = null;
+    } else {
+      const parent = h2Li ?? h1Li;
+      if (!h2Ul) { h2Ul = document.createElement('ul'); (parent ?? root).appendChild(h2Ul); }
+      h2Ul.appendChild(li);
     }
   });
   nav.appendChild(root);
