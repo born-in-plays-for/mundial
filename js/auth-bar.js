@@ -152,17 +152,20 @@ class MundialAuthBar extends HTMLElement {
               ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
+          <div class="vr"></div>
+          <a data-ref="guide-btn" href=${_guideHref.pathname + _guideHref.search}
+            class="text-decoration-none d-flex align-items-center"
+            aria-label=${_t.navGuide} title=${_t.navGuide} style=${_hoverStyle}
+            data-bs-toggle="button"
+            @click=${e => this._onGuideClick(e)}
+            @mouseover=${e => e.currentTarget.style.opacity = 1}
+            @mouseout=${e => e.currentTarget.style.opacity = .6}>
+            ${unsafeHTML(ICON_GUIDE)}
+          </a>
           <div data-ref="auth-section" data-guide="auth"
             class="d-flex align-items-center gap-3 ms-auto">
             ${_authSectionTemplate()}
           </div>
-          <a data-ref="guide-btn" href=${_guideHref.pathname + _guideHref.search}
-            class="btn btn-outline-secondary p-0 d-flex align-items-center"
-            aria-label=${_t.navGuide} title=${_t.navGuide}
-            data-bs-toggle="button"
-            @click=${e => this._onGuideClick(e)}>
-            ${unsafeHTML(ICON_GUIDE)}
-          </a>
         </div>
       </nav>`, this);
 

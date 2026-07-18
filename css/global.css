@@ -16,6 +16,11 @@
 /* .warn-icon class on the SVG excludes it from colour/weight normalisation */
 mundial-auth-bar nav [stroke]:not(.chain-icon *):not(.warn-icon *) { stroke: #1C274C; stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
 
+/* guide-btn is a Bootstrap data-bs-toggle="button" — the .btn border it used to have gave a
+   free "pressed" indicator when guide mode is open; now that it's a plain borderless icon link
+   like its siblings, keep that signal by staying fully opaque instead of dimming while active */
+mundial-auth-bar [data-ref="guide-btn"].active { opacity: 1 !important; }
+
 /* base */
 body { background: var(--page-bg); color: var(--color-default); }
 .sub { font-size: 12px; color: var(--text-muted); }

@@ -242,11 +242,23 @@ function _installHandler() {
 
   _navHandler = (e) => {
     const el = e.target.closest('mundial-auth-bar [data-guide]');
-    if (!el) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    _showingId = el.dataset.guide;
-    _showSection(_showingId);
+    if (el) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      _showingId = el.dataset.guide;
+      _showSection(_showingId);
+      return;
+    }
+    // Any other navbar link (Live, Countries, Goodies dropdown items, …) has no guide
+    // section of its own — show the shared "nothing here yet" placeholder instead of
+    // letting the click navigate away, so guide mode can only be closed via Escape or
+    // re-clicking the guide button itself.
+    const navLink = e.target.closest('mundial-auth-bar nav a[href]');
+    if (navLink && navLink.dataset.ref !== 'guide-btn') {
+      e.preventDefault();
+      _showingId = 'default';
+      _showSection(_showingId);
+    }
   };
   document.addEventListener('click', _navHandler, true);
 
