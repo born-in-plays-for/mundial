@@ -10,6 +10,9 @@ let _pageId = null;
 let _panel = null;
 let _navHandler = null;
 let _escHandler = null;
+let _authStateHandler = null;
+
+const _CURRENT_STATE_LABEL = { fr: 'État actuel', de: 'Aktueller Status', it: 'Stato attuale', es: 'Estado actual' };
 
 const _WIP_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
   <div class="gp-wip-title">WORK IN PROGRESS</div>
@@ -147,6 +150,10 @@ function _injectStyles() {
 @keyframes gp-wip-march{to{background-position:16px 0,100% 16px,-16px 100%,0 -16px}}
 .gp-wip-title{font-size:2.5rem;font-weight:700;color:#888;letter-spacing:.05em;line-height:1.2}
 .gp-wip-sub{font-size:.9rem;color:#999;margin-top:.4rem}
+#mundial-guide-panel .ga-state{border:1px solid var(--border,#e4e0d8);border-radius:6px;padding:.25rem 1.25rem 1rem;margin:1.25rem 0}
+#mundial-guide-panel .ga-state h2{margin-top:1rem;border-bottom:none!important;padding-bottom:0!important;display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+#mundial-guide-panel .ga-state.ga-current{border-color:#0dcaf0;border-width:2px;background:rgba(13,202,240,.08)}
+#mundial-guide-panel .ga-badge{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#0e7490;background:rgba(13,202,240,.2);border-radius:999px;padding:.2em .65em}
 `;
   document.head.appendChild(s);
 }
@@ -185,6 +192,34 @@ async function _showSection(guideId) {
   _panel.scrollTop = 0;
   const mermaidNodes = [..._panel.querySelectorAll('pre.mermaid')];
   if (mermaidNodes.length) mermaid.run({ nodes: mermaidNodes });
+  _refreshAuthState();
+}
+
+// The 'auth' guide topic (js/guide-mode.js's _GUIDE_IDS 'auth' entry) describes every possible
+// backend-connection state — this highlights whichever one is live right now, read from
+// <mundial-auth-bar>'s own connectionState(). No-ops for every other guide topic.
+function _refreshAuthState() {
+  if (!_panel || _showingId !== 'auth') return;
+  const authBar = document.querySelector('mundial-auth-bar');
+  const state = authBar?.connectionState?.() ?? 'online';
+  const label = _CURRENT_STATE_LABEL[_LANG] ?? 'Current state';
+  _panel.querySelectorAll('.ga-state').forEach(el => {
+    const isCurrent = el.dataset.gaState === state;
+    el.classList.toggle('ga-current', isCurrent);
+    const heading = el.querySelector('h2');
+    if (!heading) return;
+    let badge = heading.querySelector('.ga-badge');
+    if (isCurrent) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'ga-badge';
+        heading.appendChild(badge);
+      }
+      badge.textContent = label;
+    } else {
+      badge?.remove();
+    }
+  });
 }
 
 function _buildToc(body) {
@@ -268,6 +303,12 @@ function _installHandler() {
     toggleGuide(authBar);
   };
   document.addEventListener('keydown', _escHandler);
+
+  // Live-updates the 'auth' guide topic's highlighted state if connectivity changes while
+  // it's the section currently open — _refreshAuthState() itself no-ops for every other topic.
+  _authStateHandler = () => _refreshAuthState();
+  document.addEventListener('auth-bar-online', _authStateHandler);
+  document.addEventListener('auth-bar-offline', _authStateHandler);
 }
 
 function _uninstallHandler() {
@@ -278,6 +319,11 @@ function _uninstallHandler() {
   if (_escHandler) {
     document.removeEventListener('keydown', _escHandler);
     _escHandler = null;
+  }
+  if (_authStateHandler) {
+    document.removeEventListener('auth-bar-online', _authStateHandler);
+    document.removeEventListener('auth-bar-offline', _authStateHandler);
+    _authStateHandler = null;
   }
   const authBar = document.querySelector('mundial-auth-bar');
   if (authBar) {

@@ -104,6 +104,13 @@ class MundialAuthBar extends HTMLElement {
     super();
     this.BACKEND = '';
     this._guideActive = false;
+    this._offlineCategory = null;
+  }
+
+  // Public: 'online', or one of the _showOffline categories ('server', 'connection', 'offline').
+  // Read by guide-mode.js's 'auth' guide topic to highlight the currently-active state.
+  connectionState() {
+    return this._offlineCategory ?? 'online';
   }
 
   connectedCallback() {
@@ -300,6 +307,7 @@ class MundialAuthBar extends HTMLElement {
   }
 
   _restoreAuthSection() {
+    this._offlineCategory = null;
     const nav = this.querySelector('nav');
     if (nav) nav.style.background = '';
     const section = this._freshAuthSection();
