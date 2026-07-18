@@ -39,7 +39,7 @@ El panel tiene cuatro partes: una **barra de herramientas** arriba; **Ordenar** 
 
 ## Ordenar
 
-Cuatro criterios reordenables — **la clasificación Elo** (una puntuación independiente que cambia después de cada partido según el resultado y la fuerza del rival — ver *Fuentes de datos*, abajo), **población**, **Δ** (delta juega-por menos nacido-en), **A–Z** — más un botón de dirección (↓↑) para invertir ascendente/descendente. Solo los dos criterios superiores están realmente activos; al hacer clic en un criterio se mueve a la primera posición.
+Cuatro criterios reordenables — **la clasificación Elo** (una puntuación independiente que cambia después de cada partido según el resultado y la fuerza del rival — ver la pestaña [Fuentes de datos](?guide=data) para el detalle exacto), **población**, **Δ** (delta juega-por menos nacido-en), **A–Z** — más un botón de dirección (↓↑) para invertir ascendente/descendente. Solo los dos criterios superiores están realmente activos; al hacer clic en un criterio se mueve a la primera posición.
 
 ## Filtrar
 
@@ -66,7 +66,11 @@ El estado de filtro y orden también puede configurarse directamente mediante la
 
 ## Sobre la referencia de países
 
-El mapa y la lista usan [eloratings.net](https://www.eloratings.net/) como fuente de países — no la lista de miembros de la FIFA. Esto significa que la lista incluye territorios no pertenecientes a la FIFA como Groenlandia, pero también casos especiales como las cuatro naciones constituyentes del Reino Unido — entidades subnacionales con membresía FIFA propia, reconocidas por separado por la FIFA y por Elo. El orden por defecto es por puntuación Elo; otros criterios de orden están disponibles en la columna de orden.
+El mapa y la lista usan [eloratings.net](https://www.eloratings.net/) como fuente de países — no la lista de miembros de la FIFA. Esto significa que la lista incluye territorios sin ninguna membresía FIFA, como Groenlandia.
+
+También incluye las cuatro naciones constituyentes del Reino Unido — Inglaterra, Escocia, Gales, Irlanda del Norte — como cuatro entradas separadas en lugar de un único «Reino Unido», por una razón distinta: a diferencia de Groenlandia, *sí* son miembros de la FIFA, cada una por derecho propio. Lo inusual en ellas es ser entidades subnacionales con membresía FIFA (y Elo) individual, no una ausencia en ninguna de las dos listas.
+
+El orden por defecto es por puntuación Elo; otros criterios de orden están disponibles en la columna de orden.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:tax_heading -->
@@ -335,9 +339,10 @@ La misma lista de insignias, esta vez limitada a los 48 países **clasificados**
 - Cada posición filtra los países clasificados a los que han "alcanzado" esa fase — todavía en el torneo al principio, o ya campeones.
 - La navegación está limitada a la fase realmente alcanzada por el torneo; las posiciones posteriores permanecen bloqueadas hasta que se disputen los partidos correspondientes.
 
-El carrusel actúa como un filtro adicional, junto con el panel de control — puedes, por ejemplo,
-mostrar solo los equipos de octavos que también sean exportadores avanzando el carrusel y desactivando la columna de no exportador en el panel.
-Solo filtra las cuatro filas de **clasificados** (importador / no importador × exportador / no exportador); las cuatro filas de **no clasificados** no tienen una fase del torneo propia que alcanzar.
+El carrusel es el único filtro que se aplica aquí: avanzarlo hasta, digamos, octavos de final muestra exactamente
+los equipos que alcanzaron esa fase, independientemente de las casillas del panel de control o del filtro de
+confederación — esos solo afectan a la pestaña Equipos predeterminada, que no tiene concepto de fase propio.
+Los países no clasificados tampoco aparecen nunca en esta pestaña, sea cual sea el estado de sus propias casillas.
 
 En la **fase de grupos**, la lista de insignias se sustituye por las clasificaciones de grupo — los 12 grupos (A–L) juntos por defecto, o reducidos a uno solo mediante el selector, con el resultado de cada partido y los equipos clasificados para los dieciseisavos resaltados según los resultados reales (un empate no otorga marca a ninguno de los dos).
 

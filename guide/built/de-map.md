@@ -39,7 +39,7 @@ Das Panel hat vier Teile: eine **Werkzeugleiste** oben; **Sortieren** links; die
 
 ## Sortieren
 
-Vier umsortierbare Kriterien — **die Elo-Bewertung** (ein unabhängiger Wert, der sich nach jedem Spiel je nach Ergebnis und Stärke des Gegners ändert — siehe *Datenquellen*, unten), **Bevölkerung**, **Δ** (Delta aus spielt-für minus geboren-in), **A–Z** — plus eine Richtungsschaltfläche (↓↑) zum Umkehren von auf-/absteigend. Nur die obersten zwei Kriterien sind tatsächlich aktiv; ein Klick auf ein Kriterium verschiebt es an die erste Stelle.
+Vier umsortierbare Kriterien — **die Elo-Bewertung** (ein unabhängiger Wert, der sich nach jedem Spiel je nach Ergebnis und Stärke des Gegners ändert — siehe den Tab [Datenquellen](?guide=data) für die genaue Erklärung), **Bevölkerung**, **Δ** (Delta aus spielt-für minus geboren-in), **A–Z** — plus eine Richtungsschaltfläche (↓↑) zum Umkehren von auf-/absteigend. Nur die obersten zwei Kriterien sind tatsächlich aktiv; ein Klick auf ein Kriterium verschiebt es an die erste Stelle.
 
 ## Filter
 
@@ -66,7 +66,11 @@ Der Filter- und Sortierstatus kann auch direkt über die URL konfiguriert werden
 
 ## Zur Länderreferenz
 
-Karte und Liste verwenden [eloratings.net](https://www.eloratings.net/) als Länderquelle — nicht die FIFA-Mitgliederliste. Dies bedeutet, dass die Liste Nicht-FIFA-Territorien wie Grönland enthält, aber auch besondere Fälle wie die vier britischen Heimnationen — sub-nationale Einheiten mit eigener FIFA-Mitgliedschaft, die von FIFA und Elo separat anerkannt werden. Die Standardsortierung erfolgt nach Elo-Bewertung; andere Sortierkriterien sind in der Sortierspalte verfügbar.
+Karte und Liste verwenden [eloratings.net](https://www.eloratings.net/) als Länderquelle — nicht die FIFA-Mitgliederliste. Dies bedeutet, dass die Liste Gebiete ganz ohne FIFA-Mitgliedschaft enthält, wie Grönland.
+
+Sie enthält außerdem die vier britischen Heimnationen — England, Schottland, Wales, Nordirland — als vier eigenständige Einträge statt eines einzigen „Vereinigten Königreichs", aus einem ganz anderen Grund: Anders als Grönland *sind* sie FIFA-Mitglieder, jede für sich. Ungewöhnlich an ihnen ist, dass sie subnationale Einheiten mit eigener FIFA- (und Elo-)Mitgliedschaft sind, nicht eine Lücke in einer der beiden Listen.
+
+Die Standardsortierung erfolgt nach Elo-Bewertung; andere Sortierkriterien sind in der Sortierspalte verfügbar.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:tax_heading -->
@@ -335,9 +339,10 @@ Dieselbe Pillenliste, diesmal beschränkt auf die 48 **qualifizierten** Länder,
 - Jede Position filtert qualifizierte Länder auf jene, die diese Phase „erreicht“ haben — zu Beginn noch im Turnier, oder bereits Sieger.
 - Die Navigation ist auf die vom Turnier tatsächlich erreichte Phase begrenzt; weitere Positionen bleiben gesperrt, bis die entsprechenden Spiele ausgetragen sind.
 
-Das Karussell wirkt als zusätzlicher Filter, zusätzlich zum Kontrollpanel — Sie können beispielsweise
-nur Achtelfinal-Mannschaften anzeigen, die auch Exporteure sind, indem Sie das Karussell vorrücken und die Nicht-Exporteur-Spalte im Panel deaktivieren.
-Es filtert nur die vier **qualifizierten** Zeilen (Importeur / Nicht-Importeur × Exporteur / Nicht-Exporteur); die vier **nicht qualifizierten** Zeilen haben keine eigene Turnierphase zu erreichen.
+Das Karussell ist hier der einzige geltende Filter: Es bis zum Achtelfinale vorzurücken zeigt genau
+die Mannschaften, die diese Phase erreicht haben, unabhängig von den Kontrollkästchen des Kontrollpanels oder dem
+Konföderationsfilter — diese wirken sich nur auf den Standard-Tab „Teams" aus, der kein eigenes Phasenkonzept hat.
+Nicht qualifizierte Länder erscheinen in diesem Tab ebenfalls nie, egal wie ihre eigenen Kontrollkästchen gesetzt sind.
 
 Bei der **Gruppenphase** wird die Pillenliste durch Gruppentabellen ersetzt — standardmäßig alle 12 Gruppen (A–L) auf einmal, oder über die Auswahl auf eine einzelne verengt, mit dem Ergebnis jedes Spiels und den für die Sechzehntelfinale qualifizierten Teams entsprechend den tatsächlichen Ergebnissen hervorgehoben (ein Unentschieden bringt keinem der beiden ein Häkchen).
 

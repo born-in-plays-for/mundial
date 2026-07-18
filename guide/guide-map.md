@@ -40,7 +40,7 @@ The panel has four parts: a **toolbar** across the top; **sort** on the left; th
 
 ## Sort
 
-Four reorderable criteria — **Elo ranking** (an independent rating that adjusts after every match based on the result and the opponent's strength — see *Data Sources*, below), **population**, **Δ** (delta of plays-for minus born-in), **A–Z** — plus a direction toggle (↓↑) to reverse ascending/descending. Only the top two criteria are actually used; click a criterion to move it to the top of the list.
+Four reorderable criteria — **Elo ranking** (an independent rating that adjusts after every match based on the result and the opponent's strength — see the [Data Sources tab](?guide=data) for exactly how), **population**, **Δ** (delta of plays-for minus born-in), **A–Z** — plus a direction toggle (↓↑) to reverse ascending/descending. Only the top two criteria are actually used; click a criterion to move it to the top of the list.
 
 ## Filter
 
@@ -68,9 +68,14 @@ The filter and sort state can also be configured directly from the URL — `?sor
 ## About the country reference
 
 The map and the list use [eloratings.net](https://www.eloratings.net/) as the source of countries —
-not the FIFA member list. This means the list includes non-FIFA territories such as Greenland,
-but also unusual cases like the four UK home nations — sub-national entities
-with their own FIFA membership, recognised separately by both FIFA and Elo.
+not the FIFA member list. This means the list includes territories with no FIFA membership at all,
+such as Greenland.
+
+It also includes the four UK home nations — England, Scotland, Wales, Northern Ireland — as four
+separate entries rather than one "United Kingdom," for an unrelated reason: unlike Greenland, they
+*are* FIFA members, each in its own right. What's unusual about them is being sub-national entities
+with individual FIFA (and Elo) membership, not a gap in either list.
+
 The default sort order is by Elo rating; other sort criteria are available in the sort column.
 <!-- /i18n:control_sidebar -->
 
@@ -292,9 +297,10 @@ The same badge list, this time scoped to the 48 **qualified** countries only, wi
 - Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it.
 - Navigation is capped at the furthest stage the tournament has actually reached; later positions stay locked until real fixtures resolve into them.
 
-The carousel acts as an additional filter, layered on top of the Control Panel — you can, for example,
-show only Round of 16 teams that are also exporters by advancing the carousel and unchecking the non-exporter column in the panel.
-It only filters the four **qualified** rows (importer / non-importer × exporter / non-exporter); the four **non-qualified** rows have no tournament stage of their own to reach.
+The carousel is the only filter that applies here: advancing it to, say, Round of 16 shows exactly
+the teams that reached that stage, regardless of the Control Panel's checkboxes or confederation
+filter — those only affect the default Teams tab, which has no stage concept of its own.
+Non-qualified countries never appear in this tab either, whatever their own checkboxes say.
 
 At **Group stage**, the badge list is replaced by group standings — all 12 groups (A–L) at once by default, or narrowed to one at a time via the selector, with each match's result and the teams through to the Round of 32 highlighted based on the actual outcomes (a draw earns no checkmark either way).
 

@@ -39,7 +39,7 @@ Il pannello ha quattro parti: una **barra degli strumenti** in alto; **Ordina** 
 
 ## Ordina
 
-Quattro criteri riordinabili — **il ranking Elo** (un punteggio indipendente che cambia dopo ogni partita in base al risultato e alla forza dell'avversario — vedi *Fonti dei dati*, sotto), **popolazione**, **Δ** (delta gioca-per meno nato-in), **A–Z** — più un pulsante di direzione (↓↑) per invertire crescente/decrescente. Solo i primi due criteri sono effettivamente attivi; cliccando su un criterio lo si sposta in prima posizione.
+Quattro criteri riordinabili — **il ranking Elo** (un punteggio indipendente che cambia dopo ogni partita in base al risultato e alla forza dell'avversario — vedi la scheda [Fonti dei dati](?guide=data) per il dettaglio esatto), **popolazione**, **Δ** (delta gioca-per meno nato-in), **A–Z** — più un pulsante di direzione (↓↑) per invertire crescente/decrescente. Solo i primi due criteri sono effettivamente attivi; cliccando su un criterio lo si sposta in prima posizione.
 
 ## Filtra
 
@@ -66,7 +66,11 @@ Lo stato di filtro e ordinamento può essere configurato anche direttamente tram
 
 ## Sulla fonte di riferimento dei paesi
 
-Mappa ed elenco usano [eloratings.net](https://www.eloratings.net/) come fonte dei paesi — non l'elenco dei membri FIFA. Questo significa che l'elenco include territori non FIFA come la Groenlandia, ma anche casi particolari come le quattro nazioni costitutive del Regno Unito — entità sub-nazionali con appartenenza FIFA propria, riconosciute separatamente da FIFA ed Elo. L'ordinamento predefinito è per rating Elo; altri criteri di ordinamento sono disponibili nella colonna di ordinamento.
+Mappa ed elenco usano [eloratings.net](https://www.eloratings.net/) come fonte dei paesi — non l'elenco dei membri FIFA. Questo significa che l'elenco include territori senza alcuna appartenenza FIFA, come la Groenlandia.
+
+Include anche le quattro nazioni costitutive del Regno Unito — Inghilterra, Scozia, Galles, Irlanda del Nord — come quattro voci distinte anziché un unico «Regno Unito», per un motivo del tutto diverso: a differenza della Groenlandia, *sono* membri FIFA, ciascuna a pieno titolo. Ciò che è insolito in loro è essere entità sub-nazionali con appartenenza FIFA (ed Elo) individuale, non un'assenza da nessuno dei due elenchi.
+
+L'ordinamento predefinito è per rating Elo; altri criteri di ordinamento sono disponibili nella colonna di ordinamento.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:tax_heading -->
@@ -335,9 +339,10 @@ La stessa lista di badge, questa volta limitata ai 48 paesi **qualificati**, con
 - Ogni posizione filtra i paesi qualificati a quelli che hanno "raggiunto" quella fase — ancora in torneo all'inizio, o già vincitori.
 - La navigazione è limitata alla fase effettivamente raggiunta dal torneo; le posizioni successive restano bloccate finché le partite corrispondenti non vengono giocate.
 
-Il carosello agisce come filtro aggiuntivo, oltre al pannello di controllo — puoi ad esempio
-mostrare solo le squadre degli ottavi che sono anche esportatrici avanzando il carosello e disattivando la colonna non esportatore nel pannello.
-Filtra solo le quattro righe **qualificati** (importatore / non importatore × esportatore / non esportatore); le quattro righe **non qualificati** non hanno una propria fase del torneo da raggiungere.
+Il carosello è l'unico filtro applicato qui: farlo avanzare, ad esempio, fino agli ottavi di finale mostra esattamente
+le squadre che hanno raggiunto quella fase, indipendentemente dalle caselle del pannello di controllo o dal
+filtro di confederazione — questi influenzano solo la scheda Squadre predefinita, che non ha un proprio concetto di fase.
+Anche i paesi non qualificati non compaiono mai in questa scheda, qualunque sia lo stato delle loro caselle.
 
 Alla **fase a gironi**, la lista di badge viene sostituita dalle classifiche dei gironi — tutti e 12 i gironi (A–L) insieme per impostazione predefinita, oppure ridotti a uno solo tramite il selettore, con il risultato di ogni partita e le squadre qualificate per i sedicesimi evidenziate in base ai risultati reali (un pareggio non dà la spunta a nessuna delle due).
 

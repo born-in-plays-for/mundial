@@ -39,7 +39,7 @@ Le panneau comporte quatre parties : une **barre d'outils** en haut ; **tri** à
 
 ## Tri
 
-Quatre critères réorganisables — **le classement Elo** (une cote indépendante qui évolue après chaque match selon le résultat et la force de l'adversaire — voir *Sources de données*, plus bas), **population**, **Δ** (delta joue-pour moins né-dans), **A–Z** — plus un bouton de sens (↓↑) pour inverser croissant/décroissant. Seuls les deux premiers critères sont réellement actifs ; cliquez sur un critère pour le placer en tête de liste.
+Quatre critères réorganisables — **le classement Elo** (une cote indépendante qui évolue après chaque match selon le résultat et la force de l'adversaire — voir l'[onglet Sources de données](?guide=data) pour le détail exact), **population**, **Δ** (delta joue-pour moins né-dans), **A–Z** — plus un bouton de sens (↓↑) pour inverser croissant/décroissant. Seuls les deux premiers critères sont réellement actifs ; cliquez sur un critère pour le placer en tête de liste.
 
 ## Filtre
 
@@ -66,7 +66,11 @@ L'état du filtre et du tri peut aussi être configuré directement depuis l'URL
 
 ## À propos de la référence des pays
 
-La carte et la liste utilisent [eloratings.net](https://www.eloratings.net/) comme source des pays — et non la liste des membres de la FIFA. Cela signifie que la liste inclut des territoires non-FIFA tels que le Groenland, mais aussi des cas particuliers comme les quatre nations britanniques — entités sous-nationales possédant leur propre adhésion à la FIFA, reconnues séparément par la FIFA et par Elo. Le tri par défaut est par classement Elo ; d'autres critères de tri sont disponibles dans la colonne de tri.
+La carte et la liste utilisent [eloratings.net](https://www.eloratings.net/) comme source des pays — et non la liste des membres de la FIFA. Cela signifie que la liste inclut des territoires n'ayant aucune adhésion à la FIFA, comme le Groenland.
+
+Elle inclut aussi les quatre nations britanniques — Angleterre, Écosse, Pays de Galles, Irlande du Nord — sous forme de quatre entrées distinctes plutôt qu'un seul « Royaume-Uni », pour une raison sans rapport : contrairement au Groenland, elles *sont* membres de la FIFA, chacune à part entière. Ce qui est inhabituel les concernant, c'est d'être des entités infranationales avec une adhésion individuelle à la FIFA (et à Elo), pas une absence dans l'une ou l'autre liste.
+
+Le tri par défaut est par classement Elo ; d'autres critères de tri sont disponibles dans la colonne de tri.
 <!-- /i18n:control_sidebar -->
 
 <!-- i18n:tax_heading -->
@@ -335,9 +339,10 @@ La même liste de pastilles, cette fois limitée aux 48 pays **qualifiés**, ave
 - Chaque position filtre les pays qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée.
 - La navigation est limitée à la phase la plus avancée réellement atteinte par le tournoi ; les positions suivantes restent verrouillées tant que les matchs correspondants ne sont pas joués.
 
-Le carrousel agit comme un filtre supplémentaire, en plus du panneau de contrôle — vous pouvez, par exemple,
-n'afficher que les équipes des 8es de finale qui sont aussi exportatrices en avançant le carrousel et en décochant la colonne non-exportateurs dans le panneau.
-Il ne filtre que les quatre lignes **qualifiés** (importateur / non-importateur × exportateur / non-exportateur) ; les quatre lignes **non qualifiés** n'ont pas de phase de tournoi propre à atteindre.
+Le carrousel est le seul filtre qui s'applique ici : l'avancer jusqu'aux, disons, 8es de finale affiche exactement
+les équipes ayant atteint cette phase, quels que soient les cases cochées du panneau de contrôle ou le filtre de
+confédération — ceux-ci n'affectent que l'onglet Équipes par défaut, qui n'a pas de notion de phase.
+Les pays non qualifiés n'apparaissent jamais dans cet onglet non plus, quelles que soient leurs propres cases cochées.
 
 À la **phase de groupes**, la liste de pastilles est remplacée par les classements de groupe — les 12 groupes (A–L) affichés ensemble par défaut, ou réduits à un seul via le sélecteur, avec le résultat de chaque match et les équipes qualifiées pour les 16es mises en évidence selon les résultats réels (un match nul ne donne de coche à personne).
 
