@@ -13,6 +13,7 @@ const ICON_GUIDE = _icon(`<circle cx="12" cy="12" r="10" stroke="#1C274C" stroke
 const ICON_STATUS = _icon(`<path d="M4 4H20L14 12V19L10 21V12L4 4Z" stroke="#1C274C" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`);
 const ICON_HEATMAP = _icon(`<path d="M12 2C12 2 6 8 6 14C6 17.3137 8.68629 20 12 20C15.3137 20 18 17.3137 18 14C18 12 17 10 17 10C17 10 16 12 14 12C14 12 15 8 12 2Z" stroke="#1C274C" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`);
 const ICON_CARD = _icon(`<rect x="6" y="3" width="12" height="18" rx="2" stroke="#1C274C" stroke-width="1.5"/>`);
+const ICON_TAXONOMY = _icon(`<circle cx="9" cy="9" r="6" stroke="#1C274C" stroke-width="1.5"/><circle cx="15" cy="9" r="6" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="15" r="6" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_CHAIN = `<svg class="chain-icon" width="24" height="24" viewBox="62 49 388 414" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="131,118 381,118 381,256 256,256" stroke="red" />
@@ -164,6 +165,7 @@ class MundialAuthBar extends HTMLElement {
               ${_dropdownItem('/insights/france.html', _t.navFrance, ICON_FRANCE)}
               ${_dropdownItem('/insights/status.html', _t.navStatus, ICON_STATUS)}
               ${_dropdownItem('/insights/heat-map.html', _t.navHeatmap, ICON_HEATMAP)}
+              ${_dropdownItem('/insights/taxonomy.html', _t.navTaxonomy, ICON_TAXONOMY)}
               ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
@@ -192,6 +194,7 @@ class MundialAuthBar extends HTMLElement {
       '/insights/discipline.html': ['discipline.html'],
       '/insights/status.html': ['status.html'],
       '/insights/heat-map.html': ['heat-map.html'],
+      '/insights/taxonomy.html': ['taxonomy.html'],
       '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
       '/wc2026_live.html': ['wc2026_live.html'],
     };
