@@ -132,18 +132,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <table class="csb-table csb-native-table table table-sm table-bordered mb-0" hidden><tbody>
         <tr>
           <td class="csb-header text-muted ps-1" title="${T.csbTips.playersFilter}">
-            <span class="cbs-header-label">${T.filterLabels.action}</span>
+            <span class="cbs-header-label">${T.sortLabels.view}</span>
             <img class="csb-header-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" width="14" height="14" alt="" aria-hidden="true">
           </td>
         </tr>
         <tr><td class="csb-toggle-col text-muted">
           <div class="csb-native-toggle d-flex align-items-center justify-content-center">
-            <input type="checkbox" class="btn-check" id="csb-pf-export" autocomplete="off" checked>
-            <label class="btn csb-pf-export" for="csb-pf-export" title="${T.psbLabels.exportTip}"></label>
             <input type="checkbox" class="btn-check" id="csb-pf-native" autocomplete="off" checked>
             <label class="btn csb-pf-native" for="csb-pf-native" title="${T.psbLabels.nativeTip}"></label>
             <input type="checkbox" class="btn-check" id="csb-pf-import" autocomplete="off" checked>
             <label class="btn csb-pf-import" for="csb-pf-import" title="${T.psbLabels.importTip}"></label>
+            <input type="checkbox" class="btn-check" id="csb-pf-export" autocomplete="off" checked>
+            <label class="btn csb-pf-export" for="csb-pf-export" title="${T.psbLabels.exportTip}"></label>
           </div>
         </td></tr>
       </tbody></table>
@@ -180,12 +180,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <tr class="csb-nonqual-row">
       <td rowspan="2" class="csb-group" data-row="UB" title="${T.csbTips.nonQual}"><span class="elo-item"><span class="elo-name">${T.filterLabels.nonQual}</span></span></td>
       <td class="csb-row" data-row="FB" title="${T.csbTips.fifa}"><span class="elo-item"><span class="elo-name">FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FE"></label></td>
+      <td class="text-muted" title="${T.csbTips.ef}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FE" checked></label></td>
       <td class="text-muted" title="${T.csbTips.of}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-FK"></label></td>
     </tr>
     <tr class="csb-nonqual-row">
       <td class="csb-row" data-row="NB" title="${T.csbTips.nonFifa}"><span class="elo-item elo-item--nonfifa"><span class="elo-name">non-FIFA</span></span></td>
-      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NE"></label></td>
+      <td class="text-muted" title="${T.csbTips.en}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NE" checked></label></td>
       <td class="text-muted" title="${T.csbTips.on}"><label class="csb-check d-block text-center lh-1"><input type="checkbox" class="form-check-input" id="filter-NK"></label></td>
     </tr>
   </tbody></table>

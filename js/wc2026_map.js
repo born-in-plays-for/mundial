@@ -284,6 +284,12 @@ document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloData   = null;
 const _fifaMemberIds = new Set();
+// Every id present in data/elo_rank.json's rankings at all — used solely by
+// _isCountryCategoryVisible's own guard (a country with no Elo entry whatsoever is never
+// "visible", regardless of any checkbox — see that function's own comment). Populated later,
+// same by-reference pattern as _fifaMemberIds (same line) — empty at construction time,
+// correctly filled in by the time it's actually queried.
+const _eloRankedIds = new Set();
 // Shared between tab-teams (default) and tab-tournament — see _switchTab below, which
 // reparents this same .elo-layout wrapper between the two panes instead of duplicating it.
 render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking></div>`, document.getElementById('tab-teams'));
@@ -880,15 +886,33 @@ const CITY_DOT_COLOR = '#7c3aed';
 // _cityRecForPid (looks up one city's record when a "born in" table cell is clicked — see
 // _allPlayersRow) — a fresh rebuild each call rather than a cached map, but the underlying
 // player counts here are small enough (hundreds, not thousands) that this is never worth caching.
-// The player set #tab-players is currently showing (ambient or focused) with the sidebar's own
-// export/native/import filter applied (control_sidebar.js's csb-native-table) — inclusive-OR
-// over a player's own _roles, so a player holding more than one role (see _focusedPlayers' own
-// comment) stays visible as long as any one of them is checked. Shared by _playersTableTemplate
-// (the table itself) and _buildCityRecords (the map's birth-city dots) so the two can never
-// silently disagree on which players are currently "shown" — whatever narrows this set in the
-// future (this filter today, anything else later) automatically keeps both in sync.
+// The player set #tab-players is currently showing (ambient or focused) with BOTH of the
+// sidebar's own filters applied. Shared by _playersTableTemplate (the table itself) and
+// _buildCityRecords (the map's birth-city dots) so the two — and any future consumer — can
+// never silently disagree on which players are currently "shown".
+//
+// 1. The country filter (category matrix + confederation + stage — control_sidebar.js's own
+//    "true" filter, on the *set of countries* shown at all) applies to BOTH columns of a row,
+//    independently, not just to whichever team anchored it into the set in the first place:
+//    a player only shows if their birth country's own category currently passes
+//    _isCountryCategoryVisible AND their plays-for country's own category does too. Before this,
+//    the filter only ever gated the anchor side (_focusedPlayers/_visiblePlayerEntries already
+//    only pull from currently-selected teams) — an export to a category the user has hidden, or
+//    an import from one, still showed regardless, since nothing checked the *other* side of the
+//    row against the same filter that decides whether that same country's own Elo pill shows.
+//    Deliberately _isCountryCategoryVisible, NOT _isTeamVisible (below) — the group-stage
+//    single-group override is about which teams anchor the ambient roster, not about whether a
+//    row's own born-in/plays-for country passes the category filter; reusing _isTeamVisible here
+//    would wrongly hide a focused group's own exports/imports just for landing outside the group.
+// 2. The export/native/import filter (`control_sidebar.js`'s `csb-native-table`) — inclusive-OR
+//    over a player's own _roles, so a player holding more than one role (see _focusedPlayers'
+//    own comment) stays visible as long as any one of them is checked.
 const _currentPlayerSet = focusIds =>
   (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
+    .filter(p => {
+      const playsForId = QUALIFIED_BY_NAME[p.nation];
+      return _isCountryCategoryVisible(p.birthCountryId) && (playsForId == null || _isCountryCategoryVisible(playsForId));
+    })
     .filter(p => p._roles.some(r => sidebar.playersFilterChecked(r)));
 
 const _buildCityRecords = () => {
@@ -980,7 +1004,7 @@ _sidebarCallbacks.renderElo = _renderElo;
 _sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
 // _applyDimFocus is defined further down (near applySelection/clearDim) — safe to reference
 // here since this arrow function is only ever called later, well after that const exists.
-// (_renderPlayersTabIdle is layered on top of this same callback further down, right after its
+// (_refreshPlayersView is layered on top of this same callback further down, right after its
 // own const is defined — it can't be referenced this early: the very first applyFlagFilter() run
 // happens synchronously during initial setup, well before that point in module evaluation, unlike
 // every later run which is safely post-load.)
@@ -1186,27 +1210,52 @@ const applySelection = (id, destIds) => {
 
 // ── Players table (#tab-players' one and only content — see _playersTableTemplate) ────────────
 
-// Numeric ids of qualified teams whose flag is currently visible on the map (not hidden by the
-// sidebar's category filter, group focus, or dim focus) — the ambient table only ever shows
-// players/coaches of a team the map itself is currently showing, read fresh every time it's
-// opened rather than kept in sync live.
-// Reads each flag's *target* hidden state (data-hidden-target), not the live `visibility`
-// attribute — a hide fades out over ~180ms+stagger and only sets `visibility="hidden"` once
-// that finishes (see js/flag_visibility.js's own comment), while a show clears it immediately.
-// Sampling `visibility` synchronously right after a filter/stage change — exactly what this and
-// the nav pill's live count (_renderPlayersTabIdle) do — would then catch some flags still mid
-// fade-out, still reading "visible" a moment after they were told to hide, inflating the count
-// with the outgoing set on top of the incoming one. data-hidden-target is set the instant a
-// flag's target changes, so it always reflects where the filter is headed, never the animation.
+// Whether ANY country `id` — qualified or not, plays-for or born-in, an ambient anchor or just
+// one side of some other team's export/import row — currently passes the sidebar's own country
+// filter (category matrix + confederation + stage, all folded into sidebar.catEloChecked, the
+// exact same predicate sortAndFilter uses to build the Elo pill list #elo-meta-count counts).
+// Works for a non-qualified id too (fifaMember lookup + flagCat's own 'e'/'o' branch handle
+// that already) — this is the general-purpose version _isTeamVisible (below) builds on, NOT
+// the group-stage single-group override: that's specifically about which teams anchor the
+// ambient roster, unrelated to whether a given born-in/plays-for cell's own country passes the
+// filter (see _currentPlayerSet's own comment on why the two questions must stay separate).
+//
+// _eloRankedIds.has(id) guards a case catEloChecked itself was never designed to answer: a
+// player's birth country doesn't have to be rated by eloratings.net at all (the Isle of Man is
+// the concrete case that surfaced this — mundial-build's own pipeline now proactively patches
+// every such gap into data/elo_rank.json with a null-rank entry the moment it appears in the
+// player data, via pipeline/patch_unrated_birth_countries.py, so this only ever fires for a
+// transient window — e.g. map.json regenerated with a new birth country before elo_rank.json
+// has been re-patched to match). Deliberately a quiet guard, not a user-facing filter category —
+// an earlier version of this added a whole 3rd matrix row (WE/WK, "unrated") for it, but once
+// the pipeline fix above shipped, that row could (almost) never have anything left to show or
+// hide: no separate checkbox state is worth persisting for a gap the pipeline itself closes
+// before the frontend ever sees it.
+const _isCountryCategoryVisible = id => _eloRankedIds.has(id) && sidebar.catEloChecked(id, _fifaMemberIds.has(id));
+
+// Whether qualified team `id` is currently selected as an ambient-view anchor — the ONE place
+// this narrower question is answered, shared by everything that needs it (the ambient player
+// table below, the map's own flag painting via applyFlagFilter/_applyGroupFocus). Two layers,
+// same ones _applyGroupFocus itself implements: the group-stage carousel's own single-group
+// focus (_groupFocusIds, above) is a full override when active ("regardless of what the
+// checkboxes currently say" — see its own comment) — ignore the sidebar filter entirely and
+// test group membership instead; otherwise fall through to _isCountryCategoryVisible. Previously,
+// the ambient table asked this question a second, independent way — inspecting the map's own
+// painted flag DOM (data-hidden-target) after the fact, rather than the filter state directly —
+// which happened to agree in the common case but was never guaranteed to (animation timing, or
+// any future divergence between the two code paths). Querying the same canonical predicate
+// everywhere removes that risk instead of hoping the two independent derivations never drift.
+const _isTeamVisible = id => _groupFocusIds ? _groupFocusIds.has(id) : _isCountryCategoryVisible(id);
+
+// Numeric ids of every currently-selected qualified team (see _isTeamVisible) — the ambient
+// table only ever shows players/coaches of a team currently selected this way, kept in sync
+// live via _refreshPlayersView (hooked into callbacks.afterFlagFilter below), not just read
+// fresh the next time the tab happens to be (re)opened.
 const _visibleQualifiedIds = () => {
   const ids = new Set();
-  g.selectAll('.flag-qualified[data-elo-cat]').each(function() {
-    const id = +this.getAttribute('data-id');
-    if (!QUALIFIED_NAMES[id]) return;
-    const hidden = this.hasAttribute('data-hidden-target')
-      ? this.getAttribute('data-hidden-target') === '1'
-      : this.getAttribute('visibility') === 'hidden';
-    if (!hidden) ids.add(id);
+  Object.keys(QUALIFIED_NAMES).forEach(idStr => {
+    const id = +idStr;
+    if (_isTeamVisible(id)) ids.add(id);
   });
   return ids;
 };
@@ -1400,8 +1449,15 @@ const _tabPlayersLabel = (iconSrc, label, onClick, onClose) => html`
 // call sites below) is what tells the two apart, not the icon.
 const _PLAYERS_TAB_ICON = 'images/solar_linear/user-circle-svgrepo-com.svg';
 
-// Idle state (no country selected) — a live count of however many teams are in the ambient
-// (currently-visible) set, so the pill previews what tab-players will show even before it's
+// Idle state (no country selected) — a live count of every DISTINCT country appearing in the
+// ambient table, born-in or plays-for column alike, not just how many qualified teams are
+// currently visible: a player's birth country can be any country in the world (Cameroon,
+// unqualified, in the born-in column of a Canada export — see _focusedPlayers' own export/
+// import sourcing), so counting only _visibleQualifiedIds() undercounts exactly like
+// #elo-meta-count would if it only counted one side of an export/import pair. Mirrors
+// #elo-meta-count's own philosophy: an authoritative count derived from the actual currently-
+// shown rows (_currentPlayerSet, the same source the table itself renders from), not a
+// separately-derived approximation. Previews what tab-players will show even before it's
 // opened — the same preview role the dim-selected "1 team" pill (applySelection, above) already
 // plays for a one-team focus, rendered through the same _tabPlayersLabel so both modes look and
 // behave alike (a generic count, never the focused team's own name/flag; see applySelection's
@@ -1414,35 +1470,48 @@ const _renderPlayersTabIdle = () => {
   if (!_pb) return;
   const wasActive = _pb.classList.contains('active');
   _pb.className = 'nav-link flex-grow-1' + (wasActive ? ' active' : '');
-  const count = _visibleQualifiedIds().size;
+  // Plain country-name strings (not ids) — every entry already carries both (birthCountry from
+  // its own birth-country record, nation from whichever qualified team produced it), and a name
+  // is the one identity that's always populated on both sides, including a non-qualified birth
+  // country an id lookup wouldn't resolve (e.g. Cameroon) or, in principle, a non-qualified
+  // plays-for destination (an id-based QUALIFIED_BY_NAME lookup would silently drop either).
+  const countryNames = new Set();
+  for (const p of _currentPlayerSet(null)) {
+    if (p.birthCountry) countryNames.add(p.birthCountry);
+    if (p.nation) countryNames.add(p.nation);
+  }
+  const count = countryNames.size;
   render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `${count} ${T.countries(count)}`, () => _showAllPlayers()), _pb);
 };
 _renderPlayersTabIdle();
-// Layers the nav pill's live-count refresh onto the same callback assigned near initSidebar()
-// (that first assignment already runs _applyGroupFocus/_applyDimFocus; see its own comment on
-// why _renderPlayersTabIdle couldn't be included there directly). Every applyFlagFilter() call
-// from here on — checkbox toggles, stage carousel moves, confederation filter — keeps the pill
-// in sync; only the one synchronous call during initial setup (before this line runs) misses it,
-// which is harmless since app.byId/nativeByCountry/importByCountry are still empty at that
-// point anyway (buildIndices(rawData) hasn't run yet).
-{
-  const _afterFlagFilterBase = _sidebarCallbacks.afterFlagFilter;
-  _sidebarCallbacks.afterFlagFilter = () => { _afterFlagFilterBase(); _renderPlayersTabIdle(); };
-}
 
-// Unlike the category checkboxes above (only ever live-refreshed via afterFlagFilter's nav-pill
-// preview, not the table itself — see _visiblePlayerEntries' own comment on why that filter
-// doesn't need to feel instant), the export/native/import checkboxes are only ever interactive
-// while #tab-players is already the visible pane, so toggling one should be felt immediately.
-_sidebarCallbacks.onPlayersFilterChange = () => {
+// Every #tab-players-facing surface — the table itself (ambient or focused), the nav pill's
+// live count/preview, and the map's birth-city dots — kept in lockstep, regardless of which of
+// the (now several) things that can narrow the shown player set just changed: the country
+// category matrix, the confederation dropdown, the stage carousel (all three routed through
+// applyFlagFilter -> callbacks.afterFlagFilter), or the export/native/import filter
+// (callbacks.onPlayersFilterChange). One shared refresh so all three call sites can never drift
+// out of sync with each other the way the table/dots used to before this filter existed.
+const _refreshPlayersView = () => {
   const ptEl = document.getElementById('tab-players');
   if (ptEl) render(_playersTableTemplate(_ptFocusIds), ptEl);
   _renderPlayersTabIdle();
-  // Birth-city dots read the exact same _currentPlayerSet the table itself just re-rendered
-  // from — must be kept in lockstep with whatever narrows #tab-players' own rows, not just
-  // this filter specifically (see _currentPlayerSet's own comment).
   _updateAllPlayersMapLayer();
 };
+
+// Layers the players-view refresh onto the same callback assigned near initSidebar() (that first
+// assignment already runs _applyGroupFocus/_applyDimFocus; see its own comment on why this
+// couldn't be included there directly). Every applyFlagFilter() call from here on — category
+// checkbox toggles, stage carousel moves, confederation filter — keeps the table, nav pill, and
+// city dots all in sync; only the one synchronous call during initial setup (before this line
+// runs) misses it, which is harmless since app.byId/nativeByCountry/importByCountry are still
+// empty at that point anyway (buildIndices(rawData) hasn't run yet).
+{
+  const _afterFlagFilterBase = _sidebarCallbacks.afterFlagFilter;
+  _sidebarCallbacks.afterFlagFilter = () => { _afterFlagFilterBase(); _refreshPlayersView(); };
+}
+
+_sidebarCallbacks.onPlayersFilterChange = _refreshPlayersView;
 
 const clearDim = () => {
   dimState.active = false;
@@ -2165,7 +2234,7 @@ Promise.all([
   app.eloRank = Object.fromEntries(
     eloData.rankings.flatMap(({id, rank}) => { const n = QUALIFIED_NAMES[id]; return n ? [[n, rank]] : []; })
   );
-  eloData.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); });
+  eloData.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); if (r.id != null) _eloRankedIds.add(r.id); });
   buildIndices(rawData);
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
