@@ -436,7 +436,7 @@ export const paintChoropleth = (g, path, world, ukNations, byId) => {
   // Kosovo has no numeric id in the 110m topojson — only {properties:{name:'Kosovo'}} —
   // patched here, before the topojson.feature() call below needs it (see CLAUDE.md's
   // "Kosovo" section).
-  const _topoNameToId = { Kosovo: 383 };
+  const _topoNameToId = { Kosovo: 383, 'N. Cyprus': 8264, Somaliland: 8265 };
   world.objects.countries.geometries.forEach(geo => {
     if (!geo.id) { const mapped = _topoNameToId[geo.properties?.name]; if (mapped) geo.id = mapped; }
   });

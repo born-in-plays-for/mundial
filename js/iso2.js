@@ -21,7 +21,12 @@ export const ISO2 = {
   729:'sd', 834:'tz', 854:'bf', 818:'eg', 894:'zm',
   531:'cw',
   // Kosovo: user-assigned XK / numeric 383 (not in ISO 3166-1 official table)
-  383:'xk'
+  383:'xk',
+  // Northern Cyprus / Somaliland: project-assigned ids (no ISO 3166-1 code at all, official
+  // or user-assigned) — 'northern_cyprus'/'somaliland' are the circle-flags CDN's own filenames
+  // for each, reused as the pseudo-code the same way gb-eng/gb-sct/etc. already are longer than
+  // 2 chars.
+  8264:'northern_cyprus', 8265:'somaliland',
 };
 
 export const ISO2_REVERSE = Object.fromEntries(Object.entries(ISO2).map(([id, c]) => [c, +id]));
