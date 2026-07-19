@@ -64,10 +64,11 @@ const _syncHeaderLayout = () => {
 requestAnimationFrame(_syncHeaderLayout);
 window.addEventListener('resize', _syncHeaderLayout);
 
-const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
+const [{ eloData, statusByIso2 }, mapData, , fixturesData] = await Promise.all([
   loadEloData(),
   fetch('./data/v2/map.json').then(r => r.json()),
   loadWikiData(),
+  fetch('./data/fixtures.json').then(r => r.json()).catch(() => null),
 ]);
 
 const byId = Object.fromEntries((mapData.data ?? []).map(d => [d.id, d]));
@@ -78,7 +79,7 @@ Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
   if (nId != null) nativeByCountry[nId] = players;
 });
 
-const rawItems = buildEloItems({ rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2 });
+const rawItems = buildEloItems({ rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2, fixturesData });
 // Keyed by country id — the same per-country fields (rank/pop/expCount/impCount)
 // teamComparators reads, looked up per player via QUALIFIED_BY_NAME[p.nation].
 const rawById = new Map(rawItems.map(item => [item.id, item]));

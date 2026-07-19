@@ -80,6 +80,19 @@ const BRACKET_ROUNDS = ELIM_ROUNDS.slice(1);
 const SF_IDX = ELIM_ROUNDS.indexOf('Semi-finals');
 const FINAL_IDX = ELIM_ROUNDS.indexOf('Final');
 
+// data/v2/status.json's `round` field reflects a team's *last recorded loss*, not their real
+// bracket ceiling — for the 3rd Place Final's loser, those two now differ: once that match is
+// decided, status.json flips that team's round to the literal string "3rd Place Final" (the
+// winner's own entry, having lost no further match, still correctly reads "Semi-finals" — see
+// this repo's CLAUDE.md). "3rd Place Final" isn't itself a bracket round — it's a consolation
+// game — so anywhere a raw round string needs to answer "how far did this team get in the
+// actual bracket," resolve it through this alias first. NOT used by computeWonUpTo below: a
+// 3rd-place win must never count as a bracket win (it doesn't advance anyone anywhere), so that
+// function deliberately keeps reading raw round strings and lets its own `i < 0` guard drop
+// "3rd Place Final" entries on the floor.
+const _BRACKET_ROUND_ALIASES = { '3rd Place Final': 'Semi-finals' };
+const _bracketRound = round => _BRACKET_ROUND_ALIASES[round] ?? round;
+
 // ── Export/import indicator intensity (▶ / ◀ color in the Elo list, see taxonomy.css) ──
 // Colors scale with raw count relative to the tournament-wide max (France's export count,
 // Curaçao's import count as of writing — recomputed live, never hardcoded). Squared curve with
@@ -127,13 +140,30 @@ const _gradientPivots = (expCount, nativeCount, impCount, maxExpCount, maxImpCou
 // iso2 -> furthest BRACKET_ROUNDS index it's known to have WON (proven by appearing as
 // someone else's `lostTo` at that round). Absent = hasn't won a single knockout round yet.
 // Shared by buildEloItems (per-team pending state) and buildBracketState (aggregate counts).
-const computeWonUpTo = (statusByIso2) => {
+//
+// status.json keeps only ONE entry per team — its most recent loss — so a Semi-finals winner's
+// credit for that round is only provable via the *loser's* lostTo entry. If that loser goes on
+// to also lose the 3rd Place Final, their entry is overwritten (round flips to "3rd Place
+// Final", lostTo to their 3rd-place opponent) and the original Semi-finals win record vanishes
+// from status.json entirely — the winner then wrongly reads as still "pending" a round they've
+// already won (this is exactly what happened to Spain after beating France, once France went on
+// to lose the 3rd Place Final to England). fixturesData doesn't have this problem — every match
+// keeps its own entry regardless of what either side plays next — so it's used here as a second,
+// recovery-only source for exactly the fixtures status.json's lostTo scan can't see (decided,
+// non-tied knockout results only; a PEN/AET-decided fixture's goals are tied and reveal no
+// winner — same caveat buildMatchInfo documents — so those still depend on status.json alone).
+const computeWonUpTo = (statusByIso2, fixturesData) => {
   const wonUpTo = {};
+  const credit = (iso2, i) => { if (i >= 0) wonUpTo[iso2] = Math.max(wonUpTo[iso2] ?? -1, i); };
   for (const info of Object.values(statusByIso2 ?? {})) {
     if (!info.lostTo) continue;
-    const i = BRACKET_ROUNDS.indexOf(info.round);
+    credit(info.lostTo, BRACKET_ROUNDS.indexOf(info.round));
+  }
+  for (const f of fixturesData?.fixtures ?? []) {
+    const i = BRACKET_ROUNDS.indexOf(f.round); // excludes Group Stage and "3rd Place Final" — neither is a bracket-advancing win
     if (i < 0) continue;
-    wonUpTo[info.lostTo] = Math.max(wonUpTo[info.lostTo] ?? -1, i);
+    if (f.goals?.home == null || f.goals?.away == null || f.goals.home === f.goals.away) continue; // undecided, or tied (PEN/AET — no reliable winner in fixtures.json)
+    credit(f.goals.home > f.goals.away ? f.home : f.away, i);
   }
   return wonUpTo;
 };
@@ -144,16 +174,16 @@ const computeWonUpTo = (statusByIso2) => {
 export const buildNameByIso2 = (rankings, countryNameFn) =>
   Object.fromEntries(rankings.filter(r => r.iso2).map(r => [r.iso2, countryNameFn(r.id, r.name)]));
 
-export const buildEloItems = ({ rankings, byId, importByCountry, nativeByCountry = {}, countryNameFn, centroids, pop, statusByIso2 }) => {
+export const buildEloItems = ({ rankings, byId, importByCountry, nativeByCountry = {}, countryNameFn, centroids, pop, statusByIso2, fixturesData }) => {
   const nameByIso2 = buildNameByIso2(rankings, countryNameFn);
-  const wonUpTo = computeWonUpTo(statusByIso2);
+  const wonUpTo = computeWonUpTo(statusByIso2, fixturesData);
   const maxExpCount = Math.max(0, ...rankings.map(r => byId[r.id]?.count ?? 0));
   const maxImpCount = Math.max(0, ...rankings.map(r => importByCountry[r.id]?.length ?? 0));
   return rankings
     .filter(r => !r.weirdo)
     .map(({ id, rank, pts, iso2, name, fifaMember }) => {
       const status = statusByIso2?.[iso2] ?? null;
-      const eliminatedAtIndex = status ? ELIM_ROUNDS.indexOf(status.round) : null;
+      const eliminatedAtIndex = status ? ELIM_ROUNDS.indexOf(_bracketRound(status.round)) : null;
       // Carousel stage index from which this team's fate is undecided (still contesting a
       // fixture — could go either way) through 'winner'. null once eliminated (nothing left
       // to be uncertain about) or once it's actually won the Final (already the champion).
@@ -209,12 +239,14 @@ export const teamComparators = {
 
 // Per knockout round: how many of the 48 qualifiers were eliminated in it, passed through it
 // (won and moved on), or are still contesting it (fixture not yet played/decided). Derived
-// purely from status.json's `lostTo` links — a team that appears as someone else's lostTo has
+// primarily from status.json's `lostTo` links — a team that appears as someone else's lostTo has
 // thereby proven it won that round, so the furthest round any team is recorded winning tells
-// us which round it's currently playing (one past that).
-export const buildBracketState = (statusByIso2, all48Iso2) => {
-  const rIdx = r => BRACKET_ROUNDS.indexOf(r);
-  const wonUpTo = computeWonUpTo(statusByIso2);
+// us which round it's currently playing (one past that) — with fixturesData as computeWonUpTo's
+// own recovery source for wins status.json's lostTo scan can no longer see (see that function's
+// comment).
+export const buildBracketState = (statusByIso2, all48Iso2, fixturesData) => {
+  const rIdx = r => BRACKET_ROUNDS.indexOf(_bracketRound(r));
+  const wonUpTo = computeWonUpTo(statusByIso2, fixturesData);
 
   const counts = Object.fromEntries(BRACKET_ROUNDS.map(r => [r, { eliminated: 0, passed: 0, playing: 0 }]));
   for (const iso2 of all48Iso2) {
@@ -261,15 +293,19 @@ export const buildBracketState = (statusByIso2, all48Iso2) => {
 // fixtures.json yet) — `app.matchInfoByIso2[iso2]?.[stage]` is simply absent then, and the
 // control sidebar's match-display mode (js/control_sidebar.js's _buildGroups) renders it as a
 // lone row instead of a couple.
-// "3rd Place Final" is data/fixtures.json's own round name for the Semi-finals losers'
-// consolation match — it shares the 'Final' index rather than getting a bracket slot of its
-// own (see qualified.js's SF_IDX/FINAL_IDX and buildEloItems' playsThirdPlace). Only matters
-// for fixtures.json lookups below: status.json never records a "3rd Place Final" round itself
-// (both losers' single per-iso2 slot is already occupied by their real 'Semi-finals' exit), so
-// this alias is applied defensively everywhere a round string is resolved to an ELIM_ROUNDS
-// index in this function, not just where it's currently known to matter.
+// "3rd Place Final" is the round name both data/fixtures.json and (once that match is decided)
+// its loser's own data/v2/status.json entry use for the Semi-finals losers' consolation match —
+// it shares the 'Final' carousel/index slot rather than getting a bracket slot of its own (see
+// qualified.js's SF_IDX/FINAL_IDX and buildEloItems' playsThirdPlace, which instead alias it to
+// 'Semi-finals' for bracket-progress purposes — a different question). Exported so any other
+// consumer resolving a raw round string into a carousel-slot index (e.g. insights/discipline.html,
+// which mirrors this file's `final` slide but reads discipline.json's own byStage/stage keys
+// rather than going through buildEloItems) can stay in sync with this alias without duplicating
+// it. Applied defensively everywhere a round string is resolved to an ELIM_ROUNDS index in this
+// function, not just where it's currently known to matter.
 const _ROUND_ALIASES = { '3rd Place Final': 'Final' };
-const _roundIndex = round => ELIM_ROUNDS.indexOf(_ROUND_ALIASES[round] ?? round);
+export const carouselRoundIndex = round => ELIM_ROUNDS.indexOf(_ROUND_ALIASES[round] ?? round);
+const _roundIndex = carouselRoundIndex;
 
 export const buildMatchInfo = (statusByIso2, fixturesData, nameByIso2) => {
   const out = {};

@@ -20,6 +20,12 @@
   .disc-table th, .disc-table td { white-space: nowrap; }
   .disc-num { text-align: right; font-variant-numeric: tabular-nums; }
   .disc-stage { color: var(--text-muted); font-size: 11px; }
+  /* elo-viz (added on the element itself, not just here) is what unlocks css/global.css's
+     .elo-viz .carousel-control-prev/-next styling — createStageCarousel (js/stage_carousel.js)
+     always builds those buttons, but their positioning/icon rules are scoped to .elo-viz (the
+     map/players pages' own carousel wrapper) rather than .elo-stage-carousel itself, so without
+     this class here they render present-but-effectively-invisible (default Bootstrap sizing,
+     no icon). */
   .disc-carousel-host { max-width: 420px; margin: 0 auto 12px; }
   /* A still-alive team viewed at its own current (unfinished) stage has no byStage snapshot
      yet — renderTable() falls back to its last completed stage's real figures instead of
@@ -37,7 +43,7 @@
   <h1 class="fs-5 fw-bold mb-1">Discipline — fouls &amp; cards</h1>
   <p class="sub text-muted small mb-3">One row per team, updated after every finished match</p>
 
-  <div class="disc-carousel-host"></div>
+  <div class="disc-carousel-host elo-viz"></div>
 
   <div class="table-responsive">
     <table class="table table-sm table-striped table-hover pt-table disc-table">
@@ -50,12 +56,13 @@
 <script type="module">
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { T, countryName } from '../js/i18n.js';
-import { QUALIFIED_NAMES, ELIM_ROUNDS, reachesStage, loadEloData } from '../js/qualified.js';
+import { QUALIFIED_NAMES, ELIM_ROUNDS, reachesStage, loadEloData, buildEloItems } from '../js/qualified.js';
 import { createStageCarousel, maxReachableStage } from '../js/stage_carousel.js';
 
-const [{ eloData }, discData] = await Promise.all([
+const [{ eloData, statusByIso2 }, discData, fixturesData] = await Promise.all([
   loadEloData('../'),
   fetch('../data/v2/discipline.json').then(r => r.json()),
+  fetch('../data/fixtures.json').then(r => r.json()).catch(() => null),
 ]);
 
 // iso2 -> {id, name} — discipline.json is iso2-keyed, everything else in this app (and
@@ -63,20 +70,37 @@ const [{ eloData }, discData] = await Promise.all([
 // countries (not just the 48 qualifiers), so every discipline.json key resolves here.
 const byIso2 = new Map(eloData.rankings.map(r => [r.iso2, r]));
 
-// stats.stage is an ELIM_ROUNDS string verbatim (same semantics as data/v2/status.json —
-// see js/qualified.js's own comment on ELIM_ROUNDS/reachesStage). A team eliminated at
-// that round, or — if still alive — currently/next playing it: either way, the furthest
-// carousel position this team's data extends to, exactly what reachesStage expects.
+// discipline.json's own per-team `stage` field is NOT used for a still-alive team's visibility
+// or display — it turned out unreliable for two teams sharing the exact same bracket position:
+// Argentina's own stage correctly advanced to "Final" once it beat England in the Semi-finals,
+// but Spain's stayed stuck at "Semi-finals" despite also having beaten France to reach the same
+// Final (data/v2/discipline.json bug, not something this file can fully paper over). Reusing
+// buildEloItems' own per-team fields — the exact same computation the main map's carousel
+// already relies on, and which recovers proven wins from data/fixtures.json when
+// data/v2/status.json's own lostTo trail has been overwritten (see qualified.js's
+// computeWonUpTo comment) — sidesteps discipline.json's stage bug entirely and keeps this
+// page's carousel (and its Stage column) in lockstep with the map's. Eliminated teams are left
+// untouched: discipline.json's own `stage`/`eliminated` are authoritative there (it's only the
+// still-undecided case where the bug bites), so this only overrides `stage` when !eliminated.
+const eloItemsByIso2 = new Map(
+  buildEloItems({ rankings: eloData.rankings, byId: {}, importByCountry: {}, countryNameFn: (id, name) => name, statusByIso2, fixturesData })
+    .map(item => [item.iso2, item])
+);
+
 const teams = [];
 for (const [iso2, stats] of Object.entries(discData)) {
   const ranking = byIso2.get(iso2);
   if (!ranking) continue; // defensive — shouldn't happen for a qualified team
+  const item = eloItemsByIso2.get(iso2);
+  const stage = !stats.eliminated && item?.pendingFrom != null ? ELIM_ROUNDS[item.pendingFrom] : stats.stage;
   teams.push({
     ...stats,
+    stage,
     iso2,
     id: ranking.id,
     name: countryName(ranking.id, ranking.name),
-    visibleThroughIndex: ELIM_ROUNDS.indexOf(stats.stage),
+    visibleThroughIndex: item?.visibleThroughIndex ?? ELIM_ROUNDS.indexOf(stats.stage),
+    playsThirdPlace: item?.playsThirdPlace ?? false,
   });
 }
 
@@ -137,7 +161,16 @@ const _cmpMaybe = (a, b, get) => {
   return _sortDir === 'asc' ? d : -d;
 };
 
-const stageLabel = t => t.eliminated ? `Eliminated — ${t.stage}` : t.stage;
+// The two Semi-finals losers get a placement-aware label instead of the raw round name —
+// "Semi-finals" (the winner of the 3rd-place match) vs. "3rd Place Final" (its loser)
+// otherwise reads as two unrelated fates rather than 3rd vs. 4th place in the same match
+// against each other (status.json's/discipline.json's own `stage`/`round` only ever tracks a
+// team's *last loss*, not its final standing — see qualified.js's computeWonUpTo comment).
+const stageLabel = t => {
+  if (!t.eliminated) return t.stage;
+  const label = t.playsThirdPlace ? (t.stage === '3rd Place Final' ? '4th place — lost the 3rd-place match' : '3rd place — won the 3rd-place match') : t.stage;
+  return `Eliminated — ${label}`;
+};
 
 // Every eliminated team has a byStage entry for each round it actually played (contiguous
 // through its elimination round) — the only way a *visible* team (reachesStage already
@@ -145,11 +178,16 @@ const stageLabel = t => t.eliminated ? `Eliminated — ${t.stage}` : t.stage;
 // it's still alive and _stage is exactly its own current stage, whose fixture hasn't finished
 // yet (see the file's own note on byStage above). Walk backward to the nearest stage that
 // *does* have a snapshot — Group Stage (index 0) always does, so this never falls through.
+// A Semi-finals loser's 3rd Place Final figures land under byStage['3rd Place Final'], not
+// byStage['Final'] (that team never plays an actual Final) — checked as a fallback whenever
+// the walk reaches the 'Final' slot, so its real (and already-finished) 3rd-place figures are
+// used instead of stale Semi-finals ones landing here "pending".
 const snapshotFor = (t, stageIdx) => {
   for (let i = stageIdx; i >= 0; i--) {
     const key = ELIM_ROUNDS[i];
-    const snap = t.byStage?.[key];
-    if (snap) return { snap, stageKey: key, pending: i !== stageIdx };
+    const thirdKey = key === 'Final' ? '3rd Place Final' : null;
+    const snap = t.byStage?.[key] ?? (thirdKey ? t.byStage?.[thirdKey] : undefined);
+    if (snap) return { snap, stageKey: t.byStage?.[key] ? key : thirdKey, pending: i !== stageIdx };
   }
   return null;
 };
