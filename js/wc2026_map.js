@@ -880,8 +880,19 @@ const CITY_DOT_COLOR = '#7c3aed';
 // _cityRecForPid (looks up one city's record when a "born in" table cell is clicked — see
 // _allPlayersRow) — a fresh rebuild each call rather than a cached map, but the underlying
 // player counts here are small enough (hundreds, not thousands) that this is never worth caching.
+// The player set #tab-players is currently showing (ambient or focused) with the sidebar's own
+// export/native/import filter applied (control_sidebar.js's csb-native-table) — inclusive-OR
+// over a player's own _roles, so a player holding more than one role (see _focusedPlayers' own
+// comment) stays visible as long as any one of them is checked. Shared by _playersTableTemplate
+// (the table itself) and _buildCityRecords (the map's birth-city dots) so the two can never
+// silently disagree on which players are currently "shown" — whatever narrows this set in the
+// future (this filter today, anything else later) automatically keeps both in sync.
+const _currentPlayerSet = focusIds =>
+  (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
+    .filter(p => p._roles.some(r => sidebar.playersFilterChecked(r)));
+
 const _buildCityRecords = () => {
-  const players = _ptFocusIds ? _focusedPlayers(_ptFocusIds) : _visiblePlayerEntries();
+  const players = _currentPlayerSet(_ptFocusIds);
   const byCoord = new Map();
   for (const p of players) {
     const bp = _birthplaceByPid[p.pid];
@@ -1350,11 +1361,7 @@ const _ptTh = (key, label, extraClass = '') => html`<th
 const _playersTableTemplate = (focusIds = null) => {
   _ptFocusIds = focusIds;
   const dir = _ptSortDir === 'desc' ? -1 : 1;
-  // export/native/import filter (control_sidebar.js's csb-native-table) — inclusive-OR over a
-  // player's own _roles, so a player holding more than one role (see _focusedPlayers' own
-  // comment) stays visible as long as any one of them is checked.
-  const filtered = (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
-    .filter(p => p._roles.some(r => sidebar.playersFilterChecked(r)))
+  const filtered = _currentPlayerSet(focusIds)
     .sort((a, b) => dir * _PT_SORT_FNS[_ptSortKey](a, b));
   const coachCount = filtered.filter(p => p.role === 'coach').length;
   return html`
@@ -1431,6 +1438,10 @@ _sidebarCallbacks.onPlayersFilterChange = () => {
   const ptEl = document.getElementById('tab-players');
   if (ptEl) render(_playersTableTemplate(_ptFocusIds), ptEl);
   _renderPlayersTabIdle();
+  // Birth-city dots read the exact same _currentPlayerSet the table itself just re-rendered
+  // from — must be kept in lockstep with whatever narrows #tab-players' own rows, not just
+  // this filter specifically (see _currentPlayerSet's own comment).
+  _updateAllPlayersMapLayer();
 };
 
 const clearDim = () => {
