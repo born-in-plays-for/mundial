@@ -334,6 +334,30 @@
   color: rgba(33, 37, 41, 0.75);
 } */
 
+/* ── Players-tab export/native/import filter (csb-native-table) ──────────
+   Same bundled-on-one-line pattern as .csb-display-toggle above, 3 buttons instead of 2.
+   Deliberately NOT reusing .elo-item/.elo-item--exp/.elo-item--imp here (unlike the countries
+   filter table below, which is genuinely rendering country-pill-shaped cells) — taxonomy.css's
+   .elo-item:not(.elo-item--qualified) rule unconditionally zeroes border (needed there, for
+   plain map pills), which fought against Bootstrap's own .btn-check:checked+.btn border and
+   made the pushed/not-pushed state inconsistent across the 3 buttons. Self-contained glyphs +
+   border, no dependency on taxonomy.css's own rules. */
+#control-sidebar .csb-native-toggle { white-space: nowrap; gap: 2px; }
+#control-sidebar .csb-native-toggle .btn {
+  margin: 0; padding: 0 4px; border: 1px solid transparent; font-size: 14px; line-height: 1;
+}
+#control-sidebar .csb-native-toggle .btn-check:checked + .btn { border-color: rgba(23, 23, 21, 0.75); }
+#control-sidebar .csb-pf-export::after { content: '▶'; color: var(--exp-accent); }
+#control-sidebar .csb-pf-native::after { content: '●'; font-size: 10px; color: rgba(23, 23, 21, 0.75); }
+#control-sidebar .csb-pf-import::after { content: '◀'; color: var(--imp-accent); }
+
+/* ── "filter players" / "filter countries" table headers ──────────────────
+   The plain "filter" label reused for both tables gets a small disambiguating icon right after
+   it — same icon players already use elsewhere (wc2026_map.js's #tab-players-btn) for
+   "players", a flag for "countries" (this table's cells are literally country-category pills).
+   The row's own title tooltip still carries the full description. */
+#control-sidebar .csb-header-icon { vertical-align: -2px; margin-left: 3px; opacity: 0.6; }
+
 /* ── Sort direction button ─────────────────────────────────────────────── */
 
 .csb-panel .csb-sort-dir {

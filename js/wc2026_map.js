@@ -277,9 +277,9 @@ function _highlightConf(ids) {
 }
 
 document.getElementById('map').setAttribute('aria-label', T.mapAriaLabel);
-// #tab-players' actual first paint happens once _allPlayerEntries loads (see the data-load
-// callback below, right after that array is built) — nothing to render synchronously here,
-// _playersTableTemplate isn't defined yet at this point in module evaluation.
+// #tab-players' actual first paint happens once app.byId/nativeByCountry/importByCountry load
+// (see the data-load callback below, right after buildIndices(rawData) runs) — nothing to render
+// synchronously here, _playersTableTemplate isn't defined yet at this point in module evaluation.
 
 // Elo ranking tab — two-column layout: ranking list (flex:1) + collapsible sidebar
 let _eloData   = null;
@@ -724,6 +724,10 @@ let _playersTabActive = false;
 _bottomTabNav.addEventListener('show.bs.tab', e => {
   const name = e.target.dataset.tab;
   _playersTabActive = name === 'tab-players';
+  // Independent of the isEloTab branch below (which only ever runs for tab-teams/tab-tournament)
+  // — the export/native/import filter (control_sidebar.js's csb-native-table) is only ever
+  // meaningful while #tab-players itself is on screen, unlike sidebar.setMode's own two modes.
+  sidebar.setPlayersTabActive(_playersTabActive);
   // tab-players isn't a real, standalone user choice (its own button never drives this listener
   // for a *user*-picked reason the way tab-teams/tab-tournament do — it only ever becomes active
   // via activateCountry's dim-mode selection, which itself isn't persisted), so restoring it on a
@@ -1170,10 +1174,6 @@ const applySelection = (id, destIds) => {
 };
 
 // ── Players table (#tab-players' one and only content — see _playersTableTemplate) ────────────
-// Same entries construction as wc2026_players.html's own (export entries from
-// rawData.data[].players, native entries from rawData.natives) — built once below, right after
-// buildIndices(rawData) runs, since that's where rawData is in scope.
-let _allPlayerEntries = [];
 
 // Numeric ids of qualified teams whose flag is currently visible on the map (not hidden by the
 // sidebar's category filter, group focus, or dim focus) — the ambient table only ever shows
@@ -1200,13 +1200,17 @@ const _visibleQualifiedIds = () => {
   return ids;
 };
 
-// _allPlayerEntries filtered to whatever's currently visible (Teams' checkboxes or Tournament's
-// stage — whichever tab last drove the map) — the ambient, unfocused view. Shared by the table
-// itself and the nav pill's live count (see _renderPlayersTabIdle).
-const _visiblePlayerEntries = () => {
-  const visibleIds = _visibleQualifiedIds();
-  return _allPlayerEntries.filter(p => visibleIds.has(QUALIFIED_BY_NAME[p.nation]));
-};
+// Every currently-visible team's own export+native+import union (Teams' checkboxes or
+// Tournament's stage — whichever tab last drove the map) — the ambient, unfocused view. Reuses
+// _focusedPlayers (below) with the whole visible set as its focus, rather than a separately
+// filtered flat array: a plain "does this player's nation belong to a visible team" filter (the
+// old approach) only ever surfaces natives+imports relative to the visible set, never a visible
+// team's own players who've since moved away to represent someone else — _focusedPlayers already
+// pulls that third bucket in via app.byId[id].players, so reusing it here for free adds it to
+// the ambient view too, tagging each player with which role(s) earned them a place in the union
+// (see #tab-players' own export/native/import filter, control_sidebar.js's csb-native-table).
+// Shared by the table itself and the nav pill's live count (see _renderPlayersTabIdle).
+const _visiblePlayerEntries = () => _focusedPlayers(_visibleQualifiedIds());
 
 const _allPlayersFlag = code => code ? html`<img class="pt-flag" src="${FLAG_CDN_RECT(code)}" alt="" width="18">` : nothing;
 
@@ -1260,21 +1264,34 @@ const _allPlayersRow = p => {
 // Every player/coach tied to one of `focusIds` as either birth country or squad country —
 // export+native+import combined, exactly what the old per-country accordion used to split into
 // three sections, just as flat rows instead. Reads the same already-deduped app.byId/
-// nativeByCountry/importByCountry indices the map/tooltips use (not _allPlayerEntries directly —
-// that flat array's own export/import split doesn't carry app.importByCountry's self-import
-// name-mismatch fix, e.g. DR Congo; see CLAUDE.md's app.importByCountry section). Deduped by pid
-// across ids so a future multi-id focus (a fixture's two teams) can't double-list a player who's
-// simultaneously born in one focus team and playing for the other.
+// nativeByCountry/importByCountry indices the map/tooltips use (not a flat player array — that
+// kind of split wouldn't carry app.importByCountry's self-import name-mismatch fix, e.g. DR
+// Congo; see CLAUDE.md's app.importByCountry section).
+//
+// _roles (used by #tab-players' own export/native/import filter — see control_sidebar.js's
+// csb-native-table) tags which bucket a player came from, relative to the WHOLE focus set, not
+// just one id at a time: export (born in a focus-set country, plays for any other country —
+// including another focus-set one), native (born in and plays for the same focus-set country),
+// import (born OUTSIDE the whole focus set, plays for a focus-set country). The import mapping
+// below deliberately excludes anyone whose birth country is ALSO in focusIds — they're already
+// counted as that country's own export just above, and without this exclusion a player born in
+// visible team A now playing for visible team B would double-count as both A's export and B's
+// import. This makes the 3 buckets a clean partition (never more than one role per player), so
+// the dedupe below is a defensive safety net rather than an expected merge.
 const _focusedPlayers = focusIds => {
   const byKey = new Map();
   focusIds.forEach(id => {
     const country = app.byId[id]?.country ?? QUALIFIED_NAMES[id];
     const tagged = [
-      ...(app.byId[id]?.players ?? []).map(p => ({ ...p, birthCountryId: id, birthCountry: country })),
-      ...(app.nativeByCountry[id] ?? []).map(p => ({ ...p, nation: country, birthCountryId: id, birthCountry: country })),
-      ...(app.importByCountry[id] ?? []).map(p => ({ ...p, nation: country })),
+      ...(app.byId[id]?.players ?? []).map(p => ({ ...p, birthCountryId: id, birthCountry: country, _roles: ['export'] })),
+      ...(app.nativeByCountry[id] ?? []).map(p => ({ ...p, nation: country, birthCountryId: id, birthCountry: country, _roles: ['native'] })),
+      ...(app.importByCountry[id] ?? []).filter(p => !focusIds.has(p.birthCountryId)).map(p => ({ ...p, nation: country, _roles: ['import'] })),
     ];
-    tagged.forEach(p => byKey.set(p.pid ?? `${p.name}-${p.nation}-${p.birthCountryId}`, p));
+    tagged.forEach(p => {
+      const key = p.pid ?? `${p.name}-${p.nation}-${p.birthCountryId}`;
+      const existing = byKey.get(key);
+      byKey.set(key, existing ? { ...p, _roles: [...new Set([...existing._roles, ...p._roles])] } : p);
+    });
   });
   return [...byKey.values()];
 };
@@ -1333,7 +1350,11 @@ const _ptTh = (key, label, extraClass = '') => html`<th
 const _playersTableTemplate = (focusIds = null) => {
   _ptFocusIds = focusIds;
   const dir = _ptSortDir === 'desc' ? -1 : 1;
+  // export/native/import filter (control_sidebar.js's csb-native-table) — inclusive-OR over a
+  // player's own _roles, so a player holding more than one role (see _focusedPlayers' own
+  // comment) stays visible as long as any one of them is checked.
   const filtered = (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
+    .filter(p => p._roles.some(r => sidebar.playersFilterChecked(r)))
     .sort((a, b) => dir * _PT_SORT_FNS[_ptSortKey](a, b));
   const coachCount = filtered.filter(p => p.role === 'coach').length;
   return html`
@@ -1395,11 +1416,22 @@ _renderPlayersTabIdle();
 // why _renderPlayersTabIdle couldn't be included there directly). Every applyFlagFilter() call
 // from here on — checkbox toggles, stage carousel moves, confederation filter — keeps the pill
 // in sync; only the one synchronous call during initial setup (before this line runs) misses it,
-// which is harmless since _allPlayerEntries is still empty at that point anyway.
+// which is harmless since app.byId/nativeByCountry/importByCountry are still empty at that
+// point anyway (buildIndices(rawData) hasn't run yet).
 {
   const _afterFlagFilterBase = _sidebarCallbacks.afterFlagFilter;
   _sidebarCallbacks.afterFlagFilter = () => { _afterFlagFilterBase(); _renderPlayersTabIdle(); };
 }
+
+// Unlike the category checkboxes above (only ever live-refreshed via afterFlagFilter's nav-pill
+// preview, not the table itself — see _visiblePlayerEntries' own comment on why that filter
+// doesn't need to feel instant), the export/native/import checkboxes are only ever interactive
+// while #tab-players is already the visible pane, so toggling one should be felt immediately.
+_sidebarCallbacks.onPlayersFilterChange = () => {
+  const ptEl = document.getElementById('tab-players');
+  if (ptEl) render(_playersTableTemplate(_ptFocusIds), ptEl);
+  _renderPlayersTabIdle();
+};
 
 const clearDim = () => {
   dimState.active = false;
@@ -2124,15 +2156,6 @@ Promise.all([
   );
   eloData.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); });
   buildIndices(rawData);
-  // Same construction as wc2026_players.html's own `entries` — see _playersTableTemplate.
-  for (const rec of rawData.data ?? []) {
-    for (const p of rec.players ?? []) _allPlayerEntries.push({ ...p, native: false, birthCountry: rec.country, birthCountryId: rec.id });
-  }
-  for (const [country, natives] of Object.entries(rawData.natives ?? {})) {
-    const nId = QUALIFIED_BY_NAME[country];
-    for (const p of natives) _allPlayerEntries.push({ ...p, nation: country, native: true, birthCountry: country, birthCountryId: nId });
-  }
-  _allPlayerEntries.sort((a, b) => playerSortKey(a).localeCompare(playerSortKey(b)));
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
     rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,

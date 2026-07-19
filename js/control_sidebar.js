@@ -129,12 +129,33 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
           </td>
         </tr>
       </tbody></table>
+      <table class="csb-table csb-native-table table table-sm table-bordered mb-0" hidden><tbody>
+        <tr>
+          <td class="csb-header text-muted ps-1" title="${T.csbTips.playersFilter}">
+            <span class="cbs-header-label">${T.filterLabels.action}</span>
+            <img class="csb-header-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" width="14" height="14" alt="" aria-hidden="true">
+          </td>
+        </tr>
+        <tr><td class="csb-toggle-col text-muted">
+          <div class="csb-native-toggle d-flex align-items-center justify-content-center">
+            <input type="checkbox" class="btn-check" id="csb-pf-export" autocomplete="off" checked>
+            <label class="btn csb-pf-export" for="csb-pf-export" title="${T.psbLabels.exportTip}"></label>
+            <input type="checkbox" class="btn-check" id="csb-pf-native" autocomplete="off" checked>
+            <label class="btn csb-pf-native" for="csb-pf-native" title="${T.psbLabels.nativeTip}"></label>
+            <input type="checkbox" class="btn-check" id="csb-pf-import" autocomplete="off" checked>
+            <label class="btn csb-pf-import" for="csb-pf-import" title="${T.psbLabels.importTip}"></label>
+          </div>
+        </td></tr>
+      </tbody></table>
     </div>
     <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
     <tr>
-      <td colspan="2" class="csb-header text-muted ps-1">
+      <td colspan="2" class="csb-header text-muted ps-1" title="${T.csbTips.filterCountries}">
         <div class="d-flex align-items-center justify-content-between">
-          <span class="cbs-header-label">${T.filterLabels.action}</span>
+          <span class="d-flex align-items-center gap-1">
+            <span class="cbs-header-label">${T.filterLabels.action}</span>
+            <img class="csb-header-icon" src="images/solar_linear/flag-svgrepo-com.svg" width="14" height="14" alt="" aria-hidden="true">
+          </span>
           <span class="elo-item" data-col="AB" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
         </div>
       </td>
@@ -187,6 +208,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _fltNE = _panel.querySelector('#filter-NE');
   const _fltNK = _panel.querySelector('#filter-NK');
   const _displayTableEl = _panel.querySelector('.csb-display-table');
+  // ── Players-tab export/native/import filter — only ever meaningful while #tab-players is
+  // the active bottom tab (see setPlayersTabActive below); the checkboxes themselves are always
+  // present, just disabled otherwise (same dimming convention as _matchDisplayRadio.disabled).
+  // Starts `hidden` in the template (unlike the checkboxes' own `disabled`) — this control_sidebar
+  // module is shared with pages that have no #tab-players concept at all (wc2026_countries.html,
+  // control-sidebar-test.html, both 'combined' mode) and never call setPlayersTabActive; a
+  // visible-but-permanently-inert row there would just be confusing clutter, same reasoning as
+  // the display toggle being fully removed (not just disabled) on the map's own split tabs. ──
+  const _pfTableEl = _panel.querySelector('.csb-native-table');
+  const _pfExport = _panel.querySelector('#csb-pf-export');
+  const _pfNative = _panel.querySelector('#csb-pf-native');
+  const _pfImport = _panel.querySelector('#csb-pf-import');
   // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
   // The carousel's DOM/Bootstrap wiring lives in <elo-ranking> (js/elo_ranking.js) now — it
   // wraps the whole pill list there. This sidebar still owns the stage index itself, its
@@ -534,6 +567,33 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     if (!radio) return;
     _setDisplayMode(radio.dataset.display);
     callbacks.renderElo?.(callbacks.scrollToActiveElo);
+    _saveState();
+  });
+
+  // ── Players-tab export/native/import filter ──────────────────────────────────────────────
+  // Only ever enabled while #tab-players is the active bottom tab (wc2026_map.js's own
+  // show.bs.tab listener calls this unconditionally on every tab switch, independent of
+  // setMode above — tab-players never touches _mode at all). A disabled btn-check dims its
+  // label via Bootstrap's own .btn-check:disabled+.btn CSS, same mechanism
+  // _matchDisplayRadio.disabled already uses for the stage-0 case.
+  const _pfEls = { export: _pfExport, native: _pfNative, import: _pfImport };
+  const setPlayersTabActive = active => {
+    // Merely being called at all (with either true or false) is the signal that the host page
+    // actually has a #tab-players concept — see _pfTableEl's own declaration comment above for
+    // why the row starts hidden in the template.
+    _pfTableEl.hidden = false;
+    Object.values(_pfEls).forEach(el => { el.disabled = !active; });
+  };
+  const playersFilterChecked = role => !!_pfEls[role]?.checked;
+
+  // Re-renders #tab-players' actual content (unlike the category checkboxes above, which only
+  // apply cross-tab and don't live-refresh the table while it's already open — see
+  // wc2026_map.js's _visiblePlayerEntries comment): these 3 checkboxes are only ever
+  // interactive while that table is already on screen, so toggling one should be felt
+  // immediately, not wait for the next tab switch.
+  _panel.querySelector('.csb-native-table').addEventListener('change', e => {
+    if (!e.target.closest('.btn-check')) return;
+    callbacks.onPlayersFilterChange?.();
     _saveState();
   });
 
@@ -934,6 +994,26 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _ACTIONS_HIDE[code] = () => _filterSet(els, false);
   });
 
+  // PX/PN/PI (Players tab: eXport/Native/Import) — added directly to _ACTIONS_SHOW/_ACTIONS_HIDE
+  // rather than to _CELL_MAP/_ALIASES above: those two also back the ?show= URL param and the
+  // explain panel's country-category description, and these 3 checkboxes are a wholly separate
+  // concept (see ?pshow= below) that must never leak into that vocabulary. Disabled-aware (unlike
+  // _filterSet) since — unlike every other chord target — these are only ever meaningful while
+  // #tab-players is active; a chord typed while it isn't should no-op, same as a real click on a
+  // disabled button would.
+  const _filterSetPlayers = (el, checked) => {
+    if (el.disabled) return;
+    el.checked = checked;
+    callbacks.onPlayersFilterChange?.();
+    _saveState();
+  };
+  _ACTIONS_SHOW.PX = () => _filterSetPlayers(_pfExport, true);
+  _ACTIONS_HIDE.PX = () => _filterSetPlayers(_pfExport, false);
+  _ACTIONS_SHOW.PN = () => _filterSetPlayers(_pfNative, true);
+  _ACTIONS_HIDE.PN = () => _filterSetPlayers(_pfNative, false);
+  _ACTIONS_SHOW.PI = () => _filterSetPlayers(_pfImport, true);
+  _ACTIONS_HIDE.PI = () => _filterSetPlayers(_pfImport, false);
+
   const _isEditableTarget = el => !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
   let _chordArmed = false;
   let _chordShow = false; // which leader armed the chord — true: v (show), false: x (hide)
@@ -1022,6 +1102,21 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         if (!CONF_IDS[raw]) return false;
         setConfFilter(CONF_IDS[raw], raw);
         return true;
+      },
+    },
+    // Same key name/shape as players_sidebar.js's own 'pshow' (native,moved) — genuinely
+    // page-private (this page's 3-way export/native/import split has no equivalent on that
+    // page), never mixed into the 'show' entry above, which is a different concept (country
+    // category visibility, not player-role visibility).
+    {
+      key: 'pshow',
+      get: () => ['export', 'native', 'import'].filter(k => _pfEls[k].checked).join(','),
+      apply: raw => {
+        const keys = new Set(raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
+        _pfExport.checked = keys.has('export');
+        _pfNative.checked = keys.has('native');
+        _pfImport.checked = keys.has('import');
+        return true; // '' is valid too (all three hidden)
       },
     },
   ]);
@@ -1129,6 +1224,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // Always false on alwaysOpen pages (no .csb-toggle/collapse there to ever add the
       // class) — harmless to save regardless, just never restored for them (see _restoreState).
       collapsed: _el.classList.contains('collapsed'),
+      playersFilter: { export: _pfExport.checked, native: _pfNative.checked, import: _pfImport.checked },
     });
   };
 
@@ -1148,6 +1244,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }
     if (countries?.checks) {
       Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el && k in countries.checks) el.checked = !!countries.checks[k]; });
+    }
+    if (countries?.playersFilter) {
+      const pf = countries.playersFilter;
+      if (typeof pf.export === 'boolean') _pfExport.checked = pf.export;
+      if (typeof pf.native === 'boolean') _pfNative.checked = pf.native;
+      if (typeof pf.import === 'boolean') _pfImport.checked = pf.import;
     }
     if (shared?.conf && CONF_IDS[shared.conf]) {
       _confKey = shared.conf;
@@ -1262,6 +1364,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     applyParams,
     setConfFilter,
     setMode,
+    setPlayersTabActive,
+    playersFilterChecked,
     updateStageTitle: _updateCarouselTitle,
   };
 }
