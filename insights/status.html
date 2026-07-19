@@ -447,6 +447,12 @@ const afterRoundOf32 = aliveAfter(2);
 const afterRoundOf16 = aliveAfter(3);
 const afterQuerterFinals = aliveAfter(4);
 const afterSemiFinals = aliveAfter(5);
+// roundIdx 6 has no ELIM_ROUNDS entry (max index is 5, 'Final') — aliveAfter(6) only
+// keeps teams with eliminatedAtIndex == null, i.e. whoever never lost. In practice
+// that's exactly the champion, mirroring CAROUSEL_STAGES' own trailing 'winner'
+// stage on the main map page.
+const afterFinal = aliveAfter(6);
+const championItem = sorted.find(i => afterFinal.has(i.name));
 
 const outAtGroupStage = allNames.size - afterGroupStage.size;
 const outAtRoundOf32 = afterGroupStage.size - afterRoundOf32.size;
@@ -493,6 +499,12 @@ const STATES = [
     title: `Final`,
     subtitle: `${afterQuerterFinals.size-afterSemiFinals.size} eliminated in the Semi-finals - ${afterSemiFinals.size} teams remain.`,
     liveSubtitle: count => `${afterQuerterFinals.size-count} eliminated in the Semi-finals - ${count} teams remain.`,
+  },
+  {
+    alive: afterFinal,
+    title: championItem ? `${championItem.name} wins the World Cup` : 'Champion',
+    subtitle: `${afterSemiFinals.size-afterFinal.size} eliminated in the Final - ${afterFinal.size} team${afterFinal.size === 1 ? '' : 's'} remain${afterFinal.size === 1 ? 's' : ''}.`,
+    liveSubtitle: count => `${afterSemiFinals.size-count} eliminated in the Final - ${count} team${count === 1 ? '' : 's'} remain${count === 1 ? 's' : ''}.`,
   },
 ];
 
