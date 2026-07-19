@@ -27,19 +27,18 @@ export const fixtureDateLabel = date => {
   return `${dayMonth}\xa0${hour}`;
 };
 
-const _eliminationTitle = ({ knockedOut, eliminatedRound, eliminatedDate, eliminatedLostTo, playsThirdPlace } = {}) => {
+const _eliminationTitle = ({ knockedOut, eliminatedRound, eliminatedDate, eliminatedLostTo, playsThirdPlace, thirdPlace } = {}) => {
   if (!knockedOut) return '';
   // The two Semi-finals losers get a placement-aware label instead of the raw round name —
-  // "Semi-finals" (England, who then WON the 3rd-place match) vs. "3rd Place Final" (France,
-  // who LOST it) otherwise reads as two unrelated fates rather than 3rd vs. 4th place in the
-  // same match against each other (see this repo's CLAUDE.md's own note on this asymmetry —
-  // status.json's round only ever tracks a team's *last loss*, not its final standing).
-  // eliminatedLostTo still applies below either way: for the winner it's who beat them in the
-  // *real* Semi-final (a separate fact from the 3rd-place win), for the loser it's who beat
-  // them in the 3rd-place match itself.
+  // both read "Semi-finals" as their eliminatedRound (that consolation match never overwrites
+  // it — see data/v2/status.json's additive thirdPlace field, this repo's CLAUDE.md), so
+  // without this they'd otherwise show as two identical fates rather than 3rd vs. 4th place in
+  // the same match against each other. eliminatedLostTo still applies below either way: for the
+  // winner it's who beat them in the *real* Semi-final (a separate fact from the 3rd-place
+  // win), for the loser it's who beat them in the 3rd-place match itself.
   const idx = ELIM_ROUNDS.indexOf(eliminatedRound);
   const roundLabel = playsThirdPlace
-    ? (eliminatedRound === '3rd Place Final' ? T.thirdPlaceLostLabel : T.thirdPlaceWonLabel)
+    ? (thirdPlace?.result === 'lost' ? T.thirdPlaceLostLabel : T.thirdPlaceWonLabel)
     : idx >= 0 ? T.eliminationRounds[idx] : eliminatedRound;
   const dateSuffix = eliminatedDate
     ? ` (${new Date(`${eliminatedDate}T00:00:00`).toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' })})`

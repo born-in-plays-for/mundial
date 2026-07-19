@@ -294,10 +294,9 @@ import { loadEloData, buildImportByCountry, buildEloItems, QUALIFIED_BY_NAME } f
 import { pillClasses, pillContent } from '../js/elo_ranking.js';
 import { countryName } from '../js/i18n.js';
 
-const [{ eloData, statusByIso2 }, mapData, fixturesData] = await Promise.all([
+const [{ eloData, statusByIso2 }, mapData] = await Promise.all([
   loadEloData('../'),
   fetch('../data/v2/map.json').then(r => r.json()),
-  fetch('../data/fixtures.json').then(r => r.json()).catch(() => null),
 ]);
 
 // The one parameter this whole chart is built around: which per-team count drives
@@ -350,7 +349,7 @@ Object.entries(mapData.natives ?? {}).forEach(([name, players]) => {
   if (nId != null) nativeByCountry[nId] = players;
 });
 const items = buildEloItems({
-  rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, statusByIso2, fixturesData,
+  rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, statusByIso2,
 }).filter(item => item.qualified);
 // This chart's "exports" flavor means every player born in a country, whatever country
 // they represent at the tournament — not just the ones who left. bornCount = true exports

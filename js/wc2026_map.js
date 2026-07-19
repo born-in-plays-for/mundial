@@ -2137,7 +2137,7 @@ Promise.all([
   buildEloItems({
     rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry,
     nativeByCountry: app.nativeByCountry,
-    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2, fixturesData,
+    fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2,
   }).forEach(item => _eloItemsById.set(item.id, item));
   renderWorld(world, ukNations, capeVerdeGeo, curacaoGeo);
   // First real paint of #tab-players — until now it's been empty (no synchronous render at
@@ -2163,7 +2163,7 @@ Promise.all([
   _eloMain.onFixtureClick = activateFixture;
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
-    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, nativeByCountry: app.nativeByCountry, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2, fixturesData },
+    buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, nativeByCountry: app.nativeByCountry, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },
     fmtPop, eloData,
     popData: { source: rawData.popSource, updated: rawData.popUpdated },
   });
@@ -2171,7 +2171,7 @@ Promise.all([
   _eloItemsById.clear();
   _eloRawItems.forEach(item => _eloItemsById.set(item.id, item));
   app.stageIndexById = new Map(_eloRawItems.map(item => [item.id, item.visibleThroughIndex]));
-  app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2), fixturesData);
+  app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
   // Powers the control-sidebar's "match" sort criterion — pairs each team with its
   // known opponent for the round matching whichever carousel stage is active.
   app.matchInfoByIso2 = buildMatchInfo(statusByIso2, fixturesData, buildNameByIso2(eloData.rankings, countryName));

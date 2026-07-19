@@ -50,12 +50,12 @@ const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain: e
 
 const { render: renderElo, rawItems } = initEloRanking({
   el, sidebar,
-  buildArgs: { rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2, fixturesData },
+  buildArgs: { rankings: eloData.rankings, byId, importByCountry, nativeByCountry, countryNameFn: countryName, pop: mapData.pop, statusByIso2 },
   fmtPop, eloData,
   popData: { source: mapData.popSource, updated: mapData.popUpdated },
 });
 app.stageIndexById = new Map(rawItems.map(item => [item.id, item.visibleThroughIndex]));
-app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2), fixturesData);
+app.bracketState = buildBracketState(statusByIso2, eloData.rankings.filter(r => QUALIFIED_NAMES[r.id] && r.iso2).map(r => r.iso2));
 app.matchInfoByIso2 = buildMatchInfo(statusByIso2, fixturesData, buildNameByIso2(eloData.rankings, countryName));
 sidebar.updateStageTitle();
 sidebarCallbacks.renderElo = renderElo;
