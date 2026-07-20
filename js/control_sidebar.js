@@ -71,9 +71,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   render(html`<div id="control-sidebar" class="csb-panel ${alwaysOpen ? 'csb-always-open' : 'collapsed'} taxonomy">
   ${alwaysOpen ? nothing : html`<button class="csb-toggle" title="${T.csbParams.toggle}">‹</button>`}
   <div class="csb-body"><div class="csb-inset"><div class="csb-content d-flex flex-column gap-1">
-    <div class="csb-toolbar d-flex align-items-center gap-2">
+    <div class="csb-toolbar d-flex justify-content-between align-items-center gap-2">
       ${alwaysOpen ? nothing : html`<button id="csb-close" class="csb-icon-btn csb-collapse" title="${T.csbParams.collapse}" aria-label="${T.csbParams.collapse}"><kbd class="csb-esc-kbd">ESC</kbd></button>`}
-      <div class="dropdown dropend csb-conf-dropdown" id="zoom-conf-dropdown">
+      <div class="dropdown dropend csb-conf-dropdown me-auto" id="zoom-conf-dropdown">
         <button type="button" class="csb-conf-btn dropdown-toggle pe-2" data-bs-toggle="dropdown" data-bs-strategy="fixed" aria-label="${T.csbParams.confDropdown}" title="${T.csbParams.confDropdown}">
           <img src="images/solar_linear/widget-5-svgrepo-com.svg" width="18" height="18" aria-hidden="true">
         </button>
@@ -96,7 +96,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     <div class="csb-sort-stack d-flex flex-column gap-1">
       <table class="flex-grow-1 csb-table csb-sort-table table table-sm table-bordered mb-0"><tbody>
         <tr>
-          <td class="csb-header text-muted ps-1" title="${T.csbTips.action}">${_sortLabel}</td>
+          <td class="csb-header text-muted ps-1" title="${T.csbTips.action}">
+            <div class="d-flex align-items-center justify-content-start gap-1">
+              <img class="csb-header-icon" src="images/solar_linear/flag-svgrepo-com.svg" width="14" height="14" alt="" aria-hidden="true">
+              ${_sortLabel}
+            </div>
+          </td>
         </tr>
         <tr>
           <td class="csb-sort-col text-muted">
@@ -131,21 +136,33 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       </tbody></table>
       <table class="csb-table csb-native-table table table-sm table-bordered mb-0" hidden><tbody>
         <tr>
-          <td class="csb-header text-muted ps-1" title="${T.csbTips.playersFilter}">
-            <span class="cbs-header-label">${T.sortLabels.view}</span>
-            <img class="csb-header-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" width="14" height="14" alt="" aria-hidden="true">
+          <td colspan="2" class="csb-header text-muted ps-1" title="${T.csbTips.playersFilter}">
+            <div class="d-flex align-items-center justify-content-start gap-1">
+              <img class="csb-header-icon" src="images/solar_linear/user-circle-svgrepo-com.svg" width="14" height="14" alt="" aria-hidden="true">
+              <span class="cbs-header-label">${T.sortLabels.view}</span>
+            </div>
           </td>
         </tr>
-        <tr><td class="csb-toggle-col text-muted">
-          <div class="csb-native-toggle d-flex align-items-center justify-content-center">
-            <input type="checkbox" class="btn-check" id="csb-pf-native" autocomplete="off" checked>
-            <label class="btn csb-pf-native" for="csb-pf-native" title="${T.psbLabels.nativeTip}"></label>
-            <input type="checkbox" class="btn-check" id="csb-pf-import" autocomplete="off" checked>
-            <label class="btn csb-pf-import" for="csb-pf-import" title="${T.psbLabels.importTip}"></label>
-            <input type="checkbox" class="btn-check" id="csb-pf-export" autocomplete="off" checked>
-            <label class="btn csb-pf-export" for="csb-pf-export" title="${T.psbLabels.exportTip}"></label>
-          </div>
-        </td></tr>
+        <tr>
+          <td class="csb-toggle-col text-muted p-1">
+            <div class="csb-native-toggle d-flex align-items-center justify-content-center">
+              <input type="checkbox" class="btn-check" id="csb-pf-native" autocomplete="off" checked>
+              <label class="btn csb-pf-native" for="csb-pf-native" title="${T.psbLabels.nativeTip}"></label>
+              <input type="checkbox" class="btn-check" id="csb-pf-import" autocomplete="off" checked>
+              <label class="btn csb-pf-import" for="csb-pf-import" title="${T.psbLabels.importTip}"></label>
+              <input type="checkbox" class="btn-check" id="csb-pf-export" autocomplete="off" checked>
+              <label class="btn csb-pf-export" for="csb-pf-export" title="${T.psbLabels.exportTip}"></label>
+            </div>
+          </td>
+          <td class="csb-toggle-col text-muted p-1">
+            <div class="csb-native-toggle csb-kind-toggle d-flex align-items-center justify-content-center">
+              <input type="checkbox" class="btn-check" id="csb-pf-player" autocomplete="off" checked>
+              <label class="btn csb-pf-player" for="csb-pf-player" title="${T.psbLabels.playerTip}"></label>
+              <input type="checkbox" class="btn-check" id="csb-pf-coach" autocomplete="off" checked>
+              <label class="btn csb-pf-coach" for="csb-pf-coach" title="${T.psbLabels.coachTip}"></label>
+            </div>
+          </td>
+        </tr>
       </tbody></table>
     </div>
     <table class="csb-table csb-filter-table table table-sm table-bordered mb-0"><tbody>
@@ -153,8 +170,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       <td colspan="2" class="csb-header text-muted ps-1" title="${T.csbTips.filterCountries}">
         <div class="d-flex align-items-center justify-content-between">
           <span class="d-flex align-items-center gap-1">
-            <span class="cbs-header-label">${T.filterLabels.action}</span>
             <img class="csb-header-icon" src="images/solar_linear/flag-svgrepo-com.svg" width="14" height="14" alt="" aria-hidden="true">
+            <span class="cbs-header-label">${T.filterLabels.action}</span>
           </span>
           <span class="elo-item" data-col="AB" title="${T.csbTips.filterAll}">${T.filterLabels.all}</span>
         </div>
@@ -220,6 +237,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _pfExport = _panel.querySelector('#csb-pf-export');
   const _pfNative = _panel.querySelector('#csb-pf-native');
   const _pfImport = _panel.querySelector('#csb-pf-import');
+  // Player/coach — a second, orthogonal axis on the same row (which *person type* shows, not
+  // which role earned them a place in the union). Kept separate from _pfEls/_roles below rather
+  // than folded into the same OR-filter: a coach still carries its own export/native/import role
+  // (see _focusedPlayers in wc2026_map.js), so this has to AND against that result, not join it.
+  const _pfPlayer = _panel.querySelector('#csb-pf-player');
+  const _pfCoach = _panel.querySelector('#csb-pf-coach');
   // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
   // The carousel's DOM/Bootstrap wiring lives in <elo-ranking> (js/elo_ranking.js) now — it
   // wraps the whole pill list there. This sidebar still owns the stage index itself, its
@@ -517,15 +540,32 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     requestAnimationFrame(measureControlSidebar);
   };
 
-  const _updateAlphaLabel = () => {
-    _alphaEl.textContent = _sortOrder[0] === 'alpha' && _sortDir === 'asc' ? 'Z–A' : 'A–Z';
+  // True while #tab-players is the active bottom tab — set by setPlayersTabActive below (called
+  // unconditionally on every tab switch, see its own comment). Governs what .csb-sort-dir's
+  // click actually controls, and what its own glyph reflects — see both below.
+  let _playersTabActive = false;
+  // The glyph and the alpha item's own "A–Z"/"Z–A" label are two independent renderings of the
+  // exact same "which direction is currently in effect" fact — merged into one function (rather
+  // than two calls every call site has to remember to keep paired) after they drifted apart in
+  // practice: a player-table column-header click updated the glyph (via syncSortDirIcon below)
+  // but not this label, since that path only ever called the icon half.
+  const _updateSortDirUI = () => {
+    const dir = _playersTabActive ? (callbacks.getPlayersSortDir?.() ?? 'asc') : _sortDir;
+    _sortDirBtn.dataset.dir = dir;
+    // Same "dir" value, opposite meaning depending on context: the country list's own comparators
+    // (teamComparators) are naturally ascending for alpha, and _sortDir === 'asc' *flips* that to
+    // Z–A (see sortAndFilter's `if (i === 0 && _sortDir === 'asc') d = -d`). The player table's
+    // _ptSortDir is the other way around — 'asc' is itself the unflipped/natural A–Z state (see
+    // _playersTableTemplate's `dir = _ptSortDir === 'desc' ? -1 : 1`) — so "reversed from A–Z"
+    // flips on the opposite value of dir in that context.
+    const reversed = _playersTabActive ? dir === 'desc' : dir === 'asc';
+    _alphaEl.textContent = _sortOrder[0] === 'alpha' && reversed ? 'Z–A' : 'A–Z';
   };
   const _updateSortCol = () => {
     const items = Array.from(_sortListEl.querySelectorAll('.csb-sort-item'));
     const before = new Map(items.map(el => [el, el.getBoundingClientRect().top]));
     _sortOrder.forEach(key => { const el = _sortListEl.querySelector(`[data-sort="${key}"]`); if (el) _sortListEl.appendChild(el); });
-    _sortDirBtn.dataset.dir = _sortDir;
-    _updateAlphaLabel();
+    _updateSortDirUI();
     items.forEach(el => {
       const delta = before.get(el) - el.getBoundingClientRect().top;
       if (delta === 0) return;
@@ -543,9 +583,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     const btn = e.target.closest('.csb-sort-dir');
     if (btn) {
       e.stopPropagation();
+      // While #tab-players is showing, this button controls that table's own per-column
+      // direction (whichever of name/bornIn/playsFor/caps is its currently active column) —
+      // not the country-list's own _sortDir, which has no visible effect there. See
+      // setPlayersTabActive below for _playersTabActive and _updateSortDirUI for how the
+      // glyph/label are kept in sync either way.
+      if (_playersTabActive) {
+        callbacks.togglePlayersSortDir?.();
+        _updateSortDirUI();
+        return;
+      }
       _sortDir = _sortDir === 'desc' ? 'asc' : 'desc';
-      _sortDirBtn.dataset.dir = _sortDir;
-      _updateAlphaLabel();
+      _updateSortDirUI();
       callbacks.renderElo?.(callbacks.scrollToActiveElo);
       _saveState();
       return;
@@ -577,14 +626,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // label via Bootstrap's own .btn-check:disabled+.btn CSS, same mechanism
   // _matchDisplayRadio.disabled already uses for the stage-0 case.
   const _pfEls = { export: _pfExport, native: _pfNative, import: _pfImport };
+  const _pkEls = { player: _pfPlayer, coach: _pfCoach };
   const setPlayersTabActive = active => {
     // Merely being called at all (with either true or false) is the signal that the host page
     // actually has a #tab-players concept — see _pfTableEl's own declaration comment above for
-    // why the row starts hidden in the template.
+    // why the row starts hidden in the template. Queried fresh off the table (rather than
+    // iterating _pfEls/_pkEls) so any future button added to this row is disabled for free.
     _pfTableEl.hidden = false;
-    Object.values(_pfEls).forEach(el => { el.disabled = !active; });
+    _pfTableEl.querySelectorAll('.btn-check').forEach(el => { el.disabled = !active; });
+    _playersTabActive = active;
+    _updateSortDirUI();
   };
   const playersFilterChecked = role => !!_pfEls[role]?.checked;
+  const playerKindChecked = kind => !!_pkEls[kind]?.checked;
 
   // Re-renders #tab-players' actual content (unlike the category checkboxes above, which only
   // apply cross-tab and don't live-refresh the table while it's already open — see
@@ -1013,6 +1067,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   _ACTIONS_HIDE.PN = () => _filterSetPlayers(_pfNative, false);
   _ACTIONS_SHOW.PI = () => _filterSetPlayers(_pfImport, true);
   _ACTIONS_HIDE.PI = () => _filterSetPlayers(_pfImport, false);
+  // PP/PC (Players tab: Player/Coach) — same disabled-aware helper, same reasoning.
+  _ACTIONS_SHOW.PP = () => _filterSetPlayers(_pfPlayer, true);
+  _ACTIONS_HIDE.PP = () => _filterSetPlayers(_pfPlayer, false);
+  _ACTIONS_SHOW.PC = () => _filterSetPlayers(_pfCoach, true);
+  _ACTIONS_HIDE.PC = () => _filterSetPlayers(_pfCoach, false);
 
   const _isEditableTarget = el => !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
   let _chordArmed = false;
@@ -1110,13 +1169,15 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // category visibility, not player-role visibility).
     {
       key: 'pshow',
-      get: () => ['export', 'native', 'import'].filter(k => _pfEls[k].checked).join(','),
+      get: () => [...Object.keys(_pfEls), ...Object.keys(_pkEls)].filter(k => (_pfEls[k] ?? _pkEls[k]).checked).join(','),
       apply: raw => {
         const keys = new Set(raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean));
         _pfExport.checked = keys.has('export');
         _pfNative.checked = keys.has('native');
         _pfImport.checked = keys.has('import');
-        return true; // '' is valid too (all three hidden)
+        _pfPlayer.checked = keys.has('player');
+        _pfCoach.checked = keys.has('coach');
+        return true; // '' is valid too (everything hidden)
       },
     },
   ]);
@@ -1224,7 +1285,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // Always false on alwaysOpen pages (no .csb-toggle/collapse there to ever add the
       // class) — harmless to save regardless, just never restored for them (see _restoreState).
       collapsed: _el.classList.contains('collapsed'),
-      playersFilter: { export: _pfExport.checked, native: _pfNative.checked, import: _pfImport.checked },
+      playersFilter: { export: _pfExport.checked, native: _pfNative.checked, import: _pfImport.checked, player: _pfPlayer.checked, coach: _pfCoach.checked },
     });
   };
 
@@ -1239,8 +1300,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }
     if (shared?.dir === 'asc' || shared?.dir === 'desc') {
       _sortDir = shared.dir;
-      _sortDirBtn.dataset.dir = _sortDir;
-      _updateAlphaLabel();
+      _updateSortDirUI();
     }
     if (countries?.checks) {
       Object.entries(_CELL_MAP).forEach(([k, el]) => { if (el && k in countries.checks) el.checked = !!countries.checks[k]; });
@@ -1250,6 +1310,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       if (typeof pf.export === 'boolean') _pfExport.checked = pf.export;
       if (typeof pf.native === 'boolean') _pfNative.checked = pf.native;
       if (typeof pf.import === 'boolean') _pfImport.checked = pf.import;
+      if (typeof pf.player === 'boolean') _pfPlayer.checked = pf.player;
+      if (typeof pf.coach === 'boolean') _pfCoach.checked = pf.coach;
     }
     if (shared?.conf && CONF_IDS[shared.conf]) {
       _confKey = shared.conf;
@@ -1366,6 +1428,12 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     setMode,
     setPlayersTabActive,
     playersFilterChecked,
+    playerKindChecked,
+    // Called by wc2026_map.js's own _ptSetSort after a direct player-table column-header click
+    // (which flips _ptSortDir without going through .csb-sort-dir) — keeps that shared button's
+    // glyph and the alpha item's own "A–Z"/"Z–A" label honest either way, since
+    // callbacks.getPlayersSortDir now backs both while this tab is active (see _updateSortDirUI).
+    syncSortDirIcon: _updateSortDirUI,
     updateStageTitle: _updateCarouselTitle,
   };
 }

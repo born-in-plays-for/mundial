@@ -695,6 +695,11 @@ const _renderElo = (onAnimationDone) => {
   if (!_renderEloBase) return;
   _renderEloBase(onAnimationDone);
   if (dimState.sourceId) _eloMain.update(dimState.sourceId);
+  // bornIn/playsFor columns sort by the *team's* standing under whichever criterion the sort
+  // table's own leading position now holds (see _PT_SORT_FNS/_ptTeamCmp) — refresh #tab-players
+  // too so a sort-table change (reorder or direction toggle) is reflected there immediately,
+  // instead of waiting for an unrelated event to trigger the next render.
+  if (_ptSortKey === 'bornIn' || _ptSortKey === 'playsFor') _refreshPlayersView();
 };
 const _updateEloSelection = () => {
   if (_eloMain.hasItems && !_playersTabActive) _eloMain.update(dimState.sourceId);
@@ -907,13 +912,17 @@ const CITY_DOT_COLOR = '#7c3aed';
 // 2. The export/native/import filter (`control_sidebar.js`'s `csb-native-table`) — inclusive-OR
 //    over a player's own _roles, so a player holding more than one role (see _focusedPlayers'
 //    own comment) stays visible as long as any one of them is checked.
+// 3. The player/coach filter (same table's 2nd column) — a separate AND, not folded into the
+//    _roles OR-filter above: a coach still carries its own export/native/import role, so this
+//    has to further narrow that result by the person's own type, not join it.
 const _currentPlayerSet = focusIds =>
   (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
     .filter(p => {
       const playsForId = QUALIFIED_BY_NAME[p.nation];
       return _isCountryCategoryVisible(p.birthCountryId) && (playsForId == null || _isCountryCategoryVisible(playsForId));
     })
-    .filter(p => p._roles.some(r => sidebar.playersFilterChecked(r)));
+    .filter(p => p._roles.some(r => sidebar.playersFilterChecked(r)))
+    .filter(p => sidebar.playerKindChecked(p.role === 'coach' ? 'coach' : 'player'));
 
 const _buildCityRecords = () => {
   const players = _currentPlayerSet(_ptFocusIds);
@@ -1356,13 +1365,14 @@ const _focusedPlayers = focusIds => {
   return [...byKey.values()];
 };
 
-// #tab-players' own column-header sort state — independent of players_sidebar.js's team-
-// standing sort (elo/pop/delta/alpha) used by wc2026_players.html's full-page table; this one's
-// columns are simple direct fields (name/bornIn/playsFor/caps), no team-lookup indirection
-// needed. _ptFocusIds mirrors whatever `focusIds` produced the table currently on screen (set
-// as a side effect every time _playersTableTemplate runs) so a header click re-renders the same
-// view — ambient, one dim-selected team, or a fixture's two teams — instead of always falling
-// back to the ambient one.
+// #tab-players' own column-header sort state. name/caps sort on simple direct fields; bornIn/
+// playsFor sort by the *team's* current standing — same teamComparators (control_sidebar.js's
+// sidebar.sortFns, keyed by sidebar.sortOrder[0], the sort table's own active leading criterion)
+// players_sidebar.js's "sort by team" mode already uses, reused here rather than a second,
+// alpha-only copy of that logic. _ptFocusIds mirrors whatever `focusIds` produced the table
+// currently on screen (set as a side effect every time _playersTableTemplate runs) so a header
+// click re-renders the same view — ambient, one dim-selected team, or a fixture's two teams —
+// instead of always falling back to the ambient one.
 let _ptSortKey = 'name'; // 'name' | 'bornIn' | 'playsFor' | 'caps'
 let _ptSortDir = 'asc';  // 'asc' | 'desc'
 let _ptFocusIds = null;
@@ -1376,13 +1386,27 @@ const _ptBirthCity = p => {
   return bp ? (bp.actualCityName ?? bp.city) : '';
 };
 
+// A birth country can be genuinely absent from the Elo rankings entirely (e.g. the Isle of Man —
+// not a FIFA member); _eloItemsById.get(id) then returns undefined. Unknown-vs-known is a real,
+// orderable fact — unknown always sorts last, regardless of column direction — same guard
+// players_sidebar.js's own _cmpMaybe uses, for the same Array#sort-consistency reason.
+const _ptTeamCmp = (idA, idB) => {
+  const x = idA != null ? _eloItemsById.get(idA) : null;
+  const y = idB != null ? _eloItemsById.get(idB) : null;
+  if (!x && !y) return 0;
+  if (!x) return 1;
+  if (!y) return -1;
+  return sidebar.sortFns[sidebar.sortOrder[0]](x, y);
+};
+
 const _PT_SORT_FNS = {
   name:     (a, b) => playerSortKey(a).localeCompare(playerSortKey(b)),
-  // Country first, city as the tie-break within it — matches the cell's own "flag / city,
-  // country" display order conceptually (country is the primary grouping), even though the
-  // country name reads second in the cell itself.
-  bornIn:   (a, b) => (a.birthCountry ?? '').localeCompare(b.birthCountry ?? '') || _ptBirthCity(a).localeCompare(_ptBirthCity(b)),
-  playsFor: (a, b) => (a.nation ?? '').localeCompare(b.nation ?? ''),
+  // Team first (whichever criterion the sort table's own leading position is currently set to),
+  // city as the tie-break within it — matches the cell's own "flag / city, country" display
+  // order conceptually (country is the primary grouping), even though the country name reads
+  // second in the cell itself.
+  bornIn:   (a, b) => _ptTeamCmp(a.birthCountryId, b.birthCountryId) || _ptBirthCity(a).localeCompare(_ptBirthCity(b)),
+  playsFor: (a, b) => _ptTeamCmp(QUALIFIED_BY_NAME[a.nation], QUALIFIED_BY_NAME[b.nation]),
   // Coaches don't display a caps count (see _allPlayersRow) — treated as -1 (lowest) so they
   // consistently trail the capped-players list regardless of sort direction.
   caps:     (a, b) => (a.role === 'coach' ? -1 : a.caps ?? -1) - (b.role === 'coach' ? -1 : b.caps ?? -1),
@@ -1395,7 +1419,14 @@ const _ptSetSort = key => {
   _ptSortKey = key;
   const ptEl = document.getElementById('tab-players');
   if (ptEl) render(_playersTableTemplate(_ptFocusIds), ptEl);
+  // Keep control_sidebar.js's shared .csb-sort-dir glyph honest — while #tab-players is active
+  // it reflects/drives *this* direction (see callbacks.getPlayersSortDir/togglePlayersSortDir
+  // below), so a direct column-header click has to resync it too, not just a click on the button.
+  sidebar.syncSortDirIcon?.();
 };
+
+_sidebarCallbacks.getPlayersSortDir = () => _ptSortDir;
+_sidebarCallbacks.togglePlayersSortDir = () => _ptSetSort(_ptSortKey);
 
 // ▾/▴ — same glyphs as wc2026_players.html's own _sortArrow, for a consistent look between the
 // map's ambient table and the standalone players page.

@@ -200,10 +200,11 @@
 .csb-panel .csb-table tr > td:last-child { border-right: 0; }
 /* .csb-sort-table is single-column on both sidebars, so every cell is the left edge — shared.
    The rest of the left-edge story diverges per sidebar (control 1's .csb-display-table/
-   rowspan-colspan .csb-filter-table vs. control 2's simpler :first-child .csb-filter-table,
-   see css/wc2026_players.css), so only this common piece lives here. */
+   .csb-native-table/rowspan-colspan .csb-filter-table vs. control 2's simpler :first-child
+   .csb-filter-table, see css/wc2026_players.css), so only this common piece lives here. */
 .csb-panel .csb-sort-table td { border-left: 0; }
 #control-sidebar .csb-display-table td,
+#control-sidebar .csb-native-table td,
 #control-sidebar .csb-filter-table td[rowspan],
 #control-sidebar .csb-filter-table td[colspan] {
   border-left: 0;
@@ -345,11 +346,26 @@
 #control-sidebar .csb-native-toggle { white-space: nowrap; gap: 2px; }
 #control-sidebar .csb-native-toggle .btn {
   margin: 0; padding: 0 4px; border: 1px solid transparent; font-size: 14px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center; min-height: 16px;
 }
 #control-sidebar .csb-native-toggle .btn-check:checked + .btn { border-color: rgba(23, 23, 21, 0.75); }
+/* Disabled (tab-players not active) wins over :checked above — declared after it so the
+   light-gray border shows even on a checked+disabled button, not just an unchecked one.
+   opacity:1 overrides Bootstrap's own .btn-check:disabled+.btn (opacity:.65) — left at the
+   default, that dims var(--border) against the panel's own translucent background and reads
+   as a flat washed-out gray instead of the app's actual light border color. */
+#control-sidebar .csb-native-toggle .btn-check[disabled] + .btn,
+#control-sidebar .csb-native-toggle .btn-check:disabled + .btn {
+  opacity: .5;
+}
 #control-sidebar .csb-pf-export::after { content: '▶'; color: var(--exp-accent); }
 #control-sidebar .csb-pf-native::after { content: '●'; font-size: 10px; color: rgba(23, 23, 21, 0.75); }
 #control-sidebar .csb-pf-import::after { content: '◀'; color: var(--imp-accent); }
+/* .csb-kind-toggle: 2nd TD in the same row — same button chrome (shares .csb-native-toggle's
+   own rules above), just plain letter glyphs instead of a shape, since "player" vs "coach" has
+   no natural directional/dot symbol the way native/import/export does. */
+#control-sidebar .csb-pf-player::after { content: 'P'; font-size: 11px; font-weight: 600; color: rgba(23, 23, 21, 0.75); }
+#control-sidebar .csb-pf-coach::after { content: 'C'; font-size: 11px; font-weight: 600; color: rgba(23, 23, 21, 0.75); }
 
 /* ── "filter players" / "filter countries" table headers ──────────────────
    The plain "filter" label reused for both tables gets a small disambiguating icon right after
