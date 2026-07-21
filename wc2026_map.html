@@ -172,6 +172,14 @@
   <button id="scroll-top-btn" aria-label="Scroll to top"><svg viewBox="-4 -4 18 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6L5 2L9 6"/></svg></button>
   <div id="selection-panel" class="tab-footer-panel collapsed"></div>
   <nav id="bottomTabList" class="pb-1 px-3 d-flex justify-content-between gap-4 nav-tabs" role="tablist">
+    <!-- Dotted line, js/wc2026_map.js's _updateTabConnector — points from whichever of
+         #tab-teams-btn/#tab-tournament-btn is the current _activeTab (the data source behind
+         #tab-players-btn's own "N countries" count) to #tab-players-btn itself, so that count
+         has a visible, persistent reference back to where it came from even after switching to
+         #tab-players (where _activeTab, deliberately, does NOT change — see that var's comment).
+         position:absolute takes it out of this nav's flex layout entirely, so it doesn't disturb
+         the 3-button justify-content-between spacing. -->
+    <div id="tab-connector" aria-hidden="true"></div>
     <div  class="nav-item">
       
       <button class="nav-link" id="tab-teams-btn" data-tab="tab-teams" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#tab-teams" aria-controls="tab-teams" aria-selected="false"><img class="tab-icon" src="images/solar_linear/flag-svgrepo-com.svg" aria-hidden="true"></button>

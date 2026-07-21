@@ -713,6 +713,46 @@ const _updateEloSelection = () => {
 // call's own comment.
 let _playersTabActive = false;
 
+// Dotted line from whichever of #tab-teams-btn/#tab-tournament-btn is _activeTab to
+// #tab-players-btn (see the HTML comment on #tab-connector) — a visual reminder of which tab's
+// filters/selection produced #tab-players-btn's own "N countries" count, since that count
+// genuinely differs between the two (tab-teams' checkbox filters vs. tab-tournament's carousel
+// stage). Reads _activeTab, not the DOM's current .active tab — that's the whole point: this
+// must NOT move when the user switches to #tab-players itself (_activeTab is deliberately left
+// untouched by that switch — see its own declaration above), so the line survives pointing at
+// its real source. Geometry-only (getBoundingClientRect), so it needs no data to have loaded —
+// safe to call as soon as the buttons exist in the static HTML.
+const _tabConnector = document.getElementById('tab-connector');
+// Gap (px) between the line's own endpoint and the nearest edge of either button — otherwise
+// the dotted line runs flush into the icon itself, reading as touching/underlining it rather
+// than as a connector floating between the two.
+const TAB_CONNECTOR_GAP = 6;
+// dimState/_activeFixture aren't declared until further down (safe — this is only ever called
+// later, never during this module's own top-to-bottom evaluation; see their own declarations).
+// Once either is active, #tab-players-btn's count no longer comes from the ambient tab-teams/
+// tab-tournament filter this line points at — it's a specific team's (or fixture's) own roster
+// instead (see applySelection/activateFixture's own "1/2 team(s)" label) — so the connector
+// would be actively misleading, not just stale, and is hidden rather than left pointing at a
+// count that's no longer what's shown.
+const _updateTabConnector = () => {
+  if (!_tabConnector) return;
+  if (dimState.active || _activeFixture) { _tabConnector.style.display = 'none'; return; }
+  _tabConnector.style.display = '';
+  const sourceBtn = document.getElementById(_activeTab === 'tab-tournament' ? 'tab-tournament-btn' : 'tab-teams-btn');
+  const targetBtn = document.getElementById('tab-players-btn');
+  if (!sourceBtn || !targetBtn) return;
+  const navRect = _bottomTabNav.getBoundingClientRect();
+  const sRect = sourceBtn.getBoundingClientRect();
+  const tRect = targetBtn.getBoundingClientRect();
+  // Whichever button sits further left contributes its RIGHT edge; the other, its LEFT edge —
+  // the line only ever spans the real gap between the two, never passing under either button.
+  const [leftRect, rightRect] = sRect.left < tRect.left ? [sRect, tRect] : [tRect, sRect];
+  const left = leftRect.right - navRect.left + TAB_CONNECTOR_GAP;
+  const right = rightRect.left - navRect.left - TAB_CONNECTOR_GAP;
+  _tabConnector.style.left = `${left}px`;
+  _tabConnector.style.width = `${Math.max(0, right - left)}px`;
+};
+
 // Bootstrap's own Tab component (data-bs-toggle="tab" on each button, see wc2026_map.html) now
 // owns activating/deactivating both the trigger buttons' .active class and their data-bs-target
 // pane's .active class (css/wc2026_map.css shows/hides #bottomTabContent panes off that same
@@ -773,11 +813,18 @@ _bottomTabNav.addEventListener('show.bs.tab', e => {
   }
   _updateAllPlayersMapLayer();
 });
+// Geometry only — read after Bootstrap's own class flip has actually landed ('show.bs.tab'
+// fires BEFORE that, see the listener above), even though none of the 3 buttons' sizes
+// currently depend on their .active class here; separate listener rather than folding into the
+// one above so that ordering guarantee doesn't rely on this call happening to sit last in a
+// growing function.
+_bottomTabNav.addEventListener('shown.bs.tab', _updateTabConnector);
 const _switchTab = name => bootstrap.Tab.getOrCreateInstance(document.getElementById(`${name}-btn`)).show();
 
 window.addEventListener('resize', () => {
   _syncMapHeight();
   sidebar.measureControlSidebar();
+  _updateTabConnector();
 });
 
 // ── Tooltip helpers ───────────────────────────────────────────────────────────
@@ -1103,29 +1150,54 @@ const _RESTORABLE_TABS = new Set(['tab-teams', 'tab-tournament']);
 const _savedActiveTab = loadSlice('bottomTab')?.active;
 _switchTab(_RESTORABLE_TABS.has(_savedActiveTab) ? _savedActiveTab : 'tab-teams');
 
+// dimState.sourceId (one team) or _activeFixture's idA/idB (two teams, mutually exclusive with
+// the former — see activateFixture/applySelection's own clearFixtureSelection()/clearDim()
+// calls) — same [name, capital, population] triple per country either way, all flattened into
+// one '·'-joined row rather than visually grouping each country's own triple separately; with
+// two countries that reads as "France · Paris · 68M · Spain · Madrid · 47M", consistent with
+// the single-country row this already was.
 const _updateSelectionPanel = (onCollapsed) => {
   if (!_selectionPanelEl) return;
-  const id = dimState.sourceId;
-  if (!id) {
+  const ids = _activeFixture ? [_activeFixture.idA, _activeFixture.idB] : dimState.sourceId ? [dimState.sourceId] : [];
+  if (ids.length === 0) {
     _collapsePanel(_selectionPanelEl, () => { render(nothing, _selectionPanelEl); if (onCollapsed) onCollapsed(); });
     return;
   }
-  const fc = iso2ForId(id);
-  const cname  = countryName(id);
-  const pop    = app.pop?.[fc];
-  const capObj = app.capital?.[fc];
-  const capText = capObj?.[_LANG] ?? capObj?.en ?? null;
+  // Per-country [name, capital, population] triple, '·'-joined within a country same as the
+  // single-team case; the two countries' own groups are joined with '⇄' instead — '·' is
+  // already spoken for inside a group, so a fixture needs a visually distinct separator between
+  // them. The LEFT group's own triple is mirrored (population · capital · name) so the whole row
+  // reads symmetrically around the '⇄' — population next to population, name next to name on
+  // either side of it — rather than the same left-to-right order repeated twice. includePop lets
+  // the overflow check below re-render without it — population is the least essential field, so
+  // it's the first thing dropped once the row doesn't fit on its one allowed line, rather than
+  // jumping straight to an ellipsis that might cut off a country's own name instead.
+  const buildRow = includePop => {
+    const groups = ids.map((id, i) => {
+      const fc = iso2ForId(id);
+      const cname  = countryName(id);
+      const pop    = includePop ? app.pop?.[fc] : null;
+      const capObj = app.capital?.[fc];
+      const capText = capObj?.[_LANG] ?? capObj?.en ?? null;
+      const items = [
+        cname && html`<span>${cname}</span>`,
+        capText && html`<span>${capText}</span>`,
+        pop && html`<span>${fmtPop(pop)}</span>`,
+      ].filter(Boolean);
+      if (i === 0) items.reverse();
+      return join(items, () => html`<span class="sp-sep">·</span>`);
+    });
+    return html`<div class="selection-panel-row py-1 sub" style="background-color: var(--page-bg);">
+      ${join(groups, () => html`<span class="sp-sep">⇄</span>`)}
+    </div>`;
+  };
 
-  const items = [
-    cname && html`<span>${cname}</span>`,
-    capText && html`<span>${capText}</span>`,
-    pop && html`<span>${fmtPop(pop)}</span>`,
-  ].filter(Boolean);
-
-  render(html`<div class="d-flex justify-content-center align-items-center gap-1 py-1 sub" style="background-color: var(--page-bg);">
-    ${join(items, () => html`<span>·</span>`)}
-  </div>`, _selectionPanelEl);
+  render(buildRow(true), _selectionPanelEl);
   _expandPanel(_selectionPanelEl);
+  // Reading scrollWidth/clientWidth forces a synchronous layout — fine for a one-off check like
+  // this, and avoids a visible flash of the (possibly-truncated) population-included version.
+  const rowEl = _selectionPanelEl.querySelector('.selection-panel-row');
+  if (rowEl && rowEl.scrollWidth > rowEl.clientWidth) render(buildRow(false), _selectionPanelEl);
 };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
@@ -1236,6 +1308,7 @@ const applySelection = (id, destIds) => {
   _updateSelectionPanel();
   document.body.classList.add('dim-active');
   _updateAllPlayersMapLayer();
+  _updateTabConnector();
 };
 
 // ── Players table (#tab-players' one and only content — see _playersTableTemplate) ────────────
@@ -1589,6 +1662,7 @@ const clearDim = () => {
   _updateSelectionPanel(_renderPlayersTabIdle);
   _updateEloSelection();
   _updateSelectionPanel();
+  _updateTabConnector();
 };
 
 // ── Activate from anywhere (map click, Elo badge, player-table country link) ──
@@ -1618,6 +1692,8 @@ const clearFixtureSelection = () => {
   if (_ptEl) render(_playersTableTemplate(), _ptEl);
   _renderPlayersTabIdle();
   _updateAllPlayersMapLayer();
+  _updateTabConnector();
+  _updateSelectionPanel();
 };
 
 const activateFixture = (idA, idB, pairId) => {
@@ -1643,6 +1719,8 @@ const activateFixture = (idA, idB, pairId) => {
   }
 
   _updateAllPlayersMapLayer();
+  _updateTabConnector();
+  _updateSelectionPanel();
 };
 
 // ── Flag join helpers ─────────────────────────────────────────────────────────
@@ -2356,6 +2434,11 @@ Promise.all([
     // toggle-off-if-already-active) to clicking one in tab-tournament's own pill list, and
     // reusing the exact reference is what guarantees that.
     onCountryClick: _onCountryClick,
+    // Same reference tab-tournament's own match-display fixture pairs use (see _eloMain.onFixtureClick
+    // just above) — a played group-stage result is just as real a fixture as a knockout pairing,
+    // it was only ever missing this wiring (group_stage.js's _resultRow reused the same pill/
+    // separator markup from the start, but had no click handler on the separator until now).
+    onFixtureClick: activateFixture,
     // "Show only this group's 4 teams" on the map — layered on top of the sidebar's own
     // category filter via callbacks.afterFlagFilter (see control_sidebar.js/applyFlagFilter),
     // not folded into it, since the sidebar has no reason to know this concern exists.

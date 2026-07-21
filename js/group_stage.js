@@ -15,7 +15,7 @@ const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 const _GROUP_LETTERS = [...'ABCDEFGHIJKL'];
 const _FINISHED = new Set(['FT', 'AET', 'PEN']);
 
-export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick }) => {
+export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick, onFixtureClick }) => {
   let _selected = null; // null = "All"; otherwise a group letter
 
   // Whether a team actually advanced to the Round of 32 — read from the real-world elimination
@@ -59,6 +59,12 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
   // part of it here.
   const _pillClick = item => () => { if (item.id != null) onCountryClick?.(item.id); };
 
+  // Mirrors js/elo_ranking.js's own #buildRows fixture-pair handling: the separator (score box),
+  // not either team pill, is the fixture's own click target (the pills already resolve clicks to
+  // their own single team via _pillClick above). 'grp-' prefix on the pairId keeps this fixture
+  // source's ids out of the knockout-stage pairId namespace (control_sidebar.js's _buildGroups) —
+  // never actually collides in practice (f.id is API-Football's own numeric fixture id, that
+  // _pairId is a different, synthesized value) but there's no reason to rely on that.
   const _resultRow = f => {
     const home = eloItemsByIso2.get(f.home) ?? { iso2: f.home, name: regionName(f.home, f.home) };
     const away = eloItemsByIso2.get(f.away) ?? { iso2: f.away, name: regionName(f.away, f.away) };
@@ -67,10 +73,12 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
     const awayLost = f.winner === 'home';
     const dateLabel = fixtureDateLabel(f.date);
     const clickableCls = item => (onCountryClick && item.id != null) ? ' elo-item--clickable' : '';
+    const fixtureClickable = onFixtureClick && home.id != null && away.id != null;
+    const onSepClick = () => { if (fixtureClickable) onFixtureClick(home.id, away.id, `grp-${f.id}`); };
     return html`
       <li class="elo-pair${draw ? ' elo-pair--draw' : ''}">
         <span class="elo-item-wrap"><span class="${pillClasses(home)}${homeLost ? ' elo-item--lost' : ''}${clickableCls(home)}" style="${pillStyle(home)}" @click=${_pillClick(home)}>${pillContent(home)}</span></span>
-        <span class="elo-pair-sep elo-pair-sep--score">
+        <span class="elo-pair-sep elo-pair-sep--score${fixtureClickable ? ' elo-pair-sep--clickable' : ''}" @click=${onSepClick}>
           ${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}
           <span class="elo-pair-sep-score">${f.goals.home}–${f.goals.away}</span>
         </span>

@@ -57,6 +57,20 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   display: flex; flex-direction: column;
 }
 #selection-panel { order: 2; }
+/* js/wc2026_map.js's _updateSelectionPanel — forced to one line (name/capital/[population] ·
+   -joined, two countries 'vs.'-joined for a fixture) rather than wrapping the way flex content
+   normally would once it's wider than the panel (see the screenshot this was filed from: a
+   country name wrapping onto its own line above the rest). text-overflow:ellipsis needs a plain
+   inline flow, not flex — d-flex/gap-1 (join()'s own separator spans provide the visual spacing
+   instead, via   padding either side of '·'/'vs.') would clip a child at a hard edge with no
+   "…", not truncate the row as a whole the way this does. */
+.selection-panel-row {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+.selection-panel-row .sp-sep { padding: 0 4px; }
 #bottomTabList { order: 99; }
 /* #bottomTabList sits at the bottom of the screen (content above, tabs below) — Bootstrap's
    .nav-tabs assumes the opposite (tabs above content, e.g. the docs example), so every
@@ -82,6 +96,20 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   border-top-right-radius: 0;
   border-bottom-left-radius: var(--bs-nav-tabs-border-radius);
   border-bottom-right-radius: var(--bs-nav-tabs-border-radius);
+}
+/* #tab-connector — see its own HTML comment. position:relative here is what its absolute
+   left/width (set in JS, js/wc2026_map.js's _updateTabConnector) is measured against.
+   z-index:-1 (against this rule's own stacking context) keeps the dotted line behind the
+   buttons' own icons rather than drawn on top of them. */
+#bottomTabList { position: relative; }
+#tab-connector {
+  position: absolute;
+  top: 50%;
+  height: 0;
+  border-top: 2px dotted var(--text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: -1;
 }
 #bottomTabContent {
     padding-left: var(--vert-gutter) !important;
