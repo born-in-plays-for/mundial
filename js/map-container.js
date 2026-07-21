@@ -280,6 +280,14 @@ export const DOT_R = 2;
 export const FLAG_SIZE_ZOOM_EXP   = 1/3;
 // How much leader-line offset grows with zoom
 export const FLAG_OFFSET_ZOOM_EXP = 2/3;
+// Birth-city dots (js/wc2026_map.js's _updatePlayerCityDots, marked with the .city-dot class
+// alongside .standalone-dot): same 0=fixed/1=fully-proportional scale as FLAG_SIZE_ZOOM_EXP
+// above, and same direction (grows with zoom) — start small at rest (whole-map view, many dots
+// close together) and grow as you zoom into one city, rather than staying a constant pixel size.
+// Every OTHER .standalone-dot (Cape Verde/Curaçao's own standalone flags) is untouched by this
+// and keeps the plain 1/k counter-scale (constant on-screen size) it always had.
+export const CITY_DOT_SIZE_ZOOM_EXP = 0.3;
+export const cityDotRadius = (base, k) => base / Math.pow(k, 1 - CITY_DOT_SIZE_ZOOM_EXP);
 
 // ── Map dimensions ────────────────────────────────────────────────────────────
 export const W = 900, H = 480;
@@ -337,8 +345,11 @@ class WorldMap extends HTMLElement {
         .attr('x', function() { return +this.getAttribute('data-cx') - s/2; })
         .attr('y', function() { return +this.getAttribute('data-cy') - s/2; });
 
-      this.svg.selectAll('.standalone-dot')
+      this.svg.selectAll('.standalone-dot:not(.city-dot)')
         .attr('r', function() { return (+this.getAttribute('data-r-base') || DOT_R) / e.transform.k; })
+        .attr('stroke-width', 0.5 / e.transform.k);
+      this.svg.selectAll('.standalone-dot.city-dot')
+        .attr('r', function() { return cityDotRadius(+this.getAttribute('data-r-base') || DOT_R, e.transform.k); })
         .attr('stroke-width', 0.5 / e.transform.k);
 
       this.svg.selectAll('.offset-flag').each(function() {

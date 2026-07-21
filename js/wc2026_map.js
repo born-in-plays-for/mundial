@@ -14,7 +14,7 @@ import { choroFill, getDivergingParams, setDivergingParams, currentTheme, onThem
          FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT, W, H,
          buildChoroplethIndex, paintChoropleth, wireLegend,
          CENTROID_OVERRIDE, dotCentroid, zoomToCentroid as _sharedZoomToCentroid,
-         drawCountryArcs, rescaleArcs, computeImportIds, _NULL_CENTROID_ID } from './map-container.js';
+         drawCountryArcs, rescaleArcs, computeImportIds, _NULL_CENTROID_ID, cityDotRadius } from './map-container.js';
 
 const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
@@ -639,19 +639,19 @@ const _zoomToVisibleFlags = () => {
 const zoomToCentroid = (id, duration = 2000) =>
   _sharedZoomToCentroid({ svg, zoom, path, centroids, worldFeatures: _worldFeatures, ukFeatures: _ukFeatures }, id, duration);
 
-// Pans/zooms to a birth city at the zoom behavior's own scaleExtent ceiling (map-container.js's
-// d3.zoom().scaleExtent([1, 200])) — a city is a single point, not a country with mainland
-// bounds to fit, so "as close as the map allows" is the only sensible target ("max value" per
-// the #tab-players "born in" cell click this was built for — see _allPlayersRow). Shows that
-// city's own tooltip once the transition settles, anchored to the dot's real on-screen position
-// (getBoundingClientRect() on the actual circle, found via its data-key — see
-// _updatePlayerCityDots) rather than re-deriving screen coordinates from the projection + zoom
-// transform by hand.
+// Pans/zooms to a birth city — a single point, not a country with mainland bounds to fit, so
+// "close" rather than "fit bounds" is the only sensible target. k=120 rather than the zoom
+// behavior's own scaleExtent ceiling (map-container.js's d3.zoom().scaleExtent([1, 200])) — 200
+// read as over-zoomed in practice (per the "born in" cell click this was built for — see
+// _allPlayersRow). Shows that city's own tooltip once the transition settles, anchored to the
+// dot's real on-screen position (getBoundingClientRect() on the actual circle, found via its
+// data-key — see _updatePlayerCityDots) rather than re-deriving screen coordinates from the
+// projection + zoom transform by hand.
 const _zoomToCity = rec => {
   const key = `${rec.lat.toFixed(3)},${rec.lon.toFixed(3)}`;
   const [cx, cy] = projection([rec.lon, rec.lat]);
   const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
-  const k = 200;
+  const k = 30;
   const tx = vbX + vbW / 2 - k * cx;
   const ty = vbY + vbH / 2 - k * cy;
   svg.transition().duration(1200).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k))
@@ -967,21 +967,32 @@ const _updatePlayerCityDots = () => {
   g.select('.city-dots').remove();
   const dotsGroup = g.append('g').attr('class', 'city-dots');
   for (const [key, rec] of byCoord) {
-    const [cx, cy] = projection([rec.lon, rec.lat]);
+    const [rawCx, rawCy] = projection([rec.lon, rec.lat]);
+    // data-raw-cx/cy keep the true projected point around so buildBlendedInset's own per-tick
+    // update() (see _islandWarp) can re-warp it on every zoom change, not just once here — a
+    // city on Cape Verde/Curaçao otherwise renders at its true (currently imperceptible, below
+    // CV_BLEND_K_THRESHOLD) position instead of inside that island's zoomed-in inset circle.
+    // No-op ([cx,cy] === [rawCx,rawCy]) for every other city.
+    const [cx, cy] = _warpIslandPoint(rec.countryId, rawCx, rawCy);
     dotsGroup.append('circle')
-      .attr('class', 'standalone-dot')
+      .attr('class', 'standalone-dot city-dot')
       .attr('data-key', key)
+      .attr('data-country-id', rec.countryId)
+      .attr('data-raw-cx', rawCx).attr('data-raw-cy', rawCy)
       .attr('cx', cx).attr('cy', cy)
-      .attr('data-r-base', Math.max(2, 2 * Math.sqrt(rec.players.length)))
+      .attr('data-r-base', Math.max(1.5, 1.5 * Math.sqrt(rec.players.length)))
       .attr('fill', CITY_DOT_COLOR).attr('fill-opacity', 0.7)
       .attr('stroke', '#fff')
       .on('mousemove', event => showCityTip(event, rec))
       .on('mouseleave', () => hideTip())
       .on('click', event => { event.stopPropagation(); _scrollToCityRow(rec); });
   }
+  // Initial paint only — map-container.js's own zoom-tick handler (.standalone-dot.city-dot
+  // branch) takes over from here on every subsequent pan/zoom, using this same cityDotRadius
+  // helper so the two never drift apart.
   const k = d3.zoomTransform(svg.node()).k;
   dotsGroup.selectAll('circle')
-    .attr('r', function() { return (+this.getAttribute('data-r-base')) / k; })
+    .attr('r', function() { return cityDotRadius(+this.getAttribute('data-r-base'), k); })
     .attr('stroke-width', 0.5 / k);
 };
 
@@ -1004,6 +1015,18 @@ const app = {
 };
 const centroids = {};
 const _blendedInsets = []; // per-tick update fns for buildBlendedInset() countries (see below)
+// id -> {ax, ay, factor} — the CURRENT (this tick's) pivot/scale of that island's own
+// buildBlendedInset warp (translate(ax,ay) scale(factor) translate(-ax,-ay)), kept live by
+// buildBlendedInset's own update(k). _updatePlayerCityDots reads this to warp a birth-city dot's
+// raw projected position the exact same way the island's own shape/flag already are, so a city
+// on Cape Verde/Curaçao lands inside the inset circle instead of at its true (currently
+// imperceptible, below CV_BLEND_K_THRESHOLD) position. Empty for every id that isn't a blended
+// inset — _warpIslandPoint below no-ops in that case.
+const _islandWarp = new Map();
+const _warpIslandPoint = (countryId, cx, cy) => {
+  const w = _islandWarp.get(countryId);
+  return w ? [w.ax + w.factor * (cx - w.ax), w.ay + w.factor * (cy - w.ay)] : [cx, cy];
+};
 
 const _sidebarCallbacks = {};
 const sidebar = initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds: _fifaMemberIds, eloMain: _eloMain, callbacks: _sidebarCallbacks });
@@ -2099,7 +2122,11 @@ const buildBlendedInset = ({ id, geo, corner = 'bottom-right' }) => {
   const ccx = ax + signX * restSide / 2; // circle center — standard inscribed-circle placement within the square
   const ccy = ay + signY * restSide / 2;
 
-  const blend = g.append('g').attr('class', 'cv-blend');
+  // data-id lets other layers (birth-city dots — see _updatePlayerCityDots) find this island's
+  // own warp group and park themselves inside it, so a city dot sitting on Cape Verde/Curaçao
+  // rides the SAME nested transform (below) the island's own shape/flag already use — no
+  // separate per-tick math needed, it's just another child of an already-animated group.
+  const blend = g.append('g').attr('class', 'cv-blend').attr('data-id', id);
   const circle = blend.append('circle')
     .attr('cx', ccx).attr('cy', ccy).attr('r', restRadius)
     .attr('fill', '#dbeeff').attr('stroke', '#ccc8c0') // same stroke color as .country borders
@@ -2153,6 +2180,18 @@ const buildBlendedInset = ({ id, geo, corner = 'bottom-right' }) => {
       : restSide * Math.pow(CV_BLEND_K_THRESHOLD, 1 - CV_BLEND_ALPHA) * Math.pow(k, CV_BLEND_ALPHA);
     const factor = screenSide / (k * restSide); // extra world-space scale, pivoted on the anchor, on top of the map's own k
     blend.attr('transform', `translate(${ax},${ay}) scale(${factor}) translate(${-ax},${-ay})`);
+    _islandWarp.set(id, { ax, ay, factor });
+    // Birth-city dots on this island (see _updatePlayerCityDots/_warpIslandPoint) aren't
+    // children of `blend` — unlike the country path, a dot's own SIZE must stay governed by the
+    // ordinary cityDotRadius(k) curve, not get multiplied by `factor` too, so it can't just ride
+    // the group transform the way the path does (same reason the flag above is a sibling, not a
+    // child, of `blend`). Reposition them here instead, each tick, from their own stored raw
+    // (pre-warp) projected coordinates.
+    g.selectAll(`.city-dot[data-country-id="${id}"]`).each(function() {
+      const raw = d3.select(this);
+      const [wx, wy] = _warpIslandPoint(id, +raw.attr('data-raw-cx'), +raw.attr('data-raw-cy'));
+      raw.attr('cx', wx).attr('cy', wy);
+    });
     circle.attr('opacity', k >= CV_BLEND_K_THRESHOLD ? 0 : 1)
       .attr('stroke-width', 0.3 / (k * factor)); // same weight as .country borders (stroke-width: .3), counteracting blend's own scaling
     blend.selectAll('path.country-extra').attr('stroke-width', 0.3 / (k * factor)); // same treatment for the island outline itself
