@@ -344,22 +344,31 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // (tab-tournament), which excludes them outright regardless of checkbox state, and
   // .gateByStage being false (tab-teams) skips the reachesStage check entirely — a flat team
   // list has no fixture/elimination concept at all.
-  const catEloChecked = (id, fifaMember) => {
+  //
+  // `bypassNonQualifiedGate` — for wc2026_map.js's _isCountryCategoryVisible only, which reuses
+  // this same predicate to decide whether a *player's* birth/plays-for country can appear in the
+  // roster table. That's a different question from "does this country get its own pill in
+  // tab-tournament's Elo list" (which is what ignoreTeamFilters/showNonQualified:false are for —
+  // non-qualified countries never get a tournament-stage pill there, by design). A non-qualified
+  // birth country (e.g. Isle of Man) is never itself a tournament pill either way, but its players
+  // are still real roster members of whichever qualified team they play for — without this,
+  // switching from tab-teams to tab-tournament silently dropped every non-qualified-born import
+  // (and non-qualified export destination) from every team's player table, focused or ambient,
+  // regardless of the FE/NE checkbox.
+  const catEloChecked = (id, fifaMember, { bypassNonQualifiedGate = false } = {}) => {
     const behavior = MODE_BEHAVIOR[_mode];
     const cat = flagCat(id);
+    if (cat === 'e' || cat === 'o') {
+      if (!bypassNonQualifiedGate && (behavior.ignoreTeamFilters || !behavior.showNonQualified)) return false;
+      if (_confIds && fifaMember && !_confIds.has(id)) return false;
+      return cat === 'e' ? (fifaMember ? _fltFE.checked : _fltNE.checked) : (fifaMember ? _fltFK.checked : _fltNK.checked);
+    }
     if (behavior.ignoreTeamFilters) {
       // tab-tournament: fully orthogonal to whatever tab-teams' checkboxes/confederation
-      // dropdown currently say. Non-qualified categories ('e'/'o') are out of scope for this
-      // mode regardless (mirrors showNonQualified: false below); qualified categories' sole
-      // gate is the carousel's own stage.
-      if (cat === 'e' || cat === 'o') return false;
+      // dropdown currently say — qualified categories' sole gate is the carousel's own stage.
       return reachesStage(app.stageIndexById?.get(id), _stage);
     }
     if (_confIds && fifaMember && !_confIds.has(id)) return false;
-    if (cat === 'e' || cat === 'o') {
-      if (!behavior.showNonQualified) return false;
-      return cat === 'e' ? (fifaMember ? _fltFE.checked : _fltNE.checked) : (fifaMember ? _fltFK.checked : _fltNK.checked);
-    }
     if (behavior.gateByStage && !reachesStage(app.stageIndexById?.get(id), _stage)) return false;
     return _catChecked(cat);
   };

@@ -1240,7 +1240,10 @@ const applySelection = (id, destIds) => {
 // the pipeline fix above shipped, that row could (almost) never have anything left to show or
 // hide: no separate checkbox state is worth persisting for a gap the pipeline itself closes
 // before the frontend ever sees it.
-const _isCountryCategoryVisible = id => _eloRankedIds.has(id) && sidebar.catEloChecked(id, _fifaMemberIds.has(id));
+// bypassNonQualifiedGate: true — a player's birth/plays-for country must still respect its own
+// FE/FK/NE/NK checkbox, but not tab-tournament's blanket "no non-qualified pills here" gate (see
+// catEloChecked's own comment) — that gate is about the Elo pill list, not the roster table.
+const _isCountryCategoryVisible = id => _eloRankedIds.has(id) && sidebar.catEloChecked(id, _fifaMemberIds.has(id), { bypassNonQualifiedGate: true });
 
 // Whether qualified team `id` is currently selected as an ambient-view anchor — the ONE place
 // this narrower question is answered, shared by everything that needs it (the ambient player
