@@ -15,7 +15,7 @@ const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 const _GROUP_LETTERS = [...'ABCDEFGHIJKL'];
 const _FINISHED = new Set(['FT', 'AET', 'PEN']);
 
-export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick, onFixtureClick }) => {
+export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick, onFixtureClick, isFixtureActive }) => {
   let _selected = null; // null = "All"; otherwise a group letter
 
   // Whether a team actually advanced to the Round of 32 — read from the real-world elimination
@@ -73,10 +73,16 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
     const awayLost = f.winner === 'home';
     const dateLabel = fixtureDateLabel(f.date);
     const clickableCls = item => (onCountryClick && item.id != null) ? ' elo-item--clickable' : '';
+    const pairId = `grp-${f.id}`;
     const fixtureClickable = onFixtureClick && home.id != null && away.id != null;
-    const onSepClick = () => { if (fixtureClickable) onFixtureClick(home.id, away.id, `grp-${f.id}`); };
+    const onSepClick = () => { if (fixtureClickable) onFixtureClick(home.id, away.id, pairId); };
+    // Mirrors elo_ranking.js's own .elo-pair--active — this component has no access to that one's
+    // internal #activeFixtureId, so the active state is passed in as a live predicate (a function,
+    // not a snapshot value) rather than duplicating that state here; see isFixtureActive's own
+    // wiring in wc2026_map.js for how it stays in sync as selections change.
+    const active = isFixtureActive?.(pairId);
     return html`
-      <li class="elo-pair${draw ? ' elo-pair--draw' : ''}">
+      <li class="elo-pair${draw ? ' elo-pair--draw' : ''}${active ? ' elo-pair--active' : ''}">
         <span class="elo-item-wrap"><span class="${pillClasses(home)}${homeLost ? ' elo-item--lost' : ''}${clickableCls(home)}" style="${pillStyle(home)}" @click=${_pillClick(home)}>${pillContent(home)}</span></span>
         <span class="elo-pair-sep elo-pair-sep--score${fixtureClickable ? ' elo-pair-sep--clickable' : ''}" @click=${onSepClick}>
           ${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}

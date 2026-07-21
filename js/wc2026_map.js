@@ -727,17 +727,12 @@ const _tabConnector = document.getElementById('tab-connector');
 // the dotted line runs flush into the icon itself, reading as touching/underlining it rather
 // than as a connector floating between the two.
 const TAB_CONNECTOR_GAP = 6;
-// dimState/_activeFixture aren't declared until further down (safe — this is only ever called
-// later, never during this module's own top-to-bottom evaluation; see their own declarations).
-// Once either is active, #tab-players-btn's count no longer comes from the ambient tab-teams/
-// tab-tournament filter this line points at — it's a specific team's (or fixture's) own roster
-// instead (see applySelection/activateFixture's own "1/2 team(s)" label) — so the connector
-// would be actively misleading, not just stale, and is hidden rather than left pointing at a
-// count that's no longer what's shown.
+// Stays visible even while a country/fixture is dim-selected — _activeTab still governs real
+// behavior then too (e.g. tab-tournament's own native+import-only roster rule, see
+// _currentPlayerSet), it's not just an ambient-count source, so the line stays meaningful rather
+// than being hidden as if it had nothing left to point at.
 const _updateTabConnector = () => {
   if (!_tabConnector) return;
-  if (dimState.active || _activeFixture) { _tabConnector.style.display = 'none'; return; }
-  _tabConnector.style.display = '';
   const sourceBtn = document.getElementById(_activeTab === 'tab-tournament' ? 'tab-tournament-btn' : 'tab-teams-btn');
   const targetBtn = document.getElementById('tab-players-btn');
   if (!sourceBtn || !targetBtn) return;
@@ -1115,24 +1110,47 @@ const fmtPop = pop => parseFloat(pop.toFixed(2))
   .toLocaleString(LOCALE, { maximumFractionDigits: 2, minimumFractionDigits: 2, useGrouping: false }) + 'M';
 const popTag  = pop  => pop  ? html`<span class="tt-pop fw-normal text-nowrap">${fmtPop(pop)}</span>` : nothing;
 const capTag  = cap  => { const c = cap?.[_LANG] ?? cap?.en ?? null; return c ? html`<span class="tt-pop fw-normal text-nowrap">${c}</span>` : nothing; };
+// Each panel's *intended* expanded/collapsed state is tracked directly on the element
+// (panel._panelExpanded), not read back off the 'collapsed' CSS class — that class is only
+// added/removed once a transition actually FINISHES (the transitionend handler below), so two
+// calls in the same tick used to race: e.g. clearFixtureSelection's own _updateSelectionPanel()
+// call collapses the panel (starts a transition, class not yet updated), and moments later, still
+// synchronously within the same click, applySelection's own _updateSelectionPanel() call tries to
+// expand it again — the old code's guard (`!classList.contains('collapsed')`) read "not collapsed
+// yet" (still mid-transition) and wrongly no-op'd, leaving the pending collapse to finish
+// unopposed. Concrete symptom: click a fixture (panel shows), then immediately click a single
+// team — the panel should still show, now for that team, but instead went blank. Tracking intent
+// directly (and cancelling whichever opposite-direction transitionend handler is still pending)
+// makes the LAST call in a tick always win, regardless of what's mid-animation.
 const _expandPanel = panel => {
-  if (!panel || !panel.classList.contains('collapsed')) return;
+  if (!panel) return;
+  if (panel._collapseHandler) { panel.removeEventListener('transitionend', panel._collapseHandler); panel._collapseHandler = null; }
+  if (panel._panelExpanded) return;
+  panel._panelExpanded = true;
   panel.classList.remove('collapsed');
-  panel.style.maxHeight = '0';
+  panel.style.maxHeight = panel.style.maxHeight || '0';
   panel.getBoundingClientRect();
   panel.style.maxHeight = panel.scrollHeight + 'px';
-  panel.addEventListener('transitionend', () => { panel.style.maxHeight = ''; }, { once: true });
+  const handler = () => { panel.style.maxHeight = ''; panel._expandHandler = null; };
+  panel._expandHandler = handler;
+  panel.addEventListener('transitionend', handler, { once: true });
 };
 const _collapsePanel = (panel, onDone) => {
-  if (!panel || panel.classList.contains('collapsed')) return;
-  panel.style.maxHeight = panel.scrollHeight + 'px';
+  if (!panel) return;
+  if (panel._expandHandler) { panel.removeEventListener('transitionend', panel._expandHandler); panel._expandHandler = null; }
+  if (panel._panelExpanded === false) return;
+  panel._panelExpanded = false;
+  panel.style.maxHeight = panel.style.maxHeight || panel.scrollHeight + 'px';
   panel.getBoundingClientRect();
   panel.style.maxHeight = '0';
-  panel.addEventListener('transitionend', () => {
+  const handler = () => {
     panel.style.maxHeight = '';
     panel.classList.add('collapsed');
+    panel._collapseHandler = null;
     if (onDone) onDone();
-  }, { once: true });
+  };
+  panel._collapseHandler = handler;
+  panel.addEventListener('transitionend', handler, { once: true });
 };
 
 const _selectionPanelEl = FOOTER_PANELS.selection ? document.getElementById('selection-panel') : null;
@@ -1163,15 +1181,15 @@ const _updateSelectionPanel = (onCollapsed) => {
     _collapsePanel(_selectionPanelEl, () => { render(nothing, _selectionPanelEl); if (onCollapsed) onCollapsed(); });
     return;
   }
-  // Per-country [name, capital, population] triple, '·'-joined within a country same as the
-  // single-team case; the two countries' own groups are joined with '⇄' instead — '·' is
-  // already spoken for inside a group, so a fixture needs a visually distinct separator between
-  // them. The LEFT group's own triple is mirrored (population · capital · name) so the whole row
-  // reads symmetrically around the '⇄' — population next to population, name next to name on
-  // either side of it — rather than the same left-to-right order repeated twice. includePop lets
-  // the overflow check below re-render without it — population is the least essential field, so
-  // it's the first thing dropped once the row doesn't fit on its one allowed line, rather than
-  // jumping straight to an ellipsis that might cut off a country's own name instead.
+  // Per-country [name, capital, population] triple, '·'-joined within a country. A single-team
+  // selection (ids.length === 1) reads name · capital · population, same as always. A fixture
+  // (2 countries) instead joins the two groups with '⇄', and mirrors the LEFT group's own triple
+  // (population · capital · name) so the whole row reads symmetrically around the '⇄' —
+  // population next to population, name next to name on either side of it — rather than the same
+  // left-to-right order repeated twice. includePop lets the overflow check below re-render
+  // without it — population is the least essential field, so it's the first thing dropped once
+  // the row doesn't fit on its one allowed line, rather than jumping straight to an ellipsis that
+  // might cut off a country's own name instead.
   const buildRow = includePop => {
     const groups = ids.map((id, i) => {
       const fc = iso2ForId(id);
@@ -1184,7 +1202,7 @@ const _updateSelectionPanel = (onCollapsed) => {
         capText && html`<span>${capText}</span>`,
         pop && html`<span>${fmtPop(pop)}</span>`,
       ].filter(Boolean);
-      if (i === 0) items.reverse();
+      if (i === 0 && ids.length > 1) items.reverse(); // mirrored left group — fixtures (2 countries) only, not a single-team selection
       return join(items, () => html`<span class="sp-sep">·</span>`);
     });
     return html`<div class="selection-panel-row py-1 sub" style="background-color: var(--page-bg);">
@@ -1286,11 +1304,17 @@ const applySelection = (id, destIds) => {
   }
 
   // Player table — same flat table the ambient (unfocused) view uses, just narrowed to this
-  // one team (see _playersTableTemplate's own comment on the focusIds set it takes).
+  // one team (see _playersTableTemplate's own comment on the focusIds set it takes). This render
+  // happens regardless of which #bottomTabList tab is active (the table is kept live in the
+  // background even while hidden — see _refreshPlayersView's own comment), so the scroll-to-top
+  // below must NOT run unconditionally alongside it: a country/fixture click from tab-teams or
+  // tab-tournament never means "look at #tab-players", it means "dim-select this team", and
+  // jumping the whole page to top on every such click was the actual bug being fixed here — only
+  // scroll when #tab-players is the tab the user is actually looking at.
   const ptEl = document.getElementById('tab-players');
   if (ptEl) {
     render(_playersTableTemplate(new Set([id])), ptEl);
-    window.scrollTo({ top: 0 });
+    if (_playersTabActive) window.scrollTo({ top: 0 });
   }
 
   // Tab button label + close — a generic "1 team" count via _tabPlayersLabel, same icon and
@@ -1687,6 +1711,7 @@ const clearFixtureSelection = () => {
   if (!_activeFixture) return;
   _activeFixture = null;
   _eloMain.updateFixture(null);
+  _groupStage?.render(); // re-checks isFixtureActive for every group-stage result row — see its own comment
   _showingAllPlayers = true;
   const _ptEl = document.getElementById('tab-players');
   if (_ptEl) render(_playersTableTemplate(), _ptEl);
@@ -1702,11 +1727,15 @@ const activateFixture = (idA, idB, pairId) => {
   _activeFixture = { pairId, idA, idB };
   _showingAllPlayers = false;
   _eloMain.updateFixture(pairId);
+  _groupStage?.render(); // re-checks isFixtureActive for every group-stage result row — see its own comment
 
+  // See applySelection's own comment on why this scroll is gated on _playersTabActive — a
+  // fixture click from tab-tournament's own pill list or the group-stage results doesn't mean
+  // "look at #tab-players", only an actual click while already on that tab does.
   const ptEl = document.getElementById('tab-players');
   if (ptEl) {
     render(_playersTableTemplate(new Set([idA, idB])), ptEl);
-    window.scrollTo({ top: 0 });
+    if (_playersTabActive) window.scrollTo({ top: 0 });
   }
 
   // Same generic count pattern as applySelection's own "1 team" pill (see its comment) — "2
@@ -2439,6 +2468,10 @@ Promise.all([
     // it was only ever missing this wiring (group_stage.js's _resultRow reused the same pill/
     // separator markup from the start, but had no click handler on the separator until now).
     onFixtureClick: activateFixture,
+    // Live predicate, not a snapshot — _activeFixture can change (or clear) without
+    // initGroupStage's own render() being the thing that ran, so this always reads the current
+    // value at render time rather than whatever it was when initGroupStage was first called.
+    isFixtureActive: pairId => _activeFixture?.pairId === pairId,
     // "Show only this group's 4 teams" on the map — layered on top of the sidebar's own
     // category filter via callbacks.afterFlagFilter (see control_sidebar.js/applyFlagFilter),
     // not folded into it, since the sidebar has no reason to know this concern exists.
