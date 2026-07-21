@@ -896,31 +896,29 @@ const CITY_DOT_COLOR = '#7c3aed';
 // _buildCityRecords (the map's birth-city dots) so the two — and any future consumer — can
 // never silently disagree on which players are currently "shown".
 //
-// 1. The country filter (category matrix + confederation + stage — control_sidebar.js's own
-//    "true" filter, on the *set of countries* shown at all) applies to BOTH columns of a row,
-//    independently, not just to whichever team anchored it into the set in the first place:
-//    a player only shows if their birth country's own category currently passes
-//    _isCountryCategoryVisible AND their plays-for country's own category does too. Before this,
-//    the filter only ever gated the anchor side (_focusedPlayers/_visiblePlayerEntries already
-//    only pull from currently-selected teams) — an export to a category the user has hidden, or
-//    an import from one, still showed regardless, since nothing checked the *other* side of the
-//    row against the same filter that decides whether that same country's own Elo pill shows.
-//    Deliberately _isCountryCategoryVisible, NOT _isTeamVisible (below) — the group-stage
-//    single-group override is about which teams anchor the ambient roster, not about whether a
-//    row's own born-in/plays-for country passes the category filter; reusing _isTeamVisible here
-//    would wrongly hide a focused group's own exports/imports just for landing outside the group.
+// Which countries anchor the set at all (_visiblePlayerEntries' _visibleQualifiedIds, or the
+// caller's own focusIds for a dim-selected team/fixture) is the ONLY country-level filter here —
+// once a player is pulled in via _focusedPlayers, nothing re-checks their birth/plays-for
+// country's own category or carousel-stage visibility a second time. There is exactly one
+// remaining difference between tab-teams and tab-tournament's player table, both applied below:
+// 1. tab-tournament cares about fixtures, not full rosters — a player whose only role is 'export'
+//    (born in a set country, but playing for some OTHER, non-set country) is out of scope there;
+//    tab-teams keeps them (every kind of player: native, import, export). This is intentionally
+//    NOT the same thing as re-filtering by category/stage (removed — see history if curious):
+//    it only ever hides the export role, and only in tab-tournament.
+//    "Import wins over export exclusion": if that other country happens to ALSO be in the focus
+//    set, _focusedPlayers already tags the same player 'import' too (relative to their actual
+//    team), so this filter still lets the row through — just as that team's own import, not as
+//    the birth country's export.
 // 2. The export/native/import filter (`control_sidebar.js`'s `csb-native-table`) — inclusive-OR
-//    over a player's own _roles, so a player holding more than one role (see _focusedPlayers'
-//    own comment) stays visible as long as any one of them is checked.
+//    over a player's own _roles, so a player holding more than one role stays visible as long as
+//    any one of them is checked.
 // 3. The player/coach filter (same table's 2nd column) — a separate AND, not folded into the
 //    _roles OR-filter above: a coach still carries its own export/native/import role, so this
 //    has to further narrow that result by the person's own type, not join it.
 const _currentPlayerSet = focusIds =>
   (focusIds ? _focusedPlayers(focusIds) : _visiblePlayerEntries())
-    .filter(p => {
-      const playsForId = QUALIFIED_BY_NAME[p.nation];
-      return _isCountryCategoryVisible(p.birthCountryId) && (playsForId == null || _isCountryCategoryVisible(playsForId));
-    })
+    .filter(p => _activeTab !== 'tab-tournament' || p._roles.some(r => r !== 'export'))
     .filter(p => p._roles.some(r => sidebar.playersFilterChecked(r)))
     .filter(p => sidebar.playerKindChecked(p.role === 'coach' ? 'coach' : 'player'));
 
@@ -1219,15 +1217,13 @@ const applySelection = (id, destIds) => {
 
 // ── Players table (#tab-players' one and only content — see _playersTableTemplate) ────────────
 
-// Whether ANY country `id` — qualified or not, plays-for or born-in, an ambient anchor or just
-// one side of some other team's export/import row — currently passes the sidebar's own country
-// filter (category matrix + confederation + stage, all folded into sidebar.catEloChecked, the
-// exact same predicate sortAndFilter uses to build the Elo pill list #elo-meta-count counts).
-// Works for a non-qualified id too (fifaMember lookup + flagCat's own 'e'/'o' branch handle
-// that already) — this is the general-purpose version _isTeamVisible (below) builds on, NOT
-// the group-stage single-group override: that's specifically about which teams anchor the
-// ambient roster, unrelated to whether a given born-in/plays-for cell's own country passes the
-// filter (see _currentPlayerSet's own comment on why the two questions must stay separate).
+// Whether qualified team `id` currently passes the sidebar's own country filter (category
+// matrix + confederation + stage — all folded into sidebar.catEloChecked, the exact same
+// predicate sortAndFilter uses to build the Elo pill list #elo-meta-count counts). Only ever
+// asked of a qualified id — _isTeamVisible (below) is the sole caller, deciding which teams
+// anchor the ambient player-table roster; it is NOT reused to re-filter individual player rows
+// once pulled in (see _currentPlayerSet's own comment — a player's birth/plays-for country is
+// never re-checked against this a second time).
 //
 // _eloRankedIds.has(id) guards a case catEloChecked itself was never designed to answer: a
 // player's birth country doesn't have to be rated by eloratings.net at all (the Isle of Man is
@@ -1240,10 +1236,7 @@ const applySelection = (id, destIds) => {
 // the pipeline fix above shipped, that row could (almost) never have anything left to show or
 // hide: no separate checkbox state is worth persisting for a gap the pipeline itself closes
 // before the frontend ever sees it.
-// bypassNonQualifiedGate: true — a player's birth/plays-for country must still respect its own
-// FE/FK/NE/NK checkbox, but not tab-tournament's blanket "no non-qualified pills here" gate (see
-// catEloChecked's own comment) — that gate is about the Elo pill list, not the roster table.
-const _isCountryCategoryVisible = id => _eloRankedIds.has(id) && sidebar.catEloChecked(id, _fifaMemberIds.has(id), { bypassNonQualifiedGate: true });
+const _isCountryCategoryVisible = id => _eloRankedIds.has(id) && sidebar.catEloChecked(id, _fifaMemberIds.has(id));
 
 // Whether qualified team `id` is currently selected as an ambient-view anchor — the ONE place
 // this narrower question is answered, shared by everything that needs it (the ambient player
@@ -1341,15 +1334,16 @@ const _allPlayersRow = p => {
 // Congo; see CLAUDE.md's app.importByCountry section).
 //
 // _roles (used by #tab-players' own export/native/import filter — see control_sidebar.js's
-// csb-native-table) tags which bucket a player came from, relative to the WHOLE focus set, not
-// just one id at a time: export (born in a focus-set country, plays for any other country —
-// including another focus-set one), native (born in and plays for the same focus-set country),
-// import (born OUTSIDE the whole focus set, plays for a focus-set country). The import mapping
-// below deliberately excludes anyone whose birth country is ALSO in focusIds — they're already
-// counted as that country's own export just above, and without this exclusion a player born in
-// visible team A now playing for visible team B would double-count as both A's export and B's
-// import. This makes the 3 buckets a clean partition (never more than one role per player), so
-// the dedupe below is a defensive safety net rather than an expected merge.
+// csb-native-table, and by tab-tournament's own export-hiding rule — see _currentPlayerSet)
+// tags which bucket a player came from, relative to the WHOLE focus set, not just one id at a
+// time: export (born in a focus-set country, plays for any other country), native (born in and
+// plays for the same focus-set country), import (born outside the focus-set country they play
+// for, even if their birth country is ALSO in the focus set — a player born in visible team A
+// now playing for visible team B is tagged BOTH A's export and B's import; the dedupe below
+// merges these into that one player's single row with both roles, rather than picking a side).
+// Deliberate: this is what lets tab-tournament's "hide pure exports" rule (_currentPlayerSet)
+// keep such a player visible under B once B is in view, instead of the row just vanishing
+// because its export role alone is suppressed — "import wins" over "export hidden".
 const _focusedPlayers = focusIds => {
   const byKey = new Map();
   focusIds.forEach(id => {
@@ -1357,7 +1351,7 @@ const _focusedPlayers = focusIds => {
     const tagged = [
       ...(app.byId[id]?.players ?? []).map(p => ({ ...p, birthCountryId: id, birthCountry: country, _roles: ['export'] })),
       ...(app.nativeByCountry[id] ?? []).map(p => ({ ...p, nation: country, birthCountryId: id, birthCountry: country, _roles: ['native'] })),
-      ...(app.importByCountry[id] ?? []).filter(p => !focusIds.has(p.birthCountryId)).map(p => ({ ...p, nation: country, _roles: ['import'] })),
+      ...(app.importByCountry[id] ?? []).map(p => ({ ...p, nation: country, _roles: ['import'] })),
     ];
     tagged.forEach(p => {
       const key = p.pid ?? `${p.name}-${p.nation}-${p.birthCountryId}`;
