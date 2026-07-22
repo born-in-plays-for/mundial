@@ -3,19 +3,16 @@ import { CAROUSEL_STAGES, reachesStage } from './qualified.js';
 let _carouselCount = 0; // see createStageCarousel's carouselId
 
 // Builds the tournament-stage carousel widget (prev/next controls, indicator dots, one
-// captioned slide per CAROUSEL_STAGES entry) — shared by <elo-ranking> (js/elo_ranking.js),
-// players_sidebar.js, and (with leadingLabel) insights/discipline.html, so callers never end up
-// as independent implementations of the same widget that could drift apart. Reports navigation
-// via a 'stage-change' event on the returned element (when the carousel actually moves) rather
-// than owning any tournament state itself — callers own the current stage index and the
-// furthest-reachable-stage computation (see maxReachableStage below).
+// captioned slide per CAROUSEL_STAGES entry) — used by <elo-ranking> (js/elo_ranking.js).
+// Reports navigation via a 'stage-change' event on the returned element (when the carousel
+// actually moves) rather than owning any tournament state itself — the caller owns the current
+// stage index and the furthest-reachable-stage computation (see maxReachableStage below).
 //
 // `leadingLabel`, when given, prepends one extra slide/indicator ahead of CAROUSEL_STAGES[0] —
-// e.g. discipline.html's "whole competition" aggregate view, which isn't a real tournament
-// stage. It's DOM position 0 (default-active) but reported as stage index -1 in 'stage-change'
-// and the `stage` setter, so every existing caller (which never passes this option) sees
-// identical DOM-index/stage-index numbering to before — only discipline.html's own
-// _domToStage/_stageToDom offset ever kicks in.
+// tab-tournament's "Whole competition" aggregate view (js/fixture_list.js), which isn't a real
+// tournament stage. It's DOM position 0 (default-active) but reported as stage index -1 in
+// 'stage-change' and the `stage` setter, so a caller that never passes this option sees identical
+// DOM-index/stage-index numbering to before — only the leading-slide offset math ever kicks in.
 export function createStageCarousel(T, { leadingLabel } = {}) {
   const hasLeading = leadingLabel != null;
   // DOM child index (0-based over .carousel-item, what Bootstrap's slide.bs.carousel e.to and
@@ -125,9 +122,8 @@ export function createStageCarousel(T, { leadingLabel } = {}) {
 // The tournament hasn't reached every stage yet — the furthest stage index that currently has
 // at least one qualified team in it (counts are monotonically non-increasing by stage, so the
 // first empty one marks the boundary; everything past it stays locked until it fills). Pure:
-// takes whichever ids/lookup a caller already has (control_sidebar.js's QUALIFIED_NAMES keys +
-// app.stageIndexById; players_sidebar.js has the same shape from buildEloItems) rather than
-// computing either itself.
+// takes whichever ids/lookup the caller already has (control_sidebar.js's QUALIFIED_NAMES keys +
+// app.stageIndexById) rather than computing either itself.
 export const maxReachableStage = (qualifiedIds, stageIndexById) => {
   let max = 0;
   for (let p = 0; p < CAROUSEL_STAGES.length; p++) {

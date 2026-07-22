@@ -293,9 +293,8 @@ const _fifaMemberIds = new Set();
 const _eloRankedIds = new Set();
 // Shared between tab-teams (default) and tab-tournament — see _switchTab below, which
 // reparents this same .elo-layout wrapper between the two panes instead of duplicating it.
-// `all-stages` opts this one instance into the carousel's leading "Whole competition" slide
-// (js/elo_ranking.js's connectedCallback) — wc2026_countries.html/control-sidebar-test.html's
-// own static <elo-ranking> tags don't carry it, so only tab-tournament gets it.
+// `all-stages` opts this instance into the carousel's leading "Whole competition" slide
+// (js/elo_ranking.js's connectedCallback).
 render(html`<div class="elo-layout"><elo-ranking class="elo-main" all-stages></elo-ranking></div>`, document.getElementById('tab-teams'));
 const _eloLayoutEl = document.querySelector('.elo-layout');
 const _eloMain = document.querySelector('.elo-main');
@@ -1116,11 +1115,9 @@ const _updatePlayerCityDots = () => {
 };
 
 // The "production intensity" KDE raster that used to live here (the Intensity half of a
-// Bubbles/Intensity toggle) moved to its own standalone page, insights/heat-map.html — it was
-// dead code on this page for a while (the toggle UI shipped hidden, display:none, never
-// reachable), and had nothing left in common with the birth-city dots once tab-players stopped
-// being a togglable pair of alternate views and became just "birth-city dots, always". The
-// engine itself (js/kde_layer.js) is unchanged and still what that page imports.
+// Bubbles/Intensity toggle) moved to its own standalone page (insights/heat-map.html, since
+// removed along with its js/kde_layer.js engine) once tab-players stopped being a togglable pair
+// of alternate views and became just "birth-city dots, always".
 const _updateAllPlayersMapLayer = () => {
   _updatePlayerCityDots();
 };
@@ -1560,10 +1557,10 @@ const _focusedPlayers = focusIds => {
 };
 
 // #tab-players' own column-header sort state. name/caps sort on simple direct fields; bornIn/
-// playsFor sort by the *team's* current standing — same teamComparators (control_sidebar.js's
-// sidebar.sortFns, keyed by sidebar.sortOrder[0], the sort table's own active leading criterion)
-// players_sidebar.js's "sort by team" mode already uses, reused here rather than a second,
-// alpha-only copy of that logic. _ptFocusIds mirrors whatever `focusIds` produced the table
+// playsFor sort by the *team's* current standing — the same teamComparators control_sidebar.js's
+// sidebar.sortFns exposes (keyed by sidebar.sortOrder[0], the sort table's own active leading
+// criterion), reused here rather than a second, alpha-only copy of that logic. _ptFocusIds
+// mirrors whatever `focusIds` produced the table
 // currently on screen (set as a side effect every time _playersTableTemplate runs) so a header
 // click re-renders the same view — ambient, one dim-selected team, or a fixture's two teams —
 // instead of always falling back to the ambient one.
@@ -1582,8 +1579,9 @@ const _ptBirthCity = p => {
 
 // A birth country can be genuinely absent from the Elo rankings entirely (e.g. the Isle of Man —
 // not a FIFA member); _eloItemsById.get(id) then returns undefined. Unknown-vs-known is a real,
-// orderable fact — unknown always sorts last, regardless of column direction — same guard
-// players_sidebar.js's own _cmpMaybe uses, for the same Array#sort-consistency reason.
+// orderable fact — unknown always sorts last, regardless of column direction, for
+// Array#sort-consistency (a comparator must be a total order — flipping direction can't be
+// allowed to also flip where missing data lands).
 const _ptTeamCmp = (idA, idB) => {
   const x = idA != null ? _eloItemsById.get(idA) : null;
   const y = idB != null ? _eloItemsById.get(idB) : null;
@@ -1622,8 +1620,6 @@ const _ptSetSort = key => {
 _sidebarCallbacks.getPlayersSortDir = () => _ptSortDir;
 _sidebarCallbacks.togglePlayersSortDir = () => _ptSetSort(_ptSortKey);
 
-// ▾/▴ — same glyphs as wc2026_players.html's own _sortArrow, for a consistent look between the
-// map's ambient table and the standalone players page.
 const _ptSortArrow = () => _ptSortDir === 'asc' ? ' ▾' : ' ▴';
 const _ptTh = (key, label, extraClass = '') => html`<th
     class="pt-th${extraClass ? ' ' + extraClass : ''}${_ptSortKey === key ? ' pt-th-active' : ''}"
@@ -2637,9 +2633,8 @@ Promise.all([
 // map-container.js's wireLegend() (shared with the chain page). legend.refresh() is
 // called at the end of buildIndices() (below, once app.byId is populated). The
 // map's own theme repaint (not the legend widget) stays a separate onThemeChange
-// listener here. (The KDE-intensity legend swap that used to live here moved to
-// insights/heat-map.html along with the rest of that layer — see
-// _updateAllPlayersMapLayer's own comment.)
+// listener here. (The KDE-intensity legend swap that used to live here moved out along with the
+// rest of that layer — see _updateAllPlayersMapLayer's own comment.)
 const legend = wireLegend({ getById: () => app.byId });
 onThemeChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });

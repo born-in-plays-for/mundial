@@ -201,8 +201,7 @@ export const buildEloItems = ({ rankings, byId, importByCountry, nativeByCountry
 
 // Per-country comparators, keyed the same as the reorderable sort criteria — pure functions of
 // the two items' own fields (.rank/.pop/.expCount/.impCount/.name), i.e. exactly buildEloItems'
-// own output shape above. Shared by control_sidebar.js's country sort and players_sidebar.js's
-// "sort by team" mode, so the two can't silently drift apart on what e.g. "delta" means.
+// own output shape above. Used by control_sidebar.js's country sort.
 export const teamComparators = {
   elo:   (a, b) => (a.rank ?? 99999) - (b.rank ?? 99999),
   exp:   (a, b) => b.expCount - a.expCount,
@@ -272,11 +271,10 @@ export const buildBracketState = (statusByIso2, all48Iso2) => {
 // `thirdPlace` field instead — see buildEloItems' playsThirdPlace and this repo's CLAUDE.md).
 // This function still folds that fixture into the 'Final' carousel/index slot rather than
 // giving it a bracket slot of its own, purely for match-pairing display purposes. Exported so
-// any other consumer resolving a raw round string into a carousel-slot index (e.g.
-// insights/discipline.html, which mirrors this file's `final` slide but reads discipline.json's
-// own byStage/stage keys rather than going through buildEloItems) can stay in sync with this
-// alias without duplicating it. Applied defensively everywhere a round string is resolved to an
-// ELIM_ROUNDS index in this function, not just where it's currently known to matter.
+// any other consumer resolving a raw round string into a carousel-slot index can stay in sync
+// with this alias without duplicating it. Applied defensively everywhere a round string is
+// resolved to an ELIM_ROUNDS index in this function, not just where it's currently known to
+// matter.
 const _ROUND_ALIASES = { '3rd Place Final': 'Final' };
 export const carouselRoundIndex = round => ELIM_ROUNDS.indexOf(_ROUND_ALIASES[round] ?? round);
 const _roundIndex = carouselRoundIndex;

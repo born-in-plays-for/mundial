@@ -68,9 +68,7 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
     .map(t => eloItemsByIso2.get(t.iso2)?.id)
     .filter(id => id != null);
 
-  // 'groupStage' — its own localStorage slice (js/persist.js), private to this module: the
-  // selected-group choice has no equivalent on any other page, unlike control_sidebar.js's
-  // 'shared'/'countries' slices which round-trip with players_sidebar.js.
+  // 'groupStage' — its own localStorage slice (js/persist.js), private to this module.
   const _select = letter => {
     _selected = letter;
     _render();

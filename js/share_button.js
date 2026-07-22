@@ -1,9 +1,8 @@
 import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 
 // Wires a Share icon button: copies buildUrl() to the clipboard, shows a small Bootstrap toast
-// confirming success/failure. Byte-for-byte identical UI on control_sidebar.js's #csb-share and
-// players_sidebar.js's #psb-share — only what URL gets built differs per page, so that's the one
-// thing left to the caller.
+// confirming success/failure. Used by control_sidebar.js's #csb-share — only what URL gets built
+// is left to the caller.
 export function wireShareButton(btnEl, { T, buildUrl }) {
   let _toastEl = null;
   const _showToast = msg => {

@@ -109,14 +109,13 @@ class MundialAuthBar extends HTMLElement {
   connectedCallback() {
     const page = location.pathname.split('/').pop() || 'index.html';
     // 'map' (the User's Guide, off the home icon) is the only real, page-tied guide topic —
-    // the API Guide (the app's URL query parameter API, off the Players icon, since
-    // wc2026_countries.html is no longer linked from the UI; see guide/guide-api.md's own
-    // header comment) and Data Sources are both tabs *within* 'map' now (see
-    // js/guide-mode.js's _TAB_CONFIG), not independent topics of their own — reached via
+    // the API Guide (the app's URL query parameter API, off the Players icon; see
+    // guide/guide-api.md's own header comment) and Data Sources are both tabs *within* 'map' now
+    // (see js/guide-mode.js's _TAB_CONFIG), not independent topics of their own — reached via
     // _guideTabMap, below, rather than their own _guideIdMap entry. Any page with no entry
     // here falls back to 'default' (a single shared "nothing here yet" placeholder) rather
-    // than disabling the guide button — covers wc2026_countries.html, wc2026_live.html,
-    // insights/*.html, and anything added later without needing its own explicit mapping.
+    // than disabling the guide button — covers wc2026_live.html, chains/wc2026_chain_longest.html,
+    // and anything added later without needing its own explicit mapping.
     // 'auth' (offline/no-server-connection help) is separate — it's reachable via the profile
     // icon on any page, not tied to a page at all.
     const _guideIdMap = {
