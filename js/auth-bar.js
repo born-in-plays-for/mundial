@@ -5,15 +5,7 @@ import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/u
 const _icon = (paths) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${paths}</svg>`;
 const ICON_HOME = _icon(`<path d="M22 22L2 22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M2 11L10.1259 4.49931C11.2216 3.62279 12.7784 3.62279 13.8741 4.49931L22 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M15.5 5.5V3.5C15.5 3.22386 15.7239 3 16 3H18.5C18.7761 3 19 3.22386 19 3.5V8.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M4 22V9.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M20 22V9.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M15 22V17C15 15.5858 15 14.8787 14.5607 14.4393C14.1213 14 13.4142 14 12 14C10.5858 14 9.87868 14 9.43934 14.4393C9 14.8787 9 15.5858 9 17V22" stroke="#1C274C" stroke-width="1.5"/><path d="M14 9.5C14 10.6046 13.1046 11.5 12 11.5C10.8954 11.5 10 10.6046 10 9.5C10 8.39543 10.8954 7.5 12 7.5C13.1046 7.5 14 8.39543 14 9.5Z" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_LIVE = _icon(`<path d="M2 14C2 10.2288 2 8.34315 3.17157 7.17157C4.34315 6 6.22876 6 10 6H14C17.7712 6 19.6569 6 20.8284 7.17157C22 8.34315 22 10.2288 22 14C22 17.7712 22 19.6569 20.8284 20.8284C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.8284C2 19.6569 2 17.7712 2 14Z" stroke="#1C274C" stroke-width="1.5"/><circle cx="8" cy="14" r="3" stroke="#1C274C" stroke-width="1.5"/><path d="M13.5 11H19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M13.5 14H19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M13.5 17H19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 6L15 2" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>`);
-const ICON_FRANCE = `<svg style="width:24px;height:24px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke="#1C274C" stroke-width="24" stroke-linejoin="round" d="M283.4 19.83c-3.2 0-31.2 5.09-31.2 5.09-1.3 41.61-30.4 78.48-90.3 84.88l-12.8-23.07-25.1 2.48 11.3 60.09-113.79-4.9 12.2 41.5C156.3 225.4 150.7 338.4 124 439.4c47 53 141.8 47.8 186 43.1 3.1-62.2 52.4-64.5 135.9-32.2 11.3-17.6 18.8-36 44.6-50.7l-46.6-139.5-27.5 6.2c11-21.1 32.2-49.9 50.4-63.4l15.6-86.9c-88.6-6.3-146.4-46.36-199-96.17z"/></svg>`;
-const ICON_RANKINGS = _icon(`<path d="M16 22V13C16 11.5858 16 10.8787 15.5607 10.4393C15.1213 10 14.4142 10 13 10H11C9.58579 10 8.87868 10 8.43934 10.4393C8 10.8787 8 11.5858 8 13V22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M8 22C8 20.5858 8 19.8787 7.56066 19.4393C7.12132 19 6.41421 19 5 19C3.58579 19 2.87868 19 2.43934 19.4393C2 19.8787 2 20.5858 2 22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M22 22V19C22 17.5858 22 16.8787 21.5607 16.4393C21.1213 16 20.4142 16 16.4393 16.4393C16 16.8787 16 17.5858 16 19V22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M11.1459 3.02251C11.5259 2.34084 11.7159 2 12 2C12.2841 2 12.4741 2.34084 12.8541 3.02251L12.9524 3.19887C13.0603 3.39258 13.1143 3.48944 13.1985 3.55334C13.2827 3.61725 13.3875 3.64097 13.5972 3.68841L13.7881 3.73161C14.526 3.89857 14.895 3.98205 14.9828 4.26432C15.0706 4.54659 14.819 4.84072 14.316 5.42898L14.1858 5.58117C14.0429 5.74833 13.9714 5.83191 13.9392 5.93531C13.9071 6.03872 13.9179 6.15023 13.9395 6.37327L13.9592 6.57632C14.0352 7.36118 14.0733 7.75361 13.8435 7.92807C13.6136 8.10252 13.2682 7.94346 12.5773 7.62535L12.3986 7.54305C12.2022 7.45265 12.1041 7.40745 12 7.40745C11.8959 7.40745 11.7978 7.45265 11.6014 7.54305L11.4227 7.62535C10.7318 7.94346 10.3864 8.10252 10.1565 7.92807C9.92674 7.75361 9.96476 7.36118 10.0408 6.57632L10.0605 6.37327C10.0821 6.15023 10.0929 6.03872 10.0608 5.93531C10.0286 5.83191 9.95713 5.74833 9.81418 5.58117L9.68403 5.42898C9.18097 4.84072 8.92945 4.54659 9.01723 4.26432C9.10501 3.98205 9.47396 3.89857 10.2119 3.73161L10.4028 3.68841C10.6125 3.64097 10.7173 3.61725 10.8015 3.55334C10.8857 3.48944 10.9397 3.39258 11.0476 3.19887L11.1459 3.02251Z" stroke="#1C274C" stroke-width="1.5"/>`);
-const ICON_PLAYERS = _icon(`<circle cx="12" cy="9" r="3" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="12" r="10" stroke="#1C274C" stroke-width="1.5"/><path d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>`);
-const ICON_COUNTRIES = _icon(`<path d="M5 22V14M5 14V4M5 14L7.47067 13.5059C9.1212 13.1758 10.8321 13.3328 12.3949 13.958C14.0885 14.6354 15.9524 14.7619 17.722 14.3195L17.9364 14.2659C18.5615 14.1096 19 13.548 19 12.9037V5.53669C19 4.75613 18.2665 4.18339 17.5092 4.3727C15.878 4.78051 14.1597 4.66389 12.5986 4.03943L12.3949 3.95797C10.8321 3.33284 9.1212 3.17576 7.47067 3.50587L5 4M5 4V2" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>`);
 const ICON_GUIDE = _icon(`<circle cx="12" cy="12" r="10" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="#1C274C" stroke-width="1.5"/><path d="M15 9L19 5" stroke="#1C274C" stroke-width="1.5"/><path d="M5 19L9 15" stroke="#1C274C" stroke-width="1.5"/><path d="M9 9L5 5" stroke="#1C274C" stroke-width="1.5"/><path d="M19 19L15 15" stroke="#1C274C" stroke-width="1.5"/>`);
-const ICON_STATUS = _icon(`<path d="M4 4H20L14 12V19L10 21V12L4 4Z" stroke="#1C274C" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`);
-const ICON_HEATMAP = _icon(`<path d="M12 2C12 2 6 8 6 14C6 17.3137 8.68629 20 12 20C15.3137 20 18 17.3137 18 14C18 12 17 10 17 10C17 10 16 12 14 12C14 12 15 8 12 2Z" stroke="#1C274C" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`);
-const ICON_CARD = _icon(`<rect x="6" y="3" width="12" height="18" rx="2" stroke="#1C274C" stroke-width="1.5"/>`);
-const ICON_TAXONOMY = _icon(`<circle cx="9" cy="9" r="6" stroke="#1C274C" stroke-width="1.5"/><circle cx="15" cy="9" r="6" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="15" r="6" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_CHAIN = `<svg class="chain-icon" width="24" height="24" viewBox="62 49 388 414" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="131,118 381,118 381,256 256,256" stroke="red" />
@@ -145,7 +137,6 @@ class MundialAuthBar extends HTMLElement {
         style="position:fixed;top:0;left:0;right:0;z-index:1050;height:32px">
         <div class="container-xxl d-flex align-items-center gap-4 px-1">
           ${_navLink('/', _t.navMap, ICON_HOME, '', 'map')}
-          ${_navLink('/wc2026_countries.html', _t.navCountries, ICON_RANKINGS, '', '', true)}
           ${_navLink('/wc2026_live.html', _t.navLive, ICON_LIVE)}
           <div class="dropdown">
             <a href="#" class="nav-link dropdown-toggle d-flex align-items-center lh-1 p-0"
@@ -156,16 +147,6 @@ class MundialAuthBar extends HTMLElement {
               <img src="/images/puzzle-piece-svgrepo-com.svg" width="24" height="24" alt="">
             </a>
             <ul class="dropdown-menu dropdown-menu-start" style="min-width:0">
-              <!-- Superseded by #tab-players-btn (wc2026_map.html's bottom panel) as the map's
-                   own all-players view — kept reachable here rather than dropped outright, since
-                   wc2026_players.html is still a real, independent standalone page. -->
-              ${_dropdownItem('/wc2026_countries.html', _t.navCountries, ICON_COUNTRIES, 'map', 'api')}
-              ${_dropdownItem('/wc2026_players.html', _t.navPlayers, ICON_PLAYERS, 'map', 'api')}
-              ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD)}
-              ${_dropdownItem('/insights/france.html', _t.navFrance, ICON_FRANCE)}
-              ${_dropdownItem('/insights/status.html', _t.navStatus, ICON_STATUS)}
-              ${_dropdownItem('/insights/heat-map.html', _t.navHeatmap, ICON_HEATMAP)}
-              ${_dropdownItem('/insights/taxonomy.html', _t.navTaxonomy, ICON_TAXONOMY)}
               ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
@@ -188,13 +169,6 @@ class MundialAuthBar extends HTMLElement {
 
     const navLinks = {
       '/': ['index.html', 'wc2026_map.html', ''],
-      '/wc2026_countries.html': ['wc2026_countries.html'],
-      '/wc2026_players.html': ['wc2026_players.html'],
-      '/insights/france.html': ['france.html'],
-      '/insights/discipline.html': ['discipline.html'],
-      '/insights/status.html': ['status.html'],
-      '/insights/heat-map.html': ['heat-map.html'],
-      '/insights/taxonomy.html': ['taxonomy.html'],
       '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
       '/wc2026_live.html': ['wc2026_live.html'],
     };
