@@ -1281,6 +1281,8 @@ const _updateSelectionPanel = (onCollapsed) => {
     });
     return html`<div class="selection-panel-row py-1 sub" style="background-color: var(--page-bg);">
       ${join(groups, () => html`<span class="sp-sep">⇄</span>`)}
+      <span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
+            @click=${() => (_activeFixture ? clearFixtureSelection() : clearDim())}></span>
     </div>`;
   };
 
@@ -1396,15 +1398,14 @@ const applySelection = (id, destIds) => {
     if (_playersTabActive) window.scrollTo({ top: 0 });
   }
 
-  // Tab button label + close — a generic "1 team" count via _tabPlayersLabel, same icon and
-  // same wording pattern the ambient state's "N teams" uses (T.countries), not the team's own
-  // name/flag: every #tab-players-btn mode reads as the same kind of thing (a count), the
-  // identity of what's focused lives in the table itself, not the nav pill.
+  // Tab button icon via _tabPlayersLabel — the identity of what's focused lives in the table
+  // itself, not the nav pill; the close button lives in the selection panel instead (see
+  // _updateSelectionPanel's buildRow).
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     const wasActive = _playersBtn.classList.contains('active');
     _playersBtn.className = 'nav-link dim-selected' + (wasActive ? ' active' : '');
-    render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `1 ${T.countries(1)}`, () => _switchTab('tab-players'), () => clearDim()), _playersBtn);
+    render(_tabPlayersLabel(_PLAYERS_TAB_ICON, () => _switchTab('tab-players')), _playersBtn);
   }
 
   _updateEloSelection();
@@ -1639,8 +1640,12 @@ const _playersTableTemplate = (focusIds = null) => {
   const filtered = _currentPlayerSet(focusIds)
     .sort((a, b) => dir * _PT_SORT_FNS[_ptSortKey](a, b));
   const coachCount = filtered.filter(p => p.role === 'coach').length;
+  // Moved out of #tab-players itself and into #elo-meta-players (elo_ranking.js's #elo-meta,
+  // first child) — every render() call site above funnels through this one function, so
+  // updating the count here as a side effect keeps it live without touching each call site.
+  const _metaPlayersEl = document.getElementById('elo-meta-players');
+  if (_metaPlayersEl) _metaPlayersEl.textContent = `${filtered.length - coachCount} players · ${coachCount} coaches`;
   return html`
-    <p class="sub mb-2">${filtered.length - coachCount} players · ${coachCount} coaches</p>
     <table class="table table-sm table-striped table-hover pt-table" style="font-size:12px">
       <thead><tr>
         ${_ptTh('name', T.psbLabels.byPlayer)}${_ptTh('bornIn', T.chainLegend.bornIn, 'pt-born')}${_ptTh('playsFor', T.chainLegend.playsFor, 'pt-caps')}${_ptTh('caps', T.caps, 'pt-num text-end')}
@@ -1658,56 +1663,28 @@ const _showAllPlayers = () => {
 };
 
 // One shared layout for every #tab-players-btn mode (idle count, one-team focus, and eventually
-// a fixture's two teams) — label + icon packed together as a unit inside .tab-players-label,
-// with the close button (dim-selected/fixture modes only) as its last child rather than a
-// sibling spacer pair, so there's exactly one close button in the DOM, ever. onClose's click
-// stops propagation since it's now nested inside .tab-players-label's own onClick handler.
-const _tabPlayersLabel = (iconSrc, label, onClick, onClose) => html`
+// a fixture's two teams) — icon alone (the count/team-name text span was dropped, and the close
+// button moved to .selection-panel-row's own last child — see _updateSelectionPanel's buildRow).
+const _tabPlayersLabel = (iconSrc, onClick) => html`
   <span class="tab-players-label d-flex align-items-center gap-1 text-nowrap mx-1" @click=${onClick}>
-    <span style="color: var(--text-muted); font-size: 11px;">${label}</span>
     <img class="tab-icon" src="${iconSrc}" aria-hidden="true">
-    ${onClose ? html`
-      <span class="btn-close" style="cursor:pointer; font-size: 8pt;" aria-label="Close"
-            @click=${e => { e.stopPropagation(); onClose(); }}></span>` : nothing}
   </span>`;
 
-// Same icon regardless of mode — the label text (a plain "N team(s)" count, see _tabPlayersLabel
-// call sites below) is what tells the two apart, not the icon.
+// Same icon regardless of mode — #tab-players-btn no longer carries any distinguishing text
+// (the "N countries"/"1 team" label span was dropped from _tabPlayersLabel).
 const _PLAYERS_TAB_ICON = 'images/solar_linear/user-circle-svgrepo-com.svg';
 
-// Idle state (no country selected) — a live count of every DISTINCT country appearing in the
-// ambient table, born-in or plays-for column alike, not just how many qualified teams are
-// currently visible: a player's birth country can be any country in the world (Cameroon,
-// unqualified, in the born-in column of a Canada export — see _focusedPlayers' own export/
-// import sourcing), so counting only _visibleQualifiedIds() undercounts exactly like
-// #elo-meta-count would if it only counted one side of an export/import pair. Mirrors
-// #elo-meta-count's own philosophy: an authoritative count derived from the actual currently-
-// shown rows (_currentPlayerSet, the same source the table itself renders from), not a
-// separately-derived approximation. Previews what tab-players will show even before it's
-// opened — the same preview role the dim-selected "1 team" pill (applySelection, above) already
-// plays for a one-team focus, rendered through the same _tabPlayersLabel so both modes look and
-// behave alike (a generic count, never the focused team's own name/flag; see applySelection's
-// own comment). No-ops while dim is active: that pill belongs to applySelection instead (see
-// _sidebarCallbacks.afterFlagFilter's own comment on why this is safe to call unconditionally on
-// every filter/stage change). Called once at initial setup and every time clearDim runs.
+// Idle state (no country selected) — no-ops while dim is active: that pill belongs to
+// applySelection instead (see _sidebarCallbacks.afterFlagFilter's own comment on why this is
+// safe to call unconditionally on every filter/stage change). Called once at initial setup and
+// every time clearDim runs.
 const _renderPlayersTabIdle = () => {
   if (dimState.active || _activeFixture) return;
   const _pb = document.getElementById('tab-players-btn');
   if (!_pb) return;
   const wasActive = _pb.classList.contains('active');
   _pb.className = 'nav-link flex-grow-1' + (wasActive ? ' active' : '');
-  // Plain country-name strings (not ids) — every entry already carries both (birthCountry from
-  // its own birth-country record, nation from whichever qualified team produced it), and a name
-  // is the one identity that's always populated on both sides, including a non-qualified birth
-  // country an id lookup wouldn't resolve (e.g. Cameroon) or, in principle, a non-qualified
-  // plays-for destination (an id-based QUALIFIED_BY_NAME lookup would silently drop either).
-  const countryNames = new Set();
-  for (const p of _currentPlayerSet(null)) {
-    if (p.birthCountry) countryNames.add(p.birthCountry);
-    if (p.nation) countryNames.add(p.nation);
-  }
-  const count = countryNames.size;
-  render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `${count} ${T.countries(count)}`, () => _showAllPlayers()), _pb);
+  render(_tabPlayersLabel(_PLAYERS_TAB_ICON, () => _showAllPlayers()), _pb);
 };
 _renderPlayersTabIdle();
 
@@ -1818,13 +1795,11 @@ const activateFixture = (idA, idB, pairId) => {
     if (_playersTabActive) window.scrollTo({ top: 0 });
   }
 
-  // Same generic count pattern as applySelection's own "1 team" pill (see its comment) — "2
-  // teams" here, never the two teams' own names/flags.
   const _playersBtn = document.getElementById('tab-players-btn');
   if (_playersBtn) {
     const wasActive = _playersBtn.classList.contains('active');
     _playersBtn.className = 'nav-link dim-selected flex-grow-1' + (wasActive ? ' active' : '');
-    render(_tabPlayersLabel(_PLAYERS_TAB_ICON, `2 ${T.countries(2)}`, () => _switchTab('tab-players'), () => clearFixtureSelection()), _playersBtn);
+    render(_tabPlayersLabel(_PLAYERS_TAB_ICON, () => _switchTab('tab-players')), _playersBtn);
   }
 
   _updateAllPlayersMapLayer();

@@ -635,20 +635,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   });
 
   // ── Players-tab export/native/import filter ──────────────────────────────────────────────
-  // Only ever enabled while #tab-players is the active bottom tab (wc2026_map.js's own
-  // show.bs.tab listener calls this unconditionally on every tab switch, independent of
-  // setMode above — tab-players never touches _mode at all). A disabled btn-check dims its
-  // label via Bootstrap's own .btn-check:disabled+.btn CSS, same mechanism
-  // _matchDisplayRadio.disabled already uses for the stage-0 case.
+  // Always enabled/clickable regardless of which bottom tab is active — the checkboxes are no
+  // longer dimmed or made inert when #tab-players isn't showing (an earlier version disabled
+  // them via btn-check:disabled+.btn, mirroring _matchDisplayRadio.disabled's stage-0 case;
+  // dropped since the filter's effect — see callbacks.onPlayersFilterChange — is meaningful to
+  // set up in advance of switching to that tab, not just while looking at it).
   const _pfEls = { export: _pfExport, native: _pfNative, import: _pfImport };
   const _pkEls = { player: _pfPlayer, coach: _pfCoach };
   const setPlayersTabActive = active => {
     // Merely being called at all (with either true or false) is the signal that the host page
     // actually has a #tab-players concept — see _pfTableEl's own declaration comment above for
-    // why the row starts hidden in the template. Queried fresh off the table (rather than
-    // iterating _pfEls/_pkEls) so any future button added to this row is disabled for free.
+    // why the row starts hidden in the template.
     _pfTableEl.hidden = false;
-    _pfTableEl.querySelectorAll('.btn-check').forEach(el => { el.disabled = !active; });
     _playersTabActive = active;
     _updateSortDirUI();
   };
@@ -1081,12 +1079,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // PX/PN/PI (Players tab: eXport/Native/Import) — added directly to _ACTIONS_SHOW/_ACTIONS_HIDE
   // rather than to _CELL_MAP/_ALIASES above: those two also back the ?show= URL param and the
   // explain panel's country-category description, and these 3 checkboxes are a wholly separate
-  // concept (see ?pshow= below) that must never leak into that vocabulary. Disabled-aware (unlike
-  // _filterSet) since — unlike every other chord target — these are only ever meaningful while
-  // #tab-players is active; a chord typed while it isn't should no-op, same as a real click on a
-  // disabled button would.
+  // concept (see ?pshow= below) that must never leak into that vocabulary. No longer disabled-
+  // aware — the checkboxes are always enabled now (see setPlayersTabActive's own comment), so a
+  // chord typed while #tab-players isn't active takes effect just like a real click would.
   const _filterSetPlayers = (el, checked) => {
-    if (el.disabled) return;
     el.checked = checked;
     callbacks.onPlayersFilterChange?.();
     _saveState();

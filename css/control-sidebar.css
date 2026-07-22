@@ -176,6 +176,7 @@
 }
 #elo-meta-count { flex-shrink: 0; }
 #elo-meta-source {
+  display: none;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -349,15 +350,6 @@
   display: inline-flex; align-items: center; justify-content: center; min-height: 16px;
 }
 #control-sidebar .csb-native-toggle .btn-check:checked + .btn { border-color: rgba(23, 23, 21, 0.75); }
-/* Disabled (tab-players not active) wins over :checked above — declared after it so the
-   light-gray border shows even on a checked+disabled button, not just an unchecked one.
-   opacity:1 overrides Bootstrap's own .btn-check:disabled+.btn (opacity:.65) — left at the
-   default, that dims var(--border) against the panel's own translucent background and reads
-   as a flat washed-out gray instead of the app's actual light border color. */
-#control-sidebar .csb-native-toggle .btn-check[disabled] + .btn,
-#control-sidebar .csb-native-toggle .btn-check:disabled + .btn {
-  opacity: .5;
-}
 #control-sidebar .csb-pf-export::after { content: '▶'; color: var(--exp-accent); }
 #control-sidebar .csb-pf-native::after { content: '●'; font-size: 10px; color: rgba(23, 23, 21, 0.75); }
 #control-sidebar .csb-pf-import::after { content: '◀'; color: var(--imp-accent); }

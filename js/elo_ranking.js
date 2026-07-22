@@ -448,15 +448,18 @@ export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloDa
   const rawItems = buildEloItems(buildArgs);
   el.items = rawItems;
 
-  // Build stable #elo-meta structure once: count span (left) + source span (right,
-  // dynamic content, toggled) — see css/control-sidebar.css's #elo-meta flex rule.
+  // Build stable #elo-meta structure once: players/coaches span (left, filled in by
+  // wc2026_map.js's _playersTableTemplate — see that function's own comment) + count span
+  // + source span (dynamic content, toggled) — see css/control-sidebar.css's #elo-meta flex
+  // rule. #elo-meta-source is CSS-hidden (display:none) — kept in the DOM/JS below rather
+  // than ripped out in case it's needed again.
   const metaEl = document.getElementById('elo-meta');
   let metaCountEl = null, metaSourceEl = null;
   if (metaEl) {
     const hasSource = !!(eloData || popData);
     metaEl.innerHTML = hasSource
-      ? `<span id="elo-meta-count"></span><span id="elo-meta-source"></span>`
-      : `<span id="elo-meta-count"></span>`;
+      ? `<span id="elo-meta-players"></span><span id="elo-meta-count"></span><span id="elo-meta-source"></span>`
+      : `<span id="elo-meta-players"></span><span id="elo-meta-count"></span>`;
     metaCountEl  = document.getElementById('elo-meta-count');
     metaSourceEl = document.getElementById('elo-meta-source');
   }
