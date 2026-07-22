@@ -71,7 +71,7 @@ Seleccionar una confederación también resalta su frontera exterior en el mapa 
 
 ## Parámetros de URL
 
-El estado de filtro y orden también puede configurarse directamente mediante la URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?pshow=`, además de `?tab=` y `?select=` para ir directamente a una pestaña con un país ya seleccionado. Añade `?explain` a cualquier URL para abrir un panel que resume los ajustes actuales del panel — ver *«?explain» — inspeccionar la configuración actual* en la pestaña [Guía de la API](?guide=api) para el detalle exacto de qué muestra y por qué. La referencia completa con todos los códigos de celda, alias de grupo y ejemplos también está allí.
+El estado de filtro y orden también puede configurarse directamente mediante la URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?pshow=`, además de `?bottomtab=` y `?select=` para ir directamente a una pestaña con un país ya seleccionado. Añade `?explain` a cualquier URL para abrir un panel que resume los ajustes actuales del panel — ver *«?explain» — inspeccionar la configuración actual* en la pestaña [Guía de la API](?guide=api) para el detalle exacto de qué muestra y por qué. La referencia completa con todos los códigos de celda, alias de grupo y ejemplos también está allí.
 
 ## Sobre la referencia de países
 

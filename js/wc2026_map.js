@@ -2608,7 +2608,7 @@ Promise.all([
   sidebar.applyFlagFilter();
   sidebar.updateVisibleCountryCount();
 
-  // ── ?tab= / ?select= — replicate a real click path from a URL alone ──────────────────────
+  // ── ?bottomtab= / ?select= — replicate a real click path from a URL alone ────────────────
   // Not part of _paramTable (control_sidebar.js) — that table owns the sidebar's own sort/
   // filter state; tab selection and dim-mode country selection are wc2026_map.js's own
   // top-level state (_activeTab, dimState), so they're read directly here instead.
@@ -2619,19 +2619,23 @@ Promise.all([
   // and tab-tournament run under different MODE_BEHAVIOR (showNonQualified, gateByStage,
   // ignoreTeamFilters — see control_sidebar.js), so the exact same id can resolve a different
   // player set. The optional :teams/:tournament suffix pins that context explicitly (default
-  // :teams, matching the app's own default landing tab) — independent of ?tab= below, so
-  // `?select=ar:tournament&tab=teams` is a real, reachable state too: select while viewing
+  // :teams, matching the app's own default landing tab) — independent of ?bottomtab= below, so
+  // `?select=ar:tournament&bottomtab=teams` is a real, reachable state too: select while viewing
   // tab-tournament (tournament-mode context baked into the dim selection), then move over to
   // tab-teams while keeping that selection active, exactly as a real user could by clicking the
   // tab-teams button afterward (switching tabs never clears a dim selection — see the
   // 'show.bs.tab' listener's own comment above).
   //
-  // ?tab=teams|tournament|players sets the final active bottom tab — teams/tournament were
+  // ?bottomtab=teams|tournament|players sets the final active bottom tab — teams/tournament were
   // already restorable from localStorage but never directly reachable via URL; tab-players
   // wasn't reachable via URL at all (see _RESTORABLE_TABS's own comment on why it's excluded
-  // from that persistence). Applied last, after ?select= above, so landing on tab-players with
-  // a selection already active reproduces "select from tab-teams, then open tab-players" — the
-  // exact click path this was built for.
+  // from that persistence). Named 'bottomtab', not 'tab', to avoid colliding with auth-bar.js's
+  // own unrelated ?guide=X&tab=api|data (which guide-*panel* tab to open) — the two vocabularies
+  // (teams/tournament/players vs. guide/api/data) happen not to overlap today, so reusing 'tab'
+  // wouldn't have broken anything yet, but it's exactly the kind of landmine that bites the next
+  // person to extend either one. Applied last, after ?select= above, so landing on tab-players
+  // with a selection already active reproduces "select from tab-teams, then open tab-players" —
+  // the exact click path this was built for.
   let _selectedFromUrl = false;
   {
     const _urlParams = new URLSearchParams(location.search);
@@ -2648,10 +2652,10 @@ Promise.all([
         _selectedFromUrl = true;
       }
     }
-    const _tabRaw = _urlParams.get('tab');
-    if (_tabRaw === 'players') _switchTab('tab-players');
-    else if (_tabRaw === 'teams') _switchTab('tab-teams');
-    else if (_tabRaw === 'tournament') _switchTab('tab-tournament');
+    const _bottomTabRaw = _urlParams.get('bottomtab');
+    if (_bottomTabRaw === 'players') _switchTab('tab-players');
+    else if (_bottomTabRaw === 'teams') _switchTab('tab-teams');
+    else if (_bottomTabRaw === 'tournament') _switchTab('tab-tournament');
   }
 
   // Initial zoom: fit ALL flags so every country is visible (including Falklands etc.) — skipped

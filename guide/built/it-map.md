@@ -71,7 +71,7 @@ Selezionare una confederazione evidenzia anche il suo confine esterno sulla mapp
 
 ## Parametri URL
 
-Lo stato di filtro e ordinamento può essere configurato anche direttamente tramite l'URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?pshow=`, oltre a `?tab=` e `?select=` per arrivare direttamente su una scheda con un paese già selezionato. Aggiungi `?explain` a qualsiasi URL per aprire un pannello che riepiloga le impostazioni attuali del pannello — vedi *“?explain” — controllare la configurazione attuale* nella scheda [Guida API](?guide=api) per il dettaglio esatto di cosa mostra e perché. Anche il riferimento completo con tutti i codici delle celle, gli alias dei gruppi e gli esempi si trova lì.
+Lo stato di filtro e ordinamento può essere configurato anche direttamente tramite l'URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?pshow=`, oltre a `?bottomtab=` e `?select=` per arrivare direttamente su una scheda con un paese già selezionato. Aggiungi `?explain` a qualsiasi URL per aprire un pannello che riepiloga le impostazioni attuali del pannello — vedi *“?explain” — controllare la configurazione attuale* nella scheda [Guida API](?guide=api) per il dettaglio esatto di cosa mostra e perché. Anche il riferimento completo con tutti i codici delle celle, gli alias dei gruppi e gli esempi si trova lì.
 
 ## Sulla fonte di riferimento dei paesi
 
