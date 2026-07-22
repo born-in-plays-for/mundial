@@ -921,7 +921,7 @@ const showQualifiedTip = (event, name, code) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(code)}${countryName(nId, name)}${app.byId[nId]?.totalCount ? html`<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${app.byId[nId].totalCount}</span>` : nothing}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[code])}${rankTag(name)}${capTag(app.capital[code])}</span>
+        ${popRankHeader(app.pop[code], name, app.capital[code])}
       </div>
       <div class="tt-label">${T.noExport(countryName(nId, name))}</div>
       ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-label">${T.noImport(countryName(nId, name))}</div>`}
@@ -1292,6 +1292,11 @@ const _updateSelectionPanel = (onCollapsed) => {
   if (rowEl && rowEl.scrollWidth > rowEl.clientWidth) render(buildRow(false), _selectionPanelEl);
 };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
+// The pop/rank/capital column every tooltip header shows to the right of the flag+name — pop
+// and capital always present (popTag/capTag are already null-safe on missing data), rankName
+// omitted entirely (not just unresolvable) by showCityTip, which has no country rank to show at
+// all for a city-level tooltip.
+const popRankHeader = (pop, rankName, capital) => html`<span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(pop)}${rankName != null ? rankTag(rankName) : nothing}${capTag(capital)}</span>`;
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : nothing;
 
@@ -1898,7 +1903,7 @@ const showExportTip = (event, id) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${!QUALIFIED_NAMES[id] ? html`<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${countryName(rec.id, rec.country)}</span><small class="tt-pop fst-italic">${_fifaMemberIds.has(id) ? T.notQualified : T.notFifaMember}</small></span>` : countryName(rec.id, rec.country)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(rec.pop)}${(rec.country)}${capTag(app.capital[iso2ForId(rec.id)])}</span>
+        ${popRankHeader(rec.pop, QUALIFIED_NAMES[rec.id], app.capital[iso2ForId(rec.id)])}
       </div>
       ${body}
       ${hasMore ? html`<div class="tt-more-label text-end">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
@@ -1921,7 +1926,7 @@ const showImportTip = (event, destId) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(destFc)}${countryName(destId, destName)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[destFc])}${rankTag(destName)}${capTag(app.capital[destFc])}</span>
+        ${popRankHeader(app.pop[destFc], destName, app.capital[destFc])}
       </div>
       <div class="tt-countries mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
@@ -1948,7 +1953,7 @@ const showImportSourceTip = (event, centroidId) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[bFc])}${rankTag(p0.birthCountry)}${capTag(app.capital[bFc])}</span>
+        ${popRankHeader(app.pop[bFc], p0.birthCountry, app.capital[bFc])}
       </div>
       <div class="tt-countries mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
@@ -1979,7 +1984,7 @@ const showCombinedTip = (event, id) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${countryName(id, destName)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[fc])}${rankTag(destName)}${capTag(app.capital[fc])}</span>
+        ${popRankHeader(app.pop[fc], destName, app.capital[fc])}
       </div>
       ${exportPlayers.length > 0 ? html`
         <div class="tt-countries mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
@@ -2008,7 +2013,7 @@ const showSimpleTip = (event, id, topoName) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${name}</span><small class="tt-pop fst-italic">${_fifaMemberIds.has(id) ? T.notQualified : T.notFifaMember}</small></span></span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[fc])}${capTag(app.capital[fc])}</span>
+        ${popRankHeader(app.pop[fc], null, app.capital[fc])}
       </div>`, tt);
   }
   tt.classList.add('tt-non-qualified');
