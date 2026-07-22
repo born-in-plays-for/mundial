@@ -747,6 +747,19 @@ const _updateTabConnector = () => {
   _tabConnector.style.left = `${left}px`;
   _tabConnector.style.width = `${Math.max(0, right - left)}px`;
 };
+// #tab-players-btn is empty in the static HTML — it gets its real "N countries" label only once
+// _renderPlayersTabIdle() first runs, well after this module's own synchronous setup (it depends
+// on app.byId/etc., populated by the async data-load Promise.all). The very first
+// _updateTabConnector() call (from the initial _switchTab() below) fires before that, so it
+// measures the button at its tiny pre-content width — visible on a slow load as the line briefly
+// overshooting past #tab-players-btn's eventual right edge. A ResizeObserver re-runs the
+// calculation the moment the button's box actually changes size, however/whenever that happens
+// (first content, a later label-length change, font loading, ...), rather than hoping every call
+// site that could affect it remembers to call this explicitly.
+if (typeof ResizeObserver !== 'undefined') {
+  const _playersBtnEl = document.getElementById('tab-players-btn');
+  if (_playersBtnEl) new ResizeObserver(_updateTabConnector).observe(_playersBtnEl);
+}
 
 // Bootstrap's own Tab component (data-bs-toggle="tab" on each button, see wc2026_map.html) now
 // owns activating/deactivating both the trigger buttons' .active class and their data-bs-target
