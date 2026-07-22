@@ -398,6 +398,35 @@ const _scrollToActiveElo = () => {
 const _mc = document.getElementById('map-container');
 const _landscapeMQ = window.matchMedia('(max-height: 500px) and (orientation: landscape)');
 const _isLandscapeMobile = () => _landscapeMQ.matches;
+// map-container.js defaults #map's SVG to preserveAspectRatio="meet" (letterbox on shrink,
+// see its own comment) — landscape-mobile is the one deliberate exception (full-bleed cover,
+// css/map-container.css forces #map to width:100%/height:100% there), so this flips it to
+// 'slice' only in that mode and back to 'meet' everywhere else. Called on load and on every
+// resize/orientation change (below) since _isLandscapeMobile() can flip either way.
+const _syncMapFit = () => {
+  document.getElementById('map')?.setAttribute('preserveAspectRatio', `xMidYMid ${_isLandscapeMobile() ? 'slice' : 'meet'}`);
+};
+_syncMapFit();
+_landscapeMQ.addEventListener('change', _syncMapFit);
+// The height at which #map's box aspect ratio matches the viewBox's (W/H, see map-container.js)
+// at its current rendered width — i.e. the full-width "contain" point. Past this, taller is
+// just empty letterbox space (once preserveAspectRatio is 'meet'); the drag handle and the
+// localStorage-restored height (below) both cap themselves here so dragging can't overshoot
+// into that dead zone.
+const _mapNaturalHeight = () => document.getElementById('map').getBoundingClientRect().width * (H / W);
+const _MAP_HEIGHT_KEY = 'mundial-map-height';
+// Shrinks a previously-set explicit height back down if it now overshoots the natural
+// full-width height (e.g. the window narrowed since it was set, or since it was restored
+// from localStorage on load) — a no-op once #map is back to its default height:auto.
+const _clampMapHeight = () => {
+  const mapEl = document.getElementById('map');
+  if (!mapEl.style.height) return;
+  const natural = _mapNaturalHeight();
+  if (parseFloat(mapEl.style.height) > natural) {
+    mapEl.style.height = natural + 'px';
+    localStorage.setItem(_MAP_HEIGHT_KEY, natural);
+  }
+};
 const _syncPaddingTop = () => {
   if (_isLandscapeMobile()) {
     document.body.style.paddingTop    = '0';
@@ -490,6 +519,8 @@ document.addEventListener('keydown', e => {
 
 window.addEventListener('resize', () => {
   if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
+  _syncMapFit();
+  _clampMapHeight();
   _syncMapHeight();
   // Landscape mobile is always immersive-map (see map-container.css) — force it open if it
   // was left collapsed from portrait, since the toggle bar itself is hidden there and the
@@ -526,15 +557,18 @@ _syncMapHeight();
 
 // #legend-parent drag-resize — vertical only. #map is width:100%/height:auto by default
 // (css/map-container.css); dragging sets an explicit inline px height on the SVG, which
-// crops more/less of the map rather than stretching it, since map-container.js's
-// preserveAspectRatio="xMidYMid slice" fills whatever box it's given. Width is never
-// touched. Reuses _syncMapHeight/_syncPaddingTop (above) to keep body padding in sync
-// during the drag, same as the map-collapse toggle does — #zoom-hint's own position is
-// plain CSS now (#map-frame/#zoom-hint, css/map-container.css) and needs no JS at all.
-const _MAP_HEIGHT_KEY = 'mundial-map-height';
+// letterboxes (shrinks the whole map, empty space above/below) rather than cropping/zooming,
+// since map-container.js's preserveAspectRatio defaults to "xMidYMid meet" — see its own
+// comment. Width is never touched, and dragging taller than the full-width natural height
+// (_mapNaturalHeight above) is capped there, since past that point there's nothing left to
+// reveal — only more letterbox. Reuses _syncMapHeight/_syncPaddingTop (above) to keep body
+// padding in sync during the drag, same as the map-collapse toggle does — #zoom-hint's own
+// position is plain CSS now (#map-frame/#zoom-hint, css/map-container.css) and needs no JS
+// at all.
 const _legendParent = document.getElementById('legend-parent');
 const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));
 if (_storedMapHeight && !_isLandscapeMobile()) document.getElementById('map').style.height = _storedMapHeight + 'px';
+_clampMapHeight();
 if (_legendParent) {
   let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
   _legendParent.addEventListener('pointerdown', e => {
@@ -551,7 +585,10 @@ if (_legendParent) {
   _legendParent.addEventListener('pointermove', e => {
     if (!_dragging) return;
     const minH = 120;
-    const maxH = window.innerHeight - _mc.getBoundingClientRect().top - _dragOtherHeight - 20;
+    const maxH = Math.min(
+      window.innerHeight - _mc.getBoundingClientRect().top - _dragOtherHeight - 20,
+      _mapNaturalHeight(),
+    );
     const h = Math.max(minH, Math.min(maxH, _dragStartHeight + (e.clientY - _dragStartY)));
     document.getElementById('map').style.height = h + 'px';
     _syncMapHeight();

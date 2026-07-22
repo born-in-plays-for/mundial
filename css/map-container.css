@@ -44,7 +44,7 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
    off by -100vw) clips vertically flush with the box while leaving the right side
    effectively unbounded. */
 #map-frame { position: relative; clip-path: inset(0 -100vw 0 0); }
-#map { display: block; width: 100%; height: auto; touch-action: none; background-color: var(--fixed-element-bg); overflow: hidden; padding-bottom: 0.5px; }
+#map { display: block; width: 100%; height: auto; touch-action: none; background-color: var(--fixed-element-bg); overflow: hidden; padding-bottom: 0.5px; background-color: rgba(180, 195, 196, 0.667);}
 .country { cursor: default; transition: opacity .12s; }
 .country:hover { opacity: .7; }
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
