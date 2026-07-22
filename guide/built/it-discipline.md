@@ -19,7 +19,7 @@ foul-prone was this cluster of teams overall."
 |---|---|---|---|---|---|
 | Argentina | 6 | 12.41 | 1.59 | 4 | Argentina, Colombia, Ecuador, Paraguay, United States, Uruguay |
 | Italy | 3 | 11.55 | 1.27 | 0 | Brazil, Turkey, Uzbekistan |
-| France | 6 | 11.32 | 1.07 | 1 | Belgium, DR Congo, France, Haiti, Ivory Coast, Tunisia |
+| France\* | 6 | 11.32 | 1.07 | 1 | Belgium, DR Congo, France, Haiti, Ivory Coast, Tunisia |
 | Belgium | 2 | 11.20 | 1.20 | 2 | Morocco, South Africa |
 | Bosnia and Herzegovina | 3 | 11.17 | 1.17 | 1 | Algeria, Bosnia and Herzegovina, Croatia |
 | Germany | 4 | 10.95 | 1.16 | 1 | Austria, England, Germany, Saudi Arabia |
@@ -27,6 +27,11 @@ foul-prone was this cluster of teams overall."
 | England | 2 | 10.71 | 1.29 | 0 | New Zealand, Sweden |
 | Spain | 3 | 10.67 | 1.13 | 2 | Portugal, Qatar, Spain |
 | Australia | 2 | 10.43 | 1.29 | 1 | Australia, Iraq |
+
+\* Haiti is this group's biggest outlier — the tournament's single highest-fouling team overall,
+at 18.33 fouls/match. Remove it and the France group falls from 3rd place (pooled 11.32) to 9th
+(pooled 10.48, n=5) — second-to-last instead of near the top. Every other group is unaffected;
+Argentina still leads by a clear margin either way.
 
 ## Singletons (n=1 — no averaging possible, listed for completeness)
 
