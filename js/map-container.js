@@ -601,7 +601,11 @@ export const wireLegend = ({ getById }) => {
       ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
       : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
     const pct = t => theme.diverging ? _divergingPos(t, theme) * 100 : (1 - t / theme.ratioMax) * 100;
-    render(html`${ticks.map(t => html`<span style="position:absolute; left:${pct(t)}%; transform:translateX(-50%)">${t}</span>`)}`, els.ticks);
+    // The two extreme ticks sit exactly at the bar's own edges (0%/100%) — right next to that
+    // side's own outlier count label (#legend-outlier-count / -count-pos, just outside the bar)
+    // — so nudge them inward a few px, otherwise the two numbers visually merge (e.g. "-26-21").
+    const nudge = i => i === 0 ? 6 : i === ticks.length - 1 ? -6 : 0;
+    render(html`${ticks.map((t, i) => html`<span style="position:absolute; left:${pct(t)}%; transform:translateX(calc(-50% + ${nudge(i)}px))">${t}</span>`)}`, els.ticks);
   };
 
   const updateOutlier = () => {
