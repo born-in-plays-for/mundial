@@ -5,8 +5,8 @@ import { CAROUSEL_STAGES } from './qualified.js';
 // into live state (applyParams on page load). Hand-writing both sides invites exactly the kind
 // of drift this table is meant to prevent — a key present in one direction but forgotten in the
 // other. One array of { key, get, apply } entries is the single source for both directions, plus
-// the "does this URL even mention me?" check both control_sidebar.js and players_sidebar.js do
-// before falling back to restoring from localStorage.
+// the "does this URL even mention me?" check control_sidebar.js does before falling back to
+// restoring from localStorage.
 //
 // get()      → current value as the string that belongs in the URL for this key.
 // apply(raw) → parse/validate raw (the URL's string value) and, if valid, set the corresponding
@@ -45,11 +45,10 @@ export function promoteKeys(order, keys) {
   return [...new Set([...keys, ...order])].slice(0, order.length);
 }
 
-// ── Entry factories — control_sidebar.js and players_sidebar.js each have a 'stage' and a 'dir'
-// param whose shape is identical (same CAROUSEL_STAGES domain, same asc/desc domain); only what
-// runs after the value is set differs (_setStage's own carousel/bounds logic is already
-// page-specific and stays behind the caller's setStage; the sort-column UI resync is passed in
-// as part of setDir since the two pages resync different DOM). ──
+// ── Entry factories — control_sidebar.js's 'stage' and 'dir' params share one general shape
+// (same CAROUSEL_STAGES domain, same asc/desc domain); only what runs after the value is set
+// differs per caller (_setStage's own carousel/bounds logic stays behind the caller's setStage;
+// the sort-column UI resync is passed in as part of setDir). ──
 
 // getStageIndex() → current index into CAROUSEL_STAGES. setStage(idx) → apply it (whatever that
 // takes on the calling page — control's own _setStage / players' own _setStage).
@@ -80,21 +79,21 @@ export function dirEntry(key, { getDir, setDir }) {
   };
 }
 
-// ── sortEntry — the general shape behind both pages' "sort" param: an ordered priority list of
-// criteria (getOrder/setOrder), optionally applied to one of several named AXES rather than a
-// single implicit target. control_sidebar.js's country rows only ever have one identity to sort
-// by, so it's the degenerate case — axes: [] (no selector at all, just a flat criteria list in
-// the URL, e.g. "elo,pop"). players_sidebar.js's player rows have two — born-in country,
-// plays-for country — so axes: ['bornIn', 'playsFor'] selects which is primary via a compound
-// URL value ("playsFor:elo"); extraModes covers escape hatches with no criteria of their own
-// (players' 'player' mode — sort by name, axes irrelevant).
+// ── sortEntry — a general shape for a "sort" param: an ordered priority list of criteria
+// (getOrder/setOrder), optionally applied to one of several named AXES rather than a single
+// implicit target. control_sidebar.js's country rows only ever have one identity to sort by, so
+// it's the degenerate case in current use — axes: [] (no selector at all, just a flat criteria
+// list in the URL, e.g. "elo,pop"). The axes/extraModes machinery (a compound URL value like
+// "playsFor:elo" selecting which of several axes is primary) exists for a row with more than one
+// sortable identity — no current caller needs it, kept as-is rather than stripped down to the
+// no-axes case alone.
 //
-// getAxis/setAxis (only used when axes.length > 0) — current/target axis selection, e.g.
-// players' own _mode. getOrder/setOrder — the criteria priority list itself (setOrder receives
-// the already-promoted array, via promoteKeys). criteriaCount — how many leading criteria the
-// no-axes flat form serializes (control compares 2 at once — primary + tie-break; irrelevant
-// when axes.length > 0, since there the *other axis* is the tie-break, not a 2nd criterion).
-// onApply — resync whatever UI depends on the change (the caller's job, different DOM per page).
+// getAxis/setAxis (only used when axes.length > 0) — current/target axis selection. getOrder/
+// setOrder — the criteria priority list itself (setOrder receives the already-promoted array, via
+// promoteKeys). criteriaCount — how many leading criteria the no-axes flat form serializes
+// (control compares 2 at once — primary + tie-break; irrelevant when axes.length > 0, since there
+// the *other axis* is the tie-break, not a 2nd criterion). onApply — resync whatever UI depends
+// on the change (the caller's job).
 export function sortEntry(key, {
   axes = [],
   extraModes = [],
@@ -134,11 +133,10 @@ export function sortEntry(key, {
   return { key, get, apply };
 }
 
-// ── setConfFilter factory — control_sidebar.js and players_sidebar.js both had a hand-written
-// setConfFilter that was byte-for-byte the same shape (assign ids/key, sync the radio UI, notify,
-// persist, dispatch mundial-conf-changed for wc2026_map.js's own listener — see that event's own
-// comment at each call site). setState/syncRadio/notify/saveState are the only page-specific
-// parts left to the caller. ──
+// ── setConfFilter factory — extracted from control_sidebar.js's own hand-written setConfFilter
+// (assign ids/key, sync the radio UI, notify, persist, dispatch mundial-conf-changed for
+// wc2026_map.js's own listener — see that event's own comment at the call site).
+// setState/syncRadio/notify/saveState are the only page-specific parts left to the caller. ──
 export function createConfFilterSetter({ setState, syncRadio, notify, saveState }) {
   return (ids, key = null) => {
     const normIds = ids ?? null;

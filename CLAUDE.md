@@ -31,7 +31,6 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `wc2026_map.html` | Main map page (Bootstrap 5, loads JS + JSON via ES module) |
 
 **OG tags:** Both `index.html` and `wc2026_map.html` carry identical OG meta tags. Always update **both files** together when any OG tag changes (og:image, og:url, og:title, og:description, etc.).
-| `insights/france.html` | France departments choropleth page |
 | `wc2026_live.html` | Live game tracking page (Socket.IO, backend-dependent) |
 | `js/wc2026_map.js` | ES module — D3 rendering, zoom, tooltips (lit-html), filter sidebar, Elo tab, dim/arc logic |
 | `js/auth-bar.js` | ES module — `<mundial-auth-bar>` Web Component: navbar, auth, offline modal, WebSocket reconnection (lit-html + unsafeHTML) |
@@ -48,6 +47,13 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
 | `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
+
+**Retired pages:** `wc2026_countries.html`, `wc2026_players.html` (and its own sidebar module,
+`js/players_sidebar.js`), `control-sidebar-test.html`, and `insights/discipline.html` /
+`france.html` / `status.html` / `heat-map.html` (and its own KDE module, `js/kde_layer.js`) /
+`taxonomy.html` have all been removed — their functionality is superseded by `wc2026_map.html`'s
+own tab-teams/tab-tournament/tab-players. They may be rebuilt later under `insights/` against the
+current, de-duplicated codebase; until then, don't assume any of these files/pages still exist.
 
 ---
 
@@ -361,9 +367,9 @@ A persistent two-state switch (`.csb-display-toggle`, bottom of the sort column,
 
 **Fixture data — `qualified.js`'s `buildMatchInfo(statusByIso2, fixturesData, nameByIso2)`**, two layered sources:
 - `data/v2/status.json`'s `round`/`date`/`lostTo` — authoritative for **decided** fixtures. Each decided fixture has exactly one explicit loser entry and one winner (only provable by appearing as some entry's `lostTo`), so recording both sides from that single entry recovers the full pairing. This is the only reliable winner signal for penalty-shootout results — `data/fixtures.json`'s `goals` is tied for a PEN/AET decision and doesn't reveal a winner on its own.
-- `data/fixtures.json` (mundial-build; **top-level, not under `v2/`** — flat match data with no person/pid/wiki join, so it bypasses `load.py`/`export.py` the same way `elo_rank.json` does) — every WC2026 fixture, played or scheduled: `{ source, updated, fixtures: [{ id, date, round, status, home, away, goals: { home, away } }] }`. `date` is full ISO datetime with timezone; `home`/`away` are iso2; `round` matches `ELIM_ROUNDS` verbatim for knockout rounds, and `"Group Stage - N"` for group play (never matches `ELIM_ROUNDS`, so those are excluded automatically — group stage has no single-opponent fixture concept here anyway). `status` is api-football's raw short code — not currently read; a fixture is only pulled from here when `status.json` hasn't already decided it. Used to fill in **real pairing for fixtures not yet played** — without it, an undecided team would have no opponent info at all until after the match.
+- `data/fixtures.json` (mundial-build; **top-level, not under `v2/`** — flat match data with no person/pid/wiki join, so it bypasses `load.py`/`export.py` the same way `elo_rank.json` does) — every WC2026 fixture, played or scheduled: `{ source, updated, fixtures: [{ id, date, round, status, home, away, goals: { home, away }, winner, group?, score? }] }`. `date` is full ISO datetime with timezone; `home`/`away` are iso2; `round` matches `ELIM_ROUNDS` verbatim for knockout rounds, and `"Group Stage - N"` for group play (never matches `ELIM_ROUNDS`, so those are excluded automatically — group stage has no single-opponent fixture concept here anyway). `status` is api-football's raw short code (`'PEN'` for a penalty-shootout decision) — not read for pairing purposes; a fixture is only pulled from here when `status.json` hasn't already decided it. `winner` is `'home'`/`'away'`/`null` (draw, only possible in the group stage). `score.penalty.{home,away}`, when a fixture's `status` is `'PEN'`, is the actual shootout tally (js/elo_ranking.js's `fixtureRow` reads this directly for the "X–Y pen." line — see "Team/match display switch" below). `group` (group-stage fixtures only) is the group letter. Used to fill in **real pairing for fixtures not yet played** — without it, an undecided team would have no opponent info at all until after the match.
 
-`app.matchInfoByIso2` is built once per page (`wc2026_map.js`, `wc2026_countries.html`) after `statusByIso2` and `data/fixtures.json` both load, keyed by ELIM_ROUNDS index so it lines up 1:1 with the carousel's own `_stage` (`CAROUSEL_STAGES[p] === ELIM_ROUNDS[p]` for p 1..5).
+`app.matchInfoByIso2` is built once per page load (`wc2026_map.js`) after `statusByIso2` and `data/fixtures.json` both load, keyed by ELIM_ROUNDS index so it lines up 1:1 with the carousel's own `_stage` (`CAROUSEL_STAGES[p] === ELIM_ROUNDS[p]` for p 1..5).
 
 **Grouping + sort (`control_sidebar.js`)**: `_buildGroups()` pairs each filtered/visible team with its `app.matchInfoByIso2` opponent if that opponent is itself visible (category filters can hide one side, leaving the other a lone row); a team with no pairing data at all is also a lone row. `sortAndFilter`'s comparator puts every real 2-member group before any lone row, then sorts real groups purely by `_matchInfo(...).date` ascending (undated/unscheduled fixtures sort last) — the sort column's criteria never affect a real fixture's position. Lone rows instead fall back to `_groupCompare()`, which sums `_aggregateValue()` across group members (trivially just that one member, group size 1) using the active 1st/2nd sort criteria — deliberately **not** the same per-item value `elo`'s own team-display comparator uses (`rank`, an ordinal position, meaningless to add across two teams): `pts` (the actual Elo rating, a cardinal quantity) is summed instead when it matters for a real couple's *internal* ordering (see below). `pop`/`delta` sum their own already-additive values; `alpha` has no numeric aggregate, so lone rows compare by name instead. The two members within a real couple are ordered by that same per-member value (stronger/alphabetically-first leads) — arbitrary but stable; nothing downstream depends on which one leads.
 
@@ -422,7 +428,7 @@ Each fixture in `live_update` carries a `_tracked: bool` flag set by the server.
 - **Team/country flags**: `flagForTeam(team)` looks up API-Football's own numeric `team.id` in `data/v2/live.json`'s `teams` key (`{ "<team_id>": "<iso2>" }`, replacing the now-removed `data/r32_teams.json`) to get an iso2 code. `flagForCountry(name)` looks up a canonical country name in `data/elo_rank.json`'s `rankings` (also carries `iso2`) for birth-country flags. Curaçao, Kosovo, the UK home nations, etc. all resolve correctly here with no per-country override — that resolution now happens once, upstream, through `mundial-data`'s shared alias table.
 - **Player/coach identity**: `getPlayerWiki(iso, id)` looks up `data/v2/live.json` (shape: `{ "<iso2>": { "<api_football_player_or_coach_id>": { pid, birthCountry } } }`) using `lineup.startXI[].player.id` / `lineup.coach.id` — API-Football's own numeric id, the same id space the file is keyed by. A miss (id not yet resolved upstream) renders the plain name with no wiki link or birth-country tag — a visible, honest gap, not a name-matching fallback.
 
-**`mapData.natives` structure** (`data/v2/map.json`, used by `wc2026_map.js` and `wc2026_players.html`, not by the live-game page)
+**`mapData.natives` structure** (`data/v2/map.json`, used by `wc2026_map.js`, not by the live-game page)
 
 Top-level key alongside `data`, `pop`, `capital`. Shape:
 ```json

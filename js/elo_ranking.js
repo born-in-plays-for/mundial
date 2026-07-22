@@ -2,8 +2,7 @@ import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/l
 import { buildEloItems, ELIM_ROUNDS } from './qualified.js';
 import { LOCALE, T } from './i18n.js';
 import { createStageCarousel } from './stage_carousel.js';
-
-const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
+import { FLAG_CDN } from './map-container.js';
 
 // Compact "day/month hour" kickoff label for a fixture pair separator — e.g. "20/7 23h"
 // (24h-clock locales) or "7/20 11PM" (12h-clock locales, e.g. en-US), no year (sits in a tiny
@@ -67,7 +66,7 @@ export const pillStyle = ({ expColor = null, impColor = null, impPivot = null, n
   ].filter(Boolean).join(';');
 
 export const pillContent = ({ iso2, name, pts = null } = {}) => html`
-  ${iso2 ? html`<span class="elo-flag-wrap"><img class="elo-flag" src="${_CDN(iso2)}" alt=""></span>` : nothing}
+  ${iso2 ? html`<span class="elo-flag-wrap"><img class="elo-flag" src="${FLAG_CDN(iso2)}" alt=""></span>` : nothing}
   <span class="elo-name">${name}</span>
   ${pts != null ? html`<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : nothing}`;
 
@@ -153,12 +152,11 @@ class EloRanking extends HTMLElement {
   // 3rd Place Final's own list + heading — see connectedCallback and show()'s _pairThirdPlace
   // partitioning below. Only ever populated on the 'final' carousel slide.
   #ulThirdPlace; #thirdPlaceHeading;
-  // Stage carousel — wraps the whole pill list (like insights/status.html's #statusViz: prev/
-  // next controls sit absolutely over the list's left/right edges, indicators below — see
-  // css/global.css's .elo-viz). Position/persistence stays owned by control_sidebar.js — this
-  // component only mounts the widget (built by createStageCarousel, shared with
-  // players_sidebar.js — see js/stage_carousel.js) and reports slides via a 'stage-change'
-  // event rather than holding any tournament state itself.
+  // Stage carousel — wraps the whole pill list (prev/next controls sit absolutely over the
+  // list's left/right edges, indicators below — see css/global.css's .elo-viz).
+  // Position/persistence stays owned by control_sidebar.js — this component only mounts the
+  // widget (built by createStageCarousel, js/stage_carousel.js) and reports slides via a
+  // 'stage-change' event rather than holding any tournament state itself.
   #carousel = null;
   #viz = null; // the wrap div itself — see set displayMode below
 
@@ -173,11 +171,9 @@ class EloRanking extends HTMLElement {
     // carousel element itself and bubbles up through wrap/this, so external listeners attached
     // to this <elo-ranking> instance (e.g. control_sidebar.js's
     // eloMain.addEventListener('stage-change', ...)) still receive it unchanged.
-    // `all-stages` (a plain boolean attribute set by wc2026_map.js on the map's own instance
-    // only — see that file's own comment) opts into a leading "Whole competition" slide ahead of
-    // CAROUSEL_STAGES[0] (js/fixture_list.js's whole-tournament view). Every other <elo-ranking>
-    // on the site (wc2026_countries.html, control-sidebar-test.html — plain, attribute-less
-    // static tags) is unaffected, same carousel as before.
+    // `all-stages` (a plain boolean attribute set by wc2026_map.js — see that file's own comment)
+    // opts into a leading "Whole competition" slide ahead of CAROUSEL_STAGES[0] (js/fixture_list.js's
+    // whole-tournament view).
     this.#carousel = createStageCarousel(T, this.hasAttribute('all-stages') ? { leadingLabel: T.allStagesLabel } : undefined);
     wrap.appendChild(this.#carousel.el);
 

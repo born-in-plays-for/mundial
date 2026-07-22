@@ -7,11 +7,12 @@ import { animateFlagHidden } from './flag_visibility.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
 import { wireShareButton } from './share_button.js';
 
-// Everything that actually differs between the three sidebar modes, in one place, instead of
+// Everything that actually differs between the sidebar's two modes, in one place, instead of
 // scattered `_mode === '...'` checks at each call site (catEloChecked, _setDisplayMode, setMode,
-// the template, _saveState). 'combined' (default) is every page except the map's split tabs
-// (wc2026_countries.html, control-sidebar-test.html) — today's original, full-featured behavior,
-// unchanged by any of this. 'teams'/'tournament' are the map's own two tabs (see setMode below).
+// the template, _saveState). 'teams'/'tournament' are the map's own two split tabs, the sidebar's
+// only remaining consumer (see setMode below) — a former third 'combined' mode (every field here
+// null/true/showEverything, used by now-removed standalone pages) was retired once nothing real
+// used it anymore.
 //
 //  showNonQualified — are the FE/FK/NE/NK (non-qualified) categories real, checkbox-driven
 //    filters (true), or force-excluded regardless of checkbox state (false)? Purely a filtering-
@@ -37,7 +38,7 @@ import { wireShareButton } from './share_button.js';
 //    its return value always wins over whatever was requested.
 //  persistDisplay   — should _saveState() persist _displayMode at all? Split tabs' value is
 //    forced (see forcedDisplay), not a real user choice, so persisting it would just leak a
-//    meaningless value into the 'countries' localStorage slice shared with 'combined' pages.
+//    meaningless value into the 'countries' localStorage slice.
 //  defaultStage     — null: this mode never forces a starting stage. A number: the *first* time
 //    setMode ever switches into this mode with nothing else having already decided _stage
 //    (no restored/URL stage, no prior user click — see _stageEverSet below), _stage jumps here
@@ -46,12 +47,11 @@ import { wireShareButton } from './share_button.js';
 //    leadingLabel) — a real, later user choice is never overridden by this, only the untouched
 //    starting state is.
 const MODE_BEHAVIOR = {
-  combined:   { showNonQualified: true,  gateByStage: true,  ignoreTeamFilters: false, showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                    persistDisplay: true,  defaultStage: null },
   teams:      { showNonQualified: true,  gateByStage: false, ignoreTeamFilters: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                            persistDisplay: false, defaultStage: null },
   tournament: { showNonQualified: false, gateByStage: true,  ignoreTeamFilters: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage <= 0 ? 'team' : 'match',  persistDisplay: false, defaultStage: -1 },
 };
 
-export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, mode = 'combined' }) {
+export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, mode = 'teams' }) {
   let _mode = mode;
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
@@ -63,12 +63,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // "match" sort-item was: no fixtures to group by at the 'group' stage, so switching to
   // 'match' there is a no-op (forced back to 'team').
   let _displayMode = 'team';
-  // Set only when _updateCarouselTitle auto-forces 'match' back to 'team' because the carousel
-  // dropped to stage 0 (see below) — remembers that this was NOT the user's own choice, so
-  // 'match' comes back on its own once a valid stage is reached again, instead of staying stuck
-  // on 'team' until the user re-picks it by hand. A user-driven switch to 'team' at a valid
-  // stage never sets this (nothing to restore), and it's consumed (cleared) the moment it fires.
-  let _autoSwitchedFromMatch = false;
 
   const _sidebarHost = document.getElementById('sidebar-host');
   const _sortLabel = html`<span class="cbs-header-label">${T.sortLabels.action}</span>`;
@@ -235,11 +229,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // ── Players-tab export/native/import filter — only ever meaningful while #tab-players is
   // the active bottom tab (see setPlayersTabActive below); the checkboxes themselves are always
   // present, just disabled otherwise (same dimming convention as _matchDisplayRadio.disabled).
-  // Starts `hidden` in the template (unlike the checkboxes' own `disabled`) — this control_sidebar
-  // module is shared with pages that have no #tab-players concept at all (wc2026_countries.html,
-  // control-sidebar-test.html, both 'combined' mode) and never call setPlayersTabActive; a
-  // visible-but-permanently-inert row there would just be confusing clutter, same reasoning as
-  // the display toggle being fully removed (not just disabled) on the map's own split tabs. ──
+  // Starts `hidden` in the template, shown only once setPlayersTabActive(true) actually fires. ──
   const _pfTableEl = _panel.querySelector('.csb-native-table');
   const _pfExport = _panel.querySelector('#csb-pf-export');
   const _pfNative = _panel.querySelector('#csb-pf-native');
@@ -274,29 +264,14 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // "whole competition" (-1) — there's no single fixture to group by until a knockout round is
     // being viewed. Disabled (native `disabled` on the radio — Bootstrap's own
     // .btn-check:disabled+.btn CSS dims the label, and a disabled radio's label click is a no-op
-    // natively) rather than removed, so the switch's layout stays stable; forced back to 'team'
-    // if the carousel is navigated back down to stage <= 0 while it was active — but remembered
-    // (_autoSwitchedFromMatch) and silently restored the next time a valid stage is reached,
-    // since that switch was never the user's own choice.
+    // natively) rather than removed, so the switch's layout stays stable.
     if (_matchDisplayRadio) _matchDisplayRadio.disabled = _stage <= 0;
-    // _setDisplayMode must run on EVERY stage change, unconditionally — MODE_BEHAVIOR[_mode]
-    // .forcedDisplay (inside it) overrides whatever candidate is computed below for tab-teams/
-    // tab-tournament, so a stage move that isn't one of the two cases the old code recognized
-    // (landing exactly on stage <= 0, or leaving it with a remembered match preference) used to
-    // skip calling _setDisplayMode entirely — silently stranding tab-tournament in whatever
-    // display it already had (bug: Round of 32 showed the flat team list, not fixtures, because
-    // going straight from stage 0 to stage 2 hit neither branch below). The candidate itself
-    // still only matters for 'combined' mode's own remembered-toggle dance across stage <= 0 (a
-    // real user choice there, not forced) — this computes the exact same value as before.
-    let candidate = _displayMode;
-    if (_stage <= 0) {
-      if (_displayMode === 'match') _autoSwitchedFromMatch = true;
-      candidate = 'team';
-    } else if (_autoSwitchedFromMatch) {
-      _autoSwitchedFromMatch = false;
-      candidate = 'match';
-    }
-    _setDisplayMode(candidate);
+    // _setDisplayMode must run on EVERY stage change, unconditionally — both remaining modes
+    // (tab-teams/tab-tournament) define forcedDisplay, which always overrides whatever's passed
+    // in here, so the value itself doesn't matter; this just needs to fire so that override runs
+    // (bug once fixed: Round of 32 showed the flat team list, not fixtures, because a stage move
+    // that wasn't handled by an earlier, narrower version of this used to skip the call entirely).
+    _setDisplayMode(_displayMode);
   };
 
   // The tournament hasn't reached every stage yet — cap navigation at the furthest stage that
@@ -310,14 +285,11 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
 
   // _stage is owned here, unconditionally — _setStage below is the sole authority that
-  // mutates it and runs the resulting filter/render cascade, whether or not eloMain is a real,
-  // connected <elo-ranking> (a page with no pill-list UI at all, e.g. wc2026_players.html,
-  // still needs stage filtering to work — see initSidebar's own doc comment). eloMain.stage=
-  // is a fire-and-forget "reflect this visually" command, not a round-trip dependency: a bare
-  // stand-in element silently no-ops it. This listener only matters when a user drags/clicks a
-  // *real* carousel directly — the guard below skips it when the event is just Bootstrap's own
-  // slide.bs.carousel echo of a programmatic _setStage call (already applied by the time it
-  // fires), so a real widget never runs the cascade twice for the same change.
+  // mutates it and runs the resulting filter/render cascade. eloMain.stage= is a fire-and-forget
+  // "reflect this visually" command, not a round-trip dependency. This listener only matters when
+  // a user drags/clicks a *real* carousel directly — the guard below skips it when the event is
+  // just Bootstrap's own slide.bs.carousel echo of a programmatic _setStage call (already applied
+  // by the time it fires), so a real widget never runs the cascade twice for the same change.
   eloMain.addEventListener('stage-change', e => {
     if (e.detail.stage === _stage) return;
     _stage = e.detail.stage;
@@ -465,9 +437,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   });
   // The label itself carries no data-bs-toggle of its own (only .csb-conf-btn does) — forward
   // its click to the real toggle button so the whole "current confederation" text is clickable,
-  // not just the small icon next to it. Mirrors players_sidebar.js's own #players-conf-label
-  // (.csb-conf-label is a shared class/style between the two sidebars — see control-sidebar.css)
-  // — see that file's own comment for why stopPropagation is required: the nested btn.click()
+  // not just the small icon next to it. stopPropagation is required: the nested btn.click()
   // opens the dropdown and re-arms Bootstrap's document-level "click outside" listener as part
   // of that; without stopping it here, the *original* click event then keeps bubbling past the
   // label to document, where that listener sees a target outside .csb-conf-dropdown and
@@ -519,7 +489,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _setDisplayMode = mode => {
     const forced = MODE_BEHAVIOR[_mode].forcedDisplay;
     if (forced) mode = forced(_stage);
-    else if (mode === 'match' && _stage <= 0) mode = 'team';
     if (mode === _displayMode) return;
     _displayMode = mode;
     _teamDisplayRadio.checked = mode === 'team';
@@ -528,8 +497,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
 
   // Reconfigures this same shared sidebar + eloMain for one of the map's two split tabs
-  // (tab-teams / tab-tournament — see wc2026_map.js's _switchTab). Never called on pages using
-  // the default 'combined' mode, which stays exactly as it always has been.
+  // (tab-teams / tab-tournament — see wc2026_map.js's _switchTab, which calls this once early,
+  // synchronously, before any data has loaded, and again on every tab switch thereafter).
   const setMode = newMode => {
     if (newMode === _mode) return;
     _mode = newMode;
@@ -541,8 +510,9 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // The team/match toggle IS fully removed (not just disabled) on both split tabs — unlike
     // the filter rows above, it has nothing left to communicate once the tab-panel swap already
     // forces the one display that makes sense (see _setDisplayMode's forcedDisplay); keeping it
-    // visible-but-inert would just be a redundant, silent control. Only 'combined' pages (which
-    // never call setMode) still show and use it.
+    // visible-but-inert would just be a redundant, silent control. Both remaining modes set
+    // showDisplayToggle: false, so this is always hidden now — the DOM/listener are left in place
+    // rather than torn out (a bigger, separate change), just permanently inert.
     _displayTableEl.hidden = !behavior.showDisplayToggle;
     eloMain.showCarousel = behavior.showCarousel;
     // First-ever entry into a mode with its own defaultStage (today: only 'tournament', -1 —
@@ -885,7 +855,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // pairing at all (e.g. a bracket slot too far out to be scheduled yet) — see _buildGroups.
   const _matchInfo = item => _stage > 0 ? app.matchInfoByIso2?.[item.iso2]?.[_stage] : undefined;
 
-  // Shared with players_sidebar.js's "sort by team" mode — see qualified.js's own comment.
   const _sortFns = teamComparators;
 
   const _ptsFor = (key, item, fmtPop) =>
@@ -1177,7 +1146,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // panel/console describe" can't drift apart from each other or from applyParams' own reading.
   const _paramTable = createParamTable([
     // Country rows only have one identity to sort by — the degenerate, no-axes case of
-    // sortEntry (see its own header comment). players_sidebar.js's psort is the N-axes case.
+    // sortEntry (see its own header comment).
     sortEntry('sort', {
       validKeys: _SORT_KEYS,
       getOrder: () => _sortOrder,
@@ -1188,10 +1157,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // -1 ("Whole competition", 'tournament' mode's own leading carousel slide — see
     // MODE_BEHAVIOR.tournament.defaultStage) is deliberately never represented in the URL/share
     // link: CAROUSEL_STAGES[-1] doesn't exist (js/param_table.js's stageEntry would serialize
-    // "undefined"), and a real sentinel would leak into players_sidebar.js's own 'shared'-slice-
-    // reading carousel, which never gets a leading slide and could crash forwarding it to
-    // Bootstrap's own .to(-1). Aliased to 0 here instead — sharing a link while on this slide
-    // just shares "Group stage", one carousel click away either direction.
+    // "undefined"). Aliased to 0 here instead — sharing a link while on this slide just shares
+    // "Group stage", one carousel click away either direction. (_saveState's own localStorage
+    // persistence, below, uses a real 'all' sentinel instead of this alias — the URL keeps the
+    // simpler behavior since it's a lower-stakes surface.)
     stageEntry('stage', {
       getStageIndex: () => _stage === -1 ? 0 : _stage,
       // _stageEverSet marked explicitly (not left to _setStage's own idx===_stage guard) for the
@@ -1228,10 +1197,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         return true;
       },
     },
-    // Same key name/shape as players_sidebar.js's own 'pshow' (native,moved) — genuinely
-    // page-private (this page's 3-way export/native/import split has no equivalent on that
-    // page), never mixed into the 'show' entry above, which is a different concept (country
-    // category visibility, not player-role visibility).
+    // Never mixed into the 'show' entry above, which is a different concept (country category
+    // visibility, not player-role visibility).
     {
       key: 'pshow',
       get: () => [...Object.keys(_pfEls), ...Object.keys(_pkEls)].filter(k => (_pfEls[k] ?? _pkEls[k]).checked).join(','),
@@ -1328,10 +1295,6 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // saving mid-restore anyway — everything being applied already came from localStorage.
   let _restoringState = false;
 
-  // 'shared' (order/dir/stage/conf) round-trips with players_sidebar.js — same meaning, same
-  // value domain on both pages (see js/persist.js's own comment), so e.g. picking a
-  // confederation here is still selected next time the players page loads, and vice versa.
-  // 'countries' (checks/display) has no players-page equivalent — stays private to this page.
   const _saveState = () => {
     if (_restoringState) return;
     saveSlice('shared', {
@@ -1339,25 +1302,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       dir: _sortDir,
       // -1 ("Whole competition") has no CAROUSEL_STAGES entry of its own — saved as the literal
       // string 'all' instead (not a real CAROUSEL_STAGES member, so it can never collide with
-      // one). This slice round-trips with players_sidebar.js, whose own carousel never gets a
-      // leading slide — but its own restore (same idx = CAROUSEL_STAGES.indexOf(shared.stage);
-      // if (idx >= 0) ... pattern as _restoreState below) already silently ignores any string it
-      // doesn't recognize, so 'all' just leaves that page's own stage untouched rather than
-      // crashing or forwarding -1 into its carousel. Deliberately NOT the same aliasing
-      // stageEntry (the Share button/?stage= URL, above) uses — a URL is a different sharing
-      // surface, still intentionally simplified to 'group' (see that comment).
+      // one). Deliberately NOT the same aliasing stageEntry (the Share button/?stage= URL, above)
+      // uses — a URL is a different sharing surface, still intentionally simplified to 'group'
+      // (see that comment).
       stage: _stage === -1 ? 'all' : CAROUSEL_STAGES[_stage],
       conf: _confKey,
     });
     saveSlice('countries', {
       checks: Object.fromEntries(Object.entries(_CELL_MAP).map(([k, el]) => [k, !!el?.checked])),
-      // Only a real user choice in 'combined' mode — tab-teams/tab-tournament force this value
-      // themselves (see _setDisplayMode), so persisting it here would leak a forced, meaningless
-      // value into the slice this page shares with 'combined'-mode pages (wc2026_countries.html
-      // etc.) via the same localStorage key. Omitting the field (rather than writing it and
-      // relying on _setDisplayMode's restore-time override to catch it every time) also self-
-      // heals any stale value saved before this comment existed — saveSlice replaces the whole
-      // 'countries' object wholesale, so the very next save from a split tab clears it out.
+      // Both remaining modes force this value themselves (see _setDisplayMode's forcedDisplay),
+      // so persisting it here would leak a forced, meaningless value that would just get
+      // overridden on restore anyway — MODE_BEHAVIOR[_mode].persistDisplay is currently false for
+      // both, so this always omits the field. Kept as a per-mode flag (not hardcoded false) in
+      // case a future mode ever wants a real, persisted user choice here again.
       ...(MODE_BEHAVIOR[_mode].persistDisplay ? { display: _displayMode } : {}),
       // Always false on alwaysOpen pages (no .csb-toggle/collapse there to ever add the
       // class) — harmless to save regardless, just never restored for them (see _restoreState).

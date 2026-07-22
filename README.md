@@ -9,13 +9,14 @@ Static frontend for the [Born In, Plays For](https://github.com/born-in-plays-fo
 | URL | Description |
 |---|---|
 | [/](https://mundial.cthiebaud.com/) | Entry point — redirects to the map |
-| [/wc2026_map.html](https://mundial.cthiebaud.com/wc2026_map.html) | Main choropleth map |
-| [/wc2026_countries.html](https://mundial.cthiebaud.com/wc2026_countries.html) | Countries reference table |
-| [/wc2026_players.html](https://mundial.cthiebaud.com/wc2026_players.html) | Players & coaches table |
+| [/wc2026_map.html](https://mundial.cthiebaud.com/wc2026_map.html) | Main choropleth map (countries + tournament + players, all in one page) |
 | [/wc2026_live.html](https://mundial.cthiebaud.com/wc2026_live.html) | Live game tracking (requires backend) |
 | [/chains/wc2026_chain_longest.html](https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html) | Export chain snake renderer |
-| [/insights/france.html](https://mundial.cthiebaud.com/insights/france.html) | France departments choropleth |
-| [/insights/status.html](https://mundial.cthiebaud.com/insights/status.html) | Elimination status bar chart, toggle between imports/exports ranking |
+
+A handful of standalone pages that predated `wc2026_map.html` absorbing their functionality
+(countries/players reference tables, a France departments choropleth, an elimination-status chart,
+a talent-intensity heatmap, a country-taxonomy explainer) have been retired. They may return later
+under `insights/`, rebuilt against the current codebase.
 
 ## Running locally
 
@@ -109,36 +110,18 @@ UI language follows the browser locale. Supported: French, German, Italian, Span
 
 ## Control bar state
 
-`wc2026_map.html` and `wc2026_countries.html` share `#control-sidebar` (`js/control_sidebar.js`); `wc2026_players.html` has its own `#sidebar-host` panel (`js/players_sidebar.js`). Both persist to `localStorage` and both are deep-linkable via URL params — a subset of that state is genuinely shared between the two (same `localStorage` slice, same URL param name), the rest is page-private:
+`wc2026_map.html`'s `#control-sidebar` (`js/control_sidebar.js`) drives both split tabs
+(tab-teams / tab-tournament). It persists to `localStorage` and is deep-linkable via URL params,
+across two slices:
 
-```mermaid
-flowchart TB
-  subgraph SHARED["Shared state — localStorage slice 'shared', same URL param names on both pages"]
-    direction TB
-    S1["sort criteria order<br/>elo / pop / delta / alpha<br/>(control-sidebar also has 2 hidden-from-UI keys: imp / exp)<br/>URL: sort=k1,k2 (control) · psort=mode:key (players, leading key only)"]
-    S2["sort direction<br/>asc / desc<br/>URL: dir="]
-    S3["tournament stage<br/>group / r32 / r16 / qf / sf / final / winner<br/>URL: stage="]
-    S4["confederation filter<br/>uefa / afc / caf / conmebol / concacaf / ofc / none<br/>URL: fifaconf="]
-  end
-
-  subgraph CONTROL["#control-sidebar only — map + countries pages<br/>localStorage slice 'countries'"]
-    direction TB
-    C1["category cells shown<br/>qie / qi / qe / q / ef / en / of / on<br/>(+ aliases: qual / nq / exp / nexp / imp / all)<br/>URL: show="]
-    C2["display mode<br/>team / match<br/>URL: display="]
-    C3["not persisted, UI-only:<br/>collapse toggle (ESC) · params-badge explain panel · Share button"]
-  end
-
-  subgraph PLAYERS["#sidebar-host only — players page<br/>localStorage slice 'players'"]
-    direction TB
-    P1["sort mode<br/>player / playsFor / bornIn<br/>(picks which country a row is ranked by; 'player' has no criteria of its own)<br/>URL: bundled into psort="]
-    P2["origin filters<br/>native / moved<br/>URL: pshow="]
-    P3["confederation scope<br/>bornIn / playsFor<br/>(which country the fifaconf filter checks)<br/>URL: pconfscope="]
-    P4["not persisted, UI-only:<br/>Share button"]
-  end
-
-  SHARED --- CONTROL
-  SHARED --- PLAYERS
-```
+| Slice | Key | Meaning |
+|---|---|---|
+| `shared` | `order` | sort criteria priority — `elo` / `pop` / `delta` / `alpha` (URL: `sort=k1,k2`) |
+| `shared` | `dir` | sort direction — `asc` / `desc` (URL: `dir=`) |
+| `shared` | `stage` | tournament stage — `group` / `r32` / `r16` / `qf` / `sf` / `final` / `winner` (URL: `stage=`; the carousel's own leading "Whole competition" slide persists as a distinct `'all'` value in `localStorage`, but simplifies to `group` when shared via URL) |
+| `shared` | `conf` | confederation filter — `uefa` / `afc` / `caf` / `conmebol` / `concacaf` / `ofc` / none (URL: `fifaconf=`) |
+| `countries` | `checks` | category cells shown — `qie` / `qi` / `qe` / `q` / `ef` / `en` / `of` / `on` (+ aliases) (URL: `show=`) |
+| `countries` | — | not persisted, UI-only: collapse toggle (ESC) · params-badge explain panel · Share button |
 
 ## See also
 

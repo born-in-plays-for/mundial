@@ -11,15 +11,11 @@ export const loadJSON = key => {
   catch { return null; }
 };
 
-// Both control_sidebar.js and players_sidebar.js persist under this one key now, each owning
-// two top-level slices: 'shared' (order/dir/stage/conf — the 4 fields that mean the exact same
-// thing on both pages: same reorderable elo/pop/delta/alpha keys via teamComparators, same
-// asc/desc flip convention, same CAROUSEL_STAGES index, same CONF_IDS key — so picking a
-// confederation or a tournament stage on one page carries over to the other), and their own
-// page-private slice ('countries': checks/display: 'players': mode/native/moved — concepts
-// that don't generalize across the two, see control_sidebar.js/players_sidebar.js's own
-// comments). A shallow merge on save means either page can write its own two slices without
-// touching the other page's private one.
+// Several modules persist under this one shared key, each owning its own top-level slice —
+// control_sidebar.js's 'shared' (order/dir/stage/conf) and 'countries' (checks/display),
+// group_stage.js's 'groupStage' (selected), wc2026_map.js's 'bottomTab' (active) — see each
+// file's own comments for what its own fields mean. A shallow merge on save means writing one
+// slice never clobbers another.
 const _SHARED_STATE_KEY = 'mundial-state';
 
 export const loadSlice = slice => loadJSON(_SHARED_STATE_KEY)?.[slice] ?? null;

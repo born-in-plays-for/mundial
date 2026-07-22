@@ -293,9 +293,8 @@ const _fifaMemberIds = new Set();
 const _eloRankedIds = new Set();
 // Shared between tab-teams (default) and tab-tournament — see _switchTab below, which
 // reparents this same .elo-layout wrapper between the two panes instead of duplicating it.
-// `all-stages` opts this one instance into the carousel's leading "Whole competition" slide
-// (js/elo_ranking.js's connectedCallback) — wc2026_countries.html/control-sidebar-test.html's
-// own static <elo-ranking> tags don't carry it, so only tab-tournament gets it.
+// `all-stages` opts this instance into the carousel's leading "Whole competition" slide
+// (js/elo_ranking.js's connectedCallback).
 render(html`<div class="elo-layout"><elo-ranking class="elo-main" all-stages></elo-ranking></div>`, document.getElementById('tab-teams'));
 const _eloLayoutEl = document.querySelector('.elo-layout');
 const _eloMain = document.querySelector('.elo-main');
@@ -922,7 +921,7 @@ const showQualifiedTip = (event, name, code) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(code)}${countryName(nId, name)}${app.byId[nId]?.totalCount ? html`<span class="tt-count" style="color:#14532d;font-size:18px;margin:0;line-height:1">${app.byId[nId].totalCount}</span>` : nothing}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[code])}${rankTag(name)}${capTag(app.capital[code])}</span>
+        ${popRankHeader(app.pop[code], name, app.capital[code])}
       </div>
       <div class="tt-label">${T.noExport(countryName(nId, name))}</div>
       ${hasImps ? buildImportColHtml(nId) : html`<div class="tt-label">${T.noImport(countryName(nId, name))}</div>`}
@@ -1116,11 +1115,9 @@ const _updatePlayerCityDots = () => {
 };
 
 // The "production intensity" KDE raster that used to live here (the Intensity half of a
-// Bubbles/Intensity toggle) moved to its own standalone page, insights/heat-map.html — it was
-// dead code on this page for a while (the toggle UI shipped hidden, display:none, never
-// reachable), and had nothing left in common with the birth-city dots once tab-players stopped
-// being a togglable pair of alternate views and became just "birth-city dots, always". The
-// engine itself (js/kde_layer.js) is unchanged and still what that page imports.
+// Bubbles/Intensity toggle) moved to its own standalone page (insights/heat-map.html, since
+// removed along with its js/kde_layer.js engine) once tab-players stopped being a togglable pair
+// of alternate views and became just "birth-city dots, always".
 const _updateAllPlayersMapLayer = () => {
   _updatePlayerCityDots();
 };
@@ -1295,6 +1292,11 @@ const _updateSelectionPanel = (onCollapsed) => {
   if (rowEl && rowEl.scrollWidth > rowEl.clientWidth) render(buildRow(false), _selectionPanelEl);
 };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
+// The pop/rank/capital column every tooltip header shows to the right of the flag+name — pop
+// and capital always present (popTag/capTag are already null-safe on missing data), rankName
+// omitted entirely (not just unresolvable) by showCityTip, which has no country rank to show at
+// all for a city-level tooltip.
+const popRankHeader = (pop, rankName, capital) => html`<span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(pop)}${rankName != null ? rankTag(rankName) : nothing}${capTag(capital)}</span>`;
 const flagImg = code => code ? html`<img class="tt-flag rounded-circle flex-shrink-0" src="${FLAG_CDN(code)}">` : nothing;
 const coachBadge = p => p.role === 'coach' ? html`<span class="coach-badge">${T.coach}</span>` : nothing;
 
@@ -1560,10 +1562,10 @@ const _focusedPlayers = focusIds => {
 };
 
 // #tab-players' own column-header sort state. name/caps sort on simple direct fields; bornIn/
-// playsFor sort by the *team's* current standing — same teamComparators (control_sidebar.js's
-// sidebar.sortFns, keyed by sidebar.sortOrder[0], the sort table's own active leading criterion)
-// players_sidebar.js's "sort by team" mode already uses, reused here rather than a second,
-// alpha-only copy of that logic. _ptFocusIds mirrors whatever `focusIds` produced the table
+// playsFor sort by the *team's* current standing — the same teamComparators control_sidebar.js's
+// sidebar.sortFns exposes (keyed by sidebar.sortOrder[0], the sort table's own active leading
+// criterion), reused here rather than a second, alpha-only copy of that logic. _ptFocusIds
+// mirrors whatever `focusIds` produced the table
 // currently on screen (set as a side effect every time _playersTableTemplate runs) so a header
 // click re-renders the same view — ambient, one dim-selected team, or a fixture's two teams —
 // instead of always falling back to the ambient one.
@@ -1582,8 +1584,9 @@ const _ptBirthCity = p => {
 
 // A birth country can be genuinely absent from the Elo rankings entirely (e.g. the Isle of Man —
 // not a FIFA member); _eloItemsById.get(id) then returns undefined. Unknown-vs-known is a real,
-// orderable fact — unknown always sorts last, regardless of column direction — same guard
-// players_sidebar.js's own _cmpMaybe uses, for the same Array#sort-consistency reason.
+// orderable fact — unknown always sorts last, regardless of column direction, for
+// Array#sort-consistency (a comparator must be a total order — flipping direction can't be
+// allowed to also flip where missing data lands).
 const _ptTeamCmp = (idA, idB) => {
   const x = idA != null ? _eloItemsById.get(idA) : null;
   const y = idB != null ? _eloItemsById.get(idB) : null;
@@ -1622,8 +1625,6 @@ const _ptSetSort = key => {
 _sidebarCallbacks.getPlayersSortDir = () => _ptSortDir;
 _sidebarCallbacks.togglePlayersSortDir = () => _ptSetSort(_ptSortKey);
 
-// ▾/▴ — same glyphs as wc2026_players.html's own _sortArrow, for a consistent look between the
-// map's ambient table and the standalone players page.
 const _ptSortArrow = () => _ptSortDir === 'asc' ? ' ▾' : ' ▴';
 const _ptTh = (key, label, extraClass = '') => html`<th
     class="pt-th${extraClass ? ' ' + extraClass : ''}${_ptSortKey === key ? ' pt-th-active' : ''}"
@@ -1902,7 +1903,7 @@ const showExportTip = (event, id) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${!QUALIFIED_NAMES[id] ? html`<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${countryName(rec.id, rec.country)}</span><small class="tt-pop fst-italic">${_fifaMemberIds.has(id) ? T.notQualified : T.notFifaMember}</small></span>` : countryName(rec.id, rec.country)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(rec.pop)}${(rec.country)}${capTag(app.capital[iso2ForId(rec.id)])}</span>
+        ${popRankHeader(rec.pop, QUALIFIED_NAMES[rec.id], app.capital[iso2ForId(rec.id)])}
       </div>
       ${body}
       ${hasMore ? html`<div class="tt-more-label text-end">${leftTruncated && rightTruncated ? T.clickForAllPlural : T.clickForAll}</div>` : nothing}`, tt);
@@ -1925,7 +1926,7 @@ const showImportTip = (event, destId) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(destFc)}${countryName(destId, destName)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[destFc])}${rankTag(destName)}${capTag(app.capital[destFc])}</span>
+        ${popRankHeader(app.pop[destFc], destName, app.capital[destFc])}
       </div>
       <div class="tt-countries mb-0 fst-italic"><span class="color-exp">←</span> ${countryName(dimState.sourceId, srcRec.country)} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
@@ -1952,7 +1953,7 @@ const showImportSourceTip = (event, centroidId) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(bFc)}${countryName(p0.birthCountryId, p0.birthCountry)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[bFc])}${rankTag(p0.birthCountry)}${capTag(app.capital[bFc])}</span>
+        ${popRankHeader(app.pop[bFc], p0.birthCountry, app.capital[bFc])}
       </div>
       <div class="tt-countries mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${allPlayers.length})</div>
       <div class="tt-players ${allPlayers.length > 5 ? 'tt-more' : ''}">
@@ -1983,7 +1984,7 @@ const showCombinedTip = (event, id) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}${countryName(id, destName)}</span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[fc])}${rankTag(destName)}${capTag(app.capital[fc])}</span>
+        ${popRankHeader(app.pop[fc], destName, app.capital[fc])}
       </div>
       ${exportPlayers.length > 0 ? html`
         <div class="tt-countries mb-0 fst-italic"><span class="color-imp">→</span> ${countryName(dimState.sourceId, QUALIFIED_NAMES[dimState.sourceId])} (${exportPlayers.length})</div>
@@ -2012,7 +2013,7 @@ const showSimpleTip = (event, id, topoName) => {
     render(html`
       <div class="tt-name tt-name-inner d-flex align-items-center gap-2">
         <span class="tt-name-inner d-flex align-items-center gap-2">${flagImg(fc)}<span class="d-inline-flex flex-column lh-sm gap-1"><span class="text-muted">${name}</span><small class="tt-pop fst-italic">${_fifaMemberIds.has(id) ? T.notQualified : T.notFifaMember}</small></span></span>
-        <span class="tt-pop-rank d-flex flex-column align-items-end flex-shrink-0 ms-2">${popTag(app.pop[fc])}${capTag(app.capital[fc])}</span>
+        ${popRankHeader(app.pop[fc], null, app.capital[fc])}
       </div>`, tt);
   }
   tt.classList.add('tt-non-qualified');
@@ -2637,9 +2638,8 @@ Promise.all([
 // map-container.js's wireLegend() (shared with the chain page). legend.refresh() is
 // called at the end of buildIndices() (below, once app.byId is populated). The
 // map's own theme repaint (not the legend widget) stays a separate onThemeChange
-// listener here. (The KDE-intensity legend swap that used to live here moved to
-// insights/heat-map.html along with the rest of that layer — see
-// _updateAllPlayersMapLayer's own comment.)
+// listener here. (The KDE-intensity legend swap that used to live here moved out along with the
+// rest of that layer — see _updateAllPlayersMapLayer's own comment.)
 const legend = wireLegend({ getById: () => app.byId });
 onThemeChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });

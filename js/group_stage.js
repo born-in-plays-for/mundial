@@ -1,6 +1,7 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { fixtureRow } from './elo_ranking.js';
 import { loadSlice, saveSlice } from './persist.js';
+import { FLAG_CDN } from './map-container.js';
 
 // Persistent Group Stage view for tab-tournament's stage 0 — all 12 groups' standings +
 // played-fixture results, always browsable (not gated on a live match). Adapted from
@@ -11,7 +12,6 @@ import { loadSlice, saveSlice } from './persist.js';
 // lit-html (this project's mandatory templating convention) instead of raw innerHTML string
 // concatenation.
 
-const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 const _GROUP_LETTERS = [...'ABCDEFGHIJKL'];
 const _FINISHED = new Set(['FT', 'AET', 'PEN']);
 
@@ -51,7 +51,7 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
     const clickable = onCountryClick && item?.id != null;
     return html`
     <tr class="${_qualifiesForR32(t.iso2) ? 'grp-qualify' : ''}">
-      <td><img class="grp-flag" src="${_CDN(t.iso2)}" alt=""></td>
+      <td><img class="grp-flag" src="${FLAG_CDN(t.iso2)}" alt=""></td>
       <td class="grp-team${clickable ? ' grp-team--clickable' : ''}" @click=${() => { if (clickable) onCountryClick(item.id); }}>${regionName(t.iso2, t.iso2)}</td>
       <td class="grp-num">${t.played}</td><td class="grp-num">${t.win}</td>
       <td class="grp-num">${t.draw}</td><td class="grp-num">${t.lose}</td>
@@ -68,9 +68,7 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
     .map(t => eloItemsByIso2.get(t.iso2)?.id)
     .filter(id => id != null);
 
-  // 'groupStage' — its own localStorage slice (js/persist.js), private to this module: the
-  // selected-group choice has no equivalent on any other page, unlike control_sidebar.js's
-  // 'shared'/'countries' slices which round-trip with players_sidebar.js.
+  // 'groupStage' — its own localStorage slice (js/persist.js), private to this module.
   const _select = letter => {
     _selected = letter;
     _render();

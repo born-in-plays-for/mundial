@@ -554,10 +554,7 @@ export const zoomToCentroid = (ctx, id, duration = 2000) => {
 // every repaint (not read once) so callers can populate/replace their byId index after
 // wireLegend() runs (map data loads asynchronously) — see refresh() below. Extracted
 // from wc2026_map.js's _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/
-// _updateLegendBorn/_paintThemeToggle. insights/heat-map.html's own KDE-intensity legend
-// (a repurposed #legend-bar/#legend-ticks pair, its own display entirely — see that
-// page's own script) bypasses this module rather than going through it, since it has
-// nothing in common with the choropleth gradient/outlier/theme-toggle machinery here.
+// _updateLegendBorn/_paintThemeToggle.
 export const wireLegend = ({ getById }) => {
   const els = {
     bar:             document.getElementById('legend-bar'),
