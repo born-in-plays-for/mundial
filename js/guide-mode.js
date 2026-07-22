@@ -61,7 +61,14 @@ marked.use({
       return html
         .replace(/<table>/g, '<table class="table table-bordered">')
         .replace(/\{\{ARROW_BLUE\}\}/g, _ARROW_BLUE)
-        .replace(/\{\{ARROW_RED\}\}/g,  _ARROW_RED);
+        .replace(/\{\{ARROW_RED\}\}/g,  _ARROW_RED)
+        // Inline <img src="images/..."> written directly as raw HTML in a guide's own markdown
+        // source (e.g. guide-map.md's own gp-icon headings) bypasses the image() renderer hook
+        // below entirely — marked only invokes that for its own ![]() syntax, passing raw HTML
+        // straight through unchanged. Rewritten here to root-relative for the same reason as the
+        // image() renderer and the CSS-link/fetch paths above: it only ever worked because every
+        // page that opened the guide panel so far lived at site root.
+        .replace(/(<img\b[^>]*\bsrc=)"images\//g, '$1"/images/');
     }
   },
   renderer: {
