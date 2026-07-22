@@ -112,6 +112,16 @@ export const fixtureRow = (f, { eloItemsByIso2, regionName, onCountryClick, onFi
   const rightLost = decided && (swapped ? f.winner === 'away' : f.winner === 'home');
   const leftGoals = swapped ? f.goals?.away : f.goals?.home;
   const rightGoals = swapped ? f.goals?.home : f.goals?.away;
+  // f.score.penalty.{home,away} is data/fixtures.json's own shootout tally (present once a PEN
+  // fixture's result lands there — same field control_sidebar.js's buildMatchInfo, qualified.js,
+  // already reads for the knockout match-display pair's own "X-Y pen." line) — read directly here
+  // rather than through app.matchInfoByIso2 (knockout-only, see this file's own header comment),
+  // since fixtureRow's callers (group stage + whole-competition) cover fixtures buildMatchInfo
+  // never indexes at all.
+  const penalties = f.status === 'PEN';
+  const leftPen = swapped ? f.score?.penalty?.away : f.score?.penalty?.home;
+  const rightPen = swapped ? f.score?.penalty?.home : f.score?.penalty?.away;
+  const pens = penalties ? (leftPen != null ? `${leftPen}-${rightPen} pen.` : 'pen.') : null;
   const dateLabel = fixtureDateLabel(f.date);
   const clickableCls = item => (onCountryClick && item.id != null) ? ' elo-item--clickable' : '';
   const pillClick = item => () => { if (item.id != null) onCountryClick?.(item.id); };
@@ -124,7 +134,7 @@ export const fixtureRow = (f, { eloItemsByIso2, regionName, onCountryClick, onFi
       <span class="elo-item-wrap"><span class="${pillClasses(left)}${leftLost ? ' elo-item--lost' : ''}${clickableCls(left)}" style="${pillStyle(left)}" @click=${pillClick(left)}>${pillContent(left)}</span></span>
       <span class="elo-pair-sep${decided ? ' elo-pair-sep--score' : ''}${fixtureClickable ? ' elo-pair-sep--clickable' : ''}" @click=${onSepClick}>
         ${decided
-          ? html`${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}<span class="elo-pair-sep-score">${leftGoals}–${rightGoals}</span>`
+          ? html`${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}<span class="elo-pair-sep-score">${leftGoals}–${rightGoals}</span>${pens ? html`<span class="elo-pair-sep-pens">${pens}</span>` : nothing}`
           : (dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : html`–`)}
       </span>
       <span class="elo-item-wrap"><span class="${pillClasses(right)}${rightLost ? ' elo-item--lost' : ''}${clickableCls(right)}" style="${pillStyle(right)}" @click=${pillClick(right)}>${pillContent(right)}</span></span>
