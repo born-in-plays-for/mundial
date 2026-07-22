@@ -37,11 +37,14 @@ BASE_URL    = 'http://localhost:4040'
 # 'auth' is real content again (offline/no-server-connection help, reachable via the profile
 # icon). 'default' is the single shared fallback for any page with no guide topic of its own.
 GUIDES = {
-    'map':     GUIDE_DIR / 'guide-map.md',
-    'api':     GUIDE_DIR / 'guide-api.md',
-    'data':    GUIDE_DIR / 'guide-data-sources.md',
-    'auth':    GUIDE_DIR / 'guide-auth.md',
-    'default': GUIDE_DIR / 'guide-default.md',
+    'map':        GUIDE_DIR / 'guide-map.md',
+    'api':        GUIDE_DIR / 'guide-api.md',
+    'data':       GUIDE_DIR / 'guide-data-sources.md',
+    'auth':       GUIDE_DIR / 'guide-auth.md',
+    'default':    GUIDE_DIR / 'guide-default.md',
+    # No i18n/*.json entries for this one, deliberately — English-only, every language build
+    # just passes the source through unchanged (no <!-- i18n:... --> markers to substitute).
+    'discipline': GUIDE_DIR / 'guide-discipline.md',
 }
 
 # Language → Playwright locale

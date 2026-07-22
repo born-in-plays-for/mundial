@@ -122,6 +122,7 @@ class MundialAuthBar extends HTMLElement {
     const _guideIdMap = {
       '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
       'wc2026_players.html': 'map',
+      'discipline.html': 'discipline',
     };
     const _guideTabMap = {
       'wc2026_players.html': 'api',
@@ -147,7 +148,7 @@ class MundialAuthBar extends HTMLElement {
               <img src="/images/puzzle-piece-svgrepo-com.svg" width="24" height="24" alt="">
             </a>
             <ul class="dropdown-menu dropdown-menu-start" style="min-width:0">
-              ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD)}
+              ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD, 'discipline')}
               ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
@@ -196,7 +197,7 @@ class MundialAuthBar extends HTMLElement {
     // ?guide[=section][&tab=api|data] — auto-open guide panel on load
     const _sp = new URLSearchParams(location.search);
     if (_sp.has('guide')) {
-      const _validGuide = new Set(['map', 'api', 'data', 'auth', 'default']);
+      const _validGuide = new Set(['map', 'api', 'data', 'auth', 'default', 'discipline']);
       let _target = _sp.get('guide') || this._currentGuideId;
       let _targetTab = _sp.get('tab') || 'guide';
       // Legacy/old-bookmark support: 'api'/'data' used to be independent top-level guideIds —

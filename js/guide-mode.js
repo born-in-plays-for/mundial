@@ -39,16 +39,17 @@ const _ERROR_HTML = `<div class="gp-wip-banner"><div class="gp-wip-box">
   <div class="gp-wip-sub">Check your connection and try again.</div>
 </div></div>`;
 
-// 'map' is the only real, page-tied guide topic left needing this — 'api'/'data' are now tabs
-// within it (see _TAB_CONFIG above), so _showingId never actually becomes 'api'/'data' on its
-// own anymore; only 'map' itself can diverge from _pageId (e.g. opened from a page that
-// defaults elsewhere, then navigated to Home's guide topic) and need somewhere to go on close.
-// 'auth' and 'default' are deliberately absent: neither is tied to one specific page (auth is
-// reachable from the profile icon on any page; default is whatever page you're already on), so
-// there's nothing to navigate to when toggling guide mode off from either — see toggleGuide's
-// own `if (dest)` guard below.
+// 'map' and 'discipline' are the real, page-tied guide topics needing this — 'api'/'data' are
+// now tabs within 'map' (see _TAB_CONFIG above), so _showingId never actually becomes 'api'/
+// 'data' on its own anymore; a page-tied topic can still diverge from _pageId (e.g. opened from
+// a page that defaults elsewhere, then navigated to this topic via a ?guide= link) and need
+// somewhere to go on close. 'auth' and 'default' are deliberately absent: neither is tied to one
+// specific page (auth is reachable from the profile icon on any page; default is whatever page
+// you're already on), so there's nothing to navigate to when toggling guide mode off from
+// either — see toggleGuide's own `if (dest)` guard below.
 const _guideToPage = {
   map: '/',
+  discipline: '/insights/discipline.html',
 };
 
 const _ARROW_BLUE = '<svg class="gp-arrow" width="40" height="12" viewBox="0 0 40 12"><line x1="1" y1="6" x2="39" y2="6" stroke="#1d4ed8" stroke-width="2.5"/><path d="M17,2.5 L24,6 L17,9.5Z" fill="#1d4ed8"/></svg>';
@@ -69,7 +70,7 @@ marked.use({
       return `<h${depth} id="${id}">${text}</h${depth}>\n`;
     },
     image({ href, title, text }) {
-      const src = href.startsWith('http') ? href : `guide/${href}`;
+      const src = href.startsWith('http') ? href : `/guide/${href}`;
       return `<img class="img-fluid d-block" src="${src}" alt="${text}"${title ? ` title="${title}"` : ''}>`;
     },
     code({ text, lang }) {
@@ -105,7 +106,7 @@ export function toggleGuide(authBar) {
 // 'api'/'data' are recognized here so in-content `?guide=api` links (e.g. guide-map.md's own
 // cross-link to the API Guide tab) still work, but they no longer become _showingId directly —
 // see the click handler below, which routes them through 'map' + a tab instead.
-const _GUIDE_IDS = new Set(['map', 'api', 'data', 'auth', 'default']);
+const _GUIDE_IDS = new Set(['map', 'api', 'data', 'auth', 'default', 'discipline']);
 
 function _ensurePanel() {
   if (_panel) { _panel.style.display = ''; return; }
@@ -137,8 +138,8 @@ function _ensureLink(href) {
 }
 
 function _injectStyles() {
-  _ensureLink('css/wc2026_map.css');
-  _ensureLink('css/taxonomy.css');
+  _ensureLink('/css/wc2026_map.css');
+  _ensureLink('/css/taxonomy.css');
   if (document.getElementById('mundial-guide-panel-styles')) return;
   const s = document.createElement('style');
   s.id = 'mundial-guide-panel-styles';
@@ -387,8 +388,8 @@ function _buildToc(body) {
 async function _fetchContent(guideId) {
   const lang = _LANG ?? 'en';
   const candidates = [
-    `guide/built/${lang}-${guideId}.md`,
-    `guide/built/en-${guideId}.md`,
+    `/guide/built/${lang}-${guideId}.md`,
+    `/guide/built/en-${guideId}.md`,
   ];
   let failed = false;
   for (const url of candidates) {
