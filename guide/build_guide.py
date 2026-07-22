@@ -93,6 +93,15 @@ def take_screenshots():
 
             page.locator('.csb-toggle').click()
             page.wait_for_timeout(700)  # CSS transition
+            # --csb-w/--csb-h (the panel's own rendered size) are measured once, early
+            # (control_sidebar.js's measureControlSidebar, called during initSidebar's own
+            # setup) and only re-measured on a real window resize — at that early point the
+            # panel's content hasn't fully settled, so the stored size undersizes it and the
+            # panel renders clipped (right/bottom edges cut off) until something actually
+            # resizes the window. Dispatching one here forces a fresh, correct measurement
+            # before capturing.
+            page.evaluate("window.dispatchEvent(new Event('resize'))")
+            page.wait_for_timeout(300)
 
             name = _screenshot_name(lang)
             page.locator('#control-sidebar').screenshot(path=str(SCREENSHOTS / name))
@@ -100,8 +109,46 @@ def take_screenshots():
 
             context.close()
 
+        take_map_and_legend_screenshots(browser)
         take_bubbles_screenshot(browser)
         browser.close()
+
+
+def take_map_and_legend_screenshots(browser):
+    """Capture the default map (just the 48 qualified teams' flags) and the legend bar.
+
+    English only, same rationale as take_bubbles_screenshot below — nothing here has
+    per-locale text of its own.
+    """
+    # Taller than 800px — same reason as take_bubbles_screenshot below: the in-map legend sits
+    # below the fold at 800px (off-screen, so its own screenshot comes out blank) since
+    # #map-container's height is computed from the viewport.
+    context = browser.new_context(viewport={'width': 1280, 'height': 1000}, device_scale_factor=2)
+    page = context.new_page()
+    # QB is the "all 48 qualified countries" group alias (see guide-api.md's own ?show=
+    # reference) — narrows the filter to just the 48 qualified teams (the default load shows
+    # every FIFA-member exporter too, ~67 countries per the infobar). No clicks needed, the
+    # filter state is driven entirely by the URL param.
+    page.goto(f'{BASE_URL}/wc2026_map.html?show=QB', wait_until='networkidle', timeout=30_000)
+    page.wait_for_timeout(3_000)
+
+    # The collapsed control-sidebar's own footer strip (country count) is fixed-position and
+    # visually overlaps the map's screen region — locator.screenshot() captures actual rendered
+    # pixels for that rectangle, not just #map's own DOM subtree, so whatever's on top bleeds in
+    # regardless of ownership. Hidden here since it's irrelevant to this screenshot's purpose.
+    page.evaluate("document.getElementById('control-sidebar').style.visibility = 'hidden'")
+
+    # #map is the <world-map> element's own inner <svg> (see take_bubbles_screenshot's own
+    # comment) — crops out the toggle bar, zoom controls, legend, and scroll hint.
+    page.locator('#map').screenshot(path=str(SCREENSHOTS / 'qualified_flags.png'))
+    print('  ✓ screenshots/qualified_flags.png')
+
+    # The legend's own outliers (France/Curaçao) are computed from the full dataset, not the
+    # ?show= filter above, so this is unaffected by it — captured in the same page for speed.
+    page.locator('#legend').screenshot(path=str(SCREENSHOTS / 'legend.png'))
+    print('  ✓ screenshots/legend.png')
+
+    context.close()
 
 
 def take_bubbles_screenshot(browser):
@@ -129,7 +176,11 @@ def take_bubbles_screenshot(browser):
 
     page.locator('#tab-players-btn img').click()
     page.wait_for_timeout(500)
-    page.locator('#map-container').screenshot(path=str(SCREENSHOTS / 'bubbles.png'))
+    # #map is the <world-map> element's own inner <svg> (its id is forwarded there directly —
+    # see map-container.js's WorldMap.connectedCallback) — screenshotting it instead of
+    # #map-container crops out the toggle bar, zoom controls, legend, and scroll-to-zoom hint
+    # that sit alongside it, leaving just the map + bubbles themselves.
+    page.locator('#map').screenshot(path=str(SCREENSHOTS / 'bubbles.png'))
     print('  ✓ screenshots/bubbles.png')
 
     context.close()

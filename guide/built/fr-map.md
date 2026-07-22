@@ -29,7 +29,7 @@ Le bouton <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--
 
 ![Panneau de contrôle](screenshots/control_sidebar-fr.png)
 
-Le panneau comporte quatre parties : une **barre d'outils** en haut ; **tri** à gauche ; la matrice de **filtre** à droite ; et une **barre d'info** en bas.
+Le panneau comporte cinq parties : une **barre d'outils** en haut ; **tri** et **afficher** à gauche ; la matrice de **filtre** à droite ; et une **barre d'info** en bas.
 
 ## Barre d'outils
 
@@ -40,6 +40,15 @@ Le panneau comporte quatre parties : une **barre d'outils** en haut ; **tri** à
 ## Tri
 
 Quatre critères réorganisables — **le classement Elo** (une cote indépendante qui évolue après chaque match selon le résultat et la force de l'adversaire — voir l'[onglet Sources de données](?guide=data) pour le détail exact), **population**, **Δ** (delta joue-pour moins né-dans), **A–Z** — plus un bouton de sens (↓↑) pour inverser croissant/décroissant. Seuls les deux premiers critères sont réellement actifs ; cliquez sur un critère pour le placer en tête de liste.
+
+## Afficher
+
+Deux lignes indépendantes de pastilles à cocher, sous le tri :
+
+- **Export / natif / import** : quel rôle a valu à un joueur sa place dans le tableau — né ici et sélectionné ailleurs ; né et sélectionné ici ; né ailleurs et sélectionné ici.
+- **Joueur / sélectionneur** : quel type de personne s'affiche.
+
+Chaque case est cochée par défaut (tout le monde est affiché) ; décochez-en une pour masquer ce groupe. Actuellement actif uniquement dans *Le tableau des joueurs*, plus bas — les cases s'affichent mais restent désactivées ailleurs, pour l'instant.
 
 ## Filtre
 
@@ -285,6 +294,8 @@ Bordure ondulée — rencontre pas encore jouée.
 Chaque pays est coloré selon son bilan net de talent — contribution locale (exports plus joueurs natifs) moins les imports (voir *La légende*, ci-dessous). Plus ce bilan est marqué, dans un sens ou dans l'autre, plus la teinte est foncée ; un pays proche de l'équilibre neutre apparaît pâle. Les pays sans donnée pour cette mesure apparaissent dans un ton pâle neutre.
 Les pays actuellement inclus dans le filtre affichent un drapeau circulaire.
 
+![Drapeaux des équipes qualifiées](screenshots/qualified_flags.png)
+
 ## Zoom et déplacement
 
 Faites défiler (ou pincez) pour zoomer · faites glisser pour déplacer. Deux boutons ronds se trouvent dans la barre sous la carte, à gauche de la légende :
@@ -297,6 +308,10 @@ Faites défiler (ou pincez) pour zoomer · faites glisser pour déplacer. Deux b
 La carte colore chaque pays selon son bilan net de talent — contribution locale (exports plus joueurs natifs) moins les imports. Les exportateurs nets et les importateurs nets se lisent en deux couleurs différentes de part et d'autre d'un point neutre.
 
 La barre de couleur en bas de l'en-tête se lit de gauche à droite comme une droite numérique — extrême négatif, 0 neutre au milieu, extrême positif — avec une graduation de référence à chaque extrémité et au milieu, et un point isolé *à chaque extrémité* pour le pays le plus hors échelle de ce côté (plus gros importateur net, plus gros exportateur net).
+
+![Légende](screenshots/legend.png)
+
+Les deux points isolés sont toujours les deux mêmes pays : **Curaçao**, le plus gros importateur net (tout son effectif est né aux Pays-Bas), du côté négatif, et **France**, le plus gros exportateur net, du côté positif.
 
 ## Infobulles
 
@@ -365,11 +380,13 @@ Seules les lignes changent selon la sélection en cours :
 - **Un pays sélectionné** : tous les joueurs et entraîneurs qui lui sont liés — nés là-bas, nés et sélectionnés là-bas, ou nés ailleurs et sélectionnés là-bas.
 - **Une rencontre sélectionnée** : les joueurs des deux équipes combinés.
 
+La ligne **afficher** du panneau de contrôle (voir ci-dessus) affine encore ces lignes tant que cet onglet est ouvert.
+
 Sans sélection, les villes de naissance sont aussi représentées sur la carte sous forme de bulles — un point par ville de naissance unique parmi les joueurs listés, plus grand là où plus de joueurs partagent une même ville :
 
 ![Bulles des villes de naissance](screenshots/bubbles.png)
 
-Survolez un point pour voir le nom de la ville et le nombre de joueurs.
+Survolez un point pour voir le nom de la ville et les joueurs qui y sont nés.
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Chaînes
 

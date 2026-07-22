@@ -30,7 +30,7 @@ controlling what appears on the map and in the country list.
 
 ![Control panel](screenshots/control_sidebar.png)
 
-The panel has four parts: a **toolbar** across the top; **sort** on the left; the **filter** matrix on the right; and an **infobar** along the bottom.
+The panel has five parts: a **toolbar** across the top; **sort** and **view** on the left; the **filter** matrix on the right; and an **infobar** along the bottom.
 
 ## Toolbar
 
@@ -41,6 +41,15 @@ The panel has four parts: a **toolbar** across the top; **sort** on the left; th
 ## Sort
 
 Four reorderable criteria — **Elo ranking** (an independent rating that adjusts after every match based on the result and the opponent's strength — see the [Data Sources tab](?guide=data) for exactly how), **population**, **Δ** (delta of plays-for minus born-in), **A–Z** — plus a direction toggle (↓↑) to reverse ascending/descending. Only the top two criteria are actually used; click a criterion to move it to the top of the list.
+
+## View
+
+Two independent rows of pill toggles, below sort:
+
+- **Export / native / import**: which role earned a player their place in the table — born here and selected elsewhere; born and selected here; born elsewhere and selected here.
+- **Player / coach**: which kind of person shows.
+
+Every toggle is checked by default, showing everyone; uncheck one to hide that group. Currently only active within *The Player Table*, below — the toggles show but stay disabled elsewhere, for now.
 
 ## Filter
 
@@ -241,7 +250,9 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 ## Choropleth & Flags
 
 Each country is shaded by its net talent balance — home-grown contribution (exports plus native-born players) minus imports (see *The Legend*, below). The more one-sided that balance, in either direction, the darker the shade; a country close to a neutral balance appears pale. Countries with no data for that metric appear in a neutral pale tone.
-Countries currently included in the filter display a circular flag marker.
+Countries currently included in the filter display a circular flag marker:
+
+![Qualified teams' flags](screenshots/qualified_flags.png)
 
 ## Zoom & Pan
 
@@ -254,7 +265,11 @@ Scroll (or pinch) to zoom · drag to pan. Two round buttons sit in the bar below
 
 The map shades every country by its net talent balance — home-grown contribution (exports plus native-born players) minus imports. Net exporters and net importers read as two different colours either side of a neutral midpoint.
 
-The colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, and a standalone dot *at each end* for the country furthest off scale on that side (biggest net importer, biggest net exporter).
+The colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, and a standalone dot *at each end* for the country furthest off scale on that side (biggest net importer, biggest net exporter):
+
+![Legend](screenshots/legend.png)
+
+The two outlier dots are always the same two countries: **Curaçao**, the biggest net importer (its entire squad is Dutch-born), on the negative end, and **France**, the biggest net exporter, on the positive end.
 
 ## Tooltips
 
@@ -323,11 +338,13 @@ Only the rows change with the current selection:
 - **One country selected**: every player and coach tied to it — born there, born and selected there, or born elsewhere and selected there.
 - **A fixture selected**: both teams' players combined.
 
+The **view** row in the Control Panel (see above) narrows these rows further while this tab is open.
+
 With nothing selected, birth cities are also plotted on the map itself as bubbles — one dot per unique birth city among the listed players, bigger where more players share a city:
 
 ![Birth-city bubbles](screenshots/bubbles.png)
 
-Hover a dot for the city name and player count.
+Hover a dot for the city name and the players born there.
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Chains
 

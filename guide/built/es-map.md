@@ -29,7 +29,7 @@ El botón <kbd style="background:var(--bg-hover,#f0ede8);border:1px solid var(--
 
 ![Panel de control](screenshots/control_sidebar-es.png)
 
-El panel tiene cuatro partes: una **barra de herramientas** arriba; **Ordenar** a la izquierda; la matriz de **Filtrar** a la derecha; y una **barra de información** abajo.
+El panel tiene cinco partes: una **barra de herramientas** arriba; **Ordenar** y **Ver** a la izquierda; la matriz de **Filtrar** a la derecha; y una **barra de información** abajo.
 
 ## Barra de herramientas
 
@@ -40,6 +40,15 @@ El panel tiene cuatro partes: una **barra de herramientas** arriba; **Ordenar** 
 ## Ordenar
 
 Cuatro criterios reordenables — **la clasificación Elo** (una puntuación independiente que cambia después de cada partido según el resultado y la fuerza del rival — ver la pestaña [Fuentes de datos](?guide=data) para el detalle exacto), **población**, **Δ** (delta juega-por menos nacido-en), **A–Z** — más un botón de dirección (↓↑) para invertir ascendente/descendente. Solo los dos criterios superiores están realmente activos; al hacer clic en un criterio se mueve a la primera posición.
+
+## Ver
+
+Dos filas independientes de píldoras seleccionables, debajo de ordenar:
+
+- **Export / nativo / import**: qué rol le dio a un jugador su lugar en la tabla — nacido aquí y seleccionado en otro lugar; nacido y seleccionado aquí; nacido en otro lugar y seleccionado aquí.
+- **Jugador / entrenador**: qué tipo de persona se muestra.
+
+Cada casilla está marcada por defecto (mostrando a todos); desmarque una para ocultar ese grupo. Actualmente solo activo dentro de *La tabla de jugadores*, más abajo — las casillas se muestran pero permanecen desactivadas en otros lugares, por ahora.
 
 ## Filtrar
 
@@ -285,6 +294,8 @@ Borde ondulado — partido aún no jugado.
 Cada país se colorea según su balance neto de talento — contribución local (exportaciones más jugadores nativos) menos importaciones (ver *La leyenda*, abajo). Cuanto más marcado sea ese balance, en cualquier dirección, más oscuro el tono; un país cercano al equilibrio neutro aparece pálido. Los países sin datos para esa métrica aparecen en un tono claro neutro.
 Los países actualmente incluidos en el filtro muestran un marcador de bandera circular.
 
+![Banderas de los equipos clasificados](screenshots/qualified_flags.png)
+
 ## Zoom y desplazamiento
 
 Desplázate (o pellizca) para hacer zoom · arrastra para desplazar la vista. Dos botones redondos se encuentran en la barra bajo el mapa, a la izquierda de la leyenda:
@@ -297,6 +308,10 @@ Desplázate (o pellizca) para hacer zoom · arrastra para desplazar la vista. Do
 El mapa colorea cada país según su balance neto de talento — contribución local (exportaciones más jugadores nativos) menos importaciones. Exportadores netos e importadores netos aparecen en dos colores distintos a cada lado de un punto neutro central.
 
 La barra de color en la parte inferior de la cabecera se lee de izquierda a derecha como una recta numérica — extremo negativo, cero neutro en el centro, extremo positivo — con una marca de referencia en cada extremo y en el centro, más un punto independiente *en cada extremo* para el país más fuera de escala de ese lado (el mayor importador neto, el mayor exportador neto).
+
+![Leyenda](screenshots/legend.png)
+
+Los dos puntos independientes son siempre los mismos dos países: **Curaçao**, el mayor importador neto (toda su plantilla nació en los Países Bajos), en el extremo negativo, y **Francia**, el mayor exportador neto, en el extremo positivo.
 
 ## Información emergente
 
@@ -365,11 +380,13 @@ Solo las filas cambian según la selección actual:
 - **Un país seleccionado**: todos los jugadores y entrenadores vinculados a él — nacidos allí, nacidos y convocados allí, o nacidos en otro lugar y convocados allí.
 - **Un partido seleccionado**: los jugadores de ambos equipos combinados.
 
+La fila **ver** del panel de control (véase arriba) reduce aún más estas filas mientras esta pestaña está abierta.
+
 Sin selección, las ciudades de nacimiento también se representan en el mapa como burbujas — un punto por cada ciudad de nacimiento única entre los jugadores listados, más grande cuando más jugadores comparten una ciudad:
 
 ![Burbujas de ciudades de nacimiento](screenshots/bubbles.png)
 
-Pasa el cursor sobre un punto para ver el nombre de la ciudad y el número de jugadores.
+Pasa el cursor sobre un punto para ver el nombre de la ciudad y los jugadores nacidos allí.
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Cadenas
 

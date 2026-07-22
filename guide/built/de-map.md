@@ -29,7 +29,7 @@ Die Schaltfläche <kbd style="background:var(--bg-hover,#f0ede8);border:1px soli
 
 ![Kontrollpanel](screenshots/control_sidebar-de.png)
 
-Das Panel hat vier Teile: eine **Werkzeugleiste** oben; **Sortieren** links; die **Filter**-Matrix rechts; und eine **Infoleiste** unten.
+Das Panel hat fünf Teile: eine **Werkzeugleiste** oben; **Sortieren** und **Anzeigen** links; die **Filter**-Matrix rechts; und eine **Infoleiste** unten.
 
 ## Werkzeugleiste
 
@@ -40,6 +40,15 @@ Das Panel hat vier Teile: eine **Werkzeugleiste** oben; **Sortieren** links; die
 ## Sortieren
 
 Vier umsortierbare Kriterien — **die Elo-Bewertung** (ein unabhängiger Wert, der sich nach jedem Spiel je nach Ergebnis und Stärke des Gegners ändert — siehe den Tab [Datenquellen](?guide=data) für die genaue Erklärung), **Bevölkerung**, **Δ** (Delta aus spielt-für minus geboren-in), **A–Z** — plus eine Richtungsschaltfläche (↓↑) zum Umkehren von auf-/absteigend. Nur die obersten zwei Kriterien sind tatsächlich aktiv; ein Klick auf ein Kriterium verschiebt es an die erste Stelle.
+
+## Anzeigen
+
+Zwei unabhängige Reihen von Auswahl-Pillen, unter der Sortierung:
+
+- **Export / einheimisch / Import**: welche Rolle einem Spieler seinen Platz in der Tabelle verschafft hat — hier geboren und anderswo nominiert; hier geboren und hier nominiert; anderswo geboren und hier nominiert.
+- **Feldspieler / Trainer**: welche Art von Person angezeigt wird.
+
+Jede Option ist standardmäßig aktiviert (alle werden angezeigt); eine Option deaktivieren blendet diese Gruppe aus. Derzeit nur innerhalb von *Die Spielertabelle*, weiter unten, aktiv — die Optionen werden angezeigt, bleiben aber vorerst anderswo deaktiviert.
 
 ## Filter
 
@@ -285,6 +294,8 @@ Wellenförmiger Rand — Spiel noch nicht ausgetragen.
 Jedes Land ist entsprechend seiner Netto-Talentbilanz eingefärbt — hausgemachter Beitrag (Exporte plus einheimische Spieler) minus Importe (siehe *Die Legende*, unten). Je einseitiger diese Bilanz in die eine oder andere Richtung ausfällt, desto dunkler der Farbton; ein Land nahe der neutralen Balance erscheint blass. Länder ohne Daten zu dieser Kennzahl erscheinen in einem neutralen hellen Ton.
 Länder, die derzeit im Filter enthalten sind, zeigen eine kreisförmige Flaggenmarkierung.
 
+![Flaggen der qualifizierten Mannschaften](screenshots/qualified_flags.png)
+
 ## Zoom und Navigation
 
 Scrollen (oder kneifen) zum Zoomen · ziehen zum Verschieben. Zwei runde Schaltflächen befinden sich in der Leiste unter der Karte, links neben der Legende:
@@ -297,6 +308,10 @@ Scrollen (oder kneifen) zum Zoomen · ziehen zum Verschieben. Zwei runde Schaltf
 Die Karte färbt jedes Land entsprechend seiner Netto-Talentbilanz ein — hausgemachter Beitrag (Exporte plus einheimische Spieler) minus Importe. Netto-Exporteure und Netto-Importeure erscheinen in zwei unterschiedlichen Farben zu beiden Seiten eines neutralen Mittelpunkts.
 
 Der Farbbalken am unteren Rand der Kopfzeile liest sich von links nach rechts wie ein Zahlenstrahl — negatives Extrem, neutrale 0 in der Mitte, positives Extrem — mit einer Referenzmarke an jedem Ende und in der Mitte, sowie einem eigenständigen Punkt *an jedem Ende* für das Land, das auf dieser Seite am weitesten außerhalb der Skala liegt (größter Netto-Importeur, größter Netto-Exporteur).
+
+![Legende](screenshots/legend.png)
+
+Die beiden eigenständigen Punkte sind immer dieselben zwei Länder: **Curaçao**, der größte Netto-Importeur (der gesamte Kader ist in den Niederlanden geboren), am negativen Ende, und **Frankreich**, der größte Netto-Exporteur, am positiven Ende.
 
 ## Tooltips
 
@@ -365,11 +380,13 @@ Nur die Zeilen ändern sich mit der aktuellen Auswahl:
 - **Ein Land ausgewählt**: jeder Spieler und Trainer, der mit ihm verbunden ist — dort geboren, dort geboren und nominiert, oder anderswo geboren und dort nominiert.
 - **Ein Spiel ausgewählt**: die Spieler beider Teams zusammen.
 
+Die Zeile **Anzeigen** im Bedienfeld (siehe oben) schränkt diese Zeilen weiter ein, solange dieser Tab geöffnet ist.
+
 Ohne Auswahl werden Geburtsstädte auch auf der Karte selbst als Bubbles dargestellt — ein Punkt pro einzigartiger Geburtsstadt unter den aufgelisteten Spielern, größer, wenn mehr Spieler sich eine Stadt teilen:
 
 ![Geburtsstadt-Bubbles](screenshots/bubbles.png)
 
-Fahren Sie mit der Maus über einen Punkt für Stadtname und Spielerzahl.
+Fahren Sie mit der Maus über einen Punkt für Stadtname und die dort geborenen Spieler.
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Ketten
 

@@ -2594,6 +2594,15 @@ Promise.all([
   // earlier call ran, so its own callbacks.renderElo?.() was a no-op at the time.
   sidebar.setMode(_activeTab === 'tab-tournament' ? 'tournament' : 'teams');
   _renderElo();
+  // setMode no-ops (skipping its own rAF-deferred measureControlSidebar) whenever the mode
+  // above didn't actually change — the common case, since the default tab-teams load already
+  // set mode to 'teams' once, synchronously, before any data existed (see setMode's own guard,
+  // `if (newMode === _mode) return`). _renderElo() just populated the elo list for the very
+  // first time, so the sidebar's initial measureControlSidebar() call (during initSidebar's own
+  // setup, before any data existed) is now stale regardless of whether setMode itself no-opped.
+  // Without this, --csb-w/--csb-h stay undersized (control_sidebar.png's right/bottom edges
+  // rendered clipped) until something dispatches a real window resize.
+  requestAnimationFrame(sidebar.measureControlSidebar);
   sidebar.applyParams(new URLSearchParams(location.search));
   _expandPanel(_eloMetaPanel);
   sidebar.applyFlagFilter();

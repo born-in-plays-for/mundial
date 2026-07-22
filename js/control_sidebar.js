@@ -53,6 +53,13 @@ const MODE_BEHAVIOR = {
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, mode = 'teams' }) {
   let _mode = mode;
+  // First real setMode() call must run its body even though newMode already equals the initial
+  // _mode value above (both 'teams') — same _xEverSet pattern as _stageEverSet below. Without
+  // this, setMode's `if (newMode === _mode) return` guard skips its own body on that first call,
+  // so eloMain.showCarousel (etc.) never gets explicitly set to tab-teams's own false — the
+  // carousel keeps whatever <elo-ranking> itself defaults to until a real mode change (switching
+  // tabs) finally lets the guard's body run for the first time.
+  let _modeEverSet = false;
   let _sortOrder = ['elo', 'alpha', 'pop', 'delta'];
   let _sortDir = 'desc';
   // 'team' (default) — flat list, unchanged. 'match' — teams grouped fixture-by-fixture
@@ -500,7 +507,8 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // (tab-teams / tab-tournament — see wc2026_map.js's _switchTab, which calls this once early,
   // synchronously, before any data has loaded, and again on every tab switch thereafter).
   const setMode = newMode => {
-    if (newMode === _mode) return;
+    if (newMode === _mode && _modeEverSet) return;
+    _modeEverSet = true;
     _mode = newMode;
     const behavior = MODE_BEHAVIOR[_mode];
     // Every filter-table checkbox is always clickable, everywhere — no UI-level disabling based
