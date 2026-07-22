@@ -107,13 +107,16 @@ for (const [iso2, stats] of Object.entries(discData)) {
 // beaten finalist both cap out at ELIM_ROUNDS' last index ('Final'), so nothing in
 // stageIndexById ever reaches position 6 and maxReachableStage naturally leaves it
 // locked for the whole tournament, same as any other stage that hasn't been played yet. ──
-const carousel = createStageCarousel(T);
+// Leading slide (stage index -1, "whole competition") ahead of CAROUSEL_STAGES[0] — every
+// team's own final tally (as of wherever *they* were eliminated, not a shared checkpoint —
+// see renderTable's own comment below), the natural default overview for a stats page.
+const carousel = createStageCarousel(T, { leadingLabel: T.allStagesLabel });
 document.querySelector('.disc-carousel-host').appendChild(carousel.el);
 const qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
 const stageIndexById = new Map(teams.map(t => [t.id, t.visibleThroughIndex]));
 carousel.maxStage = maxReachableStage(qualifiedIds, stageIndexById);
 
-let _stage = 0;
+let _stage = -1;
 carousel.el.addEventListener('stage-change', e => {
   _stage = e.detail.stage;
   renderTable();
@@ -199,9 +202,13 @@ const renderTable = () => {
   renderHead();
   // { t, snap, pending } — figures as of the *selected* stage (js/qualified.js's
   // ELIM_ROUNDS[_stage]), not the team's final/current totals; see snapshotFor's own comment.
+  // _stage === -1 ("whole competition", the carousel's leading slide — see createStageCarousel's
+  // leadingLabel) is the one exception: every team, no reachesStage filter, each at *its own*
+  // last stage (visibleThroughIndex, clamped below Infinity for a champion whose Final is fully
+  // decided) rather than a shared checkpoint — i.e. each team's real final tally.
   const rows = teams
-    .filter(t => reachesStage(t.visibleThroughIndex, _stage))
-    .map(t => ({ t, ...snapshotFor(t, _stage) }));
+    .filter(t => _stage === -1 || reachesStage(t.visibleThroughIndex, _stage))
+    .map(t => ({ t, ...snapshotFor(t, _stage === -1 ? Math.min(t.visibleThroughIndex, ELIM_ROUNDS.length - 1) : _stage) }));
   const sorted = [...rows].sort((a, b) => {
     if (_sortKey === 'name') { const d = a.t.name.localeCompare(b.t.name); return _sortDir === 'asc' ? d : -d; }
     if (_sortKey === 'stage') {

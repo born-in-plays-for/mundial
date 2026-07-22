@@ -5,6 +5,7 @@ import { initEloRanking } from './elo_ranking.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildEloItems, buildBracketState, buildMatchInfo, buildNameByIso2, loadEloData, playerDisplayName, playerSortKey } from './qualified.js';
 import { LOCALE, _LANG, T, countryName, regionName, wikiUrl, wikiUrlEn, loadWikiData } from './i18n.js';
 import { initGroupStage } from './group_stage.js';
+import { initFixtureList } from './fixture_list.js';
 import { initSidebar } from './control_sidebar.js';
 import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
@@ -292,28 +293,43 @@ const _fifaMemberIds = new Set();
 const _eloRankedIds = new Set();
 // Shared between tab-teams (default) and tab-tournament — see _switchTab below, which
 // reparents this same .elo-layout wrapper between the two panes instead of duplicating it.
-render(html`<div class="elo-layout"><elo-ranking class="elo-main"></elo-ranking></div>`, document.getElementById('tab-teams'));
+// `all-stages` opts this one instance into the carousel's leading "Whole competition" slide
+// (js/elo_ranking.js's connectedCallback) — wc2026_countries.html/control-sidebar-test.html's
+// own static <elo-ranking> tags don't carry it, so only tab-tournament gets it.
+render(html`<div class="elo-layout"><elo-ranking class="elo-main" all-stages></elo-ranking></div>`, document.getElementById('tab-teams'));
 const _eloLayoutEl = document.querySelector('.elo-layout');
 const _eloMain = document.querySelector('.elo-main');
 const _eloMetaPanel = FOOTER_PANELS.eloMeta ? document.getElementById('elo-meta-panel') : null;
 
-// Group Stage view (js/group_stage.js) — a sibling of <elo-ranking>'s own .elo-list *inside*
-// .elo-viz (not a sibling of .elo-layout at the #tab-tournament level) — this matters
-// structurally, not just cosmetically: the carousel is always .elo-viz's first child, so
-// putting the group view inside .elo-viz too keeps the carousel above it exactly like every
-// other stage, regardless of which tab currently hosts the reparented .elo-layout. Shown only
-// while tab-tournament is the active tab AND the carousel is at stage 0 — .elo-list itself is
-// hidden for that same window (both toggled directly, not via a CSS class), since only one of
-// the two should ever be visible at once.
+// Group Stage view (js/group_stage.js) and the "Whole competition" fixture list (js/
+// fixture_list.js, carousel stage -1) — both siblings of <elo-ranking>'s own .elo-list *inside*
+// .elo-viz (not siblings of .elo-layout at the #tab-tournament level) — this matters
+// structurally, not just cosmetically: the carousel is always .elo-viz's first child, so putting
+// both views inside .elo-viz too keeps the carousel above them exactly like every other stage,
+// regardless of which tab currently hosts the reparented .elo-layout. Exactly one of the three
+// (.elo-list, _groupStageEl, _fixtureListEl) is ever visible at once — see
+// _updateGroupStageVisibility below, which despite its name now owns all three, not just the
+// group view (kept its original name — renaming would touch every call site for no behavioral
+// gain).
 const _groupStageEl = document.createElement('div');
 _groupStageEl.id = 'group-stage-view';
 _groupStageEl.className = 'taxonomy';
 _groupStageEl.hidden = true;
+const _fixtureListEl = document.createElement('div');
+_fixtureListEl.id = 'fixture-list-view';
+_fixtureListEl.className = 'taxonomy'; // .elo-pair/.elo-item pill styling (css/taxonomy.css) is scoped under this — matches _groupStageEl's own pattern (both also inherit it from #tab-teams/#tab-tournament's own .taxonomy class, but not relying on that here keeps this element correct on its own)
+_fixtureListEl.hidden = true;
 const _eloListEl = _eloMain.querySelector('.elo-list');
-_eloMain.querySelector('.elo-viz').appendChild(_groupStageEl);
-let _currentCarouselStage = 0;
+_eloMain.querySelector('.elo-viz').append(_groupStageEl, _fixtureListEl);
+// -1 ("Whole competition") is the carousel's own real default once it has a leading slide (see
+// js/elo_ranking.js's all-stages) — matching that here means this page-local mirror of the
+// carousel's stage is already correct before any real stage-change event has fired (the widget
+// never announces its own construction-time default via an event — see control_sidebar.js's
+// MODE_BEHAVIOR.tournament.defaultStage for the fuller version of this same reasoning).
+let _currentCarouselStage = -1;
 let _activeTab = 'tab-teams'; // updated by _switchTab below
 let _groupStage = null; // initGroupStage(...) handle, set once fixturesData loads
+let _fixtureList = null; // initFixtureList(...) handle, set once fixturesData loads
 // Set of numeric team ids — driven by group_stage.js's group selector ("show only this
 // group's 4 teams' flags on the map"); a full override of the sidebar's own category filter
 // (see control_sidebar.js's applyFlagFilter/callbacks.afterFlagFilter) for exactly these 4
@@ -326,16 +342,19 @@ const _applyGroupFocus = () => {
   animateFlagHidden(d3.selectAll('.flag-qualified[data-elo-cat]'), el => !_groupFocusIds.has(+el.getAttribute('data-id')));
 };
 const _updateGroupStageVisibility = () => {
-  const show = _activeTab === 'tab-tournament' && _currentCarouselStage === 0;
-  _groupStageEl.hidden = !show;
-  _eloListEl.hidden = show;
+  const onTournament = _activeTab === 'tab-tournament';
+  const showGroup = onTournament && _currentCarouselStage === 0;
+  const showFixtures = onTournament && _currentCarouselStage === -1;
+  _groupStageEl.hidden = !showGroup;
+  _fixtureListEl.hidden = !showFixtures;
+  _eloListEl.hidden = showGroup || showFixtures;
   // Re-syncs the map's own group-focus filter to match whatever group_stage.js's own
   // (persisted, tab-switch-proof) selection currently is — entering re-applies it, leaving
   // clears it so the map doesn't stay silently stuck showing only 4 flags while the user
   // browses an unrelated tab. Deliberately bypasses onGroupSelect/_select here: this isn't the
   // user picking a new group, just the same selection becoming visible or not, so it shouldn't
   // reset group_stage.js's own state, re-persist anything, or clear an active dim selection.
-  _groupFocusIds = (show && _groupStage?.selected) ? new Set(_groupStage.selectedTeamIds) : null;
+  _groupFocusIds = (showGroup && _groupStage?.selected) ? new Set(_groupStage.selectedTeamIds) : null;
   sidebar.applyFlagFilter();
 };
 // Bubbles from stage_carousel.js through <elo-ranking> — same event control_sidebar.js already
@@ -732,6 +751,14 @@ const _renderElo = (onAnimationDone) => {
   if (!_renderEloBase) return;
   _renderEloBase(onAnimationDone);
   if (dimState.sourceId) _eloMain.update(dimState.sourceId);
+  // Group Stage / "Whole competition" fixture rows order their own two teams by the sidebar's
+  // current sort criterion too (sidebar.orderPair/ptsFor, passed to both at construction) — a
+  // sort-column click or direction toggle already re-renders the main pill list via
+  // _renderEloBase above; re-rendering these two here as well (whenever they exist — both are
+  // null until fixturesData loads) keeps every fixture's own left/right order and pill figure
+  // in lockstep with it, not just the knockout match-display pairs.
+  _groupStage?.render();
+  _fixtureList?.render();
   // bornIn/playsFor columns sort by the *team's* standing under whichever criterion the sort
   // table's own leading position now holds (see _PT_SORT_FNS/_ptTeamCmp) — refresh #tab-players
   // too so a sort-table change (reorder or direction toggle) is reflected there immediately,
@@ -1762,6 +1789,7 @@ const clearFixtureSelection = () => {
   _activeFixture = null;
   _eloMain.updateFixture(null);
   _groupStage?.render(); // re-checks isFixtureActive for every group-stage result row — see its own comment
+  _fixtureList?.render(); // same, for every "whole competition" fixture row
   _showingAllPlayers = true;
   const _ptEl = document.getElementById('tab-players');
   if (_ptEl) render(_playersTableTemplate(), _ptEl);
@@ -1778,6 +1806,7 @@ const activateFixture = (idA, idB, pairId) => {
   _showingAllPlayers = false;
   _eloMain.updateFixture(pairId);
   _groupStage?.render(); // re-checks isFixtureActive for every group-stage result row — see its own comment
+  _fixtureList?.render(); // same, for every "whole competition" fixture row
 
   // See applySelection's own comment on why this scroll is gated on _playersTabActive — a
   // fixture click from tab-tournament's own pill list or the group-stage results doesn't mean
@@ -2508,6 +2537,12 @@ Promise.all([
   const _eloItemsByIso2 = new Map(_eloRawItems.map(item => [item.iso2, item]));
   _groupStage = initGroupStage({
     container: _groupStageEl, fixturesData, T, regionName, eloItemsByIso2: _eloItemsByIso2,
+    // Same sort-criterion ordering/pill-figure logic a knockout match-display pair already uses
+    // (js/control_sidebar.js's own orderPair/ptsFor) — passed straight through to fixtureRow (js/
+    // elo_ranking.js) via group_stage.js, so a group-stage result orders/labels its own two teams
+    // identically to a knockout pair, live (re-derived on every sidebar.orderPair/ptsFor call, not
+    // cached — see _renderElo's own _groupStage?.render()).
+    orderPair: sidebar.orderPair, ptsFor: sidebar.ptsFor, fmtPop,
     // Literally the same function assigned to _eloMain.onCountryClick just above — clicking a
     // pill or team name here has to behave identically (selection, dim/arc mode, map zoom,
     // toggle-off-if-already-active) to clicking one in tab-tournament's own pill list, and
@@ -2538,7 +2573,18 @@ Promise.all([
       // actually want it.
     },
   });
-  _updateGroupStageVisibility(); // stage 0 is the default and may never fire 'stage-change' on its own
+  // "Whole competition" (carousel stage -1) — every fixture, chronologically, via the same
+  // fixtureRow markup/click wiring group_stage.js's own results already use (see js/fixture_list.js's
+  // own comment). Reuses the exact same onCountryClick/onFixtureClick/isFixtureActive references
+  // passed to initGroupStage just above, so click behavior is identical everywhere in the app.
+  _fixtureList = initFixtureList({
+    container: _fixtureListEl, fixturesData, eloItemsByIso2: _eloItemsByIso2, regionName,
+    orderPair: sidebar.orderPair, ptsFor: sidebar.ptsFor, fmtPop,
+    onCountryClick: _onCountryClick,
+    onFixtureClick: activateFixture,
+    isFixtureActive: pairId => _activeFixture?.pairId === pairId,
+  });
+  _updateGroupStageVisibility(); // -1/stage 0 are both defaults that may never fire 'stage-change' on their own
   sidebar.updateStageTitle();
   // Re-affirms whatever _activeTab the earlier restore-or-default _switchTab call (see above)
   // already put the sidebar/eloMain into — not hardcoded to 'teams', since that call may have

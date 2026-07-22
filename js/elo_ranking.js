@@ -71,6 +71,66 @@ export const pillContent = ({ iso2, name, pts = null } = {}) => html`
   <span class="elo-name">${name}</span>
   ${pts != null ? html`<span class="elo-pts"><span class="elo-pts-primary">${pts}</span></span>` : nothing}`;
 
+// Renders one fixture (js/qualified.js's data/fixtures.json shape: { id, date, home, away,
+// goals, winner }) as a two-team .elo-pair row — same pill/separator markup a knockout-stage
+// match-display pair renders with (see EloRanking's own #buildRows below), so any fixture from
+// any source reads identically. Originally group_stage.js's own local _resultRow (group-stage
+// results only) — extracted here once js/fixture_list.js needed the exact same row for every
+// fixture in the tournament, not just one group's finished ones.
+// `eloItemsByIso2`/`regionName` resolve each side's pill data, falling back to a bare
+// iso2/regionName pair for a team not in eloItemsByIso2 (shouldn't happen for a real qualifier,
+// but mirrors group_stage.js's own original defensiveness). `pairIdPrefix` keeps each fixture
+// source's ids out of the others' pairId namespace (control_sidebar.js's own knockout
+// match-display pairing uses `[idA,idB].sort().join('-')`, group_stage.js `grp-`, fixture_list.js
+// `all-`) — never actually collides in practice, but no reason to rely on that.
+// `orderPair(a, b)` (control_sidebar.js's own exported `orderPair`, the same logic a knockout
+// match-display pair already orders its two teams by) decides which side displays left/right —
+// omitted, display falls back to the fixture's own raw home/away order. Since display order can
+// differ from data's home/away order, goals/lost-status are resolved by *display side*
+// (left/right), not by home/away, below. `ptsFor(item, fmtPop)` (control_sidebar.js's own
+// exported `ptsFor`) resolves the figure the pill itself shows — the value the active sort
+// criterion is actually ranking by (null only for 'alpha', which has nothing numeric to rank
+// by), so a user can see *why* orderPair put one side first; both omitted together (no ordering,
+// no figure) falls back to the fixture's raw home/away order and a bare pill, matching the
+// original pre-orderPair/ptsFor behavior.
+// Handles both decided fixtures (real score) and undecided ones (bare date separator, no win/
+// lose/draw classing) — mirrors #buildRows' own `!score` branch below; not currently reachable
+// in production (every WC2026 fixture is finished already) but this shouldn't assume that.
+export const fixtureRow = (f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, pairIdPrefix = '', orderPair, ptsFor, fmtPop }) => {
+  const homeRaw = eloItemsByIso2.get(f.home) ?? { iso2: f.home, name: regionName(f.home, f.home) };
+  const awayRaw = eloItemsByIso2.get(f.away) ?? { iso2: f.away, name: regionName(f.away, f.away) };
+  // Ordering reads each side's own real fields (pts/pop/expCount/impCount) — must happen against
+  // the raw items, before the pts override below replaces that field with whatever's actually
+  // shown in the pill.
+  const [leftRaw, rightRaw] = orderPair ? orderPair(homeRaw, awayRaw) : [homeRaw, awayRaw];
+  const swapped = leftRaw !== homeRaw;
+  const left = { ...leftRaw, pts: ptsFor ? ptsFor(leftRaw, fmtPop) : null };
+  const right = { ...rightRaw, pts: ptsFor ? ptsFor(rightRaw, fmtPop) : null };
+  const decided = f.goals?.home != null && f.goals?.away != null;
+  const draw = decided && f.winner == null;
+  const leftLost = decided && (swapped ? f.winner === 'home' : f.winner === 'away');
+  const rightLost = decided && (swapped ? f.winner === 'away' : f.winner === 'home');
+  const leftGoals = swapped ? f.goals?.away : f.goals?.home;
+  const rightGoals = swapped ? f.goals?.home : f.goals?.away;
+  const dateLabel = fixtureDateLabel(f.date);
+  const clickableCls = item => (onCountryClick && item.id != null) ? ' elo-item--clickable' : '';
+  const pillClick = item => () => { if (item.id != null) onCountryClick?.(item.id); };
+  const pairId = `${pairIdPrefix}${f.id}`;
+  const fixtureClickable = onFixtureClick && left.id != null && right.id != null;
+  const onSepClick = () => { if (fixtureClickable) onFixtureClick(left.id, right.id, pairId); };
+  const active = isFixtureActive?.(pairId);
+  return html`
+    <li class="elo-pair${draw ? ' elo-pair--draw' : ''}${!decided ? ' elo-pair--pending' : ''}${active ? ' elo-pair--active' : ''}">
+      <span class="elo-item-wrap"><span class="${pillClasses(left)}${leftLost ? ' elo-item--lost' : ''}${clickableCls(left)}" style="${pillStyle(left)}" @click=${pillClick(left)}>${pillContent(left)}</span></span>
+      <span class="elo-pair-sep${decided ? ' elo-pair-sep--score' : ''}${fixtureClickable ? ' elo-pair-sep--clickable' : ''}" @click=${onSepClick}>
+        ${decided
+          ? html`${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}<span class="elo-pair-sep-score">${leftGoals}–${rightGoals}</span>`
+          : (dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : html`–`)}
+      </span>
+      <span class="elo-item-wrap"><span class="${pillClasses(right)}${rightLost ? ' elo-item--lost' : ''}${clickableCls(right)}" style="${pillStyle(right)}" @click=${pillClick(right)}>${pillContent(right)}</span></span>
+    </li>`;
+};
+
 class EloRanking extends HTMLElement {
 
   // #itemById holds the reusable pill <span> per country — stable identity across renders,
@@ -103,7 +163,12 @@ class EloRanking extends HTMLElement {
     // carousel element itself and bubbles up through wrap/this, so external listeners attached
     // to this <elo-ranking> instance (e.g. control_sidebar.js's
     // eloMain.addEventListener('stage-change', ...)) still receive it unchanged.
-    this.#carousel = createStageCarousel(T);
+    // `all-stages` (a plain boolean attribute set by wc2026_map.js on the map's own instance
+    // only — see that file's own comment) opts into a leading "Whole competition" slide ahead of
+    // CAROUSEL_STAGES[0] (js/fixture_list.js's whole-tournament view). Every other <elo-ranking>
+    // on the site (wc2026_countries.html, control-sidebar-test.html — plain, attribute-less
+    // static tags) is unaffected, same carousel as before.
+    this.#carousel = createStageCarousel(T, this.hasAttribute('all-stages') ? { leadingLabel: T.allStagesLabel } : undefined);
     wrap.appendChild(this.#carousel.el);
 
     this.#ul = document.createElement('ul');

@@ -38,10 +38,17 @@ import { wireShareButton } from './share_button.js';
 //  persistDisplay   — should _saveState() persist _displayMode at all? Split tabs' value is
 //    forced (see forcedDisplay), not a real user choice, so persisting it would just leak a
 //    meaningless value into the 'countries' localStorage slice shared with 'combined' pages.
+//  defaultStage     — null: this mode never forces a starting stage. A number: the *first* time
+//    setMode ever switches into this mode with nothing else having already decided _stage
+//    (no restored/URL stage, no prior user click — see _stageEverSet below), _stage jumps here
+//    once. Only 'tournament' uses this today (-1, "Whole competition" — its carousel is the only
+//    one built with a leading slide, js/elo_ranking.js's all-stages/js/stage_carousel.js's
+//    leadingLabel) — a real, later user choice is never overridden by this, only the untouched
+//    starting state is.
 const MODE_BEHAVIOR = {
-  combined:   { showNonQualified: true,  gateByStage: true,  ignoreTeamFilters: false, showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                     persistDisplay: true },
-  teams:      { showNonQualified: true,  gateByStage: false, ignoreTeamFilters: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                             persistDisplay: false },
-  tournament: { showNonQualified: false, gateByStage: true,  ignoreTeamFilters: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage === 0 ? 'team' : 'match',  persistDisplay: false },
+  combined:   { showNonQualified: true,  gateByStage: true,  ignoreTeamFilters: false, showCarousel: true,  showDisplayToggle: true,  forcedDisplay: null,                                    persistDisplay: true,  defaultStage: null },
+  teams:      { showNonQualified: true,  gateByStage: false, ignoreTeamFilters: false, showCarousel: false, showDisplayToggle: false, forcedDisplay: () => 'team',                            persistDisplay: false, defaultStage: null },
+  tournament: { showNonQualified: false, gateByStage: true,  ignoreTeamFilters: true,  showCarousel: true,  showDisplayToggle: false, forcedDisplay: stage => stage <= 0 ? 'team' : 'match',  persistDisplay: false, defaultStage: -1 },
 };
 
 export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, callbacks, alwaysOpen = false, mode = 'combined' }) {
@@ -248,30 +255,41 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // wraps the whole pill list there. This sidebar still owns the stage index itself, its
   // persistence, and the filtering it drives; it just pushes state to eloMain (.maxStage,
   // .stage) and reacts to its 'stage-change' event instead of a local Bootstrap listener.
-  let _stage = 0; // index into CAROUSEL_STAGES — 0 ('group') shows every qualified team
+  let _stage = 0; // index into CAROUSEL_STAGES — 0 ('group') shows every qualified team; -1
+                   // ("Whole competition", 'tournament' mode's own leading carousel slide only —
+                   // see MODE_BEHAVIOR.tournament.defaultStage below) also shows everyone, same
+                   // as 0, via reachesStage()'s own `>= stagePos` comparison.
+  // Set once _stage has been decided by something real — a restore (_restoreState, explicitly,
+  // since _setStage's own idx===_stage guard would otherwise silently no-op and never flip this
+  // when a restored value happens to match _stage's untouched default) or a live carousel click
+  // (_setStage itself, since the very first such call is always the mode's own forced
+  // defaultStage, which is guaranteed to differ from _stage's untouched default — see setMode).
+  // Consulted by setMode: only the untouched, never-decided starting state should ever be
+  // overridden by a mode's own defaultStage.
+  let _stageEverSet = false;
 
   const _updateCarouselTitle = () => {
     _refreshCarouselBounds();
-    // "match" display only means anything once the carousel has moved off 'group' (stage
-    // 0) — there's no fixture to group by until a knockout round is being viewed. Disabled
-    // (native `disabled` on the radio — Bootstrap's own .btn-check:disabled+.btn CSS dims the
-    // label, and a disabled radio's label click is a no-op natively) rather than removed, so
-    // the switch's layout stays stable; forced back to 'team' if the carousel is navigated
-    // back down to stage 0 while it was active — but remembered (_autoSwitchedFromMatch) and
-    // silently restored the next time a valid stage is reached, since that switch was never
-    // the user's own choice.
-    if (_matchDisplayRadio) _matchDisplayRadio.disabled = _stage === 0;
+    // "match" display only means anything once the carousel has moved off 'group' (stage 0) or
+    // "whole competition" (-1) — there's no single fixture to group by until a knockout round is
+    // being viewed. Disabled (native `disabled` on the radio — Bootstrap's own
+    // .btn-check:disabled+.btn CSS dims the label, and a disabled radio's label click is a no-op
+    // natively) rather than removed, so the switch's layout stays stable; forced back to 'team'
+    // if the carousel is navigated back down to stage <= 0 while it was active — but remembered
+    // (_autoSwitchedFromMatch) and silently restored the next time a valid stage is reached,
+    // since that switch was never the user's own choice.
+    if (_matchDisplayRadio) _matchDisplayRadio.disabled = _stage <= 0;
     // _setDisplayMode must run on EVERY stage change, unconditionally — MODE_BEHAVIOR[_mode]
     // .forcedDisplay (inside it) overrides whatever candidate is computed below for tab-teams/
     // tab-tournament, so a stage move that isn't one of the two cases the old code recognized
-    // (landing exactly on stage 0, or leaving it with a remembered match preference) used to
+    // (landing exactly on stage <= 0, or leaving it with a remembered match preference) used to
     // skip calling _setDisplayMode entirely — silently stranding tab-tournament in whatever
     // display it already had (bug: Round of 32 showed the flat team list, not fixtures, because
     // going straight from stage 0 to stage 2 hit neither branch below). The candidate itself
-    // still only matters for 'combined' mode's own remembered-toggle dance across stage 0 (a
+    // still only matters for 'combined' mode's own remembered-toggle dance across stage <= 0 (a
     // real user choice there, not forced) — this computes the exact same value as before.
     let candidate = _displayMode;
-    if (_stage === 0) {
+    if (_stage <= 0) {
       if (_displayMode === 'match') _autoSwitchedFromMatch = true;
       candidate = 'team';
     } else if (_autoSwitchedFromMatch) {
@@ -501,7 +519,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   const _setDisplayMode = mode => {
     const forced = MODE_BEHAVIOR[_mode].forcedDisplay;
     if (forced) mode = forced(_stage);
-    else if (mode === 'match' && _stage === 0) mode = 'team';
+    else if (mode === 'match' && _stage <= 0) mode = 'team';
     if (mode === _displayMode) return;
     _displayMode = mode;
     _teamDisplayRadio.checked = mode === 'team';
@@ -527,6 +545,25 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // never call setMode) still show and use it.
     _displayTableEl.hidden = !behavior.showDisplayToggle;
     eloMain.showCarousel = behavior.showCarousel;
+    // First-ever entry into a mode with its own defaultStage (today: only 'tournament', -1 —
+    // see MODE_BEHAVIOR's own comment), with nothing else having already decided _stage (no
+    // restore, no prior user click — _stageEverSet, set by _restoreState/_setStage). A later
+    // re-entry into this same mode never re-applies it, so a real user choice always sticks.
+    // This can fire BEFORE _restoreState ever runs — wc2026_map.js restores the last-active
+    // #bottomTabList tab synchronously, at module top level, while sidebar.applyParams (→
+    // _restoreState) only runs later, once the async data Promise.all resolves — so a returning
+    // visitor whose last tab was tab-tournament hits this branch first. _restoringState (below)
+    // is reused here purely to suppress _setStage's own _saveState() call for the duration: this
+    // is a placeholder default, not a real choice, and without the guard it would persist
+    // "group" over whatever real stage was actually saved — corrupting it before _restoreState
+    // gets a chance to read the original value back. _restoreState's own later, real _setStage
+    // call is NOT itself guarded by _stageEverSet, so it always still wins once it runs.
+    if (behavior.defaultStage != null && !_stageEverSet) {
+      _stageEverSet = true;
+      _restoringState = true;
+      _setStage(behavior.defaultStage);
+      _restoringState = false;
+    }
     _updateCarouselTitle();
     callbacks.renderElo?.();
     applyFlagFilter();
@@ -897,6 +934,21 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     ? [...ga].map(m => m.name).sort()[0].localeCompare([...gb].map(m => m.name).sort()[0])
     : gb.reduce((s, m) => s + _aggregateValue(key, m), 0) - ga.reduce((s, m) => s + _aggregateValue(key, m), 0);
 
+  // Orders a single fixture's own two teams by the sort table's current leading criterion —
+  // stronger-by-_aggregateValue (or alphabetically-first) member returned first when _sortDir is
+  // 'desc' (the app's own default), flipped when 'asc' — same rule sortAndFilter's own
+  // match-display branch below uses for a real knockout pair, extracted here so
+  // js/group_stage.js's and js/fixture_list.js's own fixture rows (rendered outside sortAndFilter
+  // entirely — see js/elo_ranking.js's fixtureRow) can match it exactly rather than inventing a
+  // second copy. Exposed on the returned sidebar object as `orderPair`.
+  const _orderPair = (a, b) => {
+    const primary = _sortOrder[0];
+    const [x, y] = primary === 'alpha'
+      ? [a, b].sort((p, q) => p.name.localeCompare(q.name))
+      : [a, b].sort((p, q) => _aggregateValue(primary, q) - _aggregateValue(primary, p));
+    return _sortDir === 'asc' ? [y, x] : [x, y];
+  };
+
   const sortAndFilter = (allItems, fmtPop) => {
     const filtered = allItems.filter(item => catEloChecked(item.id, item.fifaMember));
     const primary   = _sortOrder[0];
@@ -928,9 +980,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
         }
         return 0;
       });
-      // Within a couple: stronger-by-primary-criterion member first (or alphabetical for
-      // 'alpha') — an arbitrary but stable, deterministic choice; nothing downstream depends
-      // on which member leads. _pairId ties both rows together for elo_ranking.js's row
+      // Within a couple: _orderPair (above) decides which member leads — stronger-by-primary-
+      // criterion (or alphabetically-first) team first when _sortDir is 'desc', flipped when
+      // 'asc', so the toggle the user already has for the flat list also reorders every fixture
+      // pair. _pairId ties both rows together for elo_ranking.js's row
       // grouping (see EloRanking.show()) — absent (undefined) for lone rows. _pairScore is the
       // "a – b" goal tally (from a's own matchInfo, so it already reads in [a, b] display
       // order), null for a fixture that hasn't been played yet — elo_ranking.js falls back to
@@ -941,7 +994,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       // elo_ranking.js can grey out the losing side's flag.
       ordered = groups.flatMap(g => {
         if (g.length === 1) return g;
-        const [a, b] = primary === 'alpha' ? [...g].sort((x, y) => x.name.localeCompare(y.name)) : [...g].sort((x, y) => _aggregateValue(primary, y) - _aggregateValue(primary, x));
+        const [a, b] = _orderPair(g[0], g[1]);
         const pairId = [a.id, b.id].sort().join('-');
         const infoA = _matchInfo(a);
         const infoB = _matchInfo(b);
@@ -1132,7 +1185,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       onApply: _updateSortCol,
     }),
     dirEntry('dir', { getDir: () => _sortDir, setDir: v => { _sortDir = v; _updateSortCol(); } }),
-    stageEntry('stage', { getStageIndex: () => _stage, setStage: _setStage }),
+    // -1 ("Whole competition", 'tournament' mode's own leading carousel slide — see
+    // MODE_BEHAVIOR.tournament.defaultStage) is deliberately never represented in the URL/share
+    // link: CAROUSEL_STAGES[-1] doesn't exist (js/param_table.js's stageEntry would serialize
+    // "undefined"), and a real sentinel would leak into players_sidebar.js's own 'shared'-slice-
+    // reading carousel, which never gets a leading slide and could crash forwarding it to
+    // Bootstrap's own .to(-1). Aliased to 0 here instead — sharing a link while on this slide
+    // just shares "Group stage", one carousel click away either direction.
+    stageEntry('stage', {
+      getStageIndex: () => _stage === -1 ? 0 : _stage,
+      // _stageEverSet marked explicitly (not left to _setStage's own idx===_stage guard) for the
+      // same reason _restoreState does — see its own comment.
+      setStage: idx => { _stageEverSet = true; _setStage(idx); },
+    }),
     {
       key: 'show',
       get: () => _describeCells(Object.entries(_CELL_MAP).filter(([, el]) => el?.checked).map(([k]) => k)),
@@ -1193,7 +1258,10 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     return [
       _stage > 0
         ? { param: `stage=${_paramTable.get('stage')}`, desc: P.stageDesc(T.stageLabels[_stage]) }
-        : { param: `stage=${_paramTable.get('stage')}`, desc: P.stageDefault(T.stageLabels[0]) },
+        // -1 ("Whole competition") gets its own label here even though _paramTable.get('stage')
+        // itself aliases to 0/'group' (see the stageEntry construction above) — this line is
+        // describing the live sidebar state, not the URL param's own necessarily-lossy encoding.
+        : { param: `stage=${_paramTable.get('stage')}`, desc: P.stageDefault(_stage === -1 ? T.allStagesLabel : T.stageLabels[0]) },
       { param: `sort=${_paramTable.get('sort')}`, desc: P.sortDesc(_sortOrder.slice(0, 2).map(k => P.sortNames[k]).join(' → ')) },
       { param: `dir=${_paramTable.get('dir')}`, desc: _sortDir === 'asc' ? P.dirAsc : P.dirDesc },
       (() => {
@@ -1269,7 +1337,16 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     saveSlice('shared', {
       order: _sortOrder,
       dir: _sortDir,
-      stage: CAROUSEL_STAGES[_stage],
+      // -1 ("Whole competition") has no CAROUSEL_STAGES entry of its own — saved as the literal
+      // string 'all' instead (not a real CAROUSEL_STAGES member, so it can never collide with
+      // one). This slice round-trips with players_sidebar.js, whose own carousel never gets a
+      // leading slide — but its own restore (same idx = CAROUSEL_STAGES.indexOf(shared.stage);
+      // if (idx >= 0) ... pattern as _restoreState below) already silently ignores any string it
+      // doesn't recognize, so 'all' just leaves that page's own stage untouched rather than
+      // crashing or forwarding -1 into its carousel. Deliberately NOT the same aliasing
+      // stageEntry (the Share button/?stage= URL, above) uses — a URL is a different sharing
+      // surface, still intentionally simplified to 'group' (see that comment).
+      stage: _stage === -1 ? 'all' : CAROUSEL_STAGES[_stage],
       conf: _confKey,
     });
     saveSlice('countries', {
@@ -1327,9 +1404,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // user-driven-click path) — left unsuppressed, that would fire before _displayMode is set
     // below and re-persist the stale pre-restore value, undoing the very thing being restored.
     _restoringState = true;
-    if (typeof shared?.stage === 'string') {
+    if (shared?.stage === 'all') {
+      // -1 ("Whole competition") — see _saveState's own comment on why this is a distinct
+      // literal string rather than a CAROUSEL_STAGES member.
+      _stageEverSet = true;
+      _setStage(-1);
+    } else if (typeof shared?.stage === 'string') {
       const idx = CAROUSEL_STAGES.indexOf(shared.stage);
-      if (idx >= 0) _setStage(idx);
+      // Set explicitly here rather than left to _setStage's own idx===_stage guard: a restored
+      // stage of 'group' (index 0) collides with _stage's own untouched top-level default (also
+      // 0), which would otherwise no-op and silently leave _stageEverSet false — later making
+      // setMode('tournament') wrongly re-force its own defaultStage over this real (if
+      // coincidentally default-valued) restored preference. See _stageEverSet's own comment.
+      if (idx >= 0) { _stageEverSet = true; _setStage(idx); }
     }
     _restoringState = false;
 
@@ -1416,6 +1503,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // app's own default/desc direction — callers still need to flip on sortDir === 'asc'
     // themselves, same as sortAndFilter below does.
     sortFns: _sortFns,
+    // Orders any fixture's own two teams by the sort table's current leading criterion — see
+    // _orderPair's own comment. js/group_stage.js and js/fixture_list.js both read this (via
+    // wc2026_map.js) so their own fixture rows stay consistent with the knockout match-display
+    // pairs' ordering above, live (re-derived on every render, not cached), so a sort-column
+    // change reorders every fixture's two teams everywhere at once.
+    orderPair: _orderPair,
+    // The pill figure a fixture row's own pillContent shows — same rule sortAndFilter applies to
+    // every pill below (null only for 'alpha', which has nothing numeric to show; otherwise
+    // whichever value the active sort criterion is actually ranking by), exposed so a user can
+    // see *why* orderPair put one side first. fmtPop is passed in per-call (page-level formatter,
+    // not something this module owns) rather than closed over, same as sortAndFilter's own param.
+    ptsFor: (item, fmtPop) => _sortOrder[0] === 'alpha' ? null : _ptsFor(_sortOrder[0], item, fmtPop),
     catEloChecked,
     flagCat,
     isClickable,

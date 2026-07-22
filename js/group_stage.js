@@ -1,5 +1,5 @@
 import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
-import { pillClasses, pillContent, pillStyle, fixtureDateLabel } from './elo_ranking.js';
+import { fixtureRow } from './elo_ranking.js';
 import { loadSlice, saveSlice } from './persist.js';
 
 // Persistent Group Stage view for tab-tournament's stage 0 — all 12 groups' standings +
@@ -15,7 +15,7 @@ const _CDN = c => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${c}.svg`;
 const _GROUP_LETTERS = [...'ABCDEFGHIJKL'];
 const _FINISHED = new Set(['FT', 'AET', 'PEN']);
 
-export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick, onFixtureClick, isFixtureActive }) => {
+export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick, onFixtureClick, isFixtureActive, orderPair, ptsFor, fmtPop }) => {
   let _selected = null; // null = "All"; otherwise a group letter
 
   // Whether a team actually advanced to the Round of 32 — read from the real-world elimination
@@ -37,60 +37,14 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
     .filter(f => f.group === letter && _FINISHED.has(f.status))
     .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  // Reuses the EXACT pill markup (pillClasses/pillContent/pillStyle, imported from
-  // js/elo_ranking.js) and .elo-pair/.elo-pairs/.elo-item-wrap/.elo-pair-sep CSS classes
-  // (css/global.css, css/taxonomy.css) that a decided knockout fixture row already renders
-  // with — so a finished group match looks pixel-identical to a Round of 32 pair, not a
-  // bespoke lookalike. Team data comes from eloItemsByIso2 (the same buildEloItems() items the
-  // rest of tab-tournament's pills already use), not fixturesData.standings, since that's what
-  // carries the elo pts/qualified/exp/imp/color fields pillContent/pillClasses/pillStyle need.
-  //
-  // Draws (only possible in the group stage, never in a knockout) get neither side marked
-  // .elo-item--lost — the shared checkmark CSS has no "nobody lost" state of its own, so an
-  // undecided-by-elo-item-classing pair would show a check on BOTH sides by default; the
-  // .elo-pair--draw class (css/group_stage.css) explicitly suppresses the checkmark for this
-  // one case without touching the score/date, which still render normally (this is a real,
-  // finished, decided-scoreline match — just not a decided-scoreline match).
-  // Same onCountryClick this whole app's other pills use (passed in from wc2026_map.js —
-  // literally the function object assigned to <elo-ranking>'s own .onCountryClick) — clicking
-  // a pill here has to have the exact same effect (selection, dim/arc mode, map zoom, toggle-
-  // off-if-already-active, ...) as clicking one in tab-tournament's own pill list, and calling
-  // the identical function reference is what guarantees that, rather than re-implementing any
-  // part of it here.
-  const _pillClick = item => () => { if (item.id != null) onCountryClick?.(item.id); };
-
-  // Mirrors js/elo_ranking.js's own #buildRows fixture-pair handling: the separator (score box),
-  // not either team pill, is the fixture's own click target (the pills already resolve clicks to
-  // their own single team via _pillClick above). 'grp-' prefix on the pairId keeps this fixture
-  // source's ids out of the knockout-stage pairId namespace (control_sidebar.js's _buildGroups) —
-  // never actually collides in practice (f.id is API-Football's own numeric fixture id, that
-  // _pairId is a different, synthesized value) but there's no reason to rely on that.
-  const _resultRow = f => {
-    const home = eloItemsByIso2.get(f.home) ?? { iso2: f.home, name: regionName(f.home, f.home) };
-    const away = eloItemsByIso2.get(f.away) ?? { iso2: f.away, name: regionName(f.away, f.away) };
-    const draw = f.winner == null;
-    const homeLost = f.winner === 'away';
-    const awayLost = f.winner === 'home';
-    const dateLabel = fixtureDateLabel(f.date);
-    const clickableCls = item => (onCountryClick && item.id != null) ? ' elo-item--clickable' : '';
-    const pairId = `grp-${f.id}`;
-    const fixtureClickable = onFixtureClick && home.id != null && away.id != null;
-    const onSepClick = () => { if (fixtureClickable) onFixtureClick(home.id, away.id, pairId); };
-    // Mirrors elo_ranking.js's own .elo-pair--active — this component has no access to that one's
-    // internal #activeFixtureId, so the active state is passed in as a live predicate (a function,
-    // not a snapshot value) rather than duplicating that state here; see isFixtureActive's own
-    // wiring in wc2026_map.js for how it stays in sync as selections change.
-    const active = isFixtureActive?.(pairId);
-    return html`
-      <li class="elo-pair${draw ? ' elo-pair--draw' : ''}${active ? ' elo-pair--active' : ''}">
-        <span class="elo-item-wrap"><span class="${pillClasses(home)}${homeLost ? ' elo-item--lost' : ''}${clickableCls(home)}" style="${pillStyle(home)}" @click=${_pillClick(home)}>${pillContent(home)}</span></span>
-        <span class="elo-pair-sep elo-pair-sep--score${fixtureClickable ? ' elo-pair-sep--clickable' : ''}" @click=${onSepClick}>
-          ${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}
-          <span class="elo-pair-sep-score">${f.goals.home}–${f.goals.away}</span>
-        </span>
-        <span class="elo-item-wrap"><span class="${pillClasses(away)}${awayLost ? ' elo-item--lost' : ''}${clickableCls(away)}" style="${pillStyle(away)}" @click=${_pillClick(away)}>${pillContent(away)}</span></span>
-      </li>`;
-  };
+  // fixtureRow (js/elo_ranking.js) renders the exact same .elo-pair/.elo-item-wrap/.elo-pair-sep
+  // markup a knockout-stage match-display pair already renders with — extracted from this
+  // module's own original _resultRow so it can also power js/fixture_list.js's whole-tournament
+  // view. Team data comes from eloItemsByIso2 (the same buildEloItems() items the rest of
+  // tab-tournament's pills already use), not fixturesData.standings — see fixtureRow's own
+  // comment for why. 'grp-' keeps this fixture source's pairIds out of the other two sources'
+  // namespaces (control_sidebar.js's knockout pairing, fixture_list.js's 'all-').
+  const _resultRow = f => fixtureRow(f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, orderPair, ptsFor, fmtPop, pairIdPrefix: 'grp-' });
 
   const _standingsRow = t => {
     const item = eloItemsByIso2.get(t.iso2);
