@@ -72,7 +72,7 @@ Selecting a confederation also highlights its external boundary on the map and z
 
 ## URL query parameters
 
-The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* on the [API Guide tab](?guide=api) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
+The filter and sort state can also be configured directly from the URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?pshow=`, plus `?tab=` and `?select=` for jumping straight to a given tab with a country already selected. Add `?explain` to any URL to open a panel summarizing the panel's current settings — see *`?explain` — inspect the current configuration* on the [API Guide tab](?guide=api) for exactly what it shows and why. The full reference with all cell codes, group aliases and examples is there too.
 
 ## About the country reference
 

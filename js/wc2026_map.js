@@ -2607,14 +2607,63 @@ Promise.all([
   _expandPanel(_eloMetaPanel);
   sidebar.applyFlagFilter();
   sidebar.updateVisibleCountryCount();
-  // Initial zoom: fit ALL flags so every country is visible (including Falklands etc.)
+
+  // ── ?tab= / ?select= — replicate a real click path from a URL alone ──────────────────────
+  // Not part of _paramTable (control_sidebar.js) — that table owns the sidebar's own sort/
+  // filter state; tab selection and dim-mode country selection are wc2026_map.js's own
+  // top-level state (_activeTab, dimState), so they're read directly here instead.
+  //
+  // ?select=<iso2>[:teams|:tournament] dim-selects a country exactly as clicking its pill/flag
+  // would (activateCountry, same as onCountryClick) — but which country's pill even exists to
+  // click, and what the resulting tab-players roster looks like, depends on context: tab-teams
+  // and tab-tournament run under different MODE_BEHAVIOR (showNonQualified, gateByStage,
+  // ignoreTeamFilters — see control_sidebar.js), so the exact same id can resolve a different
+  // player set. The optional :teams/:tournament suffix pins that context explicitly (default
+  // :teams, matching the app's own default landing tab) — independent of ?tab= below, so
+  // `?select=ar:tournament&tab=teams` is a real, reachable state too: select while viewing
+  // tab-tournament (tournament-mode context baked into the dim selection), then move over to
+  // tab-teams while keeping that selection active, exactly as a real user could by clicking the
+  // tab-teams button afterward (switching tabs never clears a dim selection — see the
+  // 'show.bs.tab' listener's own comment above).
+  //
+  // ?tab=teams|tournament|players sets the final active bottom tab — teams/tournament were
+  // already restorable from localStorage but never directly reachable via URL; tab-players
+  // wasn't reachable via URL at all (see _RESTORABLE_TABS's own comment on why it's excluded
+  // from that persistence). Applied last, after ?select= above, so landing on tab-players with
+  // a selection already active reproduces "select from tab-teams, then open tab-players" — the
+  // exact click path this was built for.
+  let _selectedFromUrl = false;
+  {
+    const _urlParams = new URLSearchParams(location.search);
+    const _selectRaw = _urlParams.get('select');
+    if (_selectRaw) {
+      const [iso2Raw, ctxRaw] = _selectRaw.split(':');
+      const iso2 = iso2Raw.trim().toLowerCase();
+      const context = ctxRaw === 'tournament' ? 'tournament' : 'teams';
+      const item = _eloItemsByIso2.get(iso2);
+      if (item) {
+        _switchTab(context === 'tournament' ? 'tab-tournament' : 'tab-teams');
+        activateCountry(item.id);
+        if (enablesDim(item.id) && centroids[item.id]) _zoomToActiveDimFlags();
+        _selectedFromUrl = true;
+      }
+    }
+    const _tabRaw = _urlParams.get('tab');
+    if (_tabRaw === 'players') _switchTab('tab-players');
+    else if (_tabRaw === 'teams') _switchTab('tab-teams');
+    else if (_tabRaw === 'tournament') _switchTab('tab-tournament');
+  }
+
+  // Initial zoom: fit ALL flags so every country is visible (including Falklands etc.) — skipped
+  // when ?select= above already dim-selected a country, since _zoomToActiveDimFlags() just
+  // handled the appropriate zoom for that and running both would fight each other.
   const xs = [], ys = [];
   g.selectAll('.flag-qualified[data-elo-cat]').each(function() {
     const cx = +this.getAttribute('data-cx');
     const cy = +this.getAttribute('data-cy');
     if (isFinite(cx) && isFinite(cy)) { xs.push(cx); ys.push(cy); }
   });
-  if (xs.length) {
+  if (xs.length && !_selectedFromUrl) {
     const [vbX, vbY, vbW, vbH] = svg.attr('viewBox').split(' ').map(Number);
     const x0 = Math.min(...xs), x1 = Math.max(...xs);
     const y0 = Math.min(...ys), y1 = Math.max(...ys);

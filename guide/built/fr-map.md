@@ -71,7 +71,7 @@ La sélection d'une confédération met également en évidence sa frontière ex
 
 ## Paramètres d'URL
 
-L'état du filtre et du tri peut aussi être configuré directement depuis l'URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`. Ajoutez `?explain` à n'importe quelle URL pour ouvrir un panneau résumant les réglages actuels du panneau — voir *« ?explain » — inspecter la configuration actuelle* sur l'[onglet Guide API](?guide=api) pour le détail exact de ce qu'il affiche et pourquoi. La référence complète avec tous les codes de cellule, alias de groupe et exemples s'y trouve aussi.
+L'état du filtre et du tri peut aussi être configuré directement depuis l'URL — `?sort=`, `?dir=`, `?stage=`, `?show=`, `?fifaconf=`, `?pshow=`, plus `?tab=` et `?select=` pour arriver directement sur un onglet donné avec un pays déjà sélectionné. Ajoutez `?explain` à n'importe quelle URL pour ouvrir un panneau résumant les réglages actuels du panneau — voir *« ?explain » — inspecter la configuration actuelle* sur l'[onglet Guide API](?guide=api) pour le détail exact de ce qu'il affiche et pourquoi. La référence complète avec tous les codes de cellule, alias de groupe et exemples s'y trouve aussi.
 
 ## À propos de la référence des pays
 

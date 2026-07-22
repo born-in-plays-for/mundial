@@ -9,7 +9,7 @@ Technical reference for the app's URL query parameter API — how to link direct
 <!-- i18n:api_url_params -->
 ## URL query parameters
 
-The Map page's filter/sort sidebar (`js/control_sidebar.js`) reads its whole configuration from a handful of URL query parameters: `?explain`, `?sort=`, `?dir=`, `?stage=`, `?fifaconf=`, `?show=`. All are optional and independent; an omitted parameter just keeps the sidebar's own default for that setting.
+The Map page's filter/sort sidebar (`js/control_sidebar.js`) reads its whole configuration from a handful of URL query parameters: `?explain`, `?sort=`, `?dir=`, `?stage=`, `?fifaconf=`, `?show=`, `?pshow=`. Two more, `?tab=` and `?select=`, are read directly by `js/wc2026_map.js` itself rather than the sidebar, to reproduce a full click path (which tab you land on, which country ends up dim-selected) from a URL alone. All are optional and independent; an omitted parameter just keeps the app's own default for that setting.
 
 ### `?explain` — inspect the current configuration
 
@@ -88,6 +88,41 @@ Comma-separated cell codes and/or group aliases. When `show` is present it **rep
 
 Only filters the list on the Country List — on the Tournament tab, `?stage` is the sole gate and `?show` is ignored entirely; see "Tab scoping" below.
 
+### `?pshow` — player/coach role filter
+
+```
+?pshow=<token>[,<token>...]
+```
+
+Comma-separated tokens from `export,native,import,player,coach` — the same 5 pill toggles as the filter sidebar's **view** row (Export / native / import, and Player / coach), only meaningful on the Player Table (see "Tab scoping" below). Like `?show`, presence **replaces** the defaults entirely — every token not listed is unchecked; all 5 are checked by default when the parameter is absent.
+
+```
+?pshow=export,native,import,coach   everyone except players (coaches only)
+?pshow=export,native,import,player  everyone except coaches (players only)
+```
+
+### `?tab` — active bottom tab
+
+```
+?tab=teams        Country List
+?tab=tournament   Tournament
+?tab=players      Player Table
+```
+
+Normally the active tab comes from your last visit (`localStorage`), or the Country List if there's none saved — this parameter overrides that for the page this link opens, without touching what gets saved for next time. Combines with `?select` below: applied *after* it, so `?select=ar&tab=players` reproduces "select Argentina from the Country List, then open the Player Table" in one link. Unknown values are silently ignored.
+
+### `?select` — dim-select a country
+
+```
+?select=<iso2>[:teams|:tournament]
+```
+
+Dim-selects a country exactly as clicking its pill or map flag would (arcs, dimmed flags, the Player Table narrowed to that one country) — `ar` for Argentina, `gb-eng` for England, etc., the same iso2 codes used throughout this app.
+
+The optional `:teams`/`:tournament` suffix (default `:teams`) sets which tab's rules were "clicked" under — the Country List and Tournament tabs run different filter rules (`?stage` only gates the Tournament tab, non-qualified countries are hidden outright there, etc.), so the exact same country can resolve a different Player Table roster depending on context. This is independent of `?tab` above: `?select=ar:tournament&tab=teams` is a real, reachable state too — select while viewing the Tournament tab (baking its rules into the selection), then move over to the Country List while keeping that selection active, exactly as switching tabs after a real click always does (a selection is never cleared by switching tabs, only by an explicit deselect).
+
+Unknown iso2 codes are silently ignored.
+
 ## Cell codes
 
 The filter matrix mirrors the sidebar layout — two columns (exporter / keeps its players) crossed with four row groups. Every code is exactly **2 letters**: position 1 picks the row scope, position 2 picks the column.
@@ -145,12 +180,13 @@ Aliases and individual codes may be freely mixed; the result is a union. Unknown
 
 ## Tab scoping — `?stage`, `?show`, and `?fifaconf` don't all combine
 
-These three don't stack into one combined filter — each of the Map page's two tabs reads only one of them for actual list-filtering:
+These three don't stack into one combined filter — each of the Map page's two Elo tabs reads only one of them for actual list-filtering:
 
 - **The Country List** (the default tab): `?show` and `?fifaconf` filter together as usual; `?stage` only parks the carousel for later — no filtering effect yet.
 - **Tournament tab**: `?stage` is the sole filter — qualified countries narrowed to those that reached that stage, every non-qualified country hidden outright; `?show` and `?fifaconf` are both ignored.
+- **Player Table**: has no country-category filter of its own — `?pshow` narrows its rows by role instead (see above); which countries it can show at all comes from whichever country is currently dim-selected (`?select`), or every visible country if none is.
 
-Which tab is active on page load comes from your last visit (`localStorage`), or the Country List if there's no saved preference — never from the URL itself. A link combining `?stage=r16&show=QB`, for example, pre-sets both values, but only one half actually filters anything, depending on which tab you land on.
+Which tab you land on comes from `?tab` when given, otherwise your last visit (`localStorage`), or the Country List if there's no saved preference. A link combining `?stage=r16&show=QB`, for example, pre-sets both values, but only one half actually filters anything, depending on which tab you land on.
 
 ## Keyboard shortcut
 
@@ -182,5 +218,9 @@ Chaining two chords reaches an exact target state regardless of what was checked
 ?fifaconf=caf&show=AE           Country List: African exporters only.
 ?stage=r16                      Tournament tab: qualified countries that reached the Round of 16.
 ?stage=winner                   Tournament tab: only the eventual champion.
+?select=ar&tab=players          Player Table: Argentina's own roster (select from Country List, then open it).
+?select=ar:tournament&tab=players  Same, but selected under the Tournament tab's own rules.
+?tab=tournament&stage=sf        Land directly on the Tournament tab, carousel parked at Semi-finals.
+?select=ar&tab=players&pshow=export,native,import,coach  Argentina's coaches only (its own coach, plus anyone born in Argentina now coaching elsewhere).
 ```
 <!-- /i18n:api_url_params -->
