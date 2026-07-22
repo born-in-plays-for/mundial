@@ -12,6 +12,7 @@ Static frontend for the [Born In, Plays For](https://github.com/born-in-plays-fo
 | [/wc2026_map.html](https://mundial.cthiebaud.com/wc2026_map.html) | Main choropleth map (countries + tournament + players, all in one page) |
 | [/wc2026_live.html](https://mundial.cthiebaud.com/wc2026_live.html) | Live game tracking (requires backend) |
 | [/chains/wc2026_chain_longest.html](https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html) | Export chain snake renderer |
+| [/insights/discipline.html](https://mundial.cthiebaud.com/insights/discipline.html) | Fouls/cards discipline table, one row per team |
 
 A handful of standalone pages that predated `wc2026_map.html` absorbing their functionality
 (countries/players reference tables, a France departments choropleth, an elimination-status chart,

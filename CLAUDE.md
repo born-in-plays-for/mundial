@@ -46,13 +46,14 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `wc2026_og_v7.jpg` | 4320×2430 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=3). Regenerate with `tools/regenerate_og_image.py` — **never hand-roll this script inline**, see that section below. |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
+| `insights/discipline.html` | Standalone fouls/cards table, one row per team, with the same stage carousel widget (`js/stage_carousel.js`) as `<elo-ranking>`. Reads `data/v2/discipline.json` (iso2-keyed). Restored from the "drop nice-to-have pages" cleanup — the only one of that batch whose feature (fouls/cards discipline stats) has no equivalent anywhere in `wc2026_map.html`, unlike the others below. |
 | `backend_config.json` | ngrok URL for production backend — auto-updated by `mundial-server/start.sh` |
 
 **Retired pages:** `wc2026_countries.html`, `wc2026_players.html` (and its own sidebar module,
-`js/players_sidebar.js`), `control-sidebar-test.html`, and `insights/discipline.html` /
-`france.html` / `status.html` / `heat-map.html` (and its own KDE module, `js/kde_layer.js`) /
-`taxonomy.html` have all been removed — their functionality is superseded by `wc2026_map.html`'s
-own tab-teams/tab-tournament/tab-players. They may be rebuilt later under `insights/` against the
+`js/players_sidebar.js`), `control-sidebar-test.html`, and `insights/france.html` / `status.html` /
+`heat-map.html` (and its own KDE module, `js/kde_layer.js`) / `taxonomy.html` have all been
+removed — their functionality is superseded by `wc2026_map.html`'s own
+tab-teams/tab-tournament/tab-players. They may be rebuilt later under `insights/` against the
 current, de-duplicated codebase; until then, don't assume any of these files/pages still exist.
 
 ---

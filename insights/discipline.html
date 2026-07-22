@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discipline — fouls & cards</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7/css/flag-icons.min.css">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/wc2026_players.css">
+<style>
+  .disc-card { max-width: 900px; margin: 0 auto; }
+  /* .pt-table (css/wc2026_players.css, reused here for its .pt-th sort-header styling) also
+     carries table-layout:fixed — right for that page's 2 fixed-percentage text columns, wrong
+     here: with no explicit per-column widths of our own, fixed layout falls back to distributing
+     every column equally, squeezing "Team"/"Stage" (long text) down to the same width as "MP"/
+     "RC" (one digit) and spilling nowrap text visibly into neighboring cells. */
+  .disc-table { table-layout: auto; }
+  .disc-table th, .disc-table td { white-space: nowrap; }
+  .disc-num { text-align: right; font-variant-numeric: tabular-nums; }
+  .disc-stage { color: var(--text-muted); font-size: 11px; }
+  /* elo-viz (added on the element itself, not just here) is what unlocks css/global.css's
+     .elo-viz .carousel-control-prev/-next styling — createStageCarousel (js/stage_carousel.js)
+     always builds those buttons, but their positioning/icon rules are scoped to .elo-viz (the
+     map/players pages' own carousel wrapper) rather than .elo-stage-carousel itself, so without
+     this class here they render present-but-effectively-invisible (default Bootstrap sizing,
+     no icon). */
+  .disc-carousel-host { max-width: 420px; margin: 0 auto 12px; }
+  /* A still-alive team viewed at its own current (unfinished) stage has no byStage snapshot
+     yet — renderTable() falls back to its last completed stage's real figures instead of
+     hiding the row or blanking it, marked with .disc-pending so it doesn't read as "confirmed
+     as of the selected stage" like every other visible row. */
+  .disc-pending { color: var(--text-muted); cursor: help; margin-left: 2px; }
+  tr.disc-row-pending .disc-num { color: var(--text-muted); font-style: italic; }
+</style>
+</head>
+<body>
+<script type="module" src="../js/auth-bar.js"></script>
+<mundial-auth-bar></mundial-auth-bar>
+
+<div id="main-content" class="container-xxl pt-4 pb-4 disc-card">
+  <h1 class="fs-5 fw-bold mb-1">Discipline — fouls &amp; cards</h1>
+  <p class="sub text-muted small mb-3">One row per team, updated after every finished match</p>
+
+  <div class="disc-carousel-host elo-viz"></div>
+
+  <div class="table-responsive">
+    <table class="table table-sm table-striped table-hover pt-table disc-table">
+      <thead><tr id="disc-head"></tr></thead>
+      <tbody id="disc-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { T, countryName } from '../js/i18n.js';
+import { QUALIFIED_NAMES, ELIM_ROUNDS, reachesStage, loadEloData, buildEloItems } from '../js/qualified.js';
+import { createStageCarousel, maxReachableStage } from '../js/stage_carousel.js';
+
+const [{ eloData, statusByIso2 }, discData] = await Promise.all([
+  loadEloData('../'),
+  fetch('../data/v2/discipline.json').then(r => r.json()),
+]);
+
+// iso2 -> {id, name} — discipline.json is iso2-keyed, everything else in this app (and
+// countryName itself) is numeric-id-keyed. elo_rank.json's rankings cover all 244
+// countries (not just the 48 qualifiers), so every discipline.json key resolves here.
+const byIso2 = new Map(eloData.rankings.map(r => [r.iso2, r]));
+
+// discipline.json's own per-team `stage` field is NOT used for a still-alive team's visibility
+// or display — it turned out unreliable for two teams sharing the exact same bracket position:
+// Argentina's own stage correctly advanced to "Final" once it beat England in the Semi-finals,
+// but Spain's stayed stuck at "Semi-finals" despite also having beaten France to reach the same
+// Final (data/v2/discipline.json bug, not something this file can fully paper over). Reusing
+// buildEloItems' own per-team fields — the exact same computation the main map's carousel
+// already relies on — sidesteps discipline.json's stage bug entirely and keeps this page's
+// carousel (and its Stage column) in lockstep with the map's. Eliminated teams are left
+// untouched: discipline.json's own `stage`/`eliminated` are authoritative there (it's only the
+// still-undecided case where the bug bites), so this only overrides `stage` when !eliminated.
+const eloItemsByIso2 = new Map(
+  buildEloItems({ rankings: eloData.rankings, byId: {}, importByCountry: {}, countryNameFn: (id, name) => name, statusByIso2 })
+    .map(item => [item.iso2, item])
+);
+
+const teams = [];
+for (const [iso2, stats] of Object.entries(discData)) {
+  const ranking = byIso2.get(iso2);
+  if (!ranking) continue; // defensive — shouldn't happen for a qualified team
+  const item = eloItemsByIso2.get(iso2);
+  const stage = !stats.eliminated && item?.pendingFrom != null ? ELIM_ROUNDS[item.pendingFrom] : stats.stage;
+  teams.push({
+    ...stats,
+    stage,
+    iso2,
+    id: ranking.id,
+    name: countryName(ranking.id, ranking.name),
+    visibleThroughIndex: item?.visibleThroughIndex ?? ELIM_ROUNDS.indexOf(stats.stage),
+    playsThirdPlace: item?.playsThirdPlace ?? false,
+    thirdPlace: item?.thirdPlace ?? null,
+  });
+}
+
+// ── Stage carousel (js/stage_carousel.js — same widget <elo-ranking>/players_sidebar.js
+// use). 'winner' (its 7th slide) has no discipline.json equivalent — a champion and a
+// beaten finalist both cap out at ELIM_ROUNDS' last index ('Final'), so nothing in
+// stageIndexById ever reaches position 6 and maxReachableStage naturally leaves it
+// locked for the whole tournament, same as any other stage that hasn't been played yet. ──
+// Leading slide (stage index -1, "whole competition") ahead of CAROUSEL_STAGES[0] — every
+// team's own final tally (as of wherever *they* were eliminated, not a shared checkpoint —
+// see renderTable's own comment below), the natural default overview for a stats page.
+const carousel = createStageCarousel(T, { leadingLabel: T.allStagesLabel });
+document.querySelector('.disc-carousel-host').appendChild(carousel.el);
+const qualifiedIds = Object.keys(QUALIFIED_NAMES).map(Number);
+const stageIndexById = new Map(teams.map(t => [t.id, t.visibleThroughIndex]));
+carousel.maxStage = maxReachableStage(qualifiedIds, stageIndexById);
+
+let _stage = -1;
+carousel.el.addEventListener('stage-change', e => {
+  _stage = e.detail.stage;
+  renderTable();
+});
+
+// ── Sortable table — click a header to sort by it, click again to reverse. Same
+// click-to-sort/pt-th-active convention as wc2026_players.html's own player table. ──
+const COLUMNS = [
+  { key: 'name',              label: 'Team' },
+  { key: 'stage',             label: 'Stage' },
+  { key: 'matchesPlayed',     label: 'MP' },
+  { key: 'foulsCommitted',    label: 'Fouls cmt.' },
+  { key: 'foulsSuffered',     label: 'Fouls suf.' },
+  { key: 'avgFoulsCommitted', label: 'Avg cmt.' },
+  { key: 'avgFoulsSuffered',  label: 'Avg suf.' },
+  { key: 'yellowCards',       label: 'YC' },
+  { key: 'redCards',          label: 'RC' },
+  { key: 'foulsPerCard',      label: 'Fouls/card' },
+];
+let _sortKey = 'foulsCommitted';
+let _sortDir = 'desc';
+const setSort = key => {
+  if (key === _sortKey) _sortDir = _sortDir === 'desc' ? 'asc' : 'desc';
+  else { _sortKey = key; _sortDir = key === 'name' || key === 'stage' ? 'asc' : 'desc'; }
+  renderTable();
+};
+
+const _sortArrow = () => _sortDir === 'asc' ? ' ▾' : ' ▴';
+const renderHead = () => {
+  const th = col => html`<th class="pt-th${col.key === 'name' ? '' : ' disc-num'}${_sortKey === col.key ? ' pt-th-active' : ''}" @click=${() => setSort(col.key)}>${col.label}${_sortKey === col.key ? _sortArrow() : ''}</th>`;
+  render(html`${COLUMNS.map(th)}`, document.getElementById('disc-head'));
+};
+
+// Nulls (foulsPerCard, when a team has zero cards so far) always sort last, whichever
+// direction is active — same rule js/players_sidebar.js's own _cmpMaybe uses for
+// genuinely-missing data, so flipping direction never makes missing data jump to the top.
+const _cmpMaybe = (a, b, get) => {
+  const x = get(a), y = get(b);
+  if (x == null && y == null) return 0;
+  if (x == null) return 1;
+  if (y == null) return -1;
+  const d = x < y ? -1 : x > y ? 1 : 0;
+  return _sortDir === 'asc' ? d : -d;
+};
+
+// The two Semi-finals losers get a placement-aware label instead of the raw round name — both
+// read "Semi-finals" as their stage (the consolation match never overwrites it — see
+// data/v2/status.json's additive thirdPlace field), so without this they'd otherwise show as
+// two identical fates rather than 3rd vs. 4th place in the same match against each other.
+const stageLabel = t => {
+  if (!t.eliminated) return t.stage;
+  const label = t.playsThirdPlace ? (t.thirdPlace?.result === 'lost' ? '4th place — lost the 3rd-place match' : '3rd place — won the 3rd-place match') : t.stage;
+  return `Eliminated — ${label}`;
+};
+
+// Every eliminated team has a byStage entry for each round it actually played (contiguous
+// through its elimination round) — the only way a *visible* team (reachesStage already
+// filtered out anyone eliminated before _stage) can lack byStage[ELIM_ROUNDS[_stage]] is if
+// it's still alive and _stage is exactly its own current stage, whose fixture hasn't finished
+// yet (see the file's own note on byStage above). Walk backward to the nearest stage that
+// *does* have a snapshot — Group Stage (index 0) always does, so this never falls through.
+// A Semi-finals loser's 3rd Place Final figures land under byStage['3rd Place Final'], not
+// byStage['Final'] (that team never plays an actual Final) — checked as a fallback whenever
+// the walk reaches the 'Final' slot, so its real (and already-finished) 3rd-place figures are
+// used instead of stale Semi-finals ones landing here "pending".
+const snapshotFor = (t, stageIdx) => {
+  for (let i = stageIdx; i >= 0; i--) {
+    const key = ELIM_ROUNDS[i];
+    const thirdKey = key === 'Final' ? '3rd Place Final' : null;
+    const snap = t.byStage?.[key] ?? (thirdKey ? t.byStage?.[thirdKey] : undefined);
+    if (snap) return { snap, stageKey: t.byStage?.[key] ? key : thirdKey, pending: i !== stageIdx };
+  }
+  return null;
+};
+// Plain inline span, not wrapped in a flex cell — flag-icons sizes .fi via its own em-based
+// width/aspect-ratio, but as a flex item (empty span, no min-content of its own beyond the
+// background-image) it can shrink to near-nothing under flex-shrink whenever a long team name
+// squeezes the column (this table isn't table-layout:fixed). .pt-flag's own vertical-align
+// already lines it up against the text baseline with no flex needed.
+const flagSpan = iso2 => html`<span class="fi fi-${iso2} pt-flag"></span>`;
+
+const renderTable = () => {
+  renderHead();
+  // { t, snap, pending } — figures as of the *selected* stage (js/qualified.js's
+  // ELIM_ROUNDS[_stage]), not the team's final/current totals; see snapshotFor's own comment.
+  // _stage === -1 ("whole competition", the carousel's leading slide — see createStageCarousel's
+  // leadingLabel) is the one exception: every team, no reachesStage filter, each at *its own*
+  // last stage (visibleThroughIndex, clamped below Infinity for a champion whose Final is fully
+  // decided) rather than a shared checkpoint — i.e. each team's real final tally.
+  const rows = teams
+    .filter(t => _stage === -1 || reachesStage(t.visibleThroughIndex, _stage))
+    .map(t => ({ t, ...snapshotFor(t, _stage === -1 ? Math.min(t.visibleThroughIndex, ELIM_ROUNDS.length - 1) : _stage) }));
+  const sorted = [...rows].sort((a, b) => {
+    if (_sortKey === 'name') { const d = a.t.name.localeCompare(b.t.name); return _sortDir === 'asc' ? d : -d; }
+    if (_sortKey === 'stage') {
+      const d = a.t.visibleThroughIndex - b.t.visibleThroughIndex || (a.t.eliminated === b.t.eliminated ? 0 : a.t.eliminated ? -1 : 1);
+      return _sortDir === 'asc' ? d : -d;
+    }
+    return _cmpMaybe(a, b, r => r.snap[_sortKey]);
+  });
+  render(html`${sorted.map(({ t, snap, stageKey, pending }) => html`
+    <tr class=${pending ? 'disc-row-pending' : ''}>
+      <td>${flagSpan(t.iso2)}${t.name}</td>
+      <td class="disc-stage">${stageLabel(t)}${pending ? html`<span class="disc-pending" title="${t.stage} not finished yet — figures as of ${stageKey}">†</span>` : nothing}</td>
+      <td class="disc-num">${snap.matchesPlayed}</td>
+      <td class="disc-num">${snap.foulsCommitted}</td>
+      <td class="disc-num">${snap.foulsSuffered}</td>
+      <td class="disc-num">${snap.avgFoulsCommitted.toFixed(1)}</td>
+      <td class="disc-num">${snap.avgFoulsSuffered.toFixed(1)}</td>
+      <td class="disc-num">${snap.yellowCards}</td>
+      <td class="disc-num">${snap.redCards}</td>
+      <td class="disc-num">${snap.foulsPerCard != null ? snap.foulsPerCard.toFixed(2) : '—'}</td>
+    </tr>`)}`, document.getElementById('disc-body'));
+};
+
+renderTable();
+</script>
+</body>
+</html>

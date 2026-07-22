@@ -6,6 +6,7 @@ const _icon = (paths) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="
 const ICON_HOME = _icon(`<path d="M22 22L2 22" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M2 11L10.1259 4.49931C11.2216 3.62279 12.7784 3.62279 13.8741 4.49931L22 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M15.5 5.5V3.5C15.5 3.22386 15.7239 3 16 3H18.5C18.7761 3 19 3.22386 19 3.5V8.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M4 22V9.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M20 22V9.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M15 22V17C15 15.5858 15 14.8787 14.5607 14.4393C14.1213 14 13.4142 14 12 14C10.5858 14 9.87868 14 9.43934 14.4393C9 14.8787 9 15.5858 9 17V22" stroke="#1C274C" stroke-width="1.5"/><path d="M14 9.5C14 10.6046 13.1046 11.5 12 11.5C10.8954 11.5 10 10.6046 10 9.5C10 8.39543 10.8954 7.5 12 7.5C13.1046 7.5 14 8.39543 14 9.5Z" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_LIVE = _icon(`<path d="M2 14C2 10.2288 2 8.34315 3.17157 7.17157C4.34315 6 6.22876 6 10 6H14C17.7712 6 19.6569 6 20.8284 7.17157C22 8.34315 22 10.2288 22 14C22 17.7712 22 19.6569 20.8284 20.8284C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.8284C2 19.6569 2 17.7712 2 14Z" stroke="#1C274C" stroke-width="1.5"/><circle cx="8" cy="14" r="3" stroke="#1C274C" stroke-width="1.5"/><path d="M13.5 11H19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M13.5 14H19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M13.5 17H19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 6L15 2" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>`);
 const ICON_GUIDE = _icon(`<circle cx="12" cy="12" r="10" stroke="#1C274C" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke="#1C274C" stroke-width="1.5"/><path d="M15 9L19 5" stroke="#1C274C" stroke-width="1.5"/><path d="M5 19L9 15" stroke="#1C274C" stroke-width="1.5"/><path d="M9 9L5 5" stroke="#1C274C" stroke-width="1.5"/><path d="M19 19L15 15" stroke="#1C274C" stroke-width="1.5"/>`);
+const ICON_CARD = _icon(`<rect x="6" y="3" width="12" height="18" rx="2" stroke="#1C274C" stroke-width="1.5"/>`);
 const ICON_CHAIN = `<svg class="chain-icon" width="24" height="24" viewBox="62 49 388 414" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="131,118 381,118 381,256 256,256" stroke="red" />
@@ -146,6 +147,7 @@ class MundialAuthBar extends HTMLElement {
               <img src="/images/puzzle-piece-svgrepo-com.svg" width="24" height="24" alt="">
             </a>
             <ul class="dropdown-menu dropdown-menu-start" style="min-width:0">
+              ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD)}
               ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
@@ -168,6 +170,7 @@ class MundialAuthBar extends HTMLElement {
 
     const navLinks = {
       '/': ['index.html', 'wc2026_map.html', ''],
+      '/insights/discipline.html': ['discipline.html'],
       '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
       '/wc2026_live.html': ['wc2026_live.html'],
     };
