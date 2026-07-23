@@ -4,6 +4,7 @@ import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './q
 import { maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden } from './flag_visibility.js';
+import { METRIC } from './map-container.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
 import { wireShareButton } from './share_button.js';
 
@@ -332,6 +333,19 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   let _confIds = null; // set by setConfFilter(); null = no confederation filter
   let _confKey = null; // confederation key ('uefa' etc.) matching _confIds, for persistence/explain
 
+  // Legend range filter — set by setLegendRange() (js/map-container.js's wireLegend(), driven
+  // by dragging the legend's own two handles). [min, max] in METRIC units, or null = no
+  // active selection. A country with no app.byId entry (nothing exported or native-selected —
+  // see buildChoroplethIndex) reads as a real 0, the same convention choroFill's own
+  // no-data fallback uses.
+  let _legendRange = null;
+  const inLegendRange = id => {
+    if (!_legendRange) return true;
+    const rec = app.byId[id];
+    const v = rec ? METRIC(rec) : 0;
+    return v >= _legendRange[0] && v <= _legendRange[1];
+  };
+
   // 'e' (non-qualified exporter) and 'o' (non-qualified, no tournament connection) are both
   // unaffected by the stage carousel — only the qualified categories (IE/IK/HE/HK) below get
   // the reachesStage check, since only they have a tournament position to "reach". A
@@ -352,6 +366,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
       if (cat === 'e' || cat === 'o') return false;
       return reachesStage(app.stageIndexById?.get(id), _stage);
     }
+    if (!inLegendRange(id)) return false;
     if (_confIds && fifaMember && !_confIds.has(id)) return false;
     if (cat === 'e' || cat === 'o') {
       if (!behavior.showNonQualified) return false;
@@ -1454,6 +1469,18 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     saveState: _saveState,
   });
 
+  // Called by map-container.js's wireLegend() (as its onRangeChange callback) every time the
+  // legend's own drag handles move — range is [min, max] in METRIC units, or null once dragged
+  // back out to the full domain (see wireLegend's own _emitRange). Same
+  // renderElo+applyFlagFilter notify pattern setConfFilter/_filterToggle/_filterSet all use —
+  // not persisted (no _saveState() call): an exploratory, session-only filter for now, unlike
+  // the rest of this module's state.
+  const setLegendRange = range => {
+    _legendRange = range;
+    callbacks.renderElo?.();
+    applyFlagFilter();
+  };
+
   return {
     get sortOrder() { return _sortOrder; },
     get sortDir() { return _sortDir; },
@@ -1485,6 +1512,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     sortAndFilter,
     applyParams,
     setConfFilter,
+    setLegendRange,
     setMode,
     setPlayersTabActive,
     playersFilterChecked,

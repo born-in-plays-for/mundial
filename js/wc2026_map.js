@@ -594,7 +594,11 @@ _clampMapHeight();
 if (_legendParent) {
   let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
   _legendParent.addEventListener('pointerdown', e => {
-    if (e.target.closest('button')) return; // #zoom-reset/#zoom-span keep their own click behavior
+    // #zoom-reset/#zoom-span keep their own click behavior; #legend keeps its own — the
+    // range-filter grips' pointerdown/pointermove/pointerup drag (map-container.js's
+    // wireLegend()) would otherwise also bubble up here and fight with the map-height
+    // drag-resize below, both racing to handle the same gesture.
+    if (e.target.closest('button') || e.target.closest('#legend')) return;
     const mapEl = document.getElementById('map');
     _dragging = true;
     _dragStartY = e.clientY;
@@ -2681,7 +2685,7 @@ Promise.all([
 // onPaletteChange listener here, fired after a live #diverging-debug tweak. (The
 // KDE-intensity legend swap that used to live here moved out along with the rest of that
 // layer — see _updateAllPlayersMapLayer's own comment.)
-const legend = wireLegend({ getById: () => app.byId });
+const legend = wireLegend({ getById: () => app.byId, onRangeChange: sidebar.setLegendRange });
 onPaletteChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });
   g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });

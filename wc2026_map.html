@@ -82,7 +82,7 @@
       <span id="legend-born-brief" class="d-md-none"></span>
     </div>
     <span id="zoom-level" hidden></span>
-    <div id="legend" class="d-flex align-items-start" style="padding: .5rem .5rem 0 .5rem !important;">
+    <div id="legend" class="d-flex align-items-start" style="padding: .5rem .75rem 0 .5rem !important; margin-right: .5rem !important;">
       <div class="d-flex flex-column pe-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
           <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
@@ -101,6 +101,12 @@
         </div>
         <div id="legend-outlier-count-pos" class="text-center"></div>
       </div>
+      <!-- Range-filter device — see map-container.js's wireLegend()/renderRange(). Covers the
+           whole #legend (both outlier columns + the gradient bar + the text rows below), plus a
+           bit of side margin for the grip handles to rest in — rendered into by JS only once
+           wired with an onRangeChange callback (wc2026_map.js only — see wireLegend's own header
+           comment for why the chain page doesn't get this). -->
+      <div id="legend-filter-device"></div>
     </div>
   </div>
   </div>

@@ -441,15 +441,18 @@ export const zoomToCentroid = (ctx, id, duration = 2000) => {
   svg.transition().duration(duration).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
 };
 
-// ── Legend gradient + ticks + outlier count ─────────────────────────────────────
-// Wires up #legend-bar/#legend-ticks/#legend-outlier-*/#legend-born-* (the markup block in
-// wc2026_map.html and chains/wc2026_chain_longest.html — same ids on both pages),
-// self-registering an onPaletteChange listener so every piece repaints after a live
-// #diverging-debug tweak. `getById()` is called lazily on every repaint (not read once) so
-// callers can populate/replace their byId index after wireLegend() runs (map data loads
+// ── Legend gradient + ticks + outlier count + range filter ─────────────────────
+// Wires up #legend-bar/#legend-ticks/#legend-outlier-*/#legend-born-*/#legend-filter-device
+// (the markup block in wc2026_map.html and chains/wc2026_chain_longest.html — same ids on
+// both pages, though only wc2026_map.html carries #legend-filter-device and passes
+// onRangeChange; the chain page has no category-filter system for a range selection to plug
+// into, so its legend stays read-only, same as before this feature existed), self-registering
+// an onPaletteChange listener so every piece repaints after a live #diverging-debug tweak.
+// `getById()` is called lazily on every repaint (not read once) so callers can
+// populate/replace their byId index after wireLegend() runs (map data loads
 // asynchronously) — see refresh() below. Extracted from wc2026_map.js's
 // _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/_updateLegendBorn.
-export const wireLegend = ({ getById }) => {
+export const wireLegend = ({ getById, onRangeChange }) => {
   const els = {
     bar:             document.getElementById('legend-bar'),
     ticks:           document.getElementById('legend-ticks'),
@@ -460,6 +463,7 @@ export const wireLegend = ({ getById }) => {
     outlierCountPos: document.getElementById('legend-outlier-count-pos'),
     bornFull:        document.getElementById('legend-born-full'),
     bornBrief:       document.getElementById('legend-born-brief'),
+    filterDevice:    document.getElementById('legend-filter-device'),
   };
 
   // Bar position (0-1) for a value v — proportional to the *combined*
@@ -519,7 +523,129 @@ export const wireLegend = ({ getById }) => {
     if (els.bornBrief) els.bornBrief.textContent = brief;
   };
 
-  const refresh = () => { buildGradient(); updateTicks(); updateOutlier(); updateBorn(); };
+  // ── Range filter — drag either grip to select a sub-range of the legend's own value domain
+  // (Curaçao's real value through France's, the same two countries the outlier dots already
+  // single out), filtering the country list/map down to that range. Opt-in: only built when
+  // both the DOM host (#legend-filter-device) and a callback to report the selected range
+  // exist — see the header comment above. #legend-filter-device is a 5-child flex row —
+  // #left-excluded/#left-grip/#center-included/#right-grip/#right-excluded — covering #legend
+  // itself plus a margin on each side (css/map-container.css), wide enough that a grip parked
+  // at rest sits fully in that margin instead of overlapping the outlier dot beside it. Margin
+  // and grip width are read live off the actual rendered boxes below, not assumed equal to
+  // each other or to any particular CSS value — both are still being visually tuned.
+  // Domain endpoints are each outlier's own *real* METRIC value, not RATIO_MAX_POS/NEG (the
+  // 2nd-place ceiling the color scale saturates at) — a real range filter needs the actual
+  // extremes, not the color-mapping ceiling short of them.
+  const _rangeDomain = () => {
+    const byId = getById();
+    const [negId] = OUTLIER_IDS_NEG, [posId] = OUTLIER_IDS_POS;
+    const negRec = byId[negId], posRec = byId[posId];
+    return [negRec ? METRIC(negRec) : -RATIO_MAX_NEG, posRec ? METRIC(posRec) : RATIO_MAX_POS];
+  };
+  // How far each grip has been dragged in from its at-rest position, in real CSS px against
+  // #legend-filter-device's own width (the actual flex container these become #left-excluded/
+  // #right-excluded's widths in) — not #legend's own, narrower width; the device is wider by
+  // its own side margins (see the header comment above), so a grip parked at rest (0/0) sits
+  // fully in that margin instead of overlapping #legend's own content. 0/0 always means "no
+  // filtering," regardless of the domain, so unlike a value-domain percentage there's nothing
+  // here that needs re-syncing once getById() starts returning real data instead of the {}
+  // it's called with before the map finishes loading (the value each px maps to is only ever
+  // resolved at conversion time, in _xToValue()/_currentRange() below).
+  let _leftPx = 0, _rightPx = 0;
+  // A device-relative x (the same coordinate frame _leftPx/_rightPx live in) → a real METRIC
+  // value — NOT a single linear scale across #legend's whole width. #legend has 3 visually
+  // very different columns (see wc2026_map.html): the negative-outlier dot, the gradient bar
+  // (#legend-bar, linear across [-RATIO_MAX_NEG, RATIO_MAX_POS] — see buildGradient() above),
+  // and the positive-outlier dot — and the two dot columns are each a single fixed-width,
+  // *discrete* marker (one dot, not a gradient), not a proportional slice of the domain the
+  // way their pixel width might suggest. Treating the dot columns as if they were more of the
+  // same linear bar scale (an earlier version of this did, using #legend's raw width) let the
+  // boundary reach the true min/max value well before a grip visually reached the outlier dot
+  // that represents it, or vice versa — surprising results like a grip sitting right next to
+  // France's own dot still not excluding France. Anything at or past the bar's own edge reads
+  // as the true domain extreme instead; only inside the bar itself is there anything to
+  // interpolate.
+  const _xToValue = xFromDeviceLeft => {
+    const [lo, hi] = _rangeDomain();
+    const barRect = document.getElementById('legend-bar')?.getBoundingClientRect();
+    const deviceRect = els.filterDevice?.getBoundingClientRect();
+    if (!barRect || !deviceRect || !barRect.width) return lo;
+    const barLeft = barRect.left - deviceRect.left, barRight = barRect.right - deviceRect.left;
+    if (xFromDeviceLeft <= barLeft) return lo;
+    if (xFromDeviceLeft >= barRight) return hi;
+    const frac = (xFromDeviceLeft - barLeft) / barRect.width; // 0..1 across the bar itself
+    return -RATIO_MAX_NEG + frac * (RATIO_MAX_NEG + RATIO_MAX_POS);
+  };
+  const _currentRange = () => {
+    const deviceRect = els.filterDevice?.getBoundingClientRect();
+    if (!deviceRect) return _rangeDomain();
+    // The excluded/included boundary is each grip's INNER edge (left-grip's right edge,
+    // right-grip's left edge) — where #center-included actually starts/ends — not the grip's
+    // outer edge (where #left-excluded/#right-excluded end). The grip's own width sits on the
+    // excluded side of that boundary (a country whose value falls directly under a grip reads
+    // as excluded, same as the dimmed span next to it), so it has to be added in here too, not
+    // just the bare _leftPx/_rightPx (the dimmed span's own width) — leaving it out let a
+    // sliver of otherwise-excluded countries stay visible even with a grip dragged as far as
+    // it goes.
+    const gripW = document.getElementById('left-grip')?.getBoundingClientRect().width ?? 0;
+    return [_xToValue(_leftPx + gripW), _xToValue(deviceRect.width - _rightPx - gripW)];
+  };
+  const _emitRange = () => {
+    onRangeChange(_leftPx === 0 && _rightPx === 0 ? null : _currentRange());
+  };
+  const _onGripDown = e => {
+    e.preventDefault();
+    const side = e.currentTarget.dataset.side; // 'left' | 'right'
+    const gripEl = e.currentTarget;
+    // Only the grip/mask redraw (cheap: a handful of style writes) happens on every
+    // pointermove — actually applying the filter (_emitRange(), which cascades into
+    // re-filtering the Elo pill list and re-animating every flag on the map) is expensive
+    // enough to visibly freeze the drag if it ran on every tick, so it's deferred to
+    // pointerup instead: one recompute per drag, not one per pixel moved.
+    const move = ev => {
+      const rect = els.filterDevice.getBoundingClientRect();
+      // Both grips' own live width — read fresh (not assumed equal to the .5rem/1rem margin
+      // constant currently in CSS, which is itself still being tuned) so the two grips can
+      // never overlap: the dragged grip's own far edge is capped at the other grip's own near
+      // edge, exactly, however wide either currently renders.
+      const gripW = gripEl.getBoundingClientRect().width;
+      if (side === 'left') {
+        const max = Math.max(0, rect.width - _rightPx - 2 * gripW);
+        _leftPx = Math.max(0, Math.min(ev.clientX - rect.left, max));
+      } else {
+        const max = Math.max(0, rect.width - _leftPx - 2 * gripW);
+        _rightPx = Math.max(0, Math.min(rect.right - ev.clientX, max));
+      }
+      renderRange();
+    };
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      _emitRange();
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  };
+  const renderRange = () => {
+    if (!els.filterDevice || !onRangeChange) return;
+    const gripTip = 'Drag to filter countries by net export/import balance — double-click to reset';
+    render(html`
+      <span id="left-excluded" style="width:${_leftPx}px"></span>
+      <span id="left-grip" data-side="left" title=${gripTip} @pointerdown=${_onGripDown}><img src="images/grip-vertical-svgrepo-com.svg" alt=""></span>
+      <span id="center-included"></span>
+      <span id="right-grip" data-side="right" title=${gripTip} @pointerdown=${_onGripDown}><img src="images/grip-vertical-svgrepo-com.svg" alt=""></span>
+      <span id="right-excluded" style="width:${_rightPx}px"></span>
+    `, els.filterDevice);
+  };
+  if (els.filterDevice && onRangeChange) {
+    els.filterDevice.addEventListener('dblclick', () => {
+      _leftPx = 0; _rightPx = 0;
+      renderRange();
+      _emitRange();
+    });
+  }
+
+  const refresh = () => { buildGradient(); updateTicks(); updateOutlier(); updateBorn(); renderRange(); };
 
   onPaletteChange(refresh);
   refresh();

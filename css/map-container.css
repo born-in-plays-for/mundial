@@ -89,10 +89,16 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    change. pointer-events:none so it never steals the drag/click handling already wired
    to #legend-parent and its real children. Opacity ~0.4 over the bar's own light
    background approximates var(--text-muted) (#999) without recoloring the (solid black
-   fill) source SVG. */
-#legend-grip { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0.4; pointer-events: none; }
+   fill) source SVG. width/height:1rem overrides the <img>'s own width="20" height="20"
+   HTML attributes (wc2026_map.html) — matches #left-grip/#right-grip's own size
+   (css/map-container.css, the #legend-filter-device rules below) now that both are the
+   same kind of grab handle, just oriented for a different drag axis. */
+#legend-grip { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1rem; height: 1rem; opacity: 0.4; pointer-events: none; }
 #legend-parent:hover #legend-grip { opacity: 0.7; }
-#legend { font-size: 11px; color: var(--text-muted); }
+/* cursor:default overrides #legend-parent's own row-resize (inherited otherwise) — #legend no
+   longer participates in that drag (js/wc2026_map.js's pointerdown handler now excludes it
+   entirely, see that file's own comment), so the resize cursor over it would be misleading. */
+#legend { font-size: 11px; color: var(--text-muted); position: relative; cursor: default; }
 #legend-countries { font-size: 11px; color: #bbb; }
 #legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }
 /* Describes what the map's shading means (js/wc2026_map.js's _updateLegendBorn() —
@@ -135,6 +141,34 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    this container needs to establish both the positioning context and its own height (nothing
    in normal flow left to size it once children are taken out of flow). */
 #legend-ticks { position: relative; width: 280px; height: 12px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
+/* Range filter device (js/map-container.js's wireLegend()) — covers the whole #legend
+   (positioned absolutely against #legend's own position:relative above), extended left/right
+   by exactly one grip's own width (.5rem) so a grip parked at a domain extreme (no filtering
+   on that side) rests entirely in that margin, beside #legend's own content, instead of
+   overlapping the outlier dot it sits next to. A flex row of 5 same-height children, left to
+   right: the excluded/dimmed span before the selection, the left grip, the fully-transparent
+   included span, the right grip, the excluded/dimmed span after — #left-excluded/#right-excluded
+   grow and shrink (their JS-set width is how a drag actually filters anything) while
+   #center-included just soaks up whatever width is left (flex:1), no width math needed for it. */
+#legend-filter-device { position: absolute; inset: 0 -.5rem; display: flex; }
+#legend-filter-device > span { height: 100%; flex-shrink: 0; }
+#left-excluded, #right-excluded{ width: 0; background: rgba(250,249,246,.8); }
+#center-included { flex: 1 1 auto; background: transparent; }
+/* .5rem wide (matching the device's own side margins above) so a grip parked at rest sits
+   fully in that margin — cursor:grab/:active mirrors #legend-grip's own drag affordance.
+   The vertical grip glyph (images/grip-vertical-svgrepo-com.svg) is the transposed twin of
+   #legend-grip's horizontal one — same dot pattern, rotated 90°, for the same reason: this
+   handle moves horizontally (left/right, filtering by value) rather than vertically like the
+   map-height resize grip does, so the *grip* itself reads as a vertical bar of dots — the
+   usual affordance for a horizontally-draggable handle. */
+#left-grip, #right-grip {
+  width: 1rem; background: rgba(250,249,246,.8);
+  display: flex; align-items: center; justify-content: center;
+  cursor: ew-resize; touch-action: none;
+  padding: 0 2px; 
+}
+#left-grip img, #right-grip img { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; pointer-events: none; }
+#left-grip:hover img, #right-grip:hover img, #left-grip:active img, #right-grip:active img { opacity: 0.85; }
 @media (max-width: 767.98px) {
   #legend-bar { max-width: 90px; }
   #legend-ticks { width: 90px; font-size: 8px; }
