@@ -626,6 +626,16 @@ if (_legendParent) {
   };
   _legendParent.addEventListener('pointerup', _endMapDrag);
   _legendParent.addEventListener('pointercancel', _endMapDrag);
+  // Double-click to reset back to the natural (full-width, no explicit override) height —
+  // same reset gesture js/map-container.js's own #legend-filter-device grips use, and the
+  // same button/#legend exclusion as the drag above (a double-click on the zoom buttons or
+  // inside #legend has its own meaning, not this).
+  _legendParent.addEventListener('dblclick', e => {
+    if (e.target.closest('button') || e.target.closest('#legend')) return;
+    document.getElementById('map').style.height = '';
+    localStorage.removeItem(_MAP_HEIGHT_KEY);
+    _syncMapHeight();
+  });
 }
 
 const _scrollTopBtn = document.getElementById('scroll-top-btn');
