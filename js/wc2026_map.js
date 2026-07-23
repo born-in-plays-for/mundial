@@ -70,6 +70,7 @@ const zoom = _wm.zoom;
 _wm.onZoomPre = e => { _blendedInsets.forEach(fn => fn(e.transform.k)); };
 
 const COUNTRY_STROKE_W = 0.3; // world-space base for .country/.mesh-border — see onZoom's 1/k compensation
+const CONF_BOUNDARY_STROKE_W = 1.2; // world-space base for .conf-boundary — same 1/k compensation
 _wm.onZoom = e => {
   dimState.k = e.transform.k;
   const k = dimState.k;
@@ -80,6 +81,9 @@ _wm.onZoom = e => {
   // excluded here since it lives inside its own extra-scaled group and
   // compensates for that separately, in buildBlendedInset's own update().)
   g.selectAll('.country:not(.country-extra), .mesh-border').attr('stroke-width', COUNTRY_STROKE_W / k);
+  // Same treatment for the FIFA-confederation highlight boundary — otherwise it's the one
+  // border left growing linearly with zoom while every other border on the map stays constant.
+  g.selectAll('.conf-boundary').attr('stroke-width', CONF_BOUNDARY_STROKE_W / k);
   // Fixed-zoom insets (Cape Verde, Curaçao…) — counter-scale by 1/k so their
   // content stays a constant on-screen size regardless of the main map's zoom.
   g.selectAll('.inset-fixed-scale').attr('transform', function() {
@@ -272,7 +276,7 @@ function _highlightConf(ids) {
     .attr('d', path)
     .attr('fill', 'none')
     .attr('stroke', '#1C274C')
-    .attr('stroke-width', 1.2)
+    .attr('stroke-width', CONF_BOUNDARY_STROKE_W / dimState.k)
     .attr('stroke-opacity', 0.7)
     .attr('pointer-events', 'none');
 }
