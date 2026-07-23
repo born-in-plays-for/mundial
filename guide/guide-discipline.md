@@ -62,5 +62,3 @@ Argentina still leads by a clear margin either way.
   average (not the pooled figure above, since a t-test needs one independent observation per
   team) — 12.52 vs. 11.40 fouls/match. Welch's t ≈ 1.53, df ≈ 9.1, two-tailed p ≈ 0.16 — a
   difference in the expected direction, but not statistically significant given n=6.
-- All figures are each team's cumulative whole-tournament tally (`discipline.json`'s top-level
-  fields), not a per-stage snapshot from `byStage`.
