@@ -76,7 +76,6 @@
       <button id="zoom-span" type="button" aria-label="Span all visible countries">
         <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
       </button>
-      <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme" style="display: none; "></button>
     </div>
     <div id="legend-born" class="sub">
       <span id="legend-born-full" class="d-none d-md-inline"></span>
@@ -94,14 +93,9 @@
         <div id="legend-bar" class="overflow-hidden rounded-2"></div>
         <div id="legend-ticks"></div>
       </div>
-      <!-- Diverging themes only (see map-container.js's THEMES.*.diverging) — the positive-
-           side outlier (negative's is the block above, reused; see map-container.js's
-           wireLegend()/updateOutlier). Hidden for sequential themes, which have just the one outlier.
-           d-none+d-flex pair (not a plain `hidden` attribute) — Bootstrap's .d-flex carries
-           !important, which always beats the UA stylesheet's non-important [hidden] rule, so a
-           bare `hidden` attribute here would silently never actually hide it. Same pattern
-           auth-bar.js already uses for its sign-in/signed-out toggle. -->
-      <div id="legend-outlier-pos-wrap" class="d-none d-flex flex-column ps-2">
+      <!-- The positive-side outlier (negative's is the block above, reused; see
+           map-container.js's wireLegend()/updateOutlier). -->
+      <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
           <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
         </div>
@@ -112,12 +106,11 @@
   </div>
 </div>
 
-<!-- Debug tool for tuning the violet theme's diverging color scale live — see
+<!-- Debug tool for tuning the map's diverging color scale live — see
      map-container.js's getDivergingParams()/setDivergingParams() and the
-     wiring right after the legend/theme-toggle setup in js/wc2026_map.js. Only has a
-     visible effect while the Violet theme is active. -->
+     wiring right after the legend setup in js/wc2026_map.js. -->
 <details id="diverging-debug" class="container-xxl my-2 sub" open style="display:none">
-  <summary style="cursor:pointer;">Diverging scale debug (Violet theme only)</summary>
+  <summary style="cursor:pointer;">Diverging scale debug</summary>
   <div class="d-flex flex-wrap gap-3 align-items-end py-2">
     <label class="d-flex flex-column">Neutral (v = 0)
       <input type="color" id="dbg-neutral">

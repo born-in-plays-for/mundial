@@ -258,24 +258,51 @@ The map can be collapsed via a full-width toggle bar (styled like the filter sid
 - **Landscape gotcha — `#map-collapse` needs its own explicit `height:100%`**: `#map-container` gets a definite height there (`top:0;bottom:0`), and `#map` is `height:100% !important` — but percentage heights only resolve against an ancestor with a *definite* height, and the intermediate `#map-collapse` wrapper has none by default (content-driven/auto). Without the explicit override, `#map`'s `height:100%` silently falls back to its intrinsic aspect-ratio height, leaving it shorter than `#map-container`; `justify-content:center` on `#map-container` then splits the leftover space equally above/below `#map` — visible in DevTools' flex overlay as violet bands that look like padding but are actually just unclaimed flex space.
 - **`preserveAspectRatio="xMidYMid slice"`** on the map SVG (set once in `map-container.js`'s `WorldMap.connectedCallback`) — the `object-fit:cover` equivalent for SVG: crops overflow to fill its box instead of the default `"meet"` behavior (letterboxing). Only has a visible effect in landscape, where `#map` is forced to `100%/100%` of a box with its own unrelated aspect ratio; in normal layout `#map` is `width:100%;height:auto`, so its box already matches the viewBox's aspect ratio exactly (nothing to crop).
 
-### Map color themes
-`js/map-container.js`'s `THEMES` registry (`earthy`, `violet`, `forest`) is not just three palettes on the same number — each theme is its own lens on the data:
-- **`ramp`** — the 7-stop light→dark hex sequence fed to `d3.interpolateRgbBasis`.
-- **`ease`** — exponent for `normalize()` (`(value / ratioMax) ** ease`), default 2 (quadratic) if omitted. `earthy`/`forest` use `1.4`: the default quadratic curve stays pale for most of the range and only darkens near `ratioMax`, which — given most countries cluster low-to-mid on any of these metrics — made the bulk of the map read as a uniform pale blob. Lowering the exponent reaches the darker/mid ramp stops sooner, so the transition reads more gradual instead of snapping pale almost immediately. `violet` keeps the untouched default.
-- **`metric(rec)`** — which number a country is colored by, computed from its `app.byId[id]` record (see `buildIndices()` in `wc2026_map.js` for exactly which fields exist: `count` export, `nativeCount`, `importCount`, `totalCount`). Each theme currently visualizes a different question:
-  - `forest` → `count` (exports only) — players born here, playing elsewhere. The site's original pre-theme-system metric.
-  - `earthy` → `importCount` — players born elsewhere, now playing for this country.
-  - `violet` → `max(0, count + nativeCount − importCount)` — net talent balance (home-grown contribution minus imports). Can go negative (net importers, e.g. Curaçao) — currently clamped to 0, which reads identically to "no data"; a real fix is a diverging scale (two hues either side of a neutral midpoint) rather than clamping, left for later.
-- **`ratioMax`** — that metric's own 2nd-highest value, i.e. the domain max for `normalize()`, after excluding `outlierIds`. **Not shared across themes** — imports top out around 26 (Curaçao), exports around 81 (France), the combo metric around 102 (France) — using one theme's ceiling for another would over- or under-saturate everything. Bump it whenever that 2nd place grows past the current ceiling, or a country silently clamps to the darkest color instead of reflecting its real position.
-- **`outlierIds`** — whichever country tops that metric, rendered black (`#000`) and shown as a standalone dot instead of on the gradient. **Not always France** — `earthy` (imports) is topped by Curaçao (id 531), whose entire squad is Dutch-born.
-- **Satellite colors** (`noData`, `placeholderFill`/`placeholderStroke`/`graticule` for the pre-load placeholder sphere) stay bundled per theme too, so switching themes never again requires hand-matching those separately — the ocean itself (real water) deliberately stays out of the theme, unaffected by land palette.
+### Map color scale
+`js/map-container.js` colors every country by one fixed metric — net talent balance
+(`METRIC`: `count − importCount`, i.e. exports minus imports; natives deliberately excluded,
+since a country's own homegrown-and-still-there players don't represent a talent flow either
+way and would just dilute the signal). It's a genuine diverging scale, not a clamped-at-0
+sequential one: positive is a net exporter (dominated by "born in"), negative a net importer
+(dominated by "plays for", e.g. Curaçao at -26).
 
-Theme is switched via `#theme-toggle` (floating over the map, cycles on click) and persists to `localStorage` (`mundial-map-theme`), read before first paint. `setTheme()`/`onThemeChange()` in `map-container.js` expose a small pub/sub so `wc2026_map.js` can repaint (`.country` fills, standalone-dot islands, legend gradient/ticks/outlier count) without `map-container.js` knowing about D3 selections.
+This replaced an earlier multi-theme system (`earthy`/`violet`/`forest`, switched at runtime via
+a `#theme-toggle` button and persisted to `localStorage`) that visualized exports-only,
+imports-only, and net-balance as three separate swappable palettes — retired as unused
+scaffolding once net balance (the `violet` theme) turned out to be the only one anyone actually
+switched to.
+
+- **`RATIO_MAX_POS`/`RATIO_MAX_NEG`** — the metric's own 2nd-highest value on each side (after
+  `OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG`), i.e. the domain max `normalize()` scales against. Bump
+  either whenever that 2nd place grows past the current ceiling, or a country silently clamps to
+  the darkest color instead of reflecting its real position. The two ceilings are wildly
+  different (42 vs 21) and **not normalized against each other** for the color mapping —
+  `normalize()` uses `Math.max(RATIO_MAX_POS, RATIO_MAX_NEG)` as a shared max so equal color
+  intensity means equal real magnitude on either side, not "maxed out on that side's own,
+  much smaller, ceiling."
+- **`OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG`** — France (biggest net exporter) and Curaçao (biggest
+  net importer, whose entire squad is Dutch-born), rendered as standalone dots off the gradient
+  rather than colored by it.
+- **Colors/easing** live in `_divergingParams` (`getDivergingParams()`/`setDivergingParams()`),
+  not baked-in constants — live-tunable via the `#diverging-debug` panel (`wc2026_map.html`,
+  hidden by default: `display:none` on the `<details>`, a dev-only tool) — `neutral` (v=0),
+  `easyLeft`/`easyRight` (color at each side's extreme), `algoLeft`/`algoRight` (`power` or
+  `smoothstep` easing), `easeLeft`/`easeRight` (the power exponent), `outlierLeft`/`outlierRight`
+  (independent outlier-dot colors), `floorLeft`/`floorRight` (minimum color strength any nonzero
+  value starts at, so v=1 doesn't read as visually identical to v=0).
+- **Satellite colors** (`NO_DATA_COLOR`, `PLACEHOLDER_FILL`/`PLACEHOLDER_STROKE`/
+  `GRATICULE_COLOR` for the pre-load placeholder sphere) are plain exported constants — the
+  ocean itself (real water) stays outside all of this, unaffected by the land palette.
+
+`setDivergingParams()` notifies `onPaletteChange()` listeners (`map-container.js`) so
+`wc2026_map.js` can repaint (`.country` fills, standalone-dot islands, legend
+gradient/ticks/outlier count) after a live `#diverging-debug` tweak, without `map-container.js`
+knowing about D3 selections.
 
 ### Legend
 The legend (`#legend`) lives as the third child of `#page-heading-sub`, bottom-aligned via `mt-auto` on a `d-flex flex-column h-100` wrapper.
-- **Gradient direction**: `linear-gradient(to left, …)` — **high values (dark) on the left, 0 on the right**. Ticks (`#legend-ticks`, lit-html-rendered by `_updateLegendTicks()` in `wc2026_map.js`) read `ratioMax × 1 / 0.75 / 0.5 / 0.25 / 0` for the *active theme* — rebuilt on every theme switch, not hardcoded, since `ratioMax` varies per theme (see "Map color themes" above). The three inner waypoints are just illustrative fractions, not tied to any specific country.
-- **Outlier**: the active theme's `outlierIds` country (France for `forest`/`violet`, Curaçao for `earthy`) is off-scale, rendered black (`#000`), shown as a standalone dot to the left of the gradient bar. `#legend-outlier-count` (`_updateLegendOutlier()`) shows that country's own `metric()` value, also rebuilt on theme switch.
+- **Gradient direction**: `linear-gradient(to right, …)` — negative (red, importers) on the left, 0 in the middle, positive (blue, exporters) on the right, positioned proportionally across the combined `-RATIO_MAX_NEG..RATIO_MAX_POS` domain (not split into two equal-width halves — the two ceilings differ, so equal pixel width per side would put 0 at the visual midpoint while running at different units-per-pixel on each side). Ticks (`#legend-ticks`, lit-html-rendered by `updateTicks()` in `map-container.js`'s `wireLegend()`) read `-RATIO_MAX_NEG, -RATIO_MAX_NEG/2, 0, RATIO_MAX_POS/2, RATIO_MAX_POS`.
+- **Outliers**: Curaçao (left, off-scale negative) and France (right, off-scale positive) each render as a standalone dot instead of on the gradient — `#legend-outlier-count`/`#legend-outlier-count-pos` (`updateOutlier()`) show each country's own `METRIC()` value.
 - On narrow screens (`max-width: 767.98px`), the bar and ticks shrink to 90px.
 
 ### Mobile layout (`@media (max-width: 767.98px)`)

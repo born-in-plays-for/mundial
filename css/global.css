@@ -74,7 +74,7 @@ body { background: var(--page-bg); color: var(--color-default); }
    elsewhere (e.g. #control-sidebar's csb-collapse button, navbar icons — all #1C274C stroke) —
    no filter needed since, unlike Bootstrap's white-on-transparent original, this SVG is already
    that color natively. The round rgba(245,242,236,.85) + border pairing is this app's own
-   standard floating-icon-button look (see map-container.css's #zoom-reset/#theme-toggle) rather
+   standard floating-icon-button look (see map-container.css's #zoom-reset/#zoom-span) rather
    than the plain opacity-only treatment #control-sidebar's .csb-icon-btn uses — needed here
    since these buttons float directly over the pill list rather than a plain page background,
    and were hard to notice without one. background-size is pinned in px (Bootstrap's own default

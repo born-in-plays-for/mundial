@@ -20,29 +20,31 @@ import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/u
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildImportByCountry } from './qualified.js';
 import { T, countryName } from './i18n.js';
 
-// ── Colour themes ───────────────────────────────────────────────────────────
-// Each theme is its own lens on the data, not just a different palette on the
-// same number: `metric` picks which figure a country is colored by, `ratioMax`
-// is that metric's own 2nd-highest value (after `outlierIds`, same convention
-// CLAUDE.md documents for the original export+native scale — bump it whenever
-// that 2nd place grows past the current ceiling, or a country silently clamps
-// to the darkest color instead of reflecting its real position) and
-// `outlierIds` is whichever country tops THAT metric (it isn't always France —
-// e.g. Curaçao dominates raw import count). A theme also bundles the few
-// satellite colors that need to stay visually coordinated with its ramp (the
-// loading-placeholder sphere/graticule drawn before world data arrives, and
-// the no-data/outlier fills) — swapping themes should never again require
-// hand-matching those, the way the ocean/placeholder mismatch had to be fixed
-// by hand when the ramp first moved from violet to earthy. The ocean itself
-// (real water, drawn once world data loads) deliberately stays out of the
-// theme — it doesn't vary with the land palette.
+// ── Colour scale — net talent balance ───────────────────────────────────────
+// A genuine diverging scale, not a clamped-at-0 sequential one — net talent
+// balance (exports minus imports; natives deliberately excluded — a country's
+// own homegrown-and-still-there players don't represent a talent flow either
+// way, so including them just diluted the signal) is signed and means
+// something different on each side of 0: positive is a net exporter
+// (dominated by "born in"), negative a net importer (dominated by "plays
+// for", e.g. Curaçao at -26). `METRIC` picks the figure a country is colored
+// by; `RATIO_MAX_POS`/`RATIO_MAX_NEG` are that metric's own 2nd-highest value
+// on each side (after `OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG` — bump either
+// whenever that 2nd place grows past the current ceiling, or a country
+// silently clamps to the darkest color instead of reflecting its real
+// position). `OUTLIER_IDS_POS`/`_NEG` is whichever country tops that side
+// (France/Curaçao today). A few satellite colors below need to stay visually
+// coordinated with the ramp (the loading-placeholder sphere/graticule drawn
+// before world data arrives, and the no-data fill) — the ocean itself (real
+// water, drawn once world data loads) deliberately stays out of it, since it
+// doesn't vary with the land palette.
 //
-// `rec` (as seen by `metric`) is an app.byId[] entry — see buildIndices() in
+// `rec` (as seen by `METRIC`) is an app.byId[] entry — see buildIndices() in
 // wc2026_map.js for exactly which fields it carries (count/nativeCount/
-// importCount today). Metrics fall back to 0 for a missing field rather than
+// importCount today). Falls back to 0 for a missing field rather than
 // throwing, defensively — a byId built some other way than buildChoroplethIndex()
 // (below) might not compute every field the main map does.
-// ── Diverging scale (violet) — EASY TWEAKS ──────────────────────────────────
+// ── Diverging scale — EASY TWEAKS ───────────────────────────────────────────
 // Live-tunable at runtime via setDivergingParams()/getDivergingParams() below
 // (see the #diverging-debug panel in wc2026_map.html for a slider/color-picker
 // UI over this exact API) — not baked-in constants, and no pre-baked gradient
@@ -89,185 +91,78 @@ let _divergingParams = {
 export const getDivergingParams = () => ({ ..._divergingParams });
 export const setDivergingParams = patch => {
   Object.assign(_divergingParams, patch);
-  _buildPalettes(THEMES[_themeName]);
-  if (THEMES[_themeName].diverging) _themeListeners.forEach(fn => fn(_themeName));
+  _buildPalettes();
+  _paletteListeners.forEach(fn => fn());
 };
 const _ease = (x, algo, exponent) => algo === 'smoothstep' ? x * x * (3 - 2 * x) : x ** exponent;
 export const divergingOutlierColor = side => side === 'pos' ? _divergingParams.outlierRight : _divergingParams.outlierLeft;
 
-export const THEMES = {
-  earthy: {
-    label: 'Earthy',
-    // Terracotta/rust sand, not a neutral tan — warmer and redder at the dark end.
-    ramp: ['#f7e8d9','#eccbae','#dba77e','#c67f52','#a35a34','#7a3f22','#4a2414'],
-    // Lower than the 2 (quadratic) default — the default leans hard on staying
-    // pale for most of the ratio range and only darkens near ratioMax, which
-    // made most countries (clustered low-to-mid) look near-uniformly pale.
-    // 1.4 still favors light overall but reaches the darker/mid ramp stops
-    // sooner, so the dark-to-light transition (as the metric drops from
-    // ratioMax) reads slower/more gradual instead of snapping pale immediately.
-    ease: 1.4,
-    // Imports — players born elsewhere now playing for this country. Curaçao
-    // (id 531) tops this one, not France: its whole squad is Dutch-born.
-    metric: rec => rec.importCount ?? 0,
-    ratioMax: 21, // 2nd after Curaçao (26) — DR Congo
-    outlierIds: new Set([531]),
-    // Only qualified countries have a squad to import players into — a
-    // non-qualified country's importCount is always a trivial 0 (nothing to do
-    // with actually having zero imports), so it must render as noData like any
-    // other country with nothing to say, not share the ramp's own "0" color.
-    qualifiedOnly: true,
-    legendKey: 'imports', // T.legendMetric[legendKey] — #legend-born's description
+// Net talent balance (exports minus imports — see the header comment above): the one metric
+// the choropleth/legend has colored by since the multi-theme system (earthy/forest exports-only
+// and imports-only palettes, plus runtime theme-switching) was retired as unused scaffolding.
+export const METRIC = rec => (rec.count ?? 0) - (rec.importCount ?? 0);
+export const RATIO_MAX_POS = 42; // 2nd after France (78) — Netherlands
+export const RATIO_MAX_NEG = 21; // 2nd after Curaçao (-26) — DR Congo
+export const OUTLIER_IDS_POS = new Set([250]); // France — biggest net exporter
+export const OUTLIER_IDS_NEG = new Set([531]); // Curaçao — biggest net importer
+export const NO_DATA_COLOR = '#e8e4e0';
+// Neutral, not tinted toward either arm — shown only briefly before world data loads, so it has
+// no diverging meaning of its own to represent.
+export const PLACEHOLDER_FILL = '#e8e6e0';
+export const PLACEHOLDER_STROKE = '#c2c0ba';
+export const GRATICULE_COLOR = '#d8d6d0';
 
-    outlier: '#000',
-    noData: '#e8e4e0',
-    placeholderFill: '#f2ded0',
-    placeholderStroke: '#c99872',
-    graticule: '#e6c7ab',
-  },
-  violet: {
-    label: 'Violet',
-    // A genuine diverging scale, not a clamped-at-0 sequential one — net talent
-    // balance (exports minus imports; natives deliberately excluded — a
-    // country's own homegrown-and-still-there players don't represent a
-    // talent flow either way, so including them just diluted the signal) is
-    // signed and means something different on each side of 0: positive is a
-    // net exporter (dominated by "born in"), negative a net importer
-    // (dominated by "plays for", e.g. Curaçao at -26). Colors/easing live in
-    // _divergingParams above (getDivergingParams()/setDivergingParams()), not
-    // here — see the #diverging-debug panel for a live slider/color-picker UI.
-    diverging: true,
-    metric: rec => (rec.count ?? 0) - (rec.importCount ?? 0),
-    ratioMaxPos: 42, // 2nd after France (78) — Netherlands
-    ratioMaxNeg: 21, // 2nd after Curaçao (-26) — DR Congo
-    outlierIdsPos: new Set([250]), // France — biggest net exporter
-    outlierIdsNeg: new Set([531]), // Curaçao — biggest net importer
-    legendKey: 'balance',
-    // Unlike earthy, no qualifiedOnly gate: a non-qualified country's
-    // importCount of 0 is genuinely true (no squad to import into), not a
-    // meaningless placeholder — so its net balance correctly reduces to its
-    // own export count, same as forest.
-    noData: '#e8e4e0',
-    // Neutral, not tinted toward either arm — shown only briefly before world
-    // data loads, so it has no "diverging" meaning of its own to represent.
-    placeholderFill: '#e8e6e0',
-    placeholderStroke: '#c2c0ba',
-    graticule: '#d8d6d0',
-  },
-  forest: {
-    label: 'Forest',
-    // Mossy/olive, not a vivid leaf green — desaturated on purpose so it reads
-    // as muted and earthy rather than flashy at the mid-range greens.
-    ramp: ['#eef1e4','#d7ddc2','#b9c294','#98a468','#76824a','#565f34','#33391e'],
-    // Same rationale as earthy's ease above.
-    ease: 1.4,
-    // Exports only — players born here, playing elsewhere. The site's original
-    // metric, pre-theme-system (was the *only* map, and included natives).
-    metric: rec => rec.count ?? 0,
-    ratioMax: 43, // 2nd after France (81) — Netherlands
-    outlierIds: new Set([250]),
-    legendKey: 'exports',
-
-    outlier: '#000',
-    noData: '#e8e4e0',
-    placeholderFill: '#e9ecdd',
-    placeholderStroke: '#a3ad7c',
-    graticule: '#c7cdab',
-  },
+// Two interpolators, picked by value sign in color() below — each just a live 2-point straight
+// line (interpolateRgb, no spline, no intermediate stops) between _divergingParams.neutral and
+// .easyLeft/.easyRight, so editing those (via setDivergingParams()) is instantly the whole
+// story. Rebuilt here at module load, and inside setDivergingParams() on every live tweak.
+let _posPalette, _negPalette;
+const _buildPalettes = () => {
+  _posPalette = d3.interpolateRgb(_divergingParams.neutral, _divergingParams.easyRight);
+  _negPalette = d3.interpolateRgb(_divergingParams.neutral, _divergingParams.easyLeft);
 };
-
-const _THEME_KEY = 'mundial-map-theme';
-const _storedTheme = localStorage.getItem(_THEME_KEY);
-let _themeName = /* THEMES[_storedTheme] ? _storedTheme : */ 'violet';
-
-// Sequential themes cache one interpolator (_palette), built from that theme's
-// own hand-picked `ramp` array via a multi-stop spline (interpolateRgbBasis).
-// Diverging themes cache two (_posPalette/_negPalette, picked by value sign in
-// color() below) and leave _palette null — each is just a live 2-point
-// straight line (interpolateRgb, no spline, no intermediate stops) between
-// _divergingParams.neutral and .easyLeft/.easyRight, so editing those (via
-// setDivergingParams()) is instantly the whole story. Rebuilt here, inside
-// setTheme() on every switch, and inside setDivergingParams() on every tweak.
-let _palette = null, _posPalette = null, _negPalette = null;
-const _buildPalettes = theme => {
-  if (theme.diverging) {
-    _posPalette = d3.interpolateRgb(_divergingParams.neutral, _divergingParams.easyRight);
-    _negPalette = d3.interpolateRgb(_divergingParams.neutral, _divergingParams.easyLeft);
-    _palette = null;
-  } else {
-    _palette = d3.interpolateRgbBasis(theme.ramp);
-    _posPalette = _negPalette = null;
-  }
-};
-_buildPalettes(THEMES[_themeName]);
+_buildPalettes();
 
 // ── Shared colour scale ───────────────────────────────────────────────────────
-// Per-theme exponent (default 2, quadratic) for sequential themes — see each
-// theme's `ease` above; diverging themes use _divergingParams's
-// algoLeft/algoRight + easeLeft/easeRight instead (via _ease() above).
-// Magnitude only (0..1) — color() below picks which side's max/palette to use.
-export const normalize = (v, theme = THEMES[_themeName]) => {
-  if (theme.diverging) {
-    // Shared max across both sides, not each side's own ratioMaxPos/Neg — the two ceilings
-    // are wildly different (e.g. 42 vs 21), and normalizing each side against its own ceiling
-    // made a country sitting at its side's own 2nd place reach full color saturation regardless
-    // of how that magnitude compared to the other side: DR Congo at -21 (maxed out on ratioMaxNeg)
-    // read as visually "as extreme" as Netherlands at +42 (maxed out on ratioMaxPos), even though
-    // 42 is double 21 in real terms. A shared max means equal color intensity = equal real
-    // magnitude on either side. ratioMaxPos/ratioMaxNeg themselves are unchanged and still drive
-    // the legend's own tick *labels* and gradient domain (wc2026_map.js) — only the color mapping
-    // uses the shared value.
-    if (v === 0) return 0; // the only value that renders as pure `neutral` — see floorLeft/Right above
-    const neg = v < 0;
-    const max = Math.max(theme.ratioMaxPos, theme.ratioMaxNeg);
-    const x = Math.min(Math.abs(v), max) / max;
-    const floor = neg ? _divergingParams.floorLeft : _divergingParams.floorRight;
-    const eased = neg ? _ease(x, _divergingParams.algoLeft, _divergingParams.easeLeft)
-                       : _ease(x, _divergingParams.algoRight, _divergingParams.easeRight);
-    // Two separate gradients meeting at a jump on v=0, not one continuous curve through it —
-    // any nonzero v starts at `floor` (already visibly tinted) instead of asymptotically
-    // approaching 0 the way a bare eased(x) does for small x.
-    return floor + (1 - floor) * eased;
-  }
-  return (Math.max(0, v) / theme.ratioMax) ** (theme.ease ?? 2);
+// _divergingParams's algoLeft/algoRight + easeLeft/easeRight drive the easing curve (via
+// _ease() above). Magnitude only (0..1) — color() below picks which side's palette to use.
+export const normalize = v => {
+  // Shared max across both sides, not each side's own RATIO_MAX_POS/NEG — the two ceilings
+  // are wildly different (42 vs 21), and normalizing each side against its own ceiling made a
+  // country sitting at its side's own 2nd place reach full color saturation regardless of how
+  // that magnitude compared to the other side: DR Congo at -21 (maxed out on RATIO_MAX_NEG)
+  // read as visually "as extreme" as Netherlands at +42 (maxed out on RATIO_MAX_POS), even
+  // though 42 is double 21 in real terms. A shared max means equal color intensity = equal real
+  // magnitude on either side. RATIO_MAX_POS/NEG themselves are unchanged and still drive the
+  // legend's own tick *labels* and gradient domain (wc2026_map.js) — only the color mapping
+  // uses the shared value.
+  if (v === 0) return 0; // the only value that renders as pure `neutral` — see floorLeft/Right above
+  const neg = v < 0;
+  const max = Math.max(RATIO_MAX_POS, RATIO_MAX_NEG);
+  const x = Math.min(Math.abs(v), max) / max;
+  const floor = neg ? _divergingParams.floorLeft : _divergingParams.floorRight;
+  const eased = neg ? _ease(x, _divergingParams.algoLeft, _divergingParams.easeLeft)
+                     : _ease(x, _divergingParams.algoRight, _divergingParams.easeRight);
+  // Two separate gradients meeting at a jump on v=0, not one continuous curve through it — any
+  // nonzero v starts at `floor` (already visibly tinted) instead of asymptotically approaching
+  // 0 the way a bare eased(x) does for small x.
+  return floor + (1 - floor) * eased;
 };
-export const color = (v, theme = THEMES[_themeName]) => {
-  const t = Math.max(0, Math.min(1, normalize(v, theme)));
-  return theme.diverging ? (v >= 0 ? _posPalette : _negPalette)(t) : _palette(t);
+export const color = v => {
+  const t = Math.max(0, Math.min(1, normalize(v)));
+  return (v >= 0 ? _posPalette : _negPalette)(t);
 };
 export const choroFill = (id, byId) => {
-  const theme = THEMES[_themeName];
-  if (theme.diverging) {
-    if (theme.outlierIdsPos.has(id)) return divergingOutlierColor('pos');
-    if (theme.outlierIdsNeg.has(id)) return divergingOutlierColor('neg');
-  } else if (theme.outlierIds.has(id)) {
-    return theme.outlier;
-  }
-  if (theme.qualifiedOnly && !QUALIFIED_NAMES[id]) return theme.noData;
+  if (OUTLIER_IDS_POS.has(id)) return divergingOutlierColor('pos');
+  if (OUTLIER_IDS_NEG.has(id)) return divergingOutlierColor('neg');
   const r = byId[id];
-  return r ? color(theme.metric(r), theme) : theme.noData;
+  return r ? color(METRIC(r)) : NO_DATA_COLOR;
 };
 
-// Read these instead of caching a THEMES[...] lookup yourself, so callers
-// always see the live value after setTheme().
-export const themeName    = () => _themeName;
-export const currentTheme = () => THEMES[_themeName];
-export const themeNames   = () => Object.keys(THEMES);
-
-// Notified after a successful setTheme() — map repaint, legend rebuild, etc.
-// live outside this module, which only owns the color state itself.
-const _themeListeners = new Set();
-export const onThemeChange = fn => { _themeListeners.add(fn); return () => _themeListeners.delete(fn); };
-export const setTheme = name => {
-  /*
-  if (!THEMES[name] || name === _themeName) return false;
-  _themeName = name;
-  _buildPalettes(THEMES[name]);
-  localStorage.setItem(_THEME_KEY, name);
-  _themeListeners.forEach(fn => fn(name));
-  */
-  return true;
-};
+// Notified after a live setDivergingParams() tweak — map repaint, legend rebuild, etc. live
+// outside this module, which only owns the color state itself.
+const _paletteListeners = new Set();
+export const onPaletteChange = fn => { _paletteListeners.add(fn); return () => _paletteListeners.delete(fn); };
 
 // ── Flag CDN helpers ──────────────────────────────────────────────────────────
 export const FLAG_CDN      = code => `https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${code}.svg`;
@@ -391,7 +286,7 @@ customElements.define('world-map', WorldMap);
 
 // ── Choropleth data index ───────────────────────────────────────────────────────
 // Pure function: rawData (data/v2/map.json shape: {data, natives, pop, capital}) → the
-// byId/nativeByCountry/importByCountry indices choroFill()/THEMES.*.metric read (count/
+// byId/nativeByCountry/importByCountry indices choroFill()/METRIC read (count/
 // nativeCount/importCount). Extracted from wc2026_map.js's buildIndices(), which layers
 // more on top afterward (pop, totalCount, and the eloRank/capital fields the tooltip/
 // player-table UI needs — none of that is choropleth-coloring-relevant, so it stays
@@ -546,15 +441,14 @@ export const zoomToCentroid = (ctx, id, duration = 2000) => {
   svg.transition().duration(duration).call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
 };
 
-// ── Legend gradient + ticks + outlier count + theme-toggle swatch ──────────────
-// Wires up #legend-bar/#legend-ticks/#legend-outlier-*/#legend-born-*/#theme-toggle (the
-// markup block in wc2026_map.html and chains/wc2026_chain_longest.html — same ids on
-// both pages) and the theme-cycling click handler, self-registering an onThemeChange
-// listener so every piece repaints on theme switch. `getById()` is called lazily on
-// every repaint (not read once) so callers can populate/replace their byId index after
-// wireLegend() runs (map data loads asynchronously) — see refresh() below. Extracted
-// from wc2026_map.js's _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/
-// _updateLegendBorn/_paintThemeToggle.
+// ── Legend gradient + ticks + outlier count ─────────────────────────────────────
+// Wires up #legend-bar/#legend-ticks/#legend-outlier-*/#legend-born-* (the markup block in
+// wc2026_map.html and chains/wc2026_chain_longest.html — same ids on both pages),
+// self-registering an onPaletteChange listener so every piece repaints after a live
+// #diverging-debug tweak. `getById()` is called lazily on every repaint (not read once) so
+// callers can populate/replace their byId index after wireLegend() runs (map data loads
+// asynchronously) — see refresh() below. Extracted from wc2026_map.js's
+// _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/_updateLegendBorn.
 export const wireLegend = ({ getById }) => {
   const els = {
     bar:             document.getElementById('legend-bar'),
@@ -566,41 +460,34 @@ export const wireLegend = ({ getById }) => {
     outlierCountPos: document.getElementById('legend-outlier-count-pos'),
     bornFull:        document.getElementById('legend-born-full'),
     bornBrief:       document.getElementById('legend-born-brief'),
-    themeToggle:     document.getElementById('theme-toggle'),
   };
 
-  // Diverging bar position (0-1) for a value v — proportional to the *combined*
-  // -ratioMaxNeg..ratioMaxPos domain (see the original comment history in wc2026_map.js
+  // Bar position (0-1) for a value v — proportional to the *combined*
+  // -RATIO_MAX_NEG..RATIO_MAX_POS domain (see the original comment history in wc2026_map.js
   // for why: giving each side equal pixel width regardless of its own span made 0 sit at
   // the visual midpoint while the two sides silently ran at different units-per-pixel).
-  const _divergingPos = (v, theme) => (v + theme.ratioMaxNeg) / (theme.ratioMaxNeg + theme.ratioMaxPos);
+  const _divergingPos = v => (v + RATIO_MAX_NEG) / (RATIO_MAX_NEG + RATIO_MAX_POS);
 
   const buildGradient = () => {
     if (!els.bar) return;
-    const theme = currentTheme();
-    const stops = theme.diverging
-      ? [
-          ...Array.from({ length: 30 }, (_, i) => {
-              const v = -theme.ratioMaxNeg + (i / 29) * theme.ratioMaxNeg;
-              return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
-            }),
-          ...Array.from({ length: 30 }, (_, i) => {
-              const v = (i / 29) * theme.ratioMaxPos;
-              return `${color(v, theme)} ${(_divergingPos(v, theme) * 100).toFixed(2)}%`;
-            }),
-        ]
-      : Array.from({ length: 60 }, (_, i) => color((i / 59) * theme.ratioMax, theme));
-    els.bar.style.background = `linear-gradient(to ${theme.diverging ? 'right' : 'left'}, ${stops.join(',')})`;
+    const stops = [
+      ...Array.from({ length: 30 }, (_, i) => {
+          const v = -RATIO_MAX_NEG + (i / 29) * RATIO_MAX_NEG;
+          return `${color(v)} ${(_divergingPos(v) * 100).toFixed(2)}%`;
+        }),
+      ...Array.from({ length: 30 }, (_, i) => {
+          const v = (i / 29) * RATIO_MAX_POS;
+          return `${color(v)} ${(_divergingPos(v) * 100).toFixed(2)}%`;
+        }),
+    ];
+    els.bar.style.background = `linear-gradient(to right, ${stops.join(',')})`;
     els.bar.style.borderRadius = '5px';
   };
 
   const updateTicks = () => {
     if (!els.ticks) return;
-    const theme = currentTheme();
-    const ticks = theme.diverging
-      ? [-theme.ratioMaxNeg, -theme.ratioMaxNeg / 2, 0, theme.ratioMaxPos / 2, theme.ratioMaxPos].map(Math.round)
-      : [1, 0.75, 0.5, 0.25, 0].map(f => Math.round(theme.ratioMax * f));
-    const pct = t => theme.diverging ? _divergingPos(t, theme) * 100 : (1 - t / theme.ratioMax) * 100;
+    const ticks = [-RATIO_MAX_NEG, -RATIO_MAX_NEG / 2, 0, RATIO_MAX_POS / 2, RATIO_MAX_POS].map(Math.round);
+    const pct = t => _divergingPos(t) * 100;
     // The two extreme ticks sit exactly at the bar's own edges (0%/100%) — right next to that
     // side's own outlier count label (#legend-outlier-count / -count-pos, just outside the bar)
     // — so nudge them inward a few px, otherwise the two numbers visually merge (e.g. "-26-21").
@@ -610,29 +497,17 @@ export const wireLegend = ({ getById }) => {
 
   const updateOutlier = () => {
     if (!els.outlierCount) return;
-    const theme = currentTheme();
     const byId = getById();
-    if (theme.diverging) {
-      const [negId] = theme.outlierIdsNeg, [posId] = theme.outlierIdsPos;
-      const negRec = byId[negId], posRec = byId[posId];
-      els.outlierCount.textContent = negRec ? theme.metric(negRec) : '';
-      if (els.outlierDot) els.outlierDot.style.background = divergingOutlierColor('neg');
-      if (els.outlierPosWrap) {
-        els.outlierPosWrap.classList.remove('d-none');
-        if (els.outlierCountPos) els.outlierCountPos.textContent = posRec ? theme.metric(posRec) : '';
-        if (els.outlierDotPos) els.outlierDotPos.style.background = divergingOutlierColor('pos');
-      }
-    } else {
-      const [outlierId] = theme.outlierIds;
-      const rec = byId[outlierId];
-      els.outlierCount.textContent = rec ? theme.metric(rec) : '';
-      if (els.outlierDot) els.outlierDot.style.background = theme.outlier;
-      if (els.outlierPosWrap) els.outlierPosWrap.classList.add('d-none');
-    }
+    const [negId] = OUTLIER_IDS_NEG, [posId] = OUTLIER_IDS_POS;
+    const negRec = byId[negId], posRec = byId[posId];
+    els.outlierCount.textContent = negRec ? METRIC(negRec) : '';
+    if (els.outlierDot) els.outlierDot.style.background = divergingOutlierColor('neg');
+    if (els.outlierCountPos) els.outlierCountPos.textContent = posRec ? METRIC(posRec) : '';
+    if (els.outlierDotPos) els.outlierDotPos.style.background = divergingOutlierColor('pos');
   };
 
   const updateBorn = () => {
-    const { full, brief } = T.legendMetric[currentTheme().legendKey];
+    const { full, brief } = T.legendMetric.balance;
     // full carries an inline <em> (i18n.js) around the operator word for emphasis
     // without shouting in all-caps — rendered via unsafeHTML since it's a developer-
     // authored translation string, never user input. title (the ellipsis-truncation
@@ -644,23 +519,9 @@ export const wireLegend = ({ getById }) => {
     if (els.bornBrief) els.bornBrief.textContent = brief;
   };
 
-  const paintThemeToggle = () => {
-    if (!els.themeToggle) return;
-    const theme = currentTheme();
-    // Diverging: each arm's own outlier color (already the darkest point of that arm),
-    // so the swatch hints at the two-sided scale. Sequential: two stops from the ramp.
-    const at = f => theme.ramp[Math.round(f * (theme.ramp.length - 1))];
-    const stops = theme.diverging ? [divergingOutlierColor('neg'), divergingOutlierColor('pos')] : [at(0.55), at(0.9)];
-    els.themeToggle.style.setProperty('--theme-swatch', `linear-gradient(135deg, ${stops[0]}, ${stops[1]})`);
-  };
+  const refresh = () => { buildGradient(); updateTicks(); updateOutlier(); updateBorn(); };
 
-  const refresh = () => { buildGradient(); updateTicks(); updateOutlier(); updateBorn(); paintThemeToggle(); };
-
-  els.themeToggle?.addEventListener('click', () => {
-    const names = themeNames();
-    setTheme(names[(names.indexOf(themeName()) + 1) % names.length]);
-  });
-  onThemeChange(refresh);
+  onPaletteChange(refresh);
   refresh();
 
   return { refresh };

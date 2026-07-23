@@ -11,7 +11,8 @@ import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
 import { CONF_BOUNDS } from './conf.js';
 import { iso2ForId, _NULL_CODE } from './iso2.js';
-import { choroFill, getDivergingParams, setDivergingParams, currentTheme, onThemeChange,
+import { choroFill, getDivergingParams, setDivergingParams, onPaletteChange,
+         PLACEHOLDER_FILL, PLACEHOLDER_STROKE, GRATICULE_COLOR,
          FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT, W, H,
          buildChoroplethIndex, paintChoropleth, wireLegend,
          CENTROID_OVERRIDE, dotCentroid, zoomToCentroid as _sharedZoomToCentroid,
@@ -97,14 +98,13 @@ _wm.onZoom = e => {
 };
 
 // Loading placeholder — shown before world.json arrives, then fully covered by
-// renderWorld()'s own ocean fill. Not repainted on setTheme() (the loading window
-// is brief and renderWorld() always reads the theme live once data does arrive).
+// renderWorld()'s own ocean fill.
 g.append('path').datum({type:'Sphere'})
-  .attr('d', path).attr('fill', currentTheme().placeholderFill).attr('stroke', currentTheme().placeholderStroke).attr('stroke-width',.5)
+  .attr('d', path).attr('fill', PLACEHOLDER_FILL).attr('stroke', PLACEHOLDER_STROKE).attr('stroke-width',.5)
   .attr('cursor', 'default')
   .on('mousemove', () => { hideTip(); });
 g.append('path').datum(d3.geoGraticule()())
-  .attr('d', path).attr('fill','none').attr('stroke', currentTheme().graticule).attr('stroke-width',.25);
+  .attr('d', path).attr('fill','none').attr('stroke', GRATICULE_COLOR).attr('stroke-width',.25);
 
 // QUALIFIED_NAMES, QUALIFIED_BY_NAME imported from qualified.js
 
@@ -564,7 +564,7 @@ if (_pageHeader) new ResizeObserver(() => {
 }).observe(_pageHeader);
 const _bottomPanel  = document.getElementById('bottom-panel');
 const _bottomTabNav = document.getElementById('bottomTabList');
-// #zoom-hint and #zoom-reset/#zoom-span/#theme-toggle used to be positioned here on every
+// #zoom-hint and #zoom-reset/#zoom-span used to be positioned here on every
 // call (getBoundingClientRect() math against #map/#map-container) — both are plain CSS now
 // (css/map-container.css's #map-frame/#zoom-hint, and #map-controls' normal flex flow), so
 // this is just a one-frame-deferred _syncPaddingTop, kept as its own function since callers
@@ -594,7 +594,7 @@ _clampMapHeight();
 if (_legendParent) {
   let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
   _legendParent.addEventListener('pointerdown', e => {
-    if (e.target.closest('button')) return; // #zoom-reset/#zoom-span/#theme-toggle keep their own click behavior
+    if (e.target.closest('button')) return; // #zoom-reset/#zoom-span keep their own click behavior
     const mapEl = document.getElementById('map');
     _dragging = true;
     _dragStartY = e.clientY;
@@ -2651,9 +2651,9 @@ Promise.all([
     const x0 = Math.min(...xs), x1 = Math.max(...xs);
     const y0 = Math.min(...ys), y1 = Math.max(...ys);
     const pad = 20;
-    // Used to need extra left clearance here: the zoom-reset/zoom-span/theme-toggle stack
-    // used to float directly over the map's bottom-left corner, and without it "fit
-    // everything" could zoom in just far enough to tuck a flag right behind those buttons.
+    // Used to need extra left clearance here: the zoom-reset/zoom-span stack used to float
+    // directly over the map's bottom-left corner, and without it "fit everything" could
+    // zoom in just far enough to tuck a flag right behind those buttons.
     // They're normal flex children of #map-controls now (wc2026_map.html, inside
     // #legend-parent, above the map rather than overlapping it), so a plain symmetric fit
     // has nothing left to avoid.
@@ -2673,25 +2673,24 @@ Promise.all([
   });
 });
 
-// ── Legend + theme toggle ─────────────────────────────────────────────────────
-// Gradient/ticks/outlier-count/born-text + theme-toggle swatch/click, and the
-// onThemeChange registration for repainting all of that, now live in
-// map-container.js's wireLegend() (shared with the chain page). legend.refresh() is
-// called at the end of buildIndices() (below, once app.byId is populated). The
-// map's own theme repaint (not the legend widget) stays a separate onThemeChange
-// listener here. (The KDE-intensity legend swap that used to live here moved out along with the
-// rest of that layer — see _updateAllPlayersMapLayer's own comment.)
+// ── Legend ─────────────────────────────────────────────────────────────────────
+// Gradient/ticks/outlier-count/born-text + the onPaletteChange registration for repainting
+// all of that, now live in map-container.js's wireLegend() (shared with the chain page).
+// legend.refresh() is called at the end of buildIndices() (below, once app.byId is
+// populated). The map's own repaint (not the legend widget) stays a separate
+// onPaletteChange listener here, fired after a live #diverging-debug tweak. (The
+// KDE-intensity legend swap that used to live here moved out along with the rest of that
+// layer — see _updateAllPlayersMapLayer's own comment.)
 const legend = wireLegend({ getById: () => app.byId });
-onThemeChange(() => {
+onPaletteChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(d._id ?? +d.id, app.byId); });
   g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
 });
 
 // ── Diverging scale debug panel (#diverging-debug, wc2026_map.html) ─────────
 // Live-tunes map-container.js's _divergingParams via getDivergingParams()/
-// setDivergingParams() — the latter already notifies onThemeChange()'s
-// listener above (only when Violet is the active theme), so every input here
-// just needs to call it; the repaint above happens for free.
+// setDivergingParams() — the latter already notifies onPaletteChange()'s listener above,
+// so every input here just needs to call it; the repaint above happens for free.
 {
   const _dbgDefaults = getDivergingParams();
   const _dbgEls = {

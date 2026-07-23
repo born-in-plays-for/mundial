@@ -80,7 +80,6 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
       <button id="zoom-span" type="button" aria-label="Span all visible countries">
         <img src="../images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
       </button>
-      <button id="theme-toggle" type="button" aria-label="Switch map color theme" title="Switch map color theme"></button>
     </div>
     <div id="legend-born" class="sub">
       <span id="legend-born-full" class="d-none d-md-inline"></span>
@@ -97,7 +96,7 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
         <div id="legend-bar" class="overflow-hidden rounded-2"></div>
         <div id="legend-ticks"></div>
       </div>
-      <div id="legend-outlier-pos-wrap" class="d-none d-flex flex-column ps-2">
+      <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
           <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
         </div>
@@ -116,16 +115,15 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
 // above it are interlinked — clicking a flag in the snake dims/arcs and pans/zooms
 // the map — so both need to share scope (byId/importByCountry/centroids/
 // worldFeatures/ukFeatures, the chain's own render/selection state). A trimmed copy
-// of wc2026_map.html's own map widget: world choropleth + zoom/theme controls +
-// legend + collapsible/draggable-resize bar + dim/arc mode, with no tooltips, player
-// table, or Elo sidebar (none of that applies to this page — its only per-country
+// of wc2026_map.html's own map widget: world choropleth + zoom controls + legend +
+// collapsible/draggable-resize bar + dim/arc mode, with no tooltips, player table,
+// or Elo sidebar (none of that applies to this page — its only per-country
 // interaction is "click a flag in the snake, or on the map itself, to dim+arc and
 // zoom there"). Everything importable from shared modules is imported, not copied;
-// the rest (not exported anywhere) is a deliberate, documented duplication of small
-// pieces of js/wc2026_map.js — see chains/DUP.md for the full accounting of what's
-// copied vs. shared.
+// the rest (not exported anywhere) is a deliberate, small duplication of pieces of
+// js/wc2026_map.js (documented inline where it happens below).
 import { renderChain } from './wc2026_chain_render.js';
-import { choroFill, currentTheme, onThemeChange, FLAG_CDN, FLAG,
+import { choroFill, onPaletteChange, FLAG_CDN, FLAG,
          buildChoroplethIndex, paintChoropleth, wireLegend,
          CENTROID_OVERRIDE, dotCentroid, zoomToCentroid,
          drawCountryArcs, rescaleArcs, computeImportIds } from '../js/map-container.js';
@@ -146,7 +144,7 @@ const [mapData, eloData, ukNations, world] = await Promise.all([
   loadWikiData('../'),
 ]);
 
-// byId/importByCountry — only what choroFill()/THEMES.*.metric and the dim/arc mode
+// byId/importByCountry — only what choroFill()/METRIC and the dim/arc mode
 // below actually read; see map-container.js's buildChoroplethIndex for what it
 // deliberately leaves out (pop/totalCount/tooltip indices — wc2026_map.js-only concerns).
 const { byId, importByCountry } = buildChoroplethIndex(mapData);
@@ -232,11 +230,11 @@ _zoomSpanBtn.addEventListener('click', e => {
     d3.zoomIdentity.translate(vbX + vbW / 2 - k * (x0 + x1) / 2, vbY + vbH / 2 - k * (y0 + y1) / 2).scale(k));
 });
 
-// ── Legend + theme toggle — map-container.js's wireLegend() (shared with
-// wc2026_map.js). The map's own theme repaint (not the legend widget) is this
-// page's own onThemeChange listener, same split wc2026_map.js uses. ─────────────
+// ── Legend — map-container.js's wireLegend() (shared with wc2026_map.js). The map's
+// own repaint (not the legend widget) is this page's own onPaletteChange listener,
+// fired after a live #diverging-debug tweak, same split wc2026_map.js uses. ─────────
 const legend = wireLegend({ getById: () => byId });
-onThemeChange(() => {
+onPaletteChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(+d.id, byId); });
   g.selectAll('.country-uk').attr('fill', function(d) { return choroFill(d._id, byId); });
 });
@@ -245,7 +243,7 @@ onThemeChange(() => {
 // ocean/Escape to clear) to dim+arc and pan/zoom there, mirroring wc2026_map.js's own
 // _chainOnClick/activateCountry/_zoomToActiveDimFlags/clearDim — minus the tooltip/
 // player-table/Elo-sidebar integration those pull in, none of which exists on this
-// page (see chains/DUP.md). Dim (opacity fade on non-linked flags) and arcs (one per
+// page. Dim (opacity fade on non-linked flags) and arcs (one per
 // export destination + import origin, from byId[id].nations/importByCountry) reuse
 // map-container.js's drawCountryArcs/computeImportIds — the same data + arc geometry
 // wc2026_map.js's own dim mode uses, just without its sidebar/tooltip-aware flag

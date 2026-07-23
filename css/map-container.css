@@ -57,45 +57,22 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    overflow) — on a very short dragged-down map, #map-frame's overflow:hidden still
    crops the hint at the right height, just as a hard cut instead of an ellipsis. */
 #zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; left: 100%; bottom: 0; overflow: hidden; text-overflow: ellipsis; }
-/* #zoom-reset/#zoom-span/#theme-toggle are normal flex children of #map-controls
-   (wc2026_map.html, inside #legend-parent) now, not JS-positioned floats — no more
-   position:absolute/z-index, no more per-frame left/bottom writes (removed from
-   js/wc2026_map.js's _syncMapHeight). #scroll-top-btn is unrelated (lives in #bottom-panel,
-   its own position/icon — css/wc2026_map.css) but shares the same button chrome, so it
-   stays in this shared list; it keeps its own position:absolute separately below. */
-#zoom-reset, #zoom-span, #scroll-top-btn, #theme-toggle { cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.4); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
+/* #zoom-reset/#zoom-span are normal flex children of #map-controls (wc2026_map.html,
+   inside #legend-parent) now, not JS-positioned floats — no more position:absolute/z-index,
+   no more per-frame left/bottom writes (removed from js/wc2026_map.js's _syncMapHeight).
+   #scroll-top-btn is unrelated (lives in #bottom-panel, its own position/icon —
+   css/wc2026_map.css) but shares the same button chrome, so it stays in this shared list;
+   it keeps its own position:absolute separately below. */
+#zoom-reset, #zoom-span, #scroll-top-btn { cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.4); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
 #scroll-top-btn { position: absolute; z-index: 10; }
 /* Sized down alongside their 20px (was 24px) icons, keeping the same 2px padding + 1px
    border margin around the icon that the shared 30px/24px pairing above had.
    #scroll-top-btn keeps the original 30px box (its own icon is an unrelated tiny inline
-   chevron, not one of these three). */
-#zoom-reset, #zoom-span, #theme-toggle { width: 26px; height: 26px; }
+   chevron, not one of these two). */
+#zoom-reset, #zoom-span { width: 26px; height: 26px; }
 #scroll-top-btn { display: none; }
 #scroll-top-btn.visible { display: flex; }
 #zoom-reset:disabled, #zoom-span:disabled { opacity: 0.3; cursor: default; }
-/* Round, not square like the zoom buttons — reads as a color swatch. The swatch
-   itself is a ::before, not the button's own background, so the button keeps
-   its normal chrome (border + neutral backdrop) showing as a ring around a
-   smaller, centered dot — scale(0.5) on a position:absolute (inset:0) box
-   shrinks toward the box's own center by default, no extra centering math
-   needed. js/wc2026_map.js's _paintThemeToggle sets --theme-swatch, a two-stop
-   preview of the active theme's ramp. position:relative here (the button itself is no
-   longer position:absolute) so that inset:0 still anchors to this box, not some
-   further-up positioned ancestor. */
-#theme-toggle { border-radius: 50%; position: relative; }
-#theme-toggle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: var(--theme-swatch, transparent);
-  /* Matches the .85 alpha the shared rule above uses for zoom-reset/zoom-span's
-     own background — without it the swatch's solid ramp colors read as more
-     opaque/heavier than its two sibling buttons. */
-  opacity: .85;
-  transform: scale(0.5);
-  pointer-events: none;
-}
 /* Never grows past one line: nowrap (cascades to #legend-born/#legend's text
    children) plus clipping instead of letting an overlong description push
    the row wider or wrap onto a second line. */
@@ -103,8 +80,8 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    width: #map stays width:100%, only height gets an inline px override). row-resize
    signals the affordance; touch-action:none stops touch drags from scrolling the page
    instead. user-select:none mirrors #map-toggle-bar's own guard against accidental text
-   selection while dragging. Buttons inside (#zoom-reset/#zoom-span/#theme-toggle) are
-   excluded from the drag in JS so their own clicks/cursor keep working. */
+   selection while dragging. Buttons inside (#zoom-reset/#zoom-span) are excluded from
+   the drag in JS so their own clicks/cursor keep working. */
 #legend-parent { overflow-x: hidden; white-space: nowrap; cursor: row-resize; touch-action: none; user-select: none; -webkit-user-select: none; position: relative; }
 /* Purely decorative grab affordance for the drag-resize above — centered over the bar
    regardless of #map-controls/#legend's own flex widths on either side, so absolute
@@ -118,10 +95,9 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #legend { font-size: 11px; color: var(--text-muted); }
 #legend-countries { font-size: 11px; color: #bbb; }
 #legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }
-/* Describes what the active color theme's shading means (js/wc2026_map.js's
-   _updateLegendBorn(), rebuilt on every theme switch — see map-container.js's
-   THEMES.*.legendKey / i18n.js's T.legendMetric, each a {full, brief} pair —
-   #legend-born-full/-brief swap via Bootstrap's d-none/d-md-* rather than one
+/* Describes what the map's shading means (js/wc2026_map.js's _updateLegendBorn() —
+   see map-container.js's wireLegend()/updateBorn() / i18n.js's T.legendMetric.balance,
+   a {full, brief} pair — #legend-born-full/-brief swap via Bootstrap's d-none/d-md-* rather than one
    span with two possible strings, so no JS resize listener is needed). Now
    display:none below (see that rule's own comment) — #legend-parent switched
    from justify-content-between to -end in wc2026_map.html accordingly, so
@@ -133,8 +109,8 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    title attribute (set alongside its textContent) is the fallback once the
    window is too narrow for it to fit next to the gradient bar. */
 #legend-born {
-  /* Low added value for the space it costs — the theme toggle button already lets you
-     switch metrics, and the legend's own gradient/ticks carry the actual scale. */
+  /* Low added value for the space it costs — the legend's own gradient/ticks/outlier
+     labels already carry the actual scale. */
   display: none;
   font-size: 11px; color: #bbb;
   flex: 1 1 auto; min-width: 0;
