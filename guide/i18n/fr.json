@@ -61,6 +61,8 @@
     "",
     "Les deux points isolés sont toujours les deux mêmes pays : **Curaçao**, le plus gros importateur net (tout son effectif est né aux Pays-Bas), du côté négatif, et **France**, le plus gros exportateur net, du côté positif.",
     "",
+    "La légende sert aussi de filtre : faites glisser l'une ou l'autre des poignées — le petit repère en pointillés juste à l'intérieur de chaque point isolé — vers l'intérieur pour restreindre la plage visible. Tout ce qui sort de la plage sélectionnée disparaît de la liste des pays, des drapeaux de la carte et du tableau des joueurs, comme n'importe quel autre filtre. Double-cliquez n'importe où sur la légende pour revenir à la plage complète.",
+    "",
     "## Infobulles",
     "",
     "Survolez un pays pour voir les détails. Les infobulles ne s'affichent pas sur mobile.",

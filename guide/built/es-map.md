@@ -313,6 +313,8 @@ La barra de color en la parte inferior de la cabecera se lee de izquierda a dere
 
 Los dos puntos independientes son siempre los mismos dos países: **Curaçao**, el mayor importador neto (toda su plantilla nació en los Países Bajos), en el extremo negativo, y **Francia**, el mayor exportador neto, en el extremo positivo.
 
+La leyenda también funciona como filtro: arrastra cualquiera de las dos asas — el pequeño indicador punteado justo dentro de cada punto atípico — hacia dentro para acotar el rango visible. Todo lo que quede fuera del rango seleccionado desaparece de la lista de países, de las banderas del mapa y de la tabla de jugadores, igual que con cualquier otro filtro. Haz doble clic en cualquier parte de la leyenda para volver al rango completo.
+
 ## Información emergente
 
 Pasa el ratón sobre un país para ver detalles. Las ventanas emergentes no se muestran en dispositivos móviles.

@@ -271,6 +271,8 @@ The colour bar at the bottom of the header reads left to right like a number lin
 
 The two outlier dots are always the same two countries: **Curaçao**, the biggest net importer (its entire squad is Dutch-born), on the negative end, and **France**, the biggest net exporter, on the positive end.
 
+The legend doubles as a filter: drag either grip — the small dotted handle just inside each outlier dot — inward to narrow the visible range. Everything outside the selected range disappears from the country list, the map's own flags, and the player table, the same as any other filter. Double-click anywhere on the legend to reset back to the full range.
+
 ## Tooltips
 
 Hover any country to see details. Tooltips are not shown on mobile.

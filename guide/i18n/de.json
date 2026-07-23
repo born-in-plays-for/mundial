@@ -61,6 +61,8 @@
     "",
     "Die beiden eigenständigen Punkte sind immer dieselben zwei Länder: **Curaçao**, der größte Netto-Importeur (der gesamte Kader ist in den Niederlanden geboren), am negativen Ende, und **Frankreich**, der größte Netto-Exporteur, am positiven Ende.",
     "",
+    "Die Legende dient auch als Filter: Ziehen Sie einen der beiden Griffe — die kleine gepunktete Fassung direkt innerhalb jedes Ausreißerpunkts — nach innen, um den sichtbaren Bereich einzugrenzen. Alles außerhalb des gewählten Bereichs verschwindet aus der Länderliste, den Flaggen auf der Karte und der Spielertabelle, genau wie bei jedem anderen Filter. Doppelklicken Sie irgendwo auf die Legende, um wieder den vollen Bereich anzuzeigen.",
+    "",
     "## Tooltips",
     "",
     "Fahren Sie mit der Maus über ein Land, um Details zu sehen. Tooltips werden auf Mobilgeräten nicht angezeigt.",
