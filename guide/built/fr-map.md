@@ -61,7 +61,7 @@ Décochez une cellule pour masquer cette catégorie. Cliquez sur un en-tête de 
 
 ## Barre d'info
 
-Indique combien de pays sont actuellement visibles sur le total, ainsi que la source des données (et la date de mise à jour) pour le critère actuellement en tête de la colonne de tri.
+Affiche, à gauche, le nombre de joueurs et de sélectionneurs actuellement présents dans le tableau des joueurs (voir *Le tableau des joueurs*, plus bas) — toujours à jour, quel que soit l'onglet réellement ouvert ; et à droite, combien de pays sont actuellement visibles sur le total.
 
 ## Filtre confédérations FIFA
 
@@ -144,7 +144,7 @@ Texte foncé — membre de la FIFA.
     <span class="elo-name" data-id="304">Greenland</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_text_light -->
-Texte clair — non membre de la FIFA.
+Texte clair et italique — non membre de la FIFA.
 <!-- /i18n:tax_desc_text_light --></span>
 </div>
 </div>

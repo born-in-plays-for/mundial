@@ -70,8 +70,8 @@
 }
 /* .elo-viz--match .elo-item--pending .elo-name { color: var(--light-text); } */
 
-/* Non-FIFA: light text */
-.taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); }
+/* Non-FIFA: light, italic text */
+.taxonomy .elo-item--nonfifa .elo-name { color: var(--light-text); font-style: italic; }
 
 /* Three-band gradient background — red (imports) | white (players born & selected by the same
    country) | blue (exports). Colors and band-boundary positions (--imp-pivot / --native-pivot)

@@ -62,7 +62,7 @@ Uncheck any cell to hide that category. Click a row or column header to toggle t
 
 ## Infobar
 
-Shows how many countries are currently visible out of the total, and the data source (and last-updated date) for whichever criterion is primary in the sort column.
+Shows, on the left, how many players and coaches are in the currently visible player table (see *The Player Table*, below) — kept live no matter which tab is actually open; and on the right, how many countries are currently visible out of the total.
 
 ## FIFA confederation filter
 
@@ -137,7 +137,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gl.svg" alt="">
     <span class="elo-name" data-id="304">Greenland</span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_text_light -->Light text — not a FIFA member.<!-- /i18n:tax_desc_text_light --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_text_light -->Light, italic text — not a FIFA member.<!-- /i18n:tax_desc_text_light --></span>
 </div>
 </div>
 

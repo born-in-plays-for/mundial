@@ -61,7 +61,7 @@ Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf ei
 
 ## Infoleiste
 
-Zeigt, wie viele Länder derzeit sichtbar sind (von der Gesamtzahl), sowie die Datenquelle (und das letzte Aktualisierungsdatum) für das jeweils oberste Kriterium in der Sortierspalte.
+Zeigt links, wie viele Spieler und Trainer aktuell in der Spielertabelle stehen (siehe *Die Spielertabelle*, weiter unten) — immer aktuell, unabhängig davon, welcher Tab gerade geöffnet ist; und rechts, wie viele Länder derzeit sichtbar sind (von der Gesamtzahl).
 
 ## FIFA-Konföderationsfilter
 
@@ -144,7 +144,7 @@ Dunkler Text — FIFA-Mitglied.
     <span class="elo-name" data-id="304">Greenland</span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_text_light -->
-Heller Text — kein FIFA-Mitglied.
+Heller, kursiver Text — kein FIFA-Mitglied.
 <!-- /i18n:tax_desc_text_light --></span>
 </div>
 </div>
