@@ -1297,7 +1297,7 @@ const _updateSelectionPanel = (onCollapsed) => {
       if (i === 0 && ids.length > 1) items.reverse(); // mirrored left group — fixtures (2 countries) only, not a single-team selection
       return join(items, () => html`<span class="sp-sep">·</span>`);
     });
-    return html`<div class="selection-panel-row py-1 sub" style="background-color: var(--page-bg);">
+    return html`<div class="selection-panel-row py-1 sub px-2" style="background-color: white !important;">
       ${join(groups, () => html`<span class="sp-sep">⇄</span>`)}
       <span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
             @click=${() => (_activeFixture ? clearFixtureSelection() : clearDim())}></span>

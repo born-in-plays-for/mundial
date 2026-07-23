@@ -55,7 +55,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   */
   display: flex; flex-direction: column;
 }
-#selection-panel { order: 2; }
+#selection-panel { order: 2; background-color: var(--page-bg);}
 /* js/wc2026_map.js's _updateSelectionPanel — forced to one line (name/capital/[population] ·
    -joined, two countries 'vs.'-joined for a fixture) rather than wrapping the way flex content
    normally would once it's wider than the panel (see the screenshot this was filed from: a
