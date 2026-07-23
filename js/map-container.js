@@ -588,7 +588,19 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     // sliver of otherwise-excluded countries stay visible even with a grip dragged as far as
     // it goes.
     const gripW = document.getElementById('left-grip')?.getBoundingClientRect().width ?? 0;
-    return [_xToValue(_leftPx + gripW), _xToValue(deviceRect.width - _rightPx - gripW)];
+    const leftBoundaryX = _leftPx + gripW, rightBoundaryX = deviceRect.width - _rightPx - gripW;
+    // The two grips have met (a fully squeezed, zero-width #center-included — the drag-clamp
+    // in _onGripDown lets them touch but never cross) — every country should read as excluded.
+    // Can't just let this fall through to the interpolation below: whenever both boundaries
+    // land past the SAME end of the bar (in the flat outlier-dot-column zone, where
+    // _xToValue always returns that one exact lo/hi value rather than a range of values —
+    // see _xToValue's own comment), they'd resolve to the identical value on both sides,
+    // and since that value is a real country's own exact METRIC value (the outlier itself),
+    // it alone would satisfy v >= x && v <= x while every other country correctly doesn't —
+    // isolating the one country most in need of excluding instead of excluding everyone.
+    // [hi, lo] (deliberately inverted) can never be satisfied by any real v, unlike [x, x].
+    if (rightBoundaryX <= leftBoundaryX) { const [lo, hi] = _rangeDomain(); return [hi, lo]; }
+    return [_xToValue(leftBoundaryX), _xToValue(rightBoundaryX)];
   };
   const _emitRange = () => {
     onRangeChange(_leftPx === 0 && _rightPx === 0 ? null : _currentRange());
