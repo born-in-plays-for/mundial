@@ -165,7 +165,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   background-color: var(--bg-button);
   border: 1px solid var(--border); border-radius: 50%;
   color: #1C274C;
-  opacity: 0.35;
+  opacity: 0.667;
 }
 /* Fills the same 16x16 content box the carousel icons' background-image fills — the inline SVG
    had its own tiny hardcoded width/height (10x7) sized for the old plain-icon-no-chrome look, so
