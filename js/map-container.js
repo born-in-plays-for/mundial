@@ -497,6 +497,31 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   // data actually sits on top of it, same set of countries and same METRIC the map's own choropleth
   // colors by. The two outliers are excluded — they already get their own dedicated dot markers
   // (updateOutlier below) well outside this bar's own domain.
+  // A more saturated shade of the gradient's own color at v — pushed further toward that side's
+  // own extreme (easyLeft/red for a negative v, easyRight/blue for a positive one), not just
+  // darkened — so a tick reads as "this spot on the gradient, but redder/bluer" rather than a
+  // generic dark hash mark sitting on top of an unrelated color underneath it.
+  // The boost itself scales with distance from center: _TICK_BOOST_MIN right at v=0, ramping up
+  // toward _TICK_BOOST_MAX right at each extreme (where the gradient is already most saturated
+  // too). Reuses normalize(v) — the exact same 0..1 magnitude the color ramp itself is built
+  // from — rather than a second, independently-tuned falloff, so the boost curve always tracks
+  // whatever easing/floor #diverging-debug currently has dialed in instead of drifting from it.
+  // _TICK_BOOST_MIN can't be 0: right at v=0 the gradient itself is already near-neutral gray, so
+  // a tick with no boost at all ends up almost exactly the same color as the background it sits
+  // on — invisible, not just subtle (this is what a country like Czechia/Egypt/Colombia/Norway,
+  // clustered near 0, looked like before this floor existed). A small nonzero floor keeps every
+  // tick visibly tinted, even the ones sitting right on top of the gradient's own neutral point.
+  const _TICK_BOOST_MIN = 0.0667;
+  const _TICK_BOOST_MAX = 1.2;
+  const _tickColor = v => {
+    const base = color(v);
+    const target = v >= 0 ? _divergingParams.easyRight : _divergingParams.easyLeft;
+    const boost = _TICK_BOOST_MIN + (_TICK_BOOST_MAX - _TICK_BOOST_MIN) * normalize(v);
+    const c = d3.color(d3.interpolateRgb(base, target)(boost));
+    if (!c) return base;
+    c.opacity = 1;
+    return c.toString();
+  };
   const updateRug = () => {
     if (!els.bar) return;
     const byId = getById();
@@ -505,7 +530,7 @@ export const wireLegend = ({ getById, onRangeChange }) => {
       .filter(id => !OUTLIER_IDS_NEG.has(id) && !OUTLIER_IDS_POS.has(id))
       .map(id => METRIC(byId[id]))
       .filter(v => v >= -RATIO_MAX_NEG && v <= RATIO_MAX_POS);
-    render(html`${marks.map(v => html`<span class="legend-rug-tick" style="left:${(_divergingPos(v) * 100).toFixed(2)}%"></span>`)}`, els.bar);
+    render(html`${marks.map(v => html`<span class="legend-rug-tick" style="left:${(_divergingPos(v) * 100).toFixed(2)}%; background:${_tickColor(v)}"></span>`)}`, els.bar);
   };
 
   const updateTicks = () => {
