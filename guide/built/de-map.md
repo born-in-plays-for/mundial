@@ -45,16 +45,16 @@ Vier umsortierbare Kriterien — **die Elo-Bewertung** (ein unabhängiger Wert, 
 
 Zwei unabhängige Reihen von Auswahl-Pillen, unter der Sortierung:
 
-- **Export / einheimisch / Import**: welche Rolle einem Spieler seinen Platz in der Tabelle verschafft hat — hier geboren und anderswo nominiert; hier geboren und hier nominiert; anderswo geboren und hier nominiert.
-- **Feldspieler / Trainer**: welche Art von Person angezeigt wird.
+- <span style="color:rgba(23,23,21,.75)">●</span> **einheimisch** (hier geboren und nominiert) / <span style="color:#dc2626">◀</span> **spielt für** (anderswo geboren, hier nominiert) / <span style="color:#1d4ed8">▶</span> **hier geboren** (hier geboren, anderswo nominiert): welche Rolle einem Spieler seinen Platz in der Tabelle verschafft hat.
+- **F** Feldspieler / **T** Trainer: welche Art von Person angezeigt wird.
 
-Jede Option ist standardmäßig aktiviert (alle werden angezeigt); eine Option deaktivieren blendet diese Gruppe aus. Derzeit nur innerhalb von *Die Spielertabelle*, weiter unten, aktiv — die Optionen werden angezeigt, bleiben aber vorerst anderswo deaktiviert.
+Jede Option ist standardmäßig aktiviert (alle werden angezeigt); eine Option deaktivieren blendet diese Gruppe aus. Derzeit nur innerhalb von *Die Spielertabelle*, weiter unten, aktiv — die Optionen werden auch anderswo angezeigt, bleiben dort aber vorerst wirkungslos.
 
 ## Filter
 
-Die Matrix kreuzt zwei **Spalten** (Exporteur / Nicht-Exporteur) mit vier **Zeilen** in zwei Gruppen:
+Die Matrix kreuzt zwei **Spalten** (hat Spieler, die hier geboren sind und anderswo spielen, oder nicht) mit vier **Zeilen** in zwei Gruppen:
 
-- **Qualifiziert** — aufgeteilt danach, ob das Land Spieler importiert oder nicht
+- **Qualifiziert** — aufgeteilt danach, ob der Kader Spieler enthält, die anderswo geboren sind
 - **Nicht qualifiziert** — aufgeteilt nach FIFA-Mitgliedschaft
 
 Deaktivieren Sie eine Zelle, um diese Kategorie auszublenden. Klicken Sie auf einen Zeilen- oder Spaltenkopf, um die gesamte Gruppe auf einmal umzuschalten.
@@ -181,7 +181,7 @@ Spieler aus anderen Ländern spielen für dieses Land, und Spieler aus diesem La
 <!-- /i18n:tax_desc_both --></span>
 </div>
 <div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->
-Der Hintergrund der Pille ist selbst ein Verlauf von Rot (Importe) → Weiß (einheimisch) → Blau (Exporte) — je breiter das Band einer Farbe, desto größer der Anteil dieser Gruppe am gesamten Spielerkader des Landes.
+Der Hintergrund der Pille ist selbst ein Verlauf von Rot (spielt für, anderswo geboren) → Weiß (einheimisch) → Blau (hier geboren, spielt anderswo) — je breiter das Band einer Farbe, desto größer der Anteil dieser Gruppe am gesamten Spielerkader des Landes.
 <!-- /i18n:tax_note_gradient --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(59,130,246); --imp-color: rgb(248,173,173); --imp-pivot: 2.8%; --native-pivot: 25.0%; flex-shrink:0">
@@ -190,7 +190,7 @@ Der Hintergrund der Pille ist selbst ein Verlauf von Rot (Importe) → Weiß (ei
     <span class="elo-pts"><span class="elo-pts-primary">3 · 81</span></span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->
-Überwiegend blau — ein starker Exporteur (81) mit nur einer Handvoll Importen (3).
+Überwiegend blau — 81 hier geborene Spieler spielen heute anderswo, gegenüber nur 3, die von anderswo hierher kamen.
 <!-- /i18n:tax_desc_gradient_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
@@ -200,7 +200,7 @@ Der Hintergrund der Pille ist selbst ein Verlauf von Rot (Importe) → Weiß (ei
     <span class="elo-pts"><span class="elo-pts-primary">7 · 11</span></span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->
-Ein sichtbares rotes Band neben dem Blau — eine ausgewogenere Mischung aus Exporten (11) und Importen (7).
+Ein sichtbares rotes Band neben dem Blau — eine ausgewogenere Mischung: 11 hier geborene Spieler spielen anderswo, 7 kamen von anderswo hierher.
 <!-- /i18n:tax_desc_gradient_mixed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
@@ -291,7 +291,7 @@ Wellenförmiger Rand — Spiel noch nicht ausgetragen.
 
 ## Choropleth und Flaggen
 
-Jedes Land ist entsprechend seiner Netto-Talentbilanz eingefärbt — hausgemachter Beitrag (Exporte plus einheimische Spieler) minus Importe (siehe *Die Legende*, unten). Je einseitiger diese Bilanz in die eine oder andere Richtung ausfällt, desto dunkler der Farbton; ein Land nahe der neutralen Balance erscheint blass. Länder ohne Daten zu dieser Kennzahl erscheinen in einem neutralen hellen Ton.
+Jedes Land ist entsprechend seiner Netto-Talentbilanz eingefärbt — hier geborene Spieler, die anderswo spielen, minus anderswo geborene Spieler, die hier spielen (siehe *Die Legende*, unten); einheimische Spieler, die weiterhin für ihr eigenes Land spielen, zählen in keine der beiden Richtungen. Je einseitiger diese Bilanz in die eine oder andere Richtung ausfällt, desto dunkler der Farbton; ein Land nahe der neutralen Balance erscheint blass. Länder ohne Daten zu dieser Kennzahl erscheinen in einem neutralen hellen Ton.
 Länder, die derzeit im Filter enthalten sind, zeigen eine kreisförmige Flaggenmarkierung.
 
 ![Flaggen der qualifizierten Mannschaften](screenshots/qualified_flags.png)
@@ -305,13 +305,11 @@ Scrollen (oder kneifen) zum Zoomen · ziehen zum Verschieben. Zwei runde Schaltf
 
 ## Die Legende
 
-Die Karte färbt jedes Land entsprechend seiner Netto-Talentbilanz ein — hausgemachter Beitrag (Exporte plus einheimische Spieler) minus Importe. Netto-Exporteure und Netto-Importeure erscheinen in zwei unterschiedlichen Farben zu beiden Seiten eines neutralen Mittelpunkts.
+Die Karte färbt jedes Land entsprechend seiner Netto-Talentbilanz ein — hier geborene Spieler, die anderswo spielen, minus anderswo geborene Spieler, die hier spielen; einheimische Spieler, die weiterhin für ihr eigenes Land spielen, zählen in keine der beiden Richtungen. Länder, die mehr Spieler abgeben als aufnehmen, erscheinen in einer Farbe, Länder, die mehr aufnehmen als abgeben, in einer anderen, zu beiden Seiten eines neutralen Mittelpunkts.
 
-Der Farbbalken am unteren Rand der Kopfzeile liest sich von links nach rechts wie ein Zahlenstrahl — negatives Extrem, neutrale 0 in der Mitte, positives Extrem — mit einer Referenzmarke an jedem Ende und in der Mitte, sowie einer eigenen feinen Markierung für jedes reale Land, damit Sie sehen, wo sich Länder tatsächlich häufen, statt anzunehmen, der weiche Verlauf bedeute eine gleichmäßige Verteilung. Ein einzelner eigenständiger Punkt sitzt jenseits des positiven Endes für **Frankreich**, den größten Netto-Exporteur — weit genug außerhalb der Skala (36 Punkte über dem nächsthöchsten Land), um eine eigene Markierung statt nur einer weiteren Markierung auf dem Balken zu verdienen:
+Der Farbbalken am unteren Rand der Kopfzeile liest sich von links nach rechts wie ein Zahlenstrahl — negatives Extrem, neutrale 0 in der Mitte, positives Extrem — mit einer Referenzmarke an jedem Ende und in der Mitte, sowie einer eigenen feinen Markierung für jedes reale Land, damit Sie sehen, wo sich Länder tatsächlich häufen, statt anzunehmen, der weiche Verlauf bedeute eine gleichmäßige Verteilung. Ein einzelner eigenständiger Punkt sitzt jenseits des positiven Endes für **Frankreich**, dessen hier geborene, heute anderswo spielende Spieler die aller anderen Länder weit übertreffen — weit genug außerhalb der Skala (36 Punkte über dem nächsthöchsten Land), um eine eigene Markierung statt nur einer weiteren Markierung auf dem Balken zu verdienen:
 
 ![Legende](screenshots/legend.png)
-
-**Curaçao**, der größte Netto-Importeur (der gesamte Kader ist in den Niederlanden geboren), liegt stattdessen am eigenen negativen Extrem des Balkens.
 
 Die Legende dient auch als Filter: Ziehen Sie einen der beiden Griffe — die kleine gepunktete Fassung an jedem Ende des Balkens — nach innen, um den sichtbaren Bereich einzugrenzen. Alles außerhalb des gewählten Bereichs verschwindet aus der Länderliste, den Flaggen auf der Karte und der Spielertabelle, genau wie bei jedem anderen Filter. Doppelklicken Sie irgendwo auf die Legende, um wieder den vollen Bereich anzuzeigen.
 
@@ -319,8 +317,8 @@ Die Legende dient auch als Filter: Ziehen Sie einen der beiden Griffe — die kl
 
 Fahren Sie mit der Maus über ein Land, um Details zu sehen. Tooltips werden auf Mobilgeräten nicht angezeigt.
 
-- **Geburtsländer**: Exportanzahl und Top-Spieler, jeweils mit ihrer Zielflagge
-- **Qualifizierte Länder, die auch rekrutieren**: eine rechte Spalte fügt die Importseite hinzu
+- **Geburtsländer**: Anzahl der dort geborenen Spieler und Top-Spieler, jeweils mit der Flagge des Landes, für das sie spielen
+- **Qualifizierte Länder, die auch rekrutieren**: eine rechte Spalte fügt die anderswo geborenen Spieler hinzu
 - **Nicht qualifizierte Geburtsländer**: ein Badge *nicht qualifiziert* ersetzt das Kader-Panel
 <!-- /i18n:map -->
 
@@ -350,11 +348,10 @@ Klicken Sie erneut auf die aktive Pille, klicken Sie woanders auf die Karte, ode
 
 ## <img class="gp-icon" src="images/world-cup-svgrepo-com.svg" alt=""> Turnier
 
-Dieselbe Pillenliste, diesmal beschränkt auf die 48 **qualifizierten** Länder, mit einem kleinen Karussell darüber, das sieben Positionen durchläuft: **Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger**.
+Dieselbe Pillenliste, diesmal beschränkt auf die 48 **qualifizierten** Länder, mit einem kleinen Karussell darüber, das acht Positionen durchläuft: **Gesamter Wettbewerb → Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger**.
 
 - Verwenden Sie die Pfeile ‹ › oder wischen Sie auf Touchscreens nach links/rechts, um zwischen den Phasen zu wechseln.
-- Jede Position filtert qualifizierte Länder auf jene, die diese Phase „erreicht“ haben — zu Beginn noch im Turnier, oder bereits Sieger.
-- Die Navigation ist auf die vom Turnier tatsächlich erreichte Phase begrenzt; weitere Positionen bleiben gesperrt, bis die entsprechenden Spiele ausgetragen sind.
+- **Gesamter Wettbewerb** zeigt alle 48 qualifizierten Länder ungefiltert. Jede andere Position filtert qualifizierte Länder auf jene, die diese Phase „erreicht“ haben — zu Beginn noch im Turnier, oder bereits Sieger.
 
 Das Karussell ist hier der einzige geltende Filter: Es bis zum Achtelfinale vorzurücken zeigt genau
 die Mannschaften, die diese Phase erreicht haben, unabhängig von den Kontrollkästchen des Kontrollpanels oder dem

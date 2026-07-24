@@ -46,16 +46,16 @@ Four reorderable criteria — **Elo ranking** (an independent rating that adjust
 
 Two independent rows of pill toggles, below sort:
 
-- **Export / native / import**: which role earned a player their place in the table — born here and selected elsewhere; born and selected here; born elsewhere and selected here.
-- **Player / coach**: which kind of person shows.
+- <span style="color:rgba(23,23,21,.75)">●</span> **native** (born and selected here) / <span style="color:#dc2626">◀</span> **plays for** (born elsewhere, selected here) / <span style="color:#1d4ed8">▶</span> **born in** (born here, selected elsewhere): which role earned a player their place in the table.
+- **P** player / **C** coach: which kind of person shows.
 
-Every toggle is checked by default, showing everyone; uncheck one to hide that group. Currently only active within *The Player Table*, below — the toggles show but stay disabled elsewhere, for now.
+Every toggle is checked by default, showing everyone; uncheck one to hide that group. Currently only active within *The Player Table*, below — the toggles show elsewhere too, but stay ineffective there, for now.
 
 ## Filter
 
-The matrix crosses two **columns** (exporter / non-exporter) with four **rows** in two groups:
+The matrix crosses two **columns** (has players born here playing elsewhere, or not) with four **rows** in two groups:
 
-- **Qualified** — split by whether the country imports players or not
+- **Qualified** — split by whether the squad includes anyone born elsewhere
 - **Non-qualified** — split by FIFA membership
 
 Uncheck any cell to hide that category. Click a row or column header to toggle the whole group at once.
@@ -164,14 +164,14 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
   </span>
   <span style="font-size:.875rem"><span style="color:#dc2626">◀</span><span style="color:#1d4ed8">▶</span> <!-- i18n:tax_desc_both -->Players born elsewhere play for this country, and players born here play for other countries.<!-- /i18n:tax_desc_both --></span>
 </div>
-<div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->The pill's background is itself a red (imports) → white (native) → blue (exports) gradient — the wider a colour's band, the larger that group's share of the country's total player pool.<!-- /i18n:tax_note_gradient --></div>
+<div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->The pill's background is itself a red (plays for, born elsewhere) → white (native) → blue (born here, plays elsewhere) gradient — the wider a colour's band, the larger that group's share of the country's total player pool.<!-- /i18n:tax_note_gradient --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(59,130,246); --imp-color: rgb(248,173,173); --imp-pivot: 2.8%; --native-pivot: 25.0%; flex-shrink:0">
     <img class="elo-flag" src="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" alt="">
     <span class="elo-name" data-id="250">France</span>
     <span class="elo-pts"><span class="elo-pts-primary">3 · 81</span></span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->Mostly blue — a heavy exporter (81) with only a handful of imports (3).<!-- /i18n:tax_desc_gradient_exp --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->Mostly blue — 81 players born here now play elsewhere, against just 3 who came from elsewhere to play here.<!-- /i18n:tax_desc_gradient_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(160,197,250); --imp-color: rgb(248,167,167); --imp-pivot: 18.4%; --native-pivot: 86.4%; flex-shrink:0">
@@ -179,7 +179,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
     <span class="elo-name" data-id="840">United States</span>
     <span class="elo-pts"><span class="elo-pts-primary">7 · 11</span></span>
   </span>
-  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->A visible red band alongside the blue — a more even mix of exports (11) and imports (7).<!-- /i18n:tax_desc_gradient_mixed --></span>
+  <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->A visible red band alongside the blue — a more even mix: 11 players born here play elsewhere, 7 came from elsewhere to play here.<!-- /i18n:tax_desc_gradient_mixed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
   <span class="elo-item elo-item--qualified elo-item--knocked-out elo-item--imp" style="--imp-color: rgb(239,68,68); --imp-pivot: 96.3%; --native-pivot: 100.0%; flex-shrink:0">
@@ -249,7 +249,7 @@ Every country is displayed as a **pill badge** whose CSS style encodes its categ
 
 ## Choropleth & Flags
 
-Each country is shaded by its net talent balance — home-grown contribution (exports plus native-born players) minus imports (see *The Legend*, below). The more one-sided that balance, in either direction, the darker the shade; a country close to a neutral balance appears pale. Countries with no data for that metric appear in a neutral pale tone.
+Each country is shaded by its net talent balance — players born here who play elsewhere, minus players born elsewhere who play here (see *The Legend*, below); native-born players who still play for their own country don't count either way. The more one-sided that balance, in either direction, the darker the shade; a country close to a neutral balance appears pale. Countries with no data for that metric appear in a neutral pale tone.
 Countries currently included in the filter display a circular flag marker:
 
 ![Qualified teams' flags](screenshots/qualified_flags.png)
@@ -263,13 +263,11 @@ Scroll (or pinch) to zoom · drag to pan. Two round buttons sit in the bar below
 
 ## The Legend
 
-The map shades every country by its net talent balance — home-grown contribution (exports plus native-born players) minus imports. Net exporters and net importers read as two different colours either side of a neutral midpoint.
+The map shades every country by its net talent balance — players born here who play elsewhere, minus players born elsewhere who play here; native-born players who still play for their own country don't count either way. Countries that send out more than they take in read as one colour, countries that take in more than they send out read as another, either side of a neutral midpoint.
 
-The colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, plus a thin tick of its own for every real country, so you can see where countries actually cluster instead of assuming the smooth gradient means an even spread. A single standalone dot sits past the positive end for **France**, the biggest net exporter — off-scale enough (36 points past the next-highest country) to earn its own marker instead of just another tick on the bar:
+The colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, plus a thin tick of its own for every real country, so you can see where countries actually cluster instead of assuming the smooth gradient means an even spread. A single standalone dot sits past the positive end for **France**, whose players born here now playing elsewhere far outnumber anyone else's — off-scale enough (36 points past the next-highest country) to earn its own marker instead of just another tick on the bar:
 
 ![Legend](screenshots/legend.png)
-
-**Curaçao**, the biggest net importer (its entire squad is Dutch-born), sits at the bar's own negative extreme instead.
 
 The legend doubles as a filter: drag either grip — the small dotted handle at each end of the bar — inward to narrow the visible range. Everything outside the selected range disappears from the country list, the map's own flags, and the player table, the same as any other filter. Double-click anywhere on the legend to reset back to the full range.
 
@@ -277,8 +275,8 @@ The legend doubles as a filter: drag either grip — the small dotted handle at 
 
 Hover any country to see details. Tooltips are not shown on mobile.
 
-- **Birth countries**: export count and top players, each with their destination flag
-- **Qualified countries that also recruit**: a right-hand column adds the import side
+- **Birth countries**: count of players born there and top players, each with the flag of the country they play for
+- **Qualified countries that also recruit**: a right-hand column adds the players who came from elsewhere
 - **Non-qualified birth countries**: a *not qualified* badge replaces the squad panel
 <!-- /i18n:map -->
 
@@ -308,11 +306,10 @@ Click the active badge a second time, click anywhere else on the map, or press *
 
 ## <img class="gp-icon" src="images/world-cup-svgrepo-com.svg" alt=""> Tournament
 
-The same badge list, this time scoped to the 48 **qualified** countries only, with a small carousel above it cycling through seven positions: **Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
+The same badge list, this time scoped to the 48 **qualified** countries only, with a small carousel above it cycling through eight positions: **Whole competition → Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner**.
 
 - Use the ‹ › arrows, or swipe left/right on touch screens, to move between stages.
-- Each position filters qualified countries down to those that "reached" that stage — still alive going into it, or having already won it.
-- Navigation is capped at the furthest stage the tournament has actually reached; later positions stay locked until real fixtures resolve into them.
+- **Whole competition** shows all 48 qualified countries, unfiltered. Every other position filters them down to those that "reached" that stage — still alive going into it, or having already won it.
 
 The carousel is the only filter that applies here: advancing it to, say, Round of 16 shows exactly
 the teams that reached that stage, regardless of the Control Panel's checkboxes or confederation

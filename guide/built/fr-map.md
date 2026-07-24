@@ -45,16 +45,16 @@ Quatre critères réorganisables — **le classement Elo** (une cote indépendan
 
 Deux lignes indépendantes de pastilles à cocher, sous le tri :
 
-- **Export / natif / import** : quel rôle a valu à un joueur sa place dans le tableau — né ici et sélectionné ailleurs ; né et sélectionné ici ; né ailleurs et sélectionné ici.
-- **Joueur / sélectionneur** : quel type de personne s'affiche.
+- <span style="color:rgba(23,23,21,.75)">●</span> **natif** (né et sélectionné ici) / <span style="color:#dc2626">◀</span> **joue pour** (né ailleurs, sélectionné ici) / <span style="color:#1d4ed8">▶</span> **né ici** (né ici, sélectionné ailleurs) : quel rôle a valu à un joueur sa place dans le tableau.
+- **J** joueur / **S** sélectionneur : quel type de personne s'affiche.
 
-Chaque case est cochée par défaut (tout le monde est affiché) ; décochez-en une pour masquer ce groupe. Actuellement actif uniquement dans *Le tableau des joueurs*, plus bas — les cases s'affichent mais restent désactivées ailleurs, pour l'instant.
+Chaque case est cochée par défaut (tout le monde est affiché) ; décochez-en une pour masquer ce groupe. Actuellement actif uniquement dans *Le tableau des joueurs*, plus bas — les cases s'affichent aussi ailleurs, mais y restent sans effet, pour l'instant.
 
 ## Filtre
 
-La matrice croise deux **colonnes** (exportateur / non-exportateur) avec quatre **lignes** en deux groupes :
+La matrice croise deux **colonnes** (a des joueurs nés ici et jouant ailleurs, ou non) avec quatre **lignes** en deux groupes :
 
-- **Qualifiés** — selon que le pays importe des joueurs ou non
+- **Qualifiés** — selon que l'effectif compte ou non des joueurs nés ailleurs
 - **Non qualifiés** — selon l'appartenance à la FIFA
 
 Décochez une cellule pour masquer cette catégorie. Cliquez sur un en-tête de ligne ou de colonne pour basculer tout le groupe d'un coup.
@@ -181,7 +181,7 @@ Des joueurs nés ailleurs jouent pour ce pays, et des joueurs nés ici jouent po
 <!-- /i18n:tax_desc_both --></span>
 </div>
 <div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->
-L'arrière-plan de la pastille est lui-même un dégradé rouge (imports) → blanc (natifs) → bleu (exports) — plus la bande d'une couleur est large, plus la part de ce groupe dans l'effectif total du pays est grande.
+L'arrière-plan de la pastille est lui-même un dégradé rouge (joue pour, né ailleurs) → blanc (natif) → bleu (né ici, joue ailleurs) — plus la bande d'une couleur est large, plus la part de ce groupe dans l'effectif total du pays est grande.
 <!-- /i18n:tax_note_gradient --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(59,130,246); --imp-color: rgb(248,173,173); --imp-pivot: 2.8%; --native-pivot: 25.0%; flex-shrink:0">
@@ -190,7 +190,7 @@ L'arrière-plan de la pastille est lui-même un dégradé rouge (imports) → bl
     <span class="elo-pts"><span class="elo-pts-primary">3 · 81</span></span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->
-Majoritairement bleu — un gros exportateur (81) avec seulement une poignée d'imports (3).
+Majoritairement bleu — 81 joueurs nés ici jouent aujourd'hui ailleurs, contre seulement 3 venus d'ailleurs pour jouer ici.
 <!-- /i18n:tax_desc_gradient_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
@@ -200,7 +200,7 @@ Majoritairement bleu — un gros exportateur (81) avec seulement une poignée d'
     <span class="elo-pts"><span class="elo-pts-primary">7 · 11</span></span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->
-Une bande rouge visible à côté du bleu — un mélange plus équilibré d'exports (11) et d'imports (7).
+Une bande rouge visible à côté du bleu — un mélange plus équilibré : 11 joueurs nés ici jouent ailleurs, 7 sont venus d'ailleurs pour jouer ici.
 <!-- /i18n:tax_desc_gradient_mixed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
@@ -291,7 +291,7 @@ Bordure ondulée — rencontre pas encore jouée.
 
 ## Choroplèthe et drapeaux
 
-Chaque pays est coloré selon son bilan net de talent — contribution locale (exports plus joueurs natifs) moins les imports (voir *La légende*, ci-dessous). Plus ce bilan est marqué, dans un sens ou dans l'autre, plus la teinte est foncée ; un pays proche de l'équilibre neutre apparaît pâle. Les pays sans donnée pour cette mesure apparaissent dans un ton pâle neutre.
+Chaque pays est coloré selon son bilan net de talent — les joueurs nés ici qui jouent ailleurs, moins les joueurs nés ailleurs qui jouent ici (voir *La légende*, ci-dessous) ; les joueurs natifs qui jouent toujours pour leur propre pays ne comptent ni dans un sens ni dans l'autre. Plus ce bilan est marqué, dans un sens ou dans l'autre, plus la teinte est foncée ; un pays proche de l'équilibre neutre apparaît pâle. Les pays sans donnée pour cette mesure apparaissent dans un ton pâle neutre.
 Les pays actuellement inclus dans le filtre affichent un drapeau circulaire.
 
 ![Drapeaux des équipes qualifiées](screenshots/qualified_flags.png)
@@ -305,13 +305,11 @@ Faites défiler (ou pincez) pour zoomer · faites glisser pour déplacer. Deux b
 
 ## La légende
 
-La carte colore chaque pays selon son bilan net de talent — contribution locale (exports plus joueurs natifs) moins les imports. Les exportateurs nets et les importateurs nets se lisent en deux couleurs différentes de part et d'autre d'un point neutre.
+La carte colore chaque pays selon son bilan net de talent — les joueurs nés ici qui jouent ailleurs, moins les joueurs nés ailleurs qui jouent ici ; les joueurs natifs qui jouent toujours pour leur propre pays ne comptent ni dans un sens ni dans l'autre. Les pays qui envoient plus de joueurs qu'ils n'en accueillent se lisent dans une couleur, ceux qui en accueillent plus qu'ils n'en envoient dans une autre, de part et d'autre d'un point neutre.
 
-La barre de couleur en bas de l'en-tête se lit de gauche à droite comme une droite numérique — extrême négatif, 0 neutre au milieu, extrême positif — avec une graduation de référence à chaque extrémité et au milieu, plus une fine graduation propre à chaque pays réel, pour voir où les pays se regroupent vraiment plutôt que de supposer que le dégradé lisse signifie une répartition homogène. Un point isolé unique se trouve au-delà de l'extrémité positive pour la **France**, le plus gros exportateur net — suffisamment hors échelle (36 points de plus que le pays suivant) pour mériter son propre repère plutôt qu'une simple graduation de plus sur la barre :
+La barre de couleur en bas de l'en-tête se lit de gauche à droite comme une droite numérique — extrême négatif, 0 neutre au milieu, extrême positif — avec une graduation de référence à chaque extrémité et au milieu, plus une fine graduation propre à chaque pays réel, pour voir où les pays se regroupent vraiment plutôt que de supposer que le dégradé lisse signifie une répartition homogène. Un point isolé unique se trouve au-delà de l'extrémité positive pour la **France**, dont les joueurs nés ici et jouant aujourd'hui ailleurs dépassent de loin ceux de tout autre pays — suffisamment hors échelle (36 points de plus que le pays suivant) pour mériter son propre repère plutôt qu'une simple graduation de plus sur la barre :
 
 ![Légende](screenshots/legend.png)
-
-**Curaçao**, le plus gros importateur net (tout son effectif est né aux Pays-Bas), se trouve à l'extrémité négative de la barre elle-même.
 
 La légende sert aussi de filtre : faites glisser l'une ou l'autre des poignées — le petit repère en pointillés à chaque extrémité de la barre — vers l'intérieur pour restreindre la plage visible. Tout ce qui sort de la plage sélectionnée disparaît de la liste des pays, des drapeaux de la carte et du tableau des joueurs, comme n'importe quel autre filtre. Double-cliquez n'importe où sur la légende pour revenir à la plage complète.
 
@@ -319,8 +317,8 @@ La légende sert aussi de filtre : faites glisser l'une ou l'autre des poignées
 
 Survolez un pays pour voir les détails. Les infobulles ne s'affichent pas sur mobile.
 
-- **Pays de naissance** : nombre d'exports et meilleurs joueurs, chacun avec le drapeau de destination
-- **Pays qualifiés qui recrutent aussi** : une colonne de droite ajoute le côté import
+- **Pays de naissance** : nombre de joueurs nés là et meilleurs joueurs, chacun avec le drapeau du pays pour lequel ils jouent
+- **Pays qualifiés qui recrutent aussi** : une colonne de droite ajoute les joueurs venus d'ailleurs
 - **Pays de naissance non qualifiés** : un badge *non qualifié* remplace le panneau de sélection
 <!-- /i18n:map -->
 
@@ -350,11 +348,10 @@ Cliquez à nouveau sur la pastille active, cliquez ailleurs sur la carte, ou app
 
 ## <img class="gp-icon" src="images/world-cup-svgrepo-com.svg" alt=""> Tournoi
 
-La même liste de pastilles, cette fois limitée aux 48 pays **qualifiés**, avec un petit carrousel au-dessus parcourant sept positions : **Phase de groupes → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur**.
+La même liste de pastilles, cette fois limitée aux 48 pays **qualifiés**, avec un petit carrousel au-dessus parcourant huit positions : **Toute la compétition → Phase de groupes → 16es de finale → 8es de finale → Quarts de finale → Demi-finales → Finale → Vainqueur**.
 
 - Utilisez les flèches ‹ ›, ou faites glisser vers la gauche/droite sur écran tactile, pour changer de phase.
-- Chaque position filtre les pays qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée.
-- La navigation est limitée à la phase la plus avancée réellement atteinte par le tournoi ; les positions suivantes restent verrouillées tant que les matchs correspondants ne sont pas joués.
+- **Toute la compétition** affiche les 48 pays qualifiés, sans filtre. Chaque autre position filtre les pays qualifiés jusqu'à ceux qui ont « atteint » cette phase — encore en lice à son coup d'envoi, ou l'ayant déjà remportée.
 
 Le carrousel est le seul filtre qui s'applique ici : l'avancer jusqu'aux, disons, 8es de finale affiche exactement
 les équipes ayant atteint cette phase, quels que soient les cases cochées du panneau de contrôle ou le filtre de

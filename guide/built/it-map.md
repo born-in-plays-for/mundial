@@ -45,16 +45,16 @@ Quattro criteri riordinabili — **il ranking Elo** (un punteggio indipendente c
 
 Due righe indipendenti di pillole selezionabili, sotto l'ordinamento:
 
-- **Export / nativo / import**: quale ruolo ha dato a un giocatore il suo posto nella tabella — nato qui e selezionato altrove; nato e selezionato qui; nato altrove e selezionato qui.
-- **Giocatore / allenatore**: quale tipo di persona viene mostrata.
+- <span style="color:rgba(23,23,21,.75)">●</span> **nativo** (nato e selezionato qui) / <span style="color:#dc2626">◀</span> **gioca per** (nato altrove, selezionato qui) / <span style="color:#1d4ed8">▶</span> **nato qui** (nato qui, selezionato altrove): quale ruolo ha dato a un giocatore il suo posto nella tabella.
+- **G** giocatore / **A** allenatore: quale tipo di persona viene mostrata.
 
-Ogni casella è selezionata per impostazione predefinita (mostra tutti); deseleziona una casella per nascondere quel gruppo. Attualmente attivo solo in *La tabella dei giocatori*, più sotto — le caselle sono visibili ma restano disabilitate altrove, per ora.
+Ogni casella è selezionata per impostazione predefinita (mostra tutti); deseleziona una casella per nascondere quel gruppo. Attualmente attivo solo in *La tabella dei giocatori*, più sotto — le caselle sono visibili anche altrove, ma restano senza effetto lì, per ora.
 
 ## Filtra
 
-La matrice incrocia due **colonne** (esportatore / non esportatore) con quattro **righe** in due gruppi:
+La matrice incrocia due **colonne** (ha giocatori nati qui e in campo altrove, o no) con quattro **righe** in due gruppi:
 
-- **Qualificati** — suddivisi in base al fatto che il paese importi giocatori o meno
+- **Qualificati** — suddivisi in base al fatto che la rosa includa o meno giocatori nati altrove
 - **Non qualificati** — suddivisi per appartenenza FIFA
 
 Disattiva una cella per nascondere quella categoria. Clicca su un'intestazione di riga o colonna per attivare/disattivare l'intero gruppo in una volta.
@@ -181,7 +181,7 @@ Giocatori nati altrove giocano per questo paese, e giocatori nati qui giocano pe
 <!-- /i18n:tax_desc_both --></span>
 </div>
 <div style="font-size:.8rem;color:#777;margin:6px 0"><!-- i18n:tax_note_gradient -->
-Lo sfondo della pillola è a sua volta un gradiente rosso (importazioni) → bianco (nativi) → blu (esportazioni) — più larga la banda di un colore, maggiore la quota di quel gruppo nella rosa totale del paese.
+Lo sfondo della pillola è a sua volta un gradiente rosso (gioca per, nato altrove) → bianco (nativo) → blu (nato qui, gioca altrove) — più larga la banda di un colore, maggiore la quota di quel gruppo nella rosa totale del paese.
 <!-- /i18n:tax_note_gradient --></div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
   <span class="elo-item elo-item--qualified elo-item--exp elo-item--imp" style="--exp-color: rgb(59,130,246); --imp-color: rgb(248,173,173); --imp-pivot: 2.8%; --native-pivot: 25.0%; flex-shrink:0">
@@ -190,7 +190,7 @@ Lo sfondo della pillola è a sua volta un gradiente rosso (importazioni) → bia
     <span class="elo-pts"><span class="elo-pts-primary">3 · 81</span></span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_exp -->
-Prevalentemente blu — un grande esportatore (81) con solo una manciata di importazioni (3).
+Prevalentemente blu — 81 giocatori nati qui oggi giocano altrove, contro appena 3 arrivati da altrove per giocare qui.
 <!-- /i18n:tax_desc_gradient_exp --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
@@ -200,7 +200,7 @@ Prevalentemente blu — un grande esportatore (81) con solo una manciata di impo
     <span class="elo-pts"><span class="elo-pts-primary">7 · 11</span></span>
   </span>
   <span style="font-size:.875rem"><!-- i18n:tax_desc_gradient_mixed -->
-Una banda rossa visibile accanto al blu — un mix più equilibrato di esportazioni (11) e importazioni (7).
+Una banda rossa visibile accanto al blu — un mix più equilibrato: 11 giocatori nati qui giocano altrove, 7 sono arrivati da altrove per giocare qui.
 <!-- /i18n:tax_desc_gradient_mixed --></span>
 </div>
 <div style="display:flex;align-items:center;gap:12px">
@@ -291,7 +291,7 @@ Bordo ondulato — partita non ancora giocata.
 
 ## Coropleta e bandiere
 
-Ogni paese è colorato in base al suo bilancio netto di talento — contributo interno (esportazioni più giocatori nativi) meno importazioni (vedi *La legenda*, sotto). Più questo bilancio è marcato, in un senso o nell'altro, più la tonalità è scura; un paese vicino all'equilibrio neutro appare chiaro. I paesi senza dati per quella metrica appaiono in un tono chiaro neutro.
+Ogni paese è colorato in base al suo bilancio netto di talento — giocatori nati qui che giocano altrove, meno giocatori nati altrove che giocano qui (vedi *La legenda*, sotto); i giocatori nativi che giocano ancora per il proprio paese non contano né in un senso né nell'altro. Più questo bilancio è marcato, in un senso o nell'altro, più la tonalità è scura; un paese vicino all'equilibrio neutro appare chiaro. I paesi senza dati per quella metrica appaiono in un tono chiaro neutro.
 I paesi attualmente inclusi nel filtro mostrano un marcatore a bandiera circolare.
 
 ![Bandiere delle squadre qualificate](screenshots/qualified_flags.png)
@@ -305,13 +305,11 @@ Scorri (o pizzica) per zoomare · trascina per spostare la vista. Due pulsanti r
 
 ## La legenda
 
-La mappa colora ogni paese in base al suo bilancio netto di talento — contributo interno (esportazioni più giocatori nativi) meno importazioni. Esportatori netti e importatori netti appaiono in due colori distinti ai due lati di un punto neutro centrale.
+La mappa colora ogni paese in base al suo bilancio netto di talento — giocatori nati qui che giocano altrove, meno giocatori nati altrove che giocano qui; i giocatori nativi che giocano ancora per il proprio paese non contano né in un senso né nell'altro. I paesi che mandano fuori più giocatori di quanti ne accolgono appaiono in un colore, quelli che ne accolgono più di quanti ne mandano fuori in un altro, ai due lati di un punto neutro centrale.
 
-La barra colorata in fondo all'intestazione si legge da sinistra a destra come una retta numerica — estremo negativo, zero neutro al centro, estremo positivo — con un segno di riferimento a ciascuna estremità e al centro, più un piccolo segno proprio per ogni paese reale, così puoi vedere dove i paesi si raggruppano davvero invece di presumere che il gradiente uniforme significhi una distribuzione omogenea. Un singolo punto a sé stante si trova oltre l'estremità positiva per la **Francia**, il maggiore esportatore netto — abbastanza fuori scala (36 punti oltre il paese successivo) da meritare un proprio indicatore invece di un altro semplice segno sulla barra:
+La barra colorata in fondo all'intestazione si legge da sinistra a destra come una retta numerica — estremo negativo, zero neutro al centro, estremo positivo — con un segno di riferimento a ciascuna estremità e al centro, più un piccolo segno proprio per ogni paese reale, così puoi vedere dove i paesi si raggruppano davvero invece di presumere che il gradiente uniforme significhi una distribuzione omogenea. Un singolo punto a sé stante si trova oltre l'estremità positiva per la **Francia**, i cui giocatori nati qui e oggi in campo altrove superano di gran lunga quelli di ogni altro paese — abbastanza fuori scala (36 punti oltre il paese successivo) da meritare un proprio indicatore invece di un altro semplice segno sulla barra:
 
 ![Legenda](screenshots/legend.png)
-
-**Curaçao**, il maggiore importatore netto (l'intera rosa è nata nei Paesi Bassi), si trova invece all'estremo negativo della barra stessa.
 
 La legenda funge anche da filtro: trascina una delle due maniglie — il piccolo indicatore punteggiato a ciascuna estremità della barra — verso l'interno per restringere l'intervallo visibile. Tutto ciò che è fuori dall'intervallo selezionato scompare dall'elenco dei paesi, dalle bandiere sulla mappa e dalla tabella dei giocatori, come qualsiasi altro filtro. Fai doppio clic in un punto qualsiasi della legenda per tornare all'intervallo completo.
 
@@ -319,8 +317,8 @@ La legenda funge anche da filtro: trascina una delle due maniglie — il piccolo
 
 Passa il mouse su un paese per vedere i dettagli. I tooltip non vengono mostrati su dispositivi mobili.
 
-- **Paesi di nascita**: numero di esportazioni e migliori giocatori, ciascuno con la propria bandiera di destinazione
-- **Paesi qualificati che reclutano anche**: una colonna a destra aggiunge il lato delle importazioni
+- **Paesi di nascita**: numero di giocatori nati lì e migliori giocatori, ciascuno con la bandiera del paese per cui gioca
+- **Paesi qualificati che reclutano anche**: una colonna a destra aggiunge i giocatori arrivati da altrove
 - **Paesi di nascita non qualificati**: un badge *non qualificato* sostituisce il pannello della rosa
 <!-- /i18n:map -->
 
@@ -350,11 +348,10 @@ Clicca di nuovo sul badge attivo, clicca altrove sulla mappa, o premi **Esc** pe
 
 ## <img class="gp-icon" src="images/world-cup-svgrepo-com.svg" alt=""> Torneo
 
-La stessa lista di badge, questa volta limitata ai 48 paesi **qualificati**, con un piccolo carosello sopra che attraversa sette posizioni: **Fase a gironi → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore**.
+La stessa lista di badge, questa volta limitata ai 48 paesi **qualificati**, con un piccolo carosello sopra che attraversa otto posizioni: **Tutta la competizione → Fase a gironi → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore**.
 
 - Usa le frecce ‹ › o scorri a sinistra/destra su schermi touch per cambiare fase.
-- Ogni posizione filtra i paesi qualificati a quelli che hanno "raggiunto" quella fase — ancora in torneo all'inizio, o già vincitori.
-- La navigazione è limitata alla fase effettivamente raggiunta dal torneo; le posizioni successive restano bloccate finché le partite corrispondenti non vengono giocate.
+- **Tutta la competizione** mostra tutti i 48 paesi qualificati, senza filtri. Ogni altra posizione filtra i paesi qualificati a quelli che hanno "raggiunto" quella fase — ancora in torneo all'inizio, o già vincitori.
 
 Il carosello è l'unico filtro applicato qui: farlo avanzare, ad esempio, fino agli ottavi di finale mostra esattamente
 le squadre che hanno raggiunto quella fase, indipendentemente dalle caselle del pannello di controllo o dal

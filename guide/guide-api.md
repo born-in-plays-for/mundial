@@ -57,7 +57,7 @@ Applies to the primary sort key only. `?sort=alpha&dir=desc` yields Z–A.
 ?stage=winner      Winner only
 ```
 
-Mirrors the stage carousel in the filter panel (Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner).
+Mirrors the stage carousel in the filter panel (Whole competition → Group stage → Round of 32 → Round of 16 → Quarter-finals → Semi-finals → Final → Winner) — except **Whole competition**, the carousel's own leading slide, which has no `?stage=` value of its own; sharing a link from that slide falls back to `?stage=group`, one carousel click away.
 
 **Only filters the list while the Tournament tab is active.** There, it's the sole gate: qualified countries are narrowed to those that "reached" that stage — still alive going into it, or having already won it — and every non-qualified country is hidden outright, regardless of `?show`/`?fifaconf`. On the Country List (the default tab), `?stage` still moves the carousel into position for whenever you switch tabs, but has no filtering effect there — `?show` is what filters on that tab instead. See "Tab scoping" below.
 
