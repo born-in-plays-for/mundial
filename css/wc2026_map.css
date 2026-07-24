@@ -45,17 +45,14 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   position: fixed !important;
   bottom: 0; left: 0; right: 0;
   z-index: 100;
-  background: var(--fixed-element-bg);
+  /* background: var(--fixed-element-bg); */
+  background-color: transparent;
   border-top: none;
   padding-left: 0 !important;
   padding-right: 0 !important;
-  /*
-  padding-left: var(--vert-gutter) !important;
-  padding-right: var(--vert-gutter) !important;
-  */
   display: flex; flex-direction: column;
 }
-#selection-panel { order: 2; background-color: var(--page-bg);}
+#selection-panel { order: 2; background-color: transparent; border-bottom: none; }
 /* js/wc2026_map.js's _updateSelectionPanel — forced to one line (name/capital/[population] ·
    -joined, two countries 'vs.'-joined for a fixture) rather than wrapping the way flex content
    normally would once it's wider than the panel (see the screenshot this was filed from: a
@@ -70,7 +67,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   text-align: center;
 }
 .selection-panel-row .sp-sep { padding: 0 4px; }
-#bottomTabList { order: 99; }
+#bottomTabList { order: 99; background: var(--fixed-element-bg); }
 /* #bottomTabList sits at the bottom of the screen (content above, tabs below) — Bootstrap's
    .nav-tabs assumes the opposite (tabs above content, e.g. the docs example), so every
    top/bottom-relative treatment needs mirroring: the container's baseline border moves from
@@ -187,7 +184,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    (a vertical-align:middle/line-height artifact). Flex sizing ignores line-height entirely,
    so this also fixes centering, not just height. */
 #tab-teams-btn, #tab-tournament-btn, #tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 2px 0;}
-
+#tab-players-btn.active { background-color: white; }
 /* "Caps" column — the players table's own 4th column beyond css/wc2026_players.css's
    name/born-in/plays-for three (see js/wc2026_map.js's _playersTableTemplate), so it lives
    here rather than in that shared stylesheet. Narrow and non-wrapping, like .pt-born/.pt-caps'
