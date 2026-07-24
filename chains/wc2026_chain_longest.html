@@ -72,23 +72,18 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
   <span id="zoom-hint"></span>
   </div>
   <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
-    <!-- #legend-grip's own position:absolute (css/map-container.css) centers it on this wrapper,
-         not #legend-parent directly — see wc2026_map.html's own comment on this same markup for
-         why. -->
-    <div id="legend-row2" class="d-flex align-items-center justify-content-between flex-fill position-relative">
-      <img id="legend-grip" src="../images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
-      <div id="map-controls" class="d-flex align-items-center gap-1">
-        <button id="zoom-reset" type="button" aria-label="Reset zoom">
-          <img src="../images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-        </button>
-        <button id="zoom-span" type="button" aria-label="Span all visible countries">
-          <img src="../images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-        </button>
-      </div>
-      <div id="legend-born" class="sub">
-        <span id="legend-born-full" class="d-none d-md-inline"></span>
-        <span id="legend-born-brief" class="d-md-none"></span>
-      </div>
+    <img id="legend-grip" src="../images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
+    <div id="map-controls" class="d-flex align-items-center gap-1">
+      <button id="zoom-reset" type="button" aria-label="Reset zoom">
+        <img src="../images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+      </button>
+      <button id="zoom-span" type="button" aria-label="Span all visible countries">
+        <img src="../images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+      </button>
+    </div>
+    <div id="legend-born" class="sub">
+      <span id="legend-born-full" class="d-none d-md-inline"></span>
+      <span id="legend-born-brief" class="d-md-none"></span>
     </div>
     <div id="legend" class="d-flex align-items-start">
       <div id="legend-outlier-neg-wrap" class="d-flex flex-column pe-2">
@@ -442,6 +437,25 @@ if (_storedMapHeight) document.getElementById('map').style.height = _storedMapHe
   _legendParent.addEventListener('pointerup', _endMapDrag);
   _legendParent.addEventListener('pointercancel', _endMapDrag);
 }
+
+// #legend-grip's top:50% centers it vertically across the whole #legend-parent, which is fine on
+// one line but lands in the gap between lines once #legend wraps onto its own full-width line at
+// max-width:500px (css/map-container.css) — same fix as wc2026_map.js's own
+// _syncLegendGripTop(), see that function's comment for the full reasoning.
+const _legendGrip = document.getElementById('legend-grip');
+const _legendEl = document.getElementById('legend');
+const _syncLegendGripTop = () => {
+  if (!_legendGrip || !_legendEl || !_legendParent) return;
+  if (window.matchMedia('(max-width: 500px)').matches) {
+    const line1H = _legendEl.getBoundingClientRect().height;
+    const totalH = _legendParent.getBoundingClientRect().height;
+    _legendGrip.style.top = (line1H + (totalH - line1H) / 2) + 'px';
+  } else {
+    _legendGrip.style.top = '';
+  }
+};
+window.addEventListener('resize', _syncLegendGripTop);
+_syncLegendGripTop();
 </script>
 </body>
 </html>

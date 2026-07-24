@@ -663,6 +663,35 @@ if (_legendParent) {
   });
 }
 
+// #legend-grip's own centering (position:absolute; left/top:50%; translate(-50%,-50%), css/
+// map-container.css) is a direct child of #legend-parent, deliberately never wrapped in anything
+// — an absolutely-positioned flex child isn't a flex item at all per spec, so #legend-parent's
+// own flex-wrap/order (only active at max-width:500px, where #legend wraps onto its own full-
+// width line above everything else) has zero effect on it either way; left:50% always centers it
+// on #legend-parent's own FULL width, on any breakpoint, with no help needed here.
+// top:50% is the one axis that doesn't survive the 2-line wrap unassisted: it centers vertically
+// across the *whole* (now taller) #legend-parent, landing in the gap between the two lines rather
+// than on either. There's no pure-CSS anchor for "the 2nd flex line's own vertical center" — flex
+// lines aren't addressable boxes — so this measures #legend's own real rendered height (line 1,
+// exactly, since #legend claims that whole line by itself at this breakpoint) and computes line
+// 2's own center directly: line1Height + (totalHeight − line1Height) / 2. Only active below the
+// same breakpoint the CSS wrap kicks in at; above it, the inline override is cleared so the
+// stylesheet's own top:50% (correct there, #legend-parent is a single line) applies again.
+const _legendGrip = document.getElementById('legend-grip');
+const _legendEl = document.getElementById('legend');
+const _syncLegendGripTop = () => {
+  if (!_legendGrip || !_legendEl || !_legendParent) return;
+  if (window.matchMedia('(max-width: 500px)').matches) {
+    const line1H = _legendEl.getBoundingClientRect().height;
+    const totalH = _legendParent.getBoundingClientRect().height;
+    _legendGrip.style.top = (line1H + (totalH - line1H) / 2) + 'px';
+  } else {
+    _legendGrip.style.top = '';
+  }
+};
+window.addEventListener('resize', _syncLegendGripTop);
+_syncLegendGripTop();
+
 const _scrollTopBtn = document.getElementById('scroll-top-btn');
 if (_scrollTopBtn) {
   window.addEventListener('scroll', () => {
