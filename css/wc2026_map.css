@@ -80,19 +80,33 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #selection-panel:has(.nav-item + .nav-item) .nav-item:first-child { justify-content: flex-end; }
 #selection-panel:has(.nav-item + .nav-item) .nav-item:last-child { justify-content: flex-start; }
 #selection-panel:has(.nav-item + .nav-item) .selection-panel-row { min-width: 0; }
-/* js/wc2026_map.js's _updateSelectionPanel — forced to one line (name/capital/[population] ·
-   -joined, two countries 'vs.'-joined for a fixture) rather than wrapping the way flex content
-   normally would once it's wider than the panel (see the screenshot this was filed from: a
-   country name wrapping onto its own line above the rest). text-overflow:ellipsis needs a plain
-   inline flow, not flex — d-flex/gap-1 (join()'s own separator spans provide the visual spacing
-   instead, via   padding either side of '·'/'vs.') would clip a child at a hard edge with no
-   "…", not truncate the row as a whole the way this does. */
-.selection-panel-row {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-}
+/* .selection-panel-row is itself a flex row of exactly 2 children now: .sp-text (the truncatable
+   name/capital/[population] '·'-joined text) and the close ✕ (js/wc2026_map.js's
+   _updateSelectionPanel) — flex-shrink:0 on the close button (below) is what this buys over the
+   row's own previous single-inline-flow approach: before, the close ✕ was just the last inline
+   node in the same truncating flow as the text, so once that text overflowed, the ✕ itself ended
+   up past the ellipsis cutoff — pushed out of the visible box entirely, not just visually
+   crowded. Splitting text and button into two flex children keeps the button's own box off
+   limits to the truncation; only .sp-text (flex:1 1 auto, min-width:0) shrinks and ellipsizes.
+   text-overflow:ellipsis still needs a plain inline flow to operate on — d-flex/gap-1 across
+   *multiple* items (join()'s own separator spans providing the visual spacing) would clip
+   whichever child hits the edge with no "…", not truncate as a whole the way one single flex
+   child holding the entire joined string does. That's why the split is exactly 2 flex children
+   (text run, button), not one flex child per name/separator/capital/population piece. */
+.selection-panel-row { display: flex; align-items: center; }
+.selection-panel-row .sp-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; text-align: center; }
+/* Left pill only (js/wc2026_map.js's own field-order reversal, see _updateSelectionPanel's
+   comment: population · capital · name, so the country name — the field that matters most, right
+   on the boundary shared with the other pill — sits at the very end of the string). Plain
+   text-overflow:ellipsis always truncates the *end* of a line, which for this pill specifically
+   means chopping the name itself once the row runs out of room, keeping the least useful field
+   (population) fully intact instead. direction:rtl flips which end the browser treats as
+   "overflow start" for truncation purposes only — the actual (LTR) text inside still renders
+   left-to-right normally, per the Unicode bidi algorithm, it's only the ellipsis placement that
+   moves to the front. text-align:left keeps the (still LTR) text hugging the left edge of the
+   box rather than sliding right the way plain RTL body text would. */
+#selection-panel:has(.nav-item + .nav-item) .nav-item:first-child .sp-text { direction: rtl; text-align: left; }
+.selection-panel-row .btn-close { flex-shrink: 0; }
 .selection-panel-row .sp-sep { padding: 0 4px; }
 #bottomTabList { order: 99; background: var(--fixed-element-bg); }
 /* #bottomTabList sits at the bottom of the screen (content above, tabs below) — Bootstrap's

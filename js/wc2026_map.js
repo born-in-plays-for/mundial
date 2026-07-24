@@ -1352,23 +1352,26 @@ const _updateSelectionPanel = (onCollapsed) => {
     return;
   }
   // Per-country [name, capital, population] triple, '·'-joined within a country. One .nav-item
-  // per country — a fixture selection (ids.length === 2) renders two, evenly spaced by
-  // #selection-panel's own d-flex justify-content-evenly (wc2026_map.html), both carrying
+  // per country — a fixture selection (ids.length === 2) renders two, each its own independent
+  // flex:1 1 50% box (css/wc2026_map.css) rather than sharing one continuous row, both carrying
   // .active (nothing here is a real Bootstrap Tab wired via data-bs-toggle, just borrowed
   // nav/nav-link/nav-item styling — so nothing enforces "only one .active" the way an actual
   // Bootstrap tab group would; two active-looking pills at once is intentional, both teams are
   // equally the current selection). The LEFT pill's own triple is reversed (population · capital
   // · name) so the two pills read symmetrically around the gap between them — both country names
   // land on the inner edge next to each other, population (least essential) pushed to the outer
-  // edges — rather than the same left-to-right order repeated twice. includePop lets the overflow
-  // check below re-render without it — population is the least essential field, so it's the
-  // first thing dropped once a row doesn't fit on its one allowed line, rather than jumping
-  // straight to an ellipsis that might cut off a country's own name instead.
-  const buildRow = includePop => {
+  // edges — rather than the same left-to-right order repeated twice.
+  // includePopFlags is one bool per id, not a single shared toggle — since the two pills are now
+  // independently-sized 50% boxes rather than sharing one row's width, whether population fits is
+  // a per-pill question too: a long capital name on one side shouldn't force population off the
+  // *other* side, which may have had plenty of room. Population is still the first thing dropped
+  // on whichever side doesn't fit, rather than jumping straight to an ellipsis that might cut off
+  // that country's own name instead.
+  const buildRow = includePopFlags => {
     const navItem = (id, i) => {
       const fc = iso2ForId(id);
       const cname  = countryName(id);
-      const pop    = includePop ? app.pop?.[fc] : null;
+      const pop    = includePopFlags[i] ? app.pop?.[fc] : null;
       const capObj = app.capital?.[fc];
       const capText = capObj?.[_LANG] ?? capObj?.en ?? null;
       const items = [
@@ -1382,23 +1385,30 @@ const _updateSelectionPanel = (onCollapsed) => {
       // selection, and #tab-players is the one place that selection's actual roster shows.
       // No-ops if already there, same "don't fight the tab the user's already looking at"
       // convention every other selection-triggered tab jump in this file follows.
+      // Close ✕ only on the last pill (the single pill in a dim selection, the right one in a
+      // fixture) — one close affordance per selection is enough; a fixture's left pill doesn't
+      // need its own, closing either side clears the whole fixture the same way.
+      const closeBtn = i === ids.length - 1
+        ? html`<span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
+                 @click=${e => { e.stopPropagation(); _activeFixture ? clearFixtureSelection() : clearDim(); }}></span>`
+        : nothing;
       return html`<div class="nav-item" @click=${() => { if (!_playersTabActive) _switchTab('tab-players'); }}><div class="selection-panel-row py-1 sub px-2 nav-link active" style="background-color: white !important; cursor: pointer;">
-        ${join(items, () => html`<span class="sp-sep">·</span>`)}
-        <span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
-              @click=${e => { e.stopPropagation(); _activeFixture ? clearFixtureSelection() : clearDim(); }}></span>
+        <span class="sp-text">${join(items, () => html`<span class="sp-sep">·</span>`)}</span>
+        ${closeBtn}
       </div></div>`;
     };
     return html`${ids.map(navItem)}`;
   };
 
-  render(buildRow(true), _selectionPanelEl);
+  render(buildRow(ids.map(() => true)), _selectionPanelEl);
   _expandPanel(_selectionPanelEl);
   // Reading scrollWidth/clientWidth forces a synchronous layout — fine for a one-off check like
   // this, and avoids a visible flash of the (possibly-truncated) population-included version.
-  // querySelectorAll, not querySelector — a fixture selection renders two rows now, and both
-  // need to fit (buildRow(false) drops population from both at once either way, same as before).
+  // querySelectorAll, not querySelector — a fixture selection renders two rows now, one per id in
+  // the same order, each checked (and, if needed, re-rendered without population) independently.
   const rowEls = [..._selectionPanelEl.querySelectorAll('.selection-panel-row')];
-  if (rowEls.some(el => el.scrollWidth > el.clientWidth)) render(buildRow(false), _selectionPanelEl);
+  const overflowed = rowEls.map(el => el.scrollWidth > el.clientWidth);
+  if (overflowed.some(Boolean)) render(buildRow(ids.map((_, i) => !overflowed[i])), _selectionPanelEl);
 };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 // The pop/rank/capital column every tooltip header shows to the right of the flag+name — pop
