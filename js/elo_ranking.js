@@ -95,7 +95,12 @@ export const pillContent = ({ iso2, name, pts = null } = {}) => html`
 // Handles both decided fixtures (real score) and undecided ones (bare date separator, no win/
 // lose/draw classing) — mirrors #buildRows' own `!score` branch below; not currently reachable
 // in production (every WC2026 fixture is finished already) but this shouldn't assume that.
-export const fixtureRow = (f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, pairIdPrefix = '', orderPair, ptsFor, fmtPop }) => {
+// `isDimmed(id)` — live predicate, same "read at render time, not a snapshot" contract as
+// isFixtureActive above (dimState can change without this row's own render() being the thing
+// that ran). Mirrors EloRanking.update()'s elo-item--dim toggle for the main pill list — these
+// rows build fresh, disposable pills every render instead of reusing #itemById's persisted
+// ones, so they need this passed in explicitly rather than picking it up automatically.
+export const fixtureRow = (f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, isDimmed, pairIdPrefix = '', orderPair, ptsFor, fmtPop }) => {
   const homeRaw = eloItemsByIso2.get(f.home) ?? { iso2: f.home, name: regionName(f.home, f.home) };
   const awayRaw = eloItemsByIso2.get(f.away) ?? { iso2: f.away, name: regionName(f.away, f.away) };
   // Ordering reads each side's own real fields (pts/pop/expCount/impCount) — must happen against
@@ -123,6 +128,7 @@ export const fixtureRow = (f, { eloItemsByIso2, regionName, onCountryClick, onFi
   const pens = penalties ? (leftPen != null ? `${leftPen}-${rightPen} pen.` : 'pen.') : null;
   const dateLabel = fixtureDateLabel(f.date);
   const clickableCls = item => (onCountryClick && item.id != null) ? ' elo-item--clickable' : '';
+  const dimCls = item => isDimmed?.(item.id) ? ' elo-item--dim' : '';
   const pillClick = item => () => { if (item.id != null) onCountryClick?.(item.id); };
   const pairId = `${pairIdPrefix}${f.id}`;
   const fixtureClickable = onFixtureClick && left.id != null && right.id != null;
@@ -130,13 +136,13 @@ export const fixtureRow = (f, { eloItemsByIso2, regionName, onCountryClick, onFi
   const active = isFixtureActive?.(pairId);
   return html`
     <li class="elo-pair${draw ? ' elo-pair--draw' : ''}${!decided ? ' elo-pair--pending' : ''}${active ? ' elo-pair--active' : ''}">
-      <span class="elo-item-wrap"><span class="${pillClasses(left)}${leftLost ? ' elo-item--lost' : ''}${clickableCls(left)}" style="${pillStyle(left)}" @click=${pillClick(left)}>${pillContent(left)}</span></span>
+      <span class="elo-item-wrap"><span class="${pillClasses(left)}${leftLost ? ' elo-item--lost' : ''}${clickableCls(left)}${dimCls(left)}" style="${pillStyle(left)}" @click=${pillClick(left)}>${pillContent(left)}</span></span>
       <span class="elo-pair-sep${decided ? ' elo-pair-sep--score' : ''}${fixtureClickable ? ' elo-pair-sep--clickable' : ''}" @click=${onSepClick}>
         ${decided
           ? html`${dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : nothing}<span class="elo-pair-sep-score">${leftGoals}–${rightGoals}</span>${pens ? html`<span class="elo-pair-sep-pens">${pens}</span>` : nothing}`
           : (dateLabel ? html`<span class="elo-pair-sep-date">${dateLabel}</span>` : html`–`)}
       </span>
-      <span class="elo-item-wrap"><span class="${pillClasses(right)}${rightLost ? ' elo-item--lost' : ''}${clickableCls(right)}" style="${pillStyle(right)}" @click=${pillClick(right)}>${pillContent(right)}</span></span>
+      <span class="elo-item-wrap"><span class="${pillClasses(right)}${rightLost ? ' elo-item--lost' : ''}${clickableCls(right)}${dimCls(right)}" style="${pillStyle(right)}" @click=${pillClick(right)}>${pillContent(right)}</span></span>
     </li>`;
 };
 

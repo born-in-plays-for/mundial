@@ -991,6 +991,13 @@ const dimState = {
 // dimState.active itself uses.
 const _eloLinkedIds = () => dimState.active ? new Set([...dimState.destIds.keys(), ...dimState.importIds.keys()]) : null;
 
+// Same "should this pill dim" question, phrased as a per-id predicate rather than a set — the
+// shape js/group_stage.js's/js/fixture_list.js's own fixtureRow() calls need (their pills are
+// freshly built every render, not persisted like EloRanking's own #itemById, so they can't pick
+// this up automatically the way _eloMain.update()'s linkedIds argument does — see fixtureRow's
+// own comment).
+const _isEloDimmed = id => dimState.active && id != null && id !== dimState.sourceId && !_eloLinkedIds().has(id);
+
 // The source country and every import/export partner applyDim (defined further down) marks via
 // data-dim-visible stay visible regardless of the sidebar's own category filter
 // (visibility:hidden) — an arc pointing at a flag the filter just hid would be visually broken,
@@ -1460,6 +1467,11 @@ const applySelection = (id, destIds) => {
   }
 
   _updateEloSelection();
+  // These build fresh pills every render rather than reusing #itemById's persisted ones (see
+  // fixtureRow's own comment on isDimmed), so unlike _updateEloSelection above, a selection
+  // change doesn't reach them automatically — re-render explicitly.
+  _groupStage?.render();
+  _fixtureList?.render();
   _updateSelectionPanel();
   document.body.classList.add('dim-active');
   _updateAllPlayersMapLayer();
@@ -1791,6 +1803,8 @@ const clearDim = () => {
   _updateAllPlayersMapLayer();
   _updateSelectionPanel(_renderPlayersTabIdle);
   _updateEloSelection();
+  _groupStage?.render(); // re-checks isDimmed for every group-stage result row — see applySelection's own comment
+  _fixtureList?.render(); // same, for every "whole competition" fixture row
   _updateSelectionPanel();
   _updateTabConnector();
 };
@@ -2584,6 +2598,7 @@ Promise.all([
     // initGroupStage's own render() being the thing that ran, so this always reads the current
     // value at render time rather than whatever it was when initGroupStage was first called.
     isFixtureActive: pairId => _activeFixture?.pairId === pairId,
+    isDimmed: _isEloDimmed,
     // "Show only this group's 4 teams" on the map — layered on top of the sidebar's own
     // category filter via callbacks.afterFlagFilter (see control_sidebar.js/applyFlagFilter),
     // not folded into it, since the sidebar has no reason to know this concern exists.
@@ -2610,6 +2625,7 @@ Promise.all([
     onCountryClick: _onCountryClick,
     onFixtureClick: activateFixture,
     isFixtureActive: pairId => _activeFixture?.pairId === pairId,
+    isDimmed: _isEloDimmed,
   });
   _updateGroupStageVisibility(); // -1/stage 0 are both defaults that may never fire 'stage-change' on their own
   sidebar.updateStageTitle();

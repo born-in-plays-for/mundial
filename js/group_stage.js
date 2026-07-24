@@ -15,7 +15,7 @@ import { FLAG_CDN } from './map-container.js';
 const _GROUP_LETTERS = [...'ABCDEFGHIJKL'];
 const _FINISHED = new Set(['FT', 'AET', 'PEN']);
 
-export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick, onFixtureClick, isFixtureActive, orderPair, ptsFor, fmtPop }) => {
+export const initGroupStage = ({ container, fixturesData, T, regionName, eloItemsByIso2, onGroupSelect, onCountryClick, onFixtureClick, isFixtureActive, isDimmed, orderPair, ptsFor, fmtPop }) => {
   let _selected = null; // null = "All"; otherwise a group letter
 
   // Whether a team actually advanced to the Round of 32 — read from the real-world elimination
@@ -44,7 +44,7 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
   // tab-tournament's pills already use), not fixturesData.standings — see fixtureRow's own
   // comment for why. 'grp-' keeps this fixture source's pairIds out of the other two sources'
   // namespaces (control_sidebar.js's knockout pairing, fixture_list.js's 'all-').
-  const _resultRow = f => fixtureRow(f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, orderPair, ptsFor, fmtPop, pairIdPrefix: 'grp-' });
+  const _resultRow = f => fixtureRow(f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, isDimmed, orderPair, ptsFor, fmtPop, pairIdPrefix: 'grp-' });
 
   const _standingsRow = t => {
     const item = eloItemsByIso2.get(t.iso2);

@@ -10,7 +10,7 @@ import { fixtureRow } from './elo_ranking.js';
 // elo_ranking.js, extracted from group_stage.js's own former _resultRow) applied to every fixture
 // at once, since that's the whole ask ("a simple list of all fixtures, sorted in chronological
 // order").
-export const initFixtureList = ({ container, fixturesData, eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, orderPair, ptsFor, fmtPop }) => {
+export const initFixtureList = ({ container, fixturesData, eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, isDimmed, orderPair, ptsFor, fmtPop }) => {
   // Sorted once per render rather than cached — fixturesData is static for the lifetime of the
   // page (no live-refetch path here, unlike wc2026_live.html), but re-sorting on every call keeps
   // this consistent with group_stage.js's own _groupResults (also resorted on every card render)
@@ -22,7 +22,7 @@ export const initFixtureList = ({ container, fixturesData, eloItemsByIso2, regio
     render(html`
       <ul class="elo-list">
         <div class="elo-pairs">
-          ${fixtures.map(f => fixtureRow(f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, orderPair, ptsFor, fmtPop, pairIdPrefix: 'all-' }))}
+          ${fixtures.map(f => fixtureRow(f, { eloItemsByIso2, regionName, onCountryClick, onFixtureClick, isFixtureActive, isDimmed, orderPair, ptsFor, fmtPop, pairIdPrefix: 'all-' }))}
         </div>
       </ul>`, container);
   };
