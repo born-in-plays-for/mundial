@@ -563,16 +563,35 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   // boundary reach the true min/max value well before a grip visually reached the outlier dot
   // that represents it, or vice versa — surprising results like a grip sitting right next to
   // France's own dot still not excluding France. Anything at or past the bar's own edge reads
-  // as the true domain extreme instead; only inside the bar itself is there anything to
-  // interpolate.
+  // as the true domain extreme (fully inclusive — matches the grip's own resting position,
+  // parked beyond the dot in the side margin) UNTIL the boundary actually reaches the dot's own
+  // center, at which point it flips to RATIO_MAX_NEG/POS — every *other* country's own real
+  // ceiling on that side, by definition (see RATIO_MAX_POS/NEG's own comment above) — which
+  // excludes exactly the outlier and nothing else. Without this second step, dragging a grip
+  // anywhere past the bar's edge (including right up against, or even past, the dot itself)
+  // always resolved to the true extreme = the outlier's own exact value, and since the filter
+  // is inclusive (v <= boundary), a boundary sitting exactly on a country's own value can never
+  // exclude that same country — the outlier was structurally unexcludable. RATIO_MAX_NEG/POS is
+  // exactly the bar's own frac=0/1 value too, so the flip at the dot's center is the only jump;
+  // crossing from the dot's center into the bar itself is a continuous handoff.
   const _xToValue = xFromDeviceLeft => {
     const [lo, hi] = _rangeDomain();
     const barRect = document.getElementById('legend-bar')?.getBoundingClientRect();
     const deviceRect = els.filterDevice?.getBoundingClientRect();
     if (!barRect || !deviceRect || !barRect.width) return lo;
     const barLeft = barRect.left - deviceRect.left, barRight = barRect.right - deviceRect.left;
-    if (xFromDeviceLeft <= barLeft) return lo;
-    if (xFromDeviceLeft >= barRight) return hi;
+    if (xFromDeviceLeft <= barLeft) {
+      const dotRect = document.getElementById('legend-outlier-dot')?.getBoundingClientRect();
+      if (!dotRect) return lo;
+      const dotCenter = (dotRect.left + dotRect.right) / 2 - deviceRect.left;
+      return xFromDeviceLeft >= dotCenter ? -RATIO_MAX_NEG : lo;
+    }
+    if (xFromDeviceLeft >= barRight) {
+      const dotRect = document.getElementById('legend-outlier-dot-pos')?.getBoundingClientRect();
+      if (!dotRect) return hi;
+      const dotCenter = (dotRect.left + dotRect.right) / 2 - deviceRect.left;
+      return xFromDeviceLeft >= dotCenter ? hi : RATIO_MAX_POS;
+    }
     const frac = (xFromDeviceLeft - barLeft) / barRect.width; // 0..1 across the bar itself
     return -RATIO_MAX_NEG + frac * (RATIO_MAX_NEG + RATIO_MAX_POS);
   };
@@ -609,6 +628,12 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     e.preventDefault();
     const side = e.currentTarget.dataset.side; // 'left' | 'right'
     const gripEl = e.currentTarget;
+    // Track the drag as a delta from the pointerdown position, not an absolute recompute off
+    // ev.clientX — the grip is wherever it currently sits, not flush against the device edge,
+    // so an absolute recompute would snap it (by however far into the grip the user happened
+    // to grab it) the instant the first pointermove fires.
+    const startClientX = e.clientX;
+    const startLeftPx = _leftPx, startRightPx = _rightPx;
     // Only the grip/mask redraw (cheap: a handful of style writes) happens on every
     // pointermove — actually applying the filter (_emitRange(), which cascades into
     // re-filtering the Elo pill list and re-animating every flag on the map) is expensive
@@ -621,12 +646,13 @@ export const wireLegend = ({ getById, onRangeChange }) => {
       // never overlap: the dragged grip's own far edge is capped at the other grip's own near
       // edge, exactly, however wide either currently renders.
       const gripW = gripEl.getBoundingClientRect().width;
+      const dx = ev.clientX - startClientX;
       if (side === 'left') {
         const max = Math.max(0, rect.width - _rightPx - 2 * gripW);
-        _leftPx = Math.max(0, Math.min(ev.clientX - rect.left, max));
+        _leftPx = Math.max(0, Math.min(startLeftPx + dx, max));
       } else {
         const max = Math.max(0, rect.width - _leftPx - 2 * gripW);
-        _rightPx = Math.max(0, Math.min(rect.right - ev.clientX, max));
+        _rightPx = Math.max(0, Math.min(startRightPx - dx, max));
       }
       renderRange();
     };
@@ -651,9 +677,25 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   };
   if (els.filterDevice && onRangeChange) {
     els.filterDevice.addEventListener('dblclick', () => {
-      _leftPx = 0; _rightPx = 0;
-      renderRange();
-      _emitRange();
+      // Same "eases back to rest" treatment as js/wc2026_map.js's own map-height resize bar
+      // dblclick reset — snapping straight to 0/0 (the old behavior) reads as abrupt for a
+      // gesture that isn't itself a drag. Eases _leftPx/_rightPx down to 0 over a fixed
+      // duration, re-rendering every frame (cheap: a handful of style writes, same as every
+      // drag frame already does above) — _emitRange() (expensive: cascades into re-filtering
+      // + re-animating every flag) still only runs once, at the end, same as the drag's own
+      // pointerup-only recompute.
+      const startLeft = _leftPx, startRight = _rightPx;
+      if (startLeft === 0 && startRight === 0) return;
+      const duration = 250, t0 = performance.now();
+      const step = now => {
+        const ease = 1 - (1 - Math.min(1, (now - t0) / duration)) ** 2; // ease-out
+        _leftPx = startLeft * (1 - ease);
+        _rightPx = startRight * (1 - ease);
+        renderRange();
+        if (ease < 1) requestAnimationFrame(step);
+        else _emitRange();
+      };
+      requestAnimationFrame(step);
     });
   }
 

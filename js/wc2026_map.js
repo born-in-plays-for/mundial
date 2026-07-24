@@ -629,12 +629,37 @@ if (_legendParent) {
   // Double-click to reset back to the natural (full-width, no explicit override) height —
   // same reset gesture js/map-container.js's own #legend-filter-device grips use, and the
   // same button/#legend exclusion as the drag above (a double-click on the zoom buttons or
-  // inside #legend has its own meaning, not this).
+  // inside #legend has its own meaning, not this). Animated: jumping straight to height:''
+  // (the drag's own live-update path, no transition) reads as an abrupt snap for a gesture
+  // that isn't itself a drag — a real `height` transition eases it back, same rAF-polling
+  // pattern the map-collapse toggle uses (_pollPaddingDuringMapToggle, above) to keep
+  // #bottomTabContent tracking the animating edge instead of jumping once at the end. `#map`
+  // has no transition of its own (css/map-container.css: height:auto by default), so one is
+  // added here only for the duration of this animation and removed once it settles — nothing
+  // else on the page reads or relies on it.
   _legendParent.addEventListener('dblclick', e => {
     if (e.target.closest('button') || e.target.closest('#legend')) return;
-    document.getElementById('map').style.height = '';
+    const mapEl = document.getElementById('map');
+    const from = mapEl.getBoundingClientRect().height;
+    const to = _mapNaturalHeight();
     localStorage.removeItem(_MAP_HEIGHT_KEY);
-    _syncMapHeight();
+    if (Math.abs(from - to) < 0.5) { mapEl.style.height = ''; _syncMapHeight(); return; }
+    let raf = null;
+    const poll = () => { _syncPaddingTop(); raf = requestAnimationFrame(poll); };
+    const onEnd = ev => {
+      if (ev.propertyName !== 'height') return;
+      mapEl.removeEventListener('transitionend', onEnd);
+      cancelAnimationFrame(raf);
+      mapEl.style.transition = '';
+      mapEl.style.height = ''; // back to responsive height:auto, not pinned at the natural px value
+      _syncPaddingTop();
+    };
+    mapEl.style.height = from + 'px'; // pin the live px height so the transition has a real start point
+    void mapEl.offsetHeight; // force reflow — otherwise the two writes coalesce and nothing animates
+    mapEl.style.transition = 'height .3s ease';
+    mapEl.addEventListener('transitionend', onEnd);
+    poll();
+    mapEl.style.height = to + 'px';
   });
 }
 
