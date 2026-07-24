@@ -232,6 +232,12 @@ background: linear-gradient(to right,
 }
 .elo-item--zoomable { cursor: pointer; }
 .elo-item--zoomable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+/* Pill-list counterpart to the map's own flag dimming during dim mode (js/wc2026_map.js's
+   applyDim/animateFlagOpacity, DURATION_MS=180 in js/flag_visibility.js) — set by
+   EloRanking.update()'s linkedIds param. Only the flag dims, not the whole pill: name/points
+   stay legible while scanning/sorting the still-visible list, mirroring how the map itself only
+   ever dims the flag graphic, never any label. Same 0.35 opacity floor as the map's own. */
+.elo-item--dim .elo-flag { opacity: 0.35; transition: opacity 0.18s ease; }
 .elo-rank { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 14px; text-align: right; flex-shrink: 0; }
 .elo-dot { font-size: 7px; line-height: 1; }
 .elo-name .elo-dot:first-child { margin-left: 3px; }

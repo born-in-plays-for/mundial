@@ -792,7 +792,7 @@ const _scrollToCityRow = rec => {
 const _renderElo = (onAnimationDone) => {
   if (!_renderEloBase) return;
   _renderEloBase(onAnimationDone);
-  if (dimState.sourceId) _eloMain.update(dimState.sourceId);
+  if (dimState.sourceId) _eloMain.update(dimState.sourceId, _eloLinkedIds());
   // Group Stage / "Whole competition" fixture rows order their own two teams by the sidebar's
   // current sort criterion too (sidebar.orderPair/ptsFor, passed to both at construction) — a
   // sort-column click or direction toggle already re-renders the main pill list via
@@ -808,7 +808,7 @@ const _renderElo = (onAnimationDone) => {
   if (_ptSortKey === 'bornIn' || _ptSortKey === 'playsFor') _refreshPlayersView();
 };
 const _updateEloSelection = () => {
-  if (_eloMain.hasItems && !_playersTabActive) _eloMain.update(dimState.sourceId);
+  if (_eloMain.hasItems && !_playersTabActive) _eloMain.update(dimState.sourceId, _eloLinkedIds());
 };
 
 // Which #bottomTabList tab is actually showing right now — the single explicit source of truth
@@ -922,7 +922,7 @@ _bottomTabNav.addEventListener('show.bs.tab', e => {
   }
   if (isEloTab) {
     _renderElo();
-    _eloMain.update(dimState.sourceId);
+    _eloMain.update(dimState.sourceId, _eloLinkedIds());
     _scrollToActiveElo();
   }
   _updateAllPlayersMapLayer();
@@ -982,6 +982,14 @@ const dimState = {
   importIds: new Map(),
   arcsGroup: null,
 };
+
+// The set of ids EloRanking.update() should keep at full opacity alongside the source id
+// itself — every other pill's own flag dims, the tab-teams/tab-tournament pill-list equivalent
+// of the map's own flag dimming (applyDim/animateFlagOpacity below), so both views (the same
+// shared <elo-ranking> instance — see _switchTab's own comment) tell the same "what's relevant
+// to this selection" story the map does. null (not active) means "dim nothing", same convention
+// dimState.active itself uses.
+const _eloLinkedIds = () => dimState.active ? new Set([...dimState.destIds.keys(), ...dimState.importIds.keys()]) : null;
 
 // The source country and every import/export partner applyDim (defined further down) marks via
 // data-dim-visible stay visible regardless of the sidebar's own category filter
@@ -1322,11 +1330,11 @@ const _updateSelectionPanel = (onCollapsed) => {
       if (i === 0 && ids.length > 1) items.reverse(); // mirrored left group — fixtures (2 countries) only, not a single-team selection
       return join(items, () => html`<span class="sp-sep">·</span>`);
     });
-    return html`<div class="selection-panel-row py-1 sub px-2" style="background-color: white !important;">
+    return html`<div class="nav-item"><div class="selection-panel-row py-1 sub px-2 nav-link active" style="background-color: white !important;">
       ${join(groups, () => html`<span class="sp-sep">⇄</span>`)}
       <span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
             @click=${() => (_activeFixture ? clearFixtureSelection() : clearDim())}></span>
-    </div>`;
+    </div></div>`;
   };
 
   render(buildRow(true), _selectionPanelEl);

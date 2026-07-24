@@ -266,10 +266,19 @@ class EloRanking extends HTMLElement {
     }
   }
 
-  update(id) {
+  // linkedIds: Set of ids to keep at full opacity alongside `id` itself (wc2026_map.js's
+  // dimState.destIds/importIds — the same export/import partners the map's own flag dimming
+  // uses), or null/undefined when there's no active selection to dim against. Every pill
+  // persists in #itemById across renders (see `set items` above), so toggling a class here
+  // reaches pills currently off-screen (a different carousel stage, etc.) too — harmless, and
+  // means the dim state is already correct the moment they're shown again.
+  update(id, linkedIds = null) {
     this.#itemById.get(this.#activeId)?.classList.remove('elo-item--active');
     this.#activeId = id ?? null;
     this.#itemById.get(this.#activeId)?.classList.add('elo-item--active');
+    this.#itemById.forEach((pill, itemId) => {
+      pill.classList.toggle('elo-item--dim', id != null && itemId !== id && !linkedIds?.has(itemId));
+    });
   }
 
   // Fixture-level selection (a whole .elo-pair row, not a single team pill) — mirrors update()
