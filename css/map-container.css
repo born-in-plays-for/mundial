@@ -283,6 +283,12 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   cursor: ew-resize; touch-action: none;
   padding: 0 2px; 
 }
+/* No object-position override needed (plain object-fit:cover, default 50% center) — an earlier
+   version of this compensated here for grip-vertical-svgrepo-com.svg's own off-center content
+   (its stock 16x16 viewBox wasn't centered on the actual dot pattern, which a narrow crop like
+   this box's — 12px/34.5px — turned into a visibly clipped dot on one side). Fixed at the source
+   instead: that SVG's own viewBox is now tightly (and correctly) centered on its content, so the
+   default center crop is already correct — see that file's own comment. */
 #left-grip img, #right-grip img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; pointer-events: none; }
 #left-grip:hover img, #right-grip:hover img, #left-grip:active img, #right-grip:active img { opacity: 0.7; }
 @media (max-width: 767.98px) {

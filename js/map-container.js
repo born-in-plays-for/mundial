@@ -545,9 +545,23 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     render(html`${marks.map(v => html`<span class="legend-rug-tick" style="left:${(_divergingPos(v) * 100).toFixed(2)}%; background:${_tickColor(v)}"></span>`)}`, els.bar);
   };
 
+  // A fixed step (not "half of that side's own domain max", the old formula) — the two domain
+  // ceilings are wildly different sizes (42 vs 26 today), so "half of each" produced a different
+  // step on every side (21 vs 13), which read as arbitrary rather than a real scale. Multiples of
+  // TICK_STEP between 0 and each side's own edge, plus that edge itself whenever it isn't
+  // already a clean multiple (26 isn't; 42 happens to be, so nothing gets duplicated there) —
+  // works unchanged if RATIO_MAX_POS/NEG themselves change later, not hardcoded to today's exact
+  // values.
+  const TICK_STEP = 14;
   const updateTicks = () => {
     if (!els.ticks) return;
-    const ticks = [-RATIO_MAX_NEG, -RATIO_MAX_NEG / 2, 0, RATIO_MAX_POS / 2, RATIO_MAX_POS].map(Math.round);
+    const posTicks = [];
+    for (let v = TICK_STEP; v < RATIO_MAX_POS; v += TICK_STEP) posTicks.push(v);
+    posTicks.push(RATIO_MAX_POS);
+    const negTicks = [];
+    for (let v = -TICK_STEP; v > -RATIO_MAX_NEG; v -= TICK_STEP) negTicks.push(v);
+    negTicks.push(-RATIO_MAX_NEG);
+    const ticks = [...negTicks.reverse(), 0, ...posTicks].map(Math.round);
     const pct = t => _divergingPos(t) * 100;
     // The two extreme ticks sit exactly at the bar's own edges (0%/100%) — right next to that
     // side's own outlier count label (#legend-outlier-count / -count-pos, just outside the bar)

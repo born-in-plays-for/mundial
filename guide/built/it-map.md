@@ -307,13 +307,13 @@ Scorri (o pizzica) per zoomare · trascina per spostare la vista. Due pulsanti r
 
 La mappa colora ogni paese in base al suo bilancio netto di talento — contributo interno (esportazioni più giocatori nativi) meno importazioni. Esportatori netti e importatori netti appaiono in due colori distinti ai due lati di un punto neutro centrale.
 
-La barra colorata in fondo all'intestazione si legge da sinistra a destra come una retta numerica — estremo negativo, zero neutro al centro, estremo positivo — con un segno di riferimento a ciascuna estremità e al centro, più un punto a sé stante *a ciascuna estremità* per il paese più fuori scala da quel lato (il maggiore importatore netto, il maggiore esportatore netto).
+La barra colorata in fondo all'intestazione si legge da sinistra a destra come una retta numerica — estremo negativo, zero neutro al centro, estremo positivo — con un segno di riferimento a ciascuna estremità e al centro, più un piccolo segno proprio per ogni paese reale, così puoi vedere dove i paesi si raggruppano davvero invece di presumere che il gradiente uniforme significhi una distribuzione omogenea. Un singolo punto a sé stante si trova oltre l'estremità positiva per la **Francia**, il maggiore esportatore netto — abbastanza fuori scala (36 punti oltre il paese successivo) da meritare un proprio indicatore invece di un altro semplice segno sulla barra:
 
 ![Legenda](screenshots/legend.png)
 
-I due punti a sé stanti sono sempre gli stessi due paesi: **Curaçao**, il maggiore importatore netto (l'intera rosa è nata nei Paesi Bassi), sul lato negativo, e la **Francia**, il maggiore esportatore netto, sul lato positivo.
+**Curaçao**, il maggiore importatore netto (l'intera rosa è nata nei Paesi Bassi), si trova invece all'estremo negativo della barra stessa.
 
-La legenda funge anche da filtro: trascina una delle due maniglie — il piccolo indicatore punteggiato appena all'interno di ciascun punto isolato — verso l'interno per restringere l'intervallo visibile. Tutto ciò che è fuori dall'intervallo selezionato scompare dall'elenco dei paesi, dalle bandiere sulla mappa e dalla tabella dei giocatori, come qualsiasi altro filtro. Fai doppio clic in un punto qualsiasi della legenda per tornare all'intervallo completo.
+La legenda funge anche da filtro: trascina una delle due maniglie — il piccolo indicatore punteggiato a ciascuna estremità della barra — verso l'interno per restringere l'intervallo visibile. Tutto ciò che è fuori dall'intervallo selezionato scompare dall'elenco dei paesi, dalle bandiere sulla mappa e dalla tabella dei giocatori, come qualsiasi altro filtro. Fai doppio clic in un punto qualsiasi della legenda per tornare all'intervallo completo.
 
 ## Tooltip
 

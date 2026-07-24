@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#000000" class="bi bi-grip-horizontal">
+<!-- viewBox/width/height tightened from the original 16x16 (0 0 16 16, 800x800px) — see
+     grip-vertical-svgrepo-com.svg's own comment for the full rationale (same fix, transposed).
+     This viewBox matches #legend-grip's own actual rendered box (2rem x 1rem = 32:16, i.e. 2:1 —
+     css/map-container.css; unlike the vertical grip, this one IS the <img> itself, no padding to
+     subtract) exactly, centered on the real dot content, with a full 1-unit margin on every side.
+     width/height match this viewBox's own 2:1 ratio. -->
+<svg width="800px" height="400px" viewBox="0 2.5 16 8" xmlns="http://www.w3.org/2000/svg" fill="#000000" class="bi bi-grip-horizontal">
   <path d="M2 8a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm3 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm3 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm3 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm3 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm0-3a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
 </svg>

@@ -265,13 +265,13 @@ Scroll (or pinch) to zoom · drag to pan. Two round buttons sit in the bar below
 
 The map shades every country by its net talent balance — home-grown contribution (exports plus native-born players) minus imports. Net exporters and net importers read as two different colours either side of a neutral midpoint.
 
-The colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, and a standalone dot *at each end* for the country furthest off scale on that side (biggest net importer, biggest net exporter):
+The colour bar at the bottom of the header reads left to right like a number line — negative extreme, neutral 0 in the middle, positive extreme — with a reference tick at each end and midpoint, plus a thin tick of its own for every real country, so you can see where countries actually cluster instead of assuming the smooth gradient means an even spread. A single standalone dot sits past the positive end for **France**, the biggest net exporter — off-scale enough (36 points past the next-highest country) to earn its own marker instead of just another tick on the bar:
 
 ![Legend](screenshots/legend.png)
 
-The two outlier dots are always the same two countries: **Curaçao**, the biggest net importer (its entire squad is Dutch-born), on the negative end, and **France**, the biggest net exporter, on the positive end.
+**Curaçao**, the biggest net importer (its entire squad is Dutch-born), sits at the bar's own negative extreme instead.
 
-The legend doubles as a filter: drag either grip — the small dotted handle just inside each outlier dot — inward to narrow the visible range. Everything outside the selected range disappears from the country list, the map's own flags, and the player table, the same as any other filter. Double-click anywhere on the legend to reset back to the full range.
+The legend doubles as a filter: drag either grip — the small dotted handle at each end of the bar — inward to narrow the visible range. Everything outside the selected range disappears from the country list, the map's own flags, and the player table, the same as any other filter. Double-click anywhere on the legend to reset back to the full range.
 
 ## Tooltips
 

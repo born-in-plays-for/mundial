@@ -146,8 +146,9 @@ def take_map_and_legend_screenshots(browser):
     page.locator('#map').screenshot(path=str(SCREENSHOTS / 'qualified_flags.png'))
     print('  ✓ screenshots/qualified_flags.png')
 
-    # The legend's own outliers (France/Curaçao) are computed from the full dataset, not the
-    # ?show= filter above, so this is unaffected by it — captured in the same page for speed.
+    # The legend's own outlier (France — Curaçao no longer gets a standalone dot, see
+    # map-container.js's OUTLIER_IDS_NEG) is computed from the full dataset, not the ?show=
+    # filter above, so this is unaffected by it — captured in the same page for speed.
     # Not a plain locator.screenshot(): #legend-filter-device (the range-filter grips) is
     # absolutely positioned to overflow #legend's own box by its own side margins (so a grip
     # parked at rest sits beside the outlier dot rather than on top of it — see
@@ -155,7 +156,10 @@ def take_map_and_legend_screenshots(browser):
     # cutting each grip in half. page.screenshot(clip=...) with the box padded out by a fixed
     # amount (generous enough for any margin currently in CSS) captures the full grips instead.
     legend_box = page.locator('#legend').bounding_box()
-    pad = 10  # horizontal only — #legend-filter-device only overflows #legend's box left/right
+    pad = 24  # horizontal only — #legend-filter-device only overflows #legend's box left/right (by
+              # exactly 1rem/16px on each side today — see css/map-container.css's own inset — pad
+              # is kept a bit above that rather than matched exactly, so it isn't the first thing
+              # to silently start clipping again the next time that inset value changes)
     page.screenshot(path=str(SCREENSHOTS / 'legend.png'), clip={
         'x': legend_box['x'] - pad, 'y': legend_box['y'],
         'width': legend_box['width'] + 2 * pad, 'height': legend_box['height'],

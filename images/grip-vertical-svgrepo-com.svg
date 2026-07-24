@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#000000" class="bi bi-grip-vertical">
+<!-- viewBox/width/height tightened from the original 16x16 (0 0 16 16, 800x800px) — the stock
+     icon's square canvas was never actually centered on its own dot content (content center
+     x=7.5, not the viewbox's 8), which this box's own extreme aspect ratio (the range-filter
+     grip's own <img>, 12px/34.5px — css/map-container.css) turned into a visibly clipped dot on
+     one side under plain object-fit:cover. An earlier version of this fix cropped the viewBox
+     down to just the content's own tight bounding box, which introduced a NEW problem: that box
+     has its own aspect ratio (dictated by the dot pattern's geometry), which doesn't match this
+     element's actual rendered aspect ratio either — object-fit:cover still had to crop to
+     reconcile them, this time with only a thin margin to spare, clipping the top/bottom rows
+     instead (only found by inspecting the *other* grip's own live rendering, which uses the same
+     source file at a different aspect ratio — always check both after touching this file).
+     This viewBox is instead sized to match the img's own 12:34.5 aspect ratio exactly (so
+     object-fit:cover needs no cropping at all — cover and contain become equivalent), centered
+     on the real content, with a full 1-unit margin on every side against future drift if that
+     12:34.5 ratio ever changes (it's derived from the legend's own row height, not a fixed
+     constant). width/height match this viewBox's own ratio 1:1. -->
+<svg width="371px" height="800px" viewBox="4.717 0 5.565 16" xmlns="http://www.w3.org/2000/svg" fill="#000000" class="bi bi-grip-vertical">
   <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
 </svg>
