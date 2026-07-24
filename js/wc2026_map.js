@@ -1309,6 +1309,15 @@ _switchTab(_RESTORABLE_TABS.has(_savedActiveTab) ? _savedActiveTab : 'tab-teams'
 const _updateSelectionPanel = (onCollapsed) => {
   if (!_selectionPanelEl) return;
   const ids = _activeFixture ? [_activeFixture.idA, _activeFixture.idB] : dimState.sourceId ? [dimState.sourceId] : [];
+  // #tab-players-btn's own background depends on whether #selection-panel is showing
+  // (css/wc2026_map.css) — toggled right here since this is the one place that already computes
+  // "is there a selection to show" for every path that can change it (dim mode, fixture
+  // selection, and both being cleared). Safe against #tab-players-btn's own className
+  // reassignments elsewhere (applySelection, activateFixture, _renderPlayersTabIdle): the first
+  // two both call _updateSelectionPanel() again right after, and _renderPlayersTabIdle only ever
+  // reassigns while dimState.active/_activeFixture are both falsy — i.e. exactly when ids.length
+  // is 0 here too, so there's nothing for it to clobber.
+  document.getElementById('tab-players-btn')?.classList.toggle('tpb-selection-open', ids.length > 0);
   if (ids.length === 0) {
     _collapsePanel(_selectionPanelEl, () => { render(nothing, _selectionPanelEl); if (onCollapsed) onCollapsed(); });
     return;

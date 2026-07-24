@@ -184,7 +184,18 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    (a vertical-align:middle/line-height artifact). Flex sizing ignores line-height entirely,
    so this also fixes centering, not just height. */
 #tab-teams-btn, #tab-tournament-btn, #tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 2px 0;}
-#tab-players-btn.active { background-color: white; }
+/* White exactly while #selection-panel is showing (js/wc2026_map.js's _updateSelectionPanel
+   toggles this — dim mode or a fixture selection, tracked there since that's the one place
+   already computing "is there a selection to show" for every path that can change it), not
+   while #tab-players-btn merely happens to be the active bottom tab — .active alone (the old
+   selector here) painted it white even with nothing selected (the ambient "N countries" idle
+   view), which didn't distinguish "you're looking at players" from "there's a selection". When
+   this class is absent, #tab-players-btn falls back to the same plain nav-link look
+   #tab-teams-btn/#tab-tournament-btn get whenever they're not themselves the active tab — no
+   separate rule needed for that side, it's just the default Bootstrap treatment neither of them
+   overrides either. #id + .class beats Bootstrap's own .nav-tabs .nav-link.active on
+   specificity, so this wins even when both are present at once. */
+#tab-players-btn.tpb-selection-open { background-color: white; }
 /* "Caps" column — the players table's own 4th column beyond css/wc2026_players.css's
    name/born-in/plays-for three (see js/wc2026_map.js's _playersTableTemplate), so it lives
    here rather than in that shared stylesheet. Narrow and non-wrapping, like .pt-born/.pt-caps'
