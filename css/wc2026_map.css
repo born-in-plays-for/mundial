@@ -53,6 +53,33 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   display: flex; flex-direction: column;
 }
 #selection-panel { order: 2; background-color: transparent; border-bottom: none; }
+/* Fixture selection (js/wc2026_map.js's _updateSelectionPanel) renders two .nav-item — one per
+   team. justify-content-evenly (wc2026_map.html) is what centers a lone .nav-item in the
+   single-team case, but with two, it can't be trusted to butt them together at exactly the
+   panel's own center: it distributes free space, so unless both pills happen to render at the
+   exact same width, the gap between them (and so their shared edge) drifts off-center. Giving
+   both flex-basis 50% instead makes the two .nav-item boxes (not their content — see below) fill
+   the row completely (50% + 50% = 100%), leaving no free space left for justify-content-evenly
+   to distribute: the boundary between the two boxes always lands exactly at the panel's own
+   center, regardless of either pill's own content width.
+   Each .nav-item box is deliberately wider than its pill needs though — the pill itself must
+   stay content-driven width, not stretched to fill its half, and hug the boundary (the side
+   facing the other team) rather than centering within its own half. Each .nav-item is turned
+   into its own flex container for this: .selection-panel-row keeps flex's default flex-grow:0
+   (stays content-sized, doesn't stretch to fill the 50% box) while justify-content pins it to
+   whichever edge faces the boundary — flex-end for the left pill, flex-start for the right one.
+   min-width:0 (both the .nav-item and .selection-panel-row) overrides the flex default
+   (min-width:auto, refuses to shrink below content) — needed only for the rare case a name is
+   actually too long for its own half, so it truncates via .selection-panel-row's own ellipsis
+   instead of overflowing past the boundary or the panel's own edge.
+   :has(.nav-item + .nav-item) scopes all of this to the two-pill case only, leaving the
+   single-team pill's own content-sized, centered look untouched. */
+#selection-panel:has(.nav-item + .nav-item) .nav-item {
+  flex: 1 1 50%; min-width: 0; display: flex;
+}
+#selection-panel:has(.nav-item + .nav-item) .nav-item:first-child { justify-content: flex-end; }
+#selection-panel:has(.nav-item + .nav-item) .nav-item:last-child { justify-content: flex-start; }
+#selection-panel:has(.nav-item + .nav-item) .selection-panel-row { min-width: 0; }
 /* js/wc2026_map.js's _updateSelectionPanel — forced to one line (name/capital/[population] ·
    -joined, two countries 'vs.'-joined for a fixture) rather than wrapping the way flex content
    normally would once it's wider than the panel (see the screenshot this was filed from: a
@@ -184,18 +211,20 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    (a vertical-align:middle/line-height artifact). Flex sizing ignores line-height entirely,
    so this also fixes centering, not just height. */
 #tab-teams-btn, #tab-tournament-btn, #tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 2px 0;}
-/* White exactly while #selection-panel is showing (js/wc2026_map.js's _updateSelectionPanel
-   toggles this — dim mode or a fixture selection, tracked there since that's the one place
-   already computing "is there a selection to show" for every path that can change it), not
-   while #tab-players-btn merely happens to be the active bottom tab — .active alone (the old
-   selector here) painted it white even with nothing selected (the ambient "N countries" idle
-   view), which didn't distinguish "you're looking at players" from "there's a selection". When
-   this class is absent, #tab-players-btn falls back to the same plain nav-link look
-   #tab-teams-btn/#tab-tournament-btn get whenever they're not themselves the active tab — no
-   separate rule needed for that side, it's just the default Bootstrap treatment neither of them
-   overrides either. #id + .class beats Bootstrap's own .nav-tabs .nav-link.active on
-   specificity, so this wins even when both are present at once. */
-#tab-players-btn.tpb-selection-open { background-color: white; }
+/* White requires BOTH: #tab-players-btn is the tab currently being viewed (.active, Bootstrap's
+   own Tab-managed class) AND there's a selection to show (.tpb-selection-open, toggled by
+   js/wc2026_map.js's _updateSelectionPanel — dim mode or a fixture selection alike, tracked
+   there since that's the one place already computing "is there a selection to show" for every
+   path that can change it). Neither alone is enough: .active alone (an earlier version of this
+   rule) painted it white even with nothing selected (the ambient "N countries" idle view);
+   .tpb-selection-open alone (a later, also-wrong version) painted it white even while looking at
+   a completely different tab, which read as a stray highlight rather than "this is what you're
+   looking at". With either half missing, #tab-players-btn falls back to the same plain nav-link
+   look #tab-teams-btn/#tab-tournament-btn get whenever they're not themselves the active tab —
+   no separate rule needed for that side, it's just the default Bootstrap treatment neither of
+   them overrides either. #id + 2 classes beats Bootstrap's own .nav-tabs .nav-link.active on
+   specificity, so this wins even when every class is present at once. */
+#tab-players-btn.active.tpb-selection-open { background-color: white; }
 /* "Caps" column — the players table's own 4th column beyond css/wc2026_players.css's
    name/born-in/plays-for three (see js/wc2026_map.js's _playersTableTemplate), so it lives
    here rather than in that shared stylesheet. Narrow and non-wrapping, like .pt-born/.pt-caps'

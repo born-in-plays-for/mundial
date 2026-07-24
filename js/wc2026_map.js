@@ -1322,17 +1322,21 @@ const _updateSelectionPanel = (onCollapsed) => {
     _collapsePanel(_selectionPanelEl, () => { render(nothing, _selectionPanelEl); if (onCollapsed) onCollapsed(); });
     return;
   }
-  // Per-country [name, capital, population] triple, '·'-joined within a country. A single-team
-  // selection (ids.length === 1) reads name · capital · population, same as always. A fixture
-  // (2 countries) instead joins the two groups with '⇄', and mirrors the LEFT group's own triple
-  // (population · capital · name) so the whole row reads symmetrically around the '⇄' —
-  // population next to population, name next to name on either side of it — rather than the same
-  // left-to-right order repeated twice. includePop lets the overflow check below re-render
-  // without it — population is the least essential field, so it's the first thing dropped once
-  // the row doesn't fit on its one allowed line, rather than jumping straight to an ellipsis that
-  // might cut off a country's own name instead.
+  // Per-country [name, capital, population] triple, '·'-joined within a country. One .nav-item
+  // per country — a fixture selection (ids.length === 2) renders two, evenly spaced by
+  // #selection-panel's own d-flex justify-content-evenly (wc2026_map.html), both carrying
+  // .active (nothing here is a real Bootstrap Tab wired via data-bs-toggle, just borrowed
+  // nav/nav-link/nav-item styling — so nothing enforces "only one .active" the way an actual
+  // Bootstrap tab group would; two active-looking pills at once is intentional, both teams are
+  // equally the current selection). The LEFT pill's own triple is reversed (population · capital
+  // · name) so the two pills read symmetrically around the gap between them — both country names
+  // land on the inner edge next to each other, population (least essential) pushed to the outer
+  // edges — rather than the same left-to-right order repeated twice. includePop lets the overflow
+  // check below re-render without it — population is the least essential field, so it's the
+  // first thing dropped once a row doesn't fit on its one allowed line, rather than jumping
+  // straight to an ellipsis that might cut off a country's own name instead.
   const buildRow = includePop => {
-    const groups = ids.map((id, i) => {
+    const navItem = (id, i) => {
       const fc = iso2ForId(id);
       const cname  = countryName(id);
       const pop    = includePop ? app.pop?.[fc] : null;
@@ -1343,22 +1347,24 @@ const _updateSelectionPanel = (onCollapsed) => {
         capText && html`<span>${capText}</span>`,
         pop && html`<span>${fmtPop(pop)}</span>`,
       ].filter(Boolean);
-      if (i === 0 && ids.length > 1) items.reverse(); // mirrored left group — fixtures (2 countries) only, not a single-team selection
-      return join(items, () => html`<span class="sp-sep">·</span>`);
-    });
-    return html`<div class="nav-item"><div class="selection-panel-row py-1 sub px-2 nav-link active" style="background-color: white !important;">
-      ${join(groups, () => html`<span class="sp-sep">⇄</span>`)}
-      <span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
-            @click=${() => (_activeFixture ? clearFixtureSelection() : clearDim())}></span>
-    </div></div>`;
+      if (i === 0 && ids.length > 1) items.reverse(); // mirrored left pill — fixtures (2 countries) only, not a single-team selection
+      return html`<div class="nav-item"><div class="selection-panel-row py-1 sub px-2 nav-link active" style="background-color: white !important;">
+        ${join(items, () => html`<span class="sp-sep">·</span>`)}
+        <span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
+              @click=${() => (_activeFixture ? clearFixtureSelection() : clearDim())}></span>
+      </div></div>`;
+    };
+    return html`${ids.map(navItem)}`;
   };
 
   render(buildRow(true), _selectionPanelEl);
   _expandPanel(_selectionPanelEl);
   // Reading scrollWidth/clientWidth forces a synchronous layout — fine for a one-off check like
   // this, and avoids a visible flash of the (possibly-truncated) population-included version.
-  const rowEl = _selectionPanelEl.querySelector('.selection-panel-row');
-  if (rowEl && rowEl.scrollWidth > rowEl.clientWidth) render(buildRow(false), _selectionPanelEl);
+  // querySelectorAll, not querySelector — a fixture selection renders two rows now, and both
+  // need to fit (buildRow(false) drops population from both at once either way, same as before).
+  const rowEls = [..._selectionPanelEl.querySelectorAll('.selection-panel-row')];
+  if (rowEls.some(el => el.scrollWidth > el.clientWidth)) render(buildRow(false), _selectionPanelEl);
 };
 const rankTag = name => { const r = app.eloRank[name]; return r ? html`<span class="tt-rank fw-normal text-nowrap">Elo #${r}</span>` : nothing; };
 // The pop/rank/capital column every tooltip header shows to the right of the flag+name — pop
