@@ -139,7 +139,16 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    alignment by that difference/2, which is exactly the "tiny pixelesque" dot-vs-bar
    misalignment this replaced — same class of bug #legend-born's own align-self:flex-start
    fixed above, just scoped to the parent since all 3 columns need the same fix here. */
-#legend-bar { height: 10px; flex: 1; max-width: 280px; }
+/* position:relative — js/map-container.js's updateRug() absolutely positions one tick per real
+   country by percent (matching buildGradient()'s own gradient stop positions) directly on top
+   of the gradient, so a viewer can see where the data actually clusters vs. where the smooth
+   gradient is just interpolating through a real gap between two countries' own values. */
+#legend-bar { height: 10px; flex: 1; max-width: 280px; position: relative; }
+/* Semi-transparent so it stays visible against both the light (near-white, middle) and dark
+   (saturated, extremes) ends of the gradient without picking a single color that would vanish
+   against one end or the other. translateX(-50%) centers the 1px mark on its own left:X% point
+   instead of starting a hard edge exactly there. */
+.legend-rug-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(0,0,0,.35); transform: translateX(-50%); pointer-events: none; }
 #legend-ticks, #legend-outlier-count, #legend-outlier-count-pos { font-family: var(--bs-font-monospace); }
 /* position:relative + explicit height — js/wc2026_map.js's _updateLegendTicks() absolutely
    positions each <span> by percent (matching #legend-bar's own gradient stop positions), so

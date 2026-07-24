@@ -488,6 +488,26 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     els.bar.style.borderRadius = '5px';
   };
 
+  // Rug plot — one thin tick per real country at its own METRIC position, overlaid directly on
+  // the gradient. The bar itself is drawn as a smooth continuous gradient (buildGradient above),
+  // which reads as if every value in [-RATIO_MAX_NEG, RATIO_MAX_POS] were equally "populated" —
+  // it isn't: countries cluster tightly in some spots and leave real gaps in others (e.g. nothing
+  // between Germany and Netherlands even though the gradient there looks the same as anywhere
+  // else). This doesn't touch the gradient/color mapping at all, just overlays where the real
+  // data actually sits on top of it, same set of countries and same METRIC the map's own choropleth
+  // colors by. The two outliers are excluded — they already get their own dedicated dot markers
+  // (updateOutlier below) well outside this bar's own domain.
+  const updateRug = () => {
+    if (!els.bar) return;
+    const byId = getById();
+    const marks = Object.keys(byId)
+      .map(Number)
+      .filter(id => !OUTLIER_IDS_NEG.has(id) && !OUTLIER_IDS_POS.has(id))
+      .map(id => METRIC(byId[id]))
+      .filter(v => v >= -RATIO_MAX_NEG && v <= RATIO_MAX_POS);
+    render(html`${marks.map(v => html`<span class="legend-rug-tick" style="left:${(_divergingPos(v) * 100).toFixed(2)}%"></span>`)}`, els.bar);
+  };
+
   const updateTicks = () => {
     if (!els.ticks) return;
     const ticks = [-RATIO_MAX_NEG, -RATIO_MAX_NEG / 2, 0, RATIO_MAX_POS / 2, RATIO_MAX_POS].map(Math.round);
@@ -726,7 +746,7 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     });
   }
 
-  const refresh = () => { buildGradient(); updateTicks(); updateOutlier(); updateBorn(); renderRange(); };
+  const refresh = () => { buildGradient(); updateRug(); updateTicks(); updateOutlier(); updateBorn(); renderRange(); };
 
   onPaletteChange(refresh);
   refresh();
