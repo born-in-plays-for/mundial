@@ -1377,10 +1377,15 @@ const _updateSelectionPanel = (onCollapsed) => {
         pop && html`<span>${fmtPop(pop)}</span>`,
       ].filter(Boolean);
       if (i === 0 && ids.length > 1) items.reverse(); // mirrored left pill — fixtures (2 countries) only, not a single-team selection
-      return html`<div class="nav-item"><div class="selection-panel-row py-1 sub px-2 nav-link active" style="background-color: white !important;">
+      // Clicking the pill itself (not the close ✕, which stops propagation so it only closes the
+      // selection instead of also jumping tabs) opens #tab-players — the pill IS the current
+      // selection, and #tab-players is the one place that selection's actual roster shows.
+      // No-ops if already there, same "don't fight the tab the user's already looking at"
+      // convention every other selection-triggered tab jump in this file follows.
+      return html`<div class="nav-item" @click=${() => { if (!_playersTabActive) _switchTab('tab-players'); }}><div class="selection-panel-row py-1 sub px-2 nav-link active" style="background-color: white !important; cursor: pointer;">
         ${join(items, () => html`<span class="sp-sep">·</span>`)}
         <span class="btn-close" style="cursor:pointer; font-size: 8pt; margin-left: 0.5rem;" aria-label="Close"
-              @click=${() => (_activeFixture ? clearFixtureSelection() : clearDim())}></span>
+              @click=${e => { e.stopPropagation(); _activeFixture ? clearFixtureSelection() : clearDim(); }}></span>
       </div></div>`;
     };
     return html`${ids.map(navItem)}`;
