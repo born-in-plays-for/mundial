@@ -32,8 +32,11 @@ import { T, countryName } from './i18n.js';
 // on each side (after `OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG` — bump either
 // whenever that 2nd place grows past the current ceiling, or a country
 // silently clamps to the darkest color instead of reflecting its real
-// position). `OUTLIER_IDS_POS`/`_NEG` is whichever country tops that side
-// (France/Curaçao today). A few satellite colors below need to stay visually
+// position). `OUTLIER_IDS_POS`/`_NEG` is whichever country tops that side,
+// carved out as its own standalone dot — only when its gap from 2nd place is
+// large enough to justify it (France today; `OUTLIER_IDS_NEG` is currently
+// empty — see its own comment on Curaçao, no longer big enough a gap from DR
+// Congo to warrant one). A few satellite colors below need to stay visually
 // coordinated with the ramp (the loading-placeholder sphere/graticule drawn
 // before world data arrives, and the no-data fill) — the ocean itself (real
 // water, drawn once world data loads) deliberately stays out of it, since it
@@ -102,9 +105,17 @@ export const divergingOutlierColor = side => side === 'pos' ? _divergingParams.o
 // and imports-only palettes, plus runtime theme-switching) was retired as unused scaffolding.
 export const METRIC = rec => (rec.count ?? 0) - (rec.importCount ?? 0);
 export const RATIO_MAX_POS = 42; // 2nd after France (78) — Netherlands
-export const RATIO_MAX_NEG = 21; // 2nd after Curaçao (-26) — DR Congo
+// Curaçao's own value (-26), not a "2nd place excluding the outlier" figure — unlike France
+// (78 vs 42, a 36-point gap from 2nd place), Curaçao's own gap from DR Congo's 21 was only 5,
+// not enough to justify carving it out as its own standalone dot the way France's real outlier
+// status does. Folded into the ordinary gradient/rug-plot instead — see OUTLIER_IDS_NEG below.
+export const RATIO_MAX_NEG = 26;
 export const OUTLIER_IDS_POS = new Set([250]); // France — biggest net exporter
-export const OUTLIER_IDS_NEG = new Set([531]); // Curaçao — biggest net importer
+// Empty, not Curaçao — see RATIO_MAX_NEG's own comment above. The mechanism itself stays generic
+// (choroFill/updateOutlier/_xToValue all still branch on OUTLIER_IDS_NEG.size, not hardcoded to
+// "there is always a negative outlier"), so a future negative outlier can be designated here
+// again the same way France already is, without touching any of that logic.
+export const OUTLIER_IDS_NEG = new Set();
 export const NO_DATA_COLOR = '#e8e4e0';
 // Neutral, not tinted toward either arm — shown only briefly before world data loads, so it has
 // no diverging meaning of its own to represent.
@@ -128,13 +139,13 @@ _buildPalettes();
 // _ease() above). Magnitude only (0..1) — color() below picks which side's palette to use.
 export const normalize = v => {
   // Shared max across both sides, not each side's own RATIO_MAX_POS/NEG — the two ceilings
-  // are wildly different (42 vs 21), and normalizing each side against its own ceiling made a
-  // country sitting at its side's own 2nd place reach full color saturation regardless of how
-  // that magnitude compared to the other side: DR Congo at -21 (maxed out on RATIO_MAX_NEG)
-  // read as visually "as extreme" as Netherlands at +42 (maxed out on RATIO_MAX_POS), even
-  // though 42 is double 21 in real terms. A shared max means equal color intensity = equal real
-  // magnitude on either side. RATIO_MAX_POS/NEG themselves are unchanged and still drive the
-  // legend's own tick *labels* and gradient domain (wc2026_map.js) — only the color mapping
+  // are wildly different (42 vs 26), and normalizing each side against its own ceiling made a
+  // country sitting at its side's own ceiling reach full color saturation regardless of how
+  // that magnitude compared to the other side: Curaçao at -26 (maxed out on RATIO_MAX_NEG)
+  // would read as visually "as extreme" as Netherlands at +42 (maxed out on RATIO_MAX_POS), even
+  // though 42 is well past 26 in real terms. A shared max means equal color intensity = equal
+  // real magnitude on either side. RATIO_MAX_POS/NEG themselves are unchanged and still drive
+  // the legend's own tick *labels* and gradient domain (wc2026_map.js) — only the color mapping
   // uses the shared value.
   if (v === 0) return 0; // the only value that renders as pure `neutral` — see floorLeft/Right above
   const neg = v < 0;
@@ -458,6 +469,7 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     ticks:           document.getElementById('legend-ticks'),
     outlierCount:    document.getElementById('legend-outlier-count'),
     outlierDot:      document.getElementById('legend-outlier-dot'),
+    outlierNegWrap:  document.getElementById('legend-outlier-neg-wrap'),
     outlierPosWrap:  document.getElementById('legend-outlier-pos-wrap'),
     outlierDotPos:   document.getElementById('legend-outlier-dot-pos'),
     outlierCountPos: document.getElementById('legend-outlier-count-pos'),
@@ -549,6 +561,20 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     const byId = getById();
     const [negId] = OUTLIER_IDS_NEG, [posId] = OUTLIER_IDS_POS;
     const negRec = byId[negId], posRec = byId[posId];
+    // Whole column hidden, not just left blank, whenever there's no negative outlier to show
+    // (OUTLIER_IDS_NEG currently empty — see its own comment) — a colored-but-blank dot read as
+    // an orphaned UI element, not a clean "nothing here". setProperty(...,'important'), not a
+    // plain style.display assignment — #legend-outlier-neg-wrap carries Bootstrap's own d-flex
+    // class (display:flex !important), which would otherwise win over a non-important inline
+    // style and leave the "hidden" column visually unchanged. (An earlier version of this used
+    // visibility:hidden instead, to keep the grip's own resting margin unchanged — reverted: the
+    // negative column's own content (blank text) and the positive column's own (a real "78")
+    // aren't the same natural width, so reserving-but-hiding it didn't actually produce a
+    // symmetric gap either. #legend-filter-device's own asymmetric inset below is the real fix.)
+    if (els.outlierNegWrap) {
+      if (OUTLIER_IDS_NEG.size) els.outlierNegWrap.style.removeProperty('display');
+      else els.outlierNegWrap.style.setProperty('display', 'none', 'important');
+    }
     els.outlierCount.textContent = negRec ? METRIC(negRec) : '';
     if (els.outlierDot) els.outlierDot.style.background = divergingOutlierColor('neg');
     if (els.outlierCountPos) els.outlierCountPos.textContent = posRec ? METRIC(posRec) : '';
@@ -569,8 +595,9 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   };
 
   // ── Range filter — drag either grip to select a sub-range of the legend's own value domain
-  // (Curaçao's real value through France's, the same two countries the outlier dots already
-  // single out), filtering the country list/map down to that range. Opt-in: only built when
+  // (Curaçao's real value through France's — the true domain extremes, not necessarily the two
+  // countries the outlier dot(s) single out; see RATIO_MAX_NEG's own comment on why Curaçao no
+  // longer gets one), filtering the country list/map down to that range. Opt-in: only built when
   // both the DOM host (#legend-filter-device) and a callback to report the selected range
   // exist — see the header comment above. #legend-filter-device is a 5-child flex row —
   // #left-excluded/#left-grip/#center-included/#right-grip/#right-excluded — covering #legend

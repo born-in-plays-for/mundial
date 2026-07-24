@@ -3,7 +3,53 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 #map-container { position: fixed !important; top: var(--page-header-h, var(--csb-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: var(--vert-gutter) !important; padding-right: var(--vert-gutter) !important; display: flex; justify-content: center; align-items: flex-start; background: var(--fixed-element-bg); transition: top 0.4s ease; }
 @media (max-width: 500px) {
   #map-container { padding: 0 !important; margin: 0 !important;}
-  #legend {display:none !important;}
+  /* #legend-parent (wc2026_map.html) stays the same single flex container — no JS change — just
+     reflowed onto 2 lines here. flex-wrap:wrap is what allows a 2nd line to exist at all (the
+     base rule is a single nowrap row); #legend at width:100% is what forces it onto a line by
+     itself (nothing else can share a line with a 100%-wide item, before or after). order:-1
+     pulls #legend's line ahead of the rest despite it being LAST in DOM order (it has to stay
+     last there — z-index/stacking and #legend-filter-device's own
+     position:absolute-against-#legend-relative wiring, js/map-container.js's wireLegend(), don't
+     care about DOM order, but nothing here needed changing that just to also flip the visual
+     order). #legend-row2 — the wrapper bundling #legend-grip/#map-controls/#legend-born/the
+     hidden #zoom-level (wc2026_map.html) — is #legend-parent's only other real child now, so it
+     falls onto line 2 alone, at the default order:0.
+     justify-content:flex-start (overriding the base rule's space-between, which would otherwise
+     stretch a 2-item — #legend-row2 + #legend — line to opposite edges; harmless once they're on
+     separate lines, but kept for a lone leftover item on either line to stay put rather than
+     center/space itself) is a defensive leftover from before #legend-row2 existed, when this
+     line could hold several loose items; harmless to keep. gap likewise now has nothing to act
+     on (#legend-row2 is the only item on its own line) but costs nothing left in place.
+     Both !important overrides here are load-bearing, not defensive: #legend-parent's own
+     space-between comes from its justify-content-between HTML class, a Bootstrap utility (always
+     !important) — a plain declaration here would lose to it regardless of source order. #legend's
+     own width:40% (below, unconditional) sits *later* in this file than this media query block,
+     so at equal specificity a plain width here would also lose on source order alone. */
+  #legend-parent { flex-wrap: wrap; justify-content: flex-start !important; gap: .5rem; }
+  #legend { width: 100% !important; order: -1; }
+  /* #legend-grip needs no mobile override anymore — it's absolutely positioned against
+     #legend-row2 now (wc2026_map.html), not #legend-parent directly, so it centers correctly on
+     whichever box actually contains it: the same wrapper on both breakpoints, which becomes a
+     proper full-width row of its own here once #legend (order:-1, full width) wraps above it. */
+  /* #legend-filter-device's own left inset (below) extends the range-filter's resting/drag
+     device past #legend's own left border — safe on desktop, where #map-container's own
+     padding-left (var(--vert-gutter)) gives it room, but #map-container is padding:0 above at
+     this breakpoint, and #legend itself (now 100% wide, no margin-left of its own) sits flush
+     against the viewport's own left edge here. Any leftward extension at all pushes #left-grip
+     off-screen — not hidden, just rendered past x=0 — so 0 is the floor.
+     But 0 alone isn't enough: #left-grip is 1rem wide (below) and sits flush against this
+     device's own left edge, so with 0 extension it now overlaps #legend's own content by
+     1rem − padding-left. #legend's base padding-left is only .5rem, so the leftmost .5rem of
+     #legend-bar-col — the leading digit of the leftmost tick label — was rendering *behind* the
+     grip. Bumping padding-left to 1rem (matching the grip's own width exactly) closes that gap
+     to zero: #left-grip now sits flush against #legend's left edge with nothing behind it, and
+     #legend-bar-col starts exactly where the grip ends.
+     The right side needs no matching override: #legend's own margin-right already reserves
+     exactly the room #legend-filter-device's own right inset needs, so #right-grip stays fully
+     on-screen without help here. !important on both: their base declarations (below) sit later
+     in the file, so a plain override here loses on source order alone at equal specificity. */
+  #legend-filter-device { inset: 0 -.75rem 0 0 !important; }
+  #legend { padding-left: 1rem !important; }
 }
 
 /* Ctrl-M / #map-toggle-bar (js/wc2026_map.js) — a real Bootstrap Collapse
@@ -103,7 +149,18 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 /* cursor:default overrides #legend-parent's own row-resize (inherited otherwise) — #legend no
    longer participates in that drag (js/wc2026_map.js's pointerdown handler now excludes it
    entirely, see that file's own comment), so the resize cursor over it would be misleading. */
-#legend { font-size: 11px; color: var(--text-muted); position: relative; cursor: default; }
+/* width: 1/3 of #legend-parent (2/3 of its own half — #legend-parent's other flex children sit
+   to its left, this is the last one) — #legend-parent's own justify-content-between (wc2026_map.
+   html) already keeps the last flex child flush against the right edge regardless of its width,
+   so no extra alignment rule is needed here, just the width itself. Percentage resolves cleanly
+   against #legend-parent's own definite width (w-100) since #legend is a direct flex item of it. */
+/* padding/margin-right used to live as an inline style (wc2026_map.html) with !important — moved
+   here so the @media (max-width:500px) block above can actually override padding-left. Inline
+   !important beats *any* external stylesheet rule regardless of specificity or !important, so as
+   long as it stayed inline, no media query could ever touch it — which is exactly why the left
+   grip kept re-clipping the leftmost tick label there: #legend-filter-device's own left inset
+   could be tuned all day, but the .5rem of padding it's measured against was unreachable. */
+#legend { font-size: 11px; color: var(--text-muted); position: relative; cursor: default; width: 40%; padding: .5rem .75rem 0 .5rem; margin-right: .75rem; }
 #legend-countries { font-size: 11px; color: #bbb; }
 #legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }
 /* Describes what the map's shading means (js/wc2026_map.js's _updateLegendBorn() —
@@ -139,11 +196,18 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    alignment by that difference/2, which is exactly the "tiny pixelesque" dot-vs-bar
    misalignment this replaced — same class of bug #legend-born's own align-self:flex-start
    fixed above, just scoped to the parent since all 3 columns need the same fix here. */
+/* Grows to fill whatever's left of #legend's own (now 33.3333%-of-#legend-parent — see #legend's
+   own rule above) width once the outlier column(s) beside it take their share — #legend-bar/
+   #legend-ticks below both fill this at width:100%, rather than either sizing itself directly
+   against #legend or #legend-parent. min-width:0 overrides the flex default (min-width:auto,
+   refuses to shrink below content), needed since #legend-ticks' own tick labels have a real
+   intrinsic text width that would otherwise stop this column shrinking on a narrow viewport. */
+#legend-bar-col { flex: 1 1 auto; min-width: 0; }
 /* position:relative — js/map-container.js's updateRug() absolutely positions one tick per real
    country by percent (matching buildGradient()'s own gradient stop positions) directly on top
    of the gradient, so a viewer can see where the data actually clusters vs. where the smooth
    gradient is just interpolating through a real gap between two countries' own values. */
-#legend-bar { height: 10px; flex: 1; max-width: 280px; position: relative; }
+#legend-bar { height: 10px; width: 100%; position: relative; }
 /* background is set inline per-tick (js/map-container.js's updateRug()/_tickColor()) — a
    darkened, semi-transparent shade of the gradient's own color at that exact spot, not a fixed
    tint here, so a tick reads as "this point on the gradient, marked" rather than a generic mark
@@ -155,17 +219,32 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    positions each <span> by percent (matching #legend-bar's own gradient stop positions), so
    this container needs to establish both the positioning context and its own height (nothing
    in normal flow left to size it once children are taken out of flow). */
-#legend-ticks { position: relative; width: 280px; height: 12px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
+#legend-ticks { position: relative; width: 100%; height: 12px; font-size: 9px; color: var(--text-muted); margin-top: 3px; }
 /* Range filter device (js/map-container.js's wireLegend()) — covers the whole #legend
-   (positioned absolutely against #legend's own position:relative above), extended left/right
-   by exactly one grip's own width (.5rem) so a grip parked at a domain extreme (no filtering
-   on that side) rests entirely in that margin, beside #legend's own content, instead of
-   overlapping the outlier dot it sits next to. A flex row of 5 same-height children, left to
-   right: the excluded/dimmed span before the selection, the left grip, the fully-transparent
-   included span, the right grip, the excluded/dimmed span after — #left-excluded/#right-excluded
-   grow and shrink (their JS-set width is how a drag actually filters anything) while
-   #center-included just soaks up whatever width is left (flex:1), no width math needed for it. */
-#legend-filter-device { position: absolute; inset: 0 -.5rem; display: flex; }
+   (positioned absolutely against #legend's own position:relative above), extended left/right so
+   a grip parked at a domain extreme (no filtering on that side) rests beside #legend's own
+   content instead of overlapping it. A flex row of 5 same-height children, left to right: the
+   excluded/dimmed span before the selection, the left grip, the fully-transparent included span,
+   the right grip, the excluded/dimmed span after — #left-excluded/#right-excluded grow and
+   shrink (their JS-set width is how a drag actually filters anything) while #center-included
+   just soaks up whatever width is left (flex:1), no width math needed for it.
+   The two inset extensions (4-value form: top right bottom left) are solved exactly, not
+   eyeballed, from two requirements: each grip is 1rem wide (#left-grip/#right-grip below) and
+   sits flush against this device's own edge (since #left-excluded/#right-excluded are 0-width at
+   rest); and the target gap between a grip's inner edge and the thing it's supposed to clear —
+   the gradient bar on the left, France's own outlier dot on the right — is exactly .5rem.
+   Left: #legend-outlier-neg-wrap is display:none (OUTLIER_IDS_NEG is empty — see its own
+   comment), so #legend-bar-col sits flush against #legend's own left padding (.5rem, inline
+   style, wc2026_map.html). gap = padding-left + inset − gripWidth = .5rem + inset − 1rem = .5rem
+   target → inset = 1rem.
+   Right: #legend-outlier-pos-wrap sits flush against #legend's own right padding (.75rem). gap =
+   inset − gripWidth + padding-right = inset − 1rem + .75rem = .5rem target → inset = .75rem.
+   Both values depend on #legend's own left/right padding staying .5rem/.75rem respectively —
+   re-derive if either changes. #legend's own inline margin-right (wc2026_map.html) is set to
+   .75rem to match the right inset exactly, so the right grip's own far edge lands precisely at
+   #legend-parent's own clipped boundary (overflow-x:hidden) instead of past it — any smaller
+   margin here clips the grip. */
+#legend-filter-device { position: absolute; inset: 0 -.75rem 0 -1rem; display: flex; }
 #legend-filter-device > span { height: 100%; flex-shrink: 0; }
 #left-excluded, #right-excluded{ width: 0; background: rgba(250,249,246,.8); }
 #center-included { flex: 1 1 auto; background: transparent; }
@@ -185,8 +264,15 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #left-grip img, #right-grip img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; pointer-events: none; }
 #left-grip:hover img, #right-grip:hover img, #left-grip:active img, #right-grip:active img { opacity: 0.7; }
 @media (max-width: 767.98px) {
-  #legend-bar { max-width: 90px; }
-  #legend-ticks { width: 90px; font-size: 8px; }
+  /* No more fixed max-width/width override here for #legend-bar/#legend-ticks — both are
+     width:100% of #legend-bar-col now (a flex-grow column inside #legend's own explicit
+     percentage width, above), so they already shrink to fit whatever room is actually available
+     on a narrow viewport. A leftover fixed 90px cap here fought that: #legend's own share of
+     #legend-parent can easily still be well over 90px even under this breakpoint, so the bar
+     rendered artificially short with dead space after it instead of actually filling its column
+     (the "still not taking the full available width" bug this replaced). font-size shrinks the
+     tick labels only — a real narrow-screen readability tweak, unrelated to the width bug. */
+  #legend-ticks { font-size: 8px; }
   /* wc2026_map.html's pt-1 is a Bootstrap spacing utility (!important) — needs
      matching !important to actually override it here. Without this, the gap
      above #legend-born reads as if it weren't top-aligned at all. */

@@ -272,17 +272,25 @@ imports-only, and net-balance as three separate swappable palettes — retired a
 scaffolding once net balance (the `violet` theme) turned out to be the only one anyone actually
 switched to.
 
-- **`RATIO_MAX_POS`/`RATIO_MAX_NEG`** — the metric's own 2nd-highest value on each side (after
-  `OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG`), i.e. the domain max `normalize()` scales against. Bump
-  either whenever that 2nd place grows past the current ceiling, or a country silently clamps to
-  the darkest color instead of reflecting its real position. The two ceilings are wildly
-  different (42 vs 21) and **not normalized against each other** for the color mapping —
-  `normalize()` uses `Math.max(RATIO_MAX_POS, RATIO_MAX_NEG)` as a shared max so equal color
-  intensity means equal real magnitude on either side, not "maxed out on that side's own,
-  much smaller, ceiling."
-- **`OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG`** — France (biggest net exporter) and Curaçao (biggest
-  net importer, whose entire squad is Dutch-born), rendered as standalone dots off the gradient
-  rather than colored by it.
+- **`RATIO_MAX_POS`/`RATIO_MAX_NEG`** — the domain max `normalize()`/the legend's own gradient
+  scale against on each side. Normally the metric's own 2nd-highest value on that side (after
+  `OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG` — bump either whenever that 2nd place grows past the
+  current ceiling, or a country silently clamps to the darkest color instead of reflecting its
+  real position), **except** `RATIO_MAX_NEG`, which is currently Curaçao's own value (26) — see
+  `OUTLIER_IDS_NEG` just below for why. The two ceilings are wildly different (42 vs 26) and
+  **not normalized against each other** for the color mapping — `normalize()` uses
+  `Math.max(RATIO_MAX_POS, RATIO_MAX_NEG)` as a shared max so equal color intensity means equal
+  real magnitude on either side, not "maxed out on that side's own, much smaller, ceiling."
+- **`OUTLIER_IDS_POS`/`OUTLIER_IDS_NEG`** — a country carved out as its own standalone dot off
+  the gradient (rather than colored by it), reserved for a gap from 2nd place large enough to
+  justify one. Only France (biggest net exporter, 78 vs 2nd-place Netherlands' 42 — a 36-point
+  gap) currently qualifies; `OUTLIER_IDS_NEG` is empty — Curaçao (biggest net importer, whose
+  entire squad is Dutch-born, at -26) was the previous negative outlier, but its own gap from
+  2nd-place DR Congo's -21 was only 5, not enough to earn separate treatment the way France's
+  does, so it was folded back into the ordinary gradient/rug-plot instead. The mechanism itself
+  stays generic (`choroFill`/`updateOutlier`/`_xToValue` all branch on `OUTLIER_IDS_NEG.size`,
+  nothing hardcodes "there is always a negative outlier"), so a future negative outlier can be
+  designated the same way France already is, without touching any of that logic.
 - **Colors/easing** live in `_divergingParams` (`getDivergingParams()`/`setDivergingParams()`),
   not baked-in constants — live-tunable via the `#diverging-debug` panel (`wc2026_map.html`,
   hidden by default: `display:none` on the `<details>`, a dev-only tool) — `neutral` (v=0),
@@ -302,11 +310,17 @@ knowing about D3 selections.
 ### Legend
 The legend (`#legend`) lives as the third child of `#page-heading-sub`, bottom-aligned via `mt-auto` on a `d-flex flex-column h-100` wrapper.
 - **Gradient direction**: `linear-gradient(to right, …)` — negative (red, importers) on the left, 0 in the middle, positive (blue, exporters) on the right, positioned proportionally across the combined `-RATIO_MAX_NEG..RATIO_MAX_POS` domain (not split into two equal-width halves — the two ceilings differ, so equal pixel width per side would put 0 at the visual midpoint while running at different units-per-pixel on each side). Ticks (`#legend-ticks`, lit-html-rendered by `updateTicks()` in `map-container.js`'s `wireLegend()`) read `-RATIO_MAX_NEG, -RATIO_MAX_NEG/2, 0, RATIO_MAX_POS/2, RATIO_MAX_POS`.
-- **Outliers**: Curaçao (left, off-scale negative) and France (right, off-scale positive) each render as a standalone dot instead of on the gradient — `#legend-outlier-count`/`#legend-outlier-count-pos` (`updateOutlier()`) show each country's own `METRIC()` value.
-- On narrow screens (`max-width: 767.98px`), the bar and ticks shrink to 90px.
+- **Outliers**: France (right, off-scale positive) renders as a standalone dot instead of on the gradient — `#legend-outlier-count-pos` (`updateOutlier()`) shows its own `METRIC()` value. The negative side's equivalent (`#legend-outlier-neg-wrap`, `#legend-outlier-dot`/`#legend-outlier-count`) is hidden whenever `OUTLIER_IDS_NEG` is empty (currently always — see that constant's own comment on Curaçao).
+- **Rug plot**: one thin tick per real country, overlaid directly on the gradient bar at its own `METRIC()` position (`updateRug()`/`_tickColor()`) — the gradient alone reads as if every value were equally "populated," when countries actually cluster tightly in some spots and leave real gaps in others. Each tick is the gradient's own color at that spot, blended toward that side's extreme (red/blue) by an amount that scales with distance from center (reusing `normalize(v)`, with a nonzero floor so a tick sitting right on the gradient's own near-neutral center point doesn't blend into invisibility).
+- **`#legend`'s own width** is `40%` of `#legend-parent`, always right-aligned via `#legend-parent`'s own `justify-content-between` (the last flex child sits flush against the end edge regardless of its own width) — `#legend-bar-col` (wrapping `#legend-bar`/`#legend-ticks`) fills whatever's left of that after the outlier column(s), both at `width:100%` of it.
+- **Range filter** (`#legend-filter-device`, `wireLegend()`) — drag either grip to filter the country list/map down to a sub-range of the legend's own value domain. The two grips' resting-position insets are solved exactly (not eyeballed) from two requirements: each grip is `1rem` wide and sits flush against the device's own edge, and the target gap to whatever it's supposed to clear (the gradient bar on the left, France's own outlier dot on the right) is exactly `.5rem` — see `#legend-filter-device`'s own CSS comment for the derivation. `#legend`'s own left/right padding and right margin are load-bearing inputs to that math, so they live in a real CSS rule now, not an inline style — an inline `!important` style can't be overridden by any external stylesheet rule regardless of specificity, which silently defeated an earlier attempt at a mobile-specific override.
+- On narrow screens (`max-width: 767.98px`), only the tick label font-size shrinks (`8px`) — the bar/ticks themselves are fluid (`width:100%` of `#legend-bar-col`), not fixed-px, so they already size themselves to whatever room is actually available.
 
 ### Mobile layout (`@media (max-width: 767.98px)`)
-Legend bar/ticks shrink to 90px. The fixed header and map are always present on all screen sizes.
+The fixed header and map are always present on all screen sizes.
+
+### Legend/map-controls 2-row mobile layout (`@media (max-width: 500px)`)
+`#legend-parent`'s children are wrapped into 2 rows via `flex-wrap` + `order`, no DOM reordering: `#legend` (full width, `order:-1`) forms row 1; `#legend-row2` — a wrapper bundling `#legend-grip`/`#map-controls`/`#legend-born`/`#zoom-level`, added specifically so `#legend-grip`'s own `position:absolute` centering (see below) has a stable box to resolve against — forms row 2 at the default `order:0`. `#legend-grip`'s decorative centering (`left/top:50%; transform:translate(-50%,-50%)`) is positioned against `#legend-row2`, not `#legend-parent` directly, on both breakpoints (desktop: the wrapper is `flex:1`, i.e. everything left of `#legend`'s own fixed width, visually equivalent to before this wrapper existed; mobile: the wrapper *is* row 2, so the grip centers — and vertically positions — correctly on that row alone instead of across the whole, now taller, 2-row box). Same markup mirrored on `chains/wc2026_chain_longest.html`, which shares this stylesheet.
 
 ### Mobile portrait sticky layout (`@media (max-width: 767.98px) and (orientation: portrait)`)
 On portrait mobile only (landscape and desktop are unaffected):

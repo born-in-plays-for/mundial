@@ -68,28 +68,41 @@
   <span id="zoom-hint">scroll to zoom · drag to pan</span>
   </div>
   <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
-    <img id="legend-grip" src="images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
-    <div id="map-controls" class="d-flex align-items-center gap-1">
-      <button id="zoom-reset" type="button" aria-label="Reset zoom">
-        <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-      </button>
-      <button id="zoom-span" type="button" aria-label="Span all visible countries">
-        <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-      </button>
+    <!-- #legend-grip's own position:absolute (css/map-container.css) centers it on its nearest
+         positioned ancestor — this wrapper, not #legend-parent directly — so that centering
+         stays correct both on desktop (wrapper = flex:1, everything left of #legend's own fixed
+         width) and on mobile (wrapper becomes its own full-width row once #legend, order:-1,
+         wraps onto a line by itself — see the @media (max-width:500px) block). Without this
+         wrapper, #legend-grip had no stable box to center on once #legend-parent itself could
+         span 2 lines: centering on the whole (now taller) #legend-parent put it vertically
+         between the two lines instead of on either one. -->
+    <div id="legend-row2" class="d-flex align-items-center justify-content-between flex-fill position-relative">
+      <img id="legend-grip" src="images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
+      <div id="map-controls" class="d-flex align-items-center gap-1">
+        <button id="zoom-reset" type="button" aria-label="Reset zoom">
+          <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+        </button>
+        <button id="zoom-span" type="button" aria-label="Span all visible countries">
+          <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+        </button>
+      </div>
+      <div id="legend-born" class="sub">
+        <span id="legend-born-full" class="d-none d-md-inline"></span>
+        <span id="legend-born-brief" class="d-md-none"></span>
+      </div>
+      <span id="zoom-level" hidden></span>
     </div>
-    <div id="legend-born" class="sub">
-      <span id="legend-born-full" class="d-none d-md-inline"></span>
-      <span id="legend-born-brief" class="d-md-none"></span>
-    </div>
-    <span id="zoom-level" hidden></span>
-    <div id="legend" class="d-flex align-items-start" style="padding: .5rem .75rem 0 .5rem !important; margin-right: .5rem !important;">
-      <div class="d-flex flex-column pe-2">
+    <div id="legend" class="d-flex align-items-start">
+      <!-- Hidden via map-container.js's wireLegend()/updateOutlier() whenever OUTLIER_IDS_NEG is
+           empty (no country carved out as its own standalone dot on the negative side — see that
+           Set's own comment on why Curaçao no longer gets one). -->
+      <div id="legend-outlier-neg-wrap" class="d-flex flex-column pe-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
           <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
         </div>
         <div id="legend-outlier-count" class="text-center"></div>
       </div>
-      <div>
+      <div id="legend-bar-col">
         <div id="legend-bar" class="overflow-hidden rounded-2"></div>
         <div id="legend-ticks"></div>
       </div>
