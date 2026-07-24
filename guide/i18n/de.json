@@ -244,7 +244,7 @@
     "?stage=winner      Nur der Sieger",
     "```",
     "",
-    "Spiegelt das Phasen-Karussell im Filterpanel wider (Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger).",
+    "Spiegelt das Phasen-Karussell im Filterpanel wider (Gesamter Wettbewerb → Gruppenphase → Sechzehntelfinale → Achtelfinale → Viertelfinale → Halbfinale → Finale → Sieger) — außer **Gesamter Wettbewerb**, der ersten Position des Karussells, die keinen eigenen `?stage=`-Wert hat; das Teilen eines Links von dieser Position aus fällt auf `?stage=group` zurück, einen Karussell-Klick entfernt.",
     "",
     "**Filtert die Liste nur, während der Turnier-Tab aktiv ist.** Dort ist es das alleinige Kriterium: qualifizierte Länder werden auf die eingegrenzt, die diese Phase „erreicht\" haben — beim Einstieg noch im Rennen, oder sie bereits gewonnen —, und jedes nicht qualifizierte Land wird ausnahmslos ausgeblendet, unabhängig von `?show`/`?fifaconf`. Auf der Länderliste (dem Standard-Tab) bewegt `?stage` das Karussell weiterhin in Position für den nächsten Tab-Wechsel, hat dort aber keine Filterwirkung — dort filtert stattdessen `?show`. Siehe „Tab-Geltungsbereich\" unten.",
     "",

@@ -243,7 +243,7 @@
     "?stage=winner      Vainqueur uniquement",
     "```",
     "",
-    "Reflète le carrousel d'étapes du panneau de filtre (Phase de groupes → Seizièmes de finale → Huitièmes de finale → Quarts de finale → Demi-finales → Finale → Vainqueur).",
+    "Reflète le carrousel d'étapes du panneau de filtre (Toute la compétition → Phase de groupes → Seizièmes de finale → Huitièmes de finale → Quarts de finale → Demi-finales → Finale → Vainqueur) — sauf **Toute la compétition**, la première position du carrousel, qui n'a pas de valeur `?stage=` propre ; partager un lien depuis cette position retombe sur `?stage=group`, à un clic de carrousel de là.",
     "",
     "**Ne filtre la liste que lorsque l'onglet Tournoi est actif.** Là, c'est le seul filtre : les pays qualifiés sont réduits à ceux ayant « atteint » cette étape — encore en lice en l'abordant, ou l'ayant déjà remportée — et tout pays non qualifié est masqué d'office, quels que soient `?show`/`?fifaconf`. Sur la liste des pays (l'onglet par défaut), `?stage` déplace quand même le carrousel pour le préparer au prochain changement d'onglet, mais n'a aucun effet de filtrage là — c'est `?show` qui filtre sur cet onglet. Voir « Portée par onglet » ci-dessous.",
     "",

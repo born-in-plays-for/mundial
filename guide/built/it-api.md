@@ -57,7 +57,7 @@ Si applica solo alla chiave di ordinamento primaria. `?sort=alpha&dir=desc` rest
 ?stage=winner      Solo il vincitore
 ```
 
-Rispecchia il carosello delle fasi nel pannello del filtro (Fase a gironi → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore).
+Rispecchia il carosello delle fasi nel pannello del filtro (Tutta la competizione → Fase a gironi → Sedicesimi di finale → Ottavi di finale → Quarti di finale → Semifinali → Finale → Vincitore) — eccetto **Tutta la competizione**, la prima posizione del carosello, che non ha un proprio valore `?stage=`; condividere un link da quella posizione ripiega su `?stage=group`, a un clic di carosello di distanza.
 
 **Filtra l'elenco solo quando la scheda Torneo è attiva.** Lì è l'unico filtro: i paesi qualificati vengono ridotti a quelli che hanno "raggiunto" quella fase — ancora in corsa entrandovi, o già vincitori — e ogni paese non qualificato viene nascosto a prescindere, indipendentemente da `?show`/`?fifaconf`. Sull'elenco dei paesi (la scheda predefinita), `?stage` sposta comunque il carosello in posizione per il prossimo cambio di scheda, ma lì non ha alcun effetto di filtro — è `?show` a filtrare su quella scheda. Vedi "Ambito per scheda" più sotto.
 

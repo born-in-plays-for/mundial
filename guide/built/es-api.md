@@ -57,7 +57,7 @@ Se aplica solo a la clave de ordenación primaria. `?sort=alpha&dir=desc` da Z�
 ?stage=winner      Solo el campeón
 ```
 
-Refleja el carrusel de fases del panel de filtro (Fase de grupos → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón).
+Refleja el carrusel de fases del panel de filtro (Toda la competición → Fase de grupos → Dieciseisavos de final → Octavos de final → Cuartos de final → Semifinales → Final → Campeón) — excepto **Toda la competición**, la primera posición del carrusel, que no tiene un valor `?stage=` propio; compartir un enlace desde esa posición recae en `?stage=group`, a un clic de carrusel de distancia.
 
 **Solo filtra la lista mientras la pestaña Torneo está activa.** Allí es el único filtro: los países clasificados se reducen a los que "alcanzaron" esa fase — todavía en juego al entrar en ella, o habiéndola ya ganado — y cualquier país no clasificado queda oculto sin excepción, sin importar `?show`/`?fifaconf`. En la lista de países (la pestaña predeterminada), `?stage` sigue moviendo el carrusel a su posición para el próximo cambio de pestaña, pero no tiene efecto de filtrado allí — es `?show` lo que filtra en esa pestaña. Ver "Alcance por pestaña" más abajo.
 
