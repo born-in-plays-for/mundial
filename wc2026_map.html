@@ -2,6 +2,27 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<!-- #app-loading's own critical CSS, inlined here (not in an external stylesheet) and placed
+     before any <link rel="stylesheet"> — deliberately, so the overlay is correctly styled and
+     visible from the very first paint, never waiting on (or flashing unstyled before) an
+     external CSS fetch. Colors are hardcoded to match --fixed-element-bg (css/global.css) and
+     the purple already used for <meta name="theme-color"> above/below, rather than referencing
+     those as CSS custom properties — the whole point is this block has zero external
+     dependencies. See js/wc2026_map.js's _hideAppLoading() for how/when this goes away: once the
+     main data Promise.all().then() finishes (map rendered, legend built, sidebar populated) or,
+     defensively, on any rejection in that chain — a stuck spinner forever would be a strictly
+     worse failure mode than revealing a partially-broken page. -->
+<style>
+  #app-loading {
+    position: fixed; inset: 0; z-index: 999999;
+    display: flex; align-items: center; justify-content: center;
+    background: #faf9f6;
+    transition: opacity .35s ease;
+  }
+  #app-loading.app-loading-hide { opacity: 0; pointer-events: none; }
+  #app-loading svg { animation: app-loading-spin 1.1s linear infinite; }
+  @keyframes app-loading-spin { to { transform: rotate(360deg); } }
+</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thiebaud's Mundial</title>
 <link rel="icon" type="image/png" href="/realfavicongenerator/favicon-96x96.png?v=20260611" sizes="96x96" />
@@ -39,6 +60,15 @@
 <link rel="stylesheet" href="css/group_stage.css">
 </head>
 <body>
+<!-- Covers the whole viewport from first paint until js/wc2026_map.js's _hideAppLoading() runs
+     — replaces what used to be several independent things popping in at different times
+     (placeholder sphere → real map, empty legend → gradient, the filter sidebar's own
+     measure-then-collapse flash) with one deliberate loading→ready transition. -->
+<div id="app-loading" role="status" aria-label="Loading">
+  <svg viewBox="0 0 50 50" width="56" height="56" aria-hidden="true">
+    <circle cx="25" cy="25" r="20" fill="none" stroke="#7b2d8b" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 60"></circle>
+  </svg>
+</div>
 <script type="module" src="js/auth-bar.js"></script>
 <mundial-auth-bar id="auth-bar"></mundial-auth-bar>
 <header id="page-header" class="container-xxl px-0" style="margin-top:0">

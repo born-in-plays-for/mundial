@@ -2570,6 +2570,20 @@ topojson.feature(world, world.objects.countries).features
 
 };
 
+// #app-loading (wc2026_map.html) — covers the whole viewport from first paint until the initial
+// data-driven render below (map + legend + sidebar) actually finishes, replacing what used to be
+// several independent things popping in at different times with one deliberate loading→ready
+// transition. Also called from the Promise.all().then() chain's own .catch() further down — a
+// spinner stuck up forever on a real load failure is a strictly worse outcome than revealing
+// whatever partial page did make it up; console.error there is this function's only companion,
+// not a silent swallow.
+const _hideAppLoading = () => {
+  const el = document.getElementById('app-loading');
+  if (!el) return;
+  el.classList.add('app-loading-hide');
+  el.addEventListener('transitionend', () => el.remove(), { once: true });
+};
+
 Promise.all([
   fetch('data/v2/map.json').then(r => r.json()),
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
@@ -2792,7 +2806,11 @@ Promise.all([
     if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
     _syncPaddingTop();
     _syncMapHeight();
+    _hideAppLoading(); // last step on purpose — map, legend, sidebar, and layout are all settled by now
   });
+}).catch(err => {
+  console.error('[wc2026_map] initial data load failed', err);
+  _hideAppLoading();
 });
 
 // ── Legend ─────────────────────────────────────────────────────────────────────
