@@ -1479,6 +1479,24 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _legendRange = range;
     callbacks.renderElo?.();
     applyFlagFilter();
+    // Debug aid — the per-country half of the range-filter pipeline (see map-container.js's own
+    // _currentRange() for the geometry half: how grip pixel positions became this range in the
+    // first place). Dumps every country's own METRIC value against the new range so a confusing
+    // inclusion/exclusion can be checked against the real numbers instead of eyeballed off grip
+    // position on the legend — every id from app.byId (has a real METRIC) or QUALIFIED_NAMES
+    // (reads as METRIC 0 per inLegendRange's own convention if it has no app.byId entry).
+    if (range) {
+      const ids = new Set([...Object.keys(app.byId).map(Number), ...Object.keys(QUALIFIED_NAMES).map(Number)]);
+      const rows = [...ids].map(id => {
+        const rec = app.byId[id];
+        const v = rec ? METRIC(rec) : 0;
+        return { id, name: QUALIFIED_NAMES[id] ?? rec?.country ?? '?', METRIC: v, included: inLegendRange(id) };
+      }).sort((a, b) => a.METRIC - b.METRIC);
+      console.log(`[legend-filter] range = [${range[0]}, ${range[1]}]`);
+      console.table(rows);
+    } else {
+      console.log('[legend-filter] range = null (no filter)');
+    }
   };
 
   return {

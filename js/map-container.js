@@ -553,27 +553,30 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   // resolved at conversion time, in _xToValue()/_currentRange() below).
   let _leftPx = 0, _rightPx = 0;
   // A device-relative x (the same coordinate frame _leftPx/_rightPx live in) → a real METRIC
-  // value — NOT a single linear scale across #legend's whole width. #legend has 3 visually
-  // very different columns (see wc2026_map.html): the negative-outlier dot, the gradient bar
-  // (#legend-bar, linear across [-RATIO_MAX_NEG, RATIO_MAX_POS] — see buildGradient() above),
-  // and the positive-outlier dot — and the two dot columns are each a single fixed-width,
-  // *discrete* marker (one dot, not a gradient), not a proportional slice of the domain the
-  // way their pixel width might suggest. Treating the dot columns as if they were more of the
-  // same linear bar scale (an earlier version of this did, using #legend's raw width) let the
-  // boundary reach the true min/max value well before a grip visually reached the outlier dot
-  // that represents it, or vice versa — surprising results like a grip sitting right next to
-  // France's own dot still not excluding France. Anything at or past the bar's own edge reads
-  // as the true domain extreme (fully inclusive — matches the grip's own resting position,
-  // parked beyond the dot in the side margin) UNTIL the boundary actually reaches the dot's own
-  // center, at which point it flips to RATIO_MAX_NEG/POS — every *other* country's own real
-  // ceiling on that side, by definition (see RATIO_MAX_POS/NEG's own comment above) — which
-  // excludes exactly the outlier and nothing else. Without this second step, dragging a grip
-  // anywhere past the bar's edge (including right up against, or even past, the dot itself)
-  // always resolved to the true extreme = the outlier's own exact value, and since the filter
-  // is inclusive (v <= boundary), a boundary sitting exactly on a country's own value can never
-  // exclude that same country — the outlier was structurally unexcludable. RATIO_MAX_NEG/POS is
-  // exactly the bar's own frac=0/1 value too, so the flip at the dot's center is the only jump;
-  // crossing from the dot's center into the bar itself is a continuous handoff.
+  // value. The contract this must satisfy: a country is excluded iff its own boundary-facing
+  // grip border has moved past that country's own position — nothing softer than that. The
+  // cleanest way to guarantee that is to make _xToValue the exact mathematical inverse of each
+  // country's own "natural x position" (call it countryX(v)): every ordinary country's countryX
+  // is its proportional spot on #legend-bar (linear across [-RATIO_MAX_NEG, RATIO_MAX_POS] — see
+  // buildGradient() above); each outlier's countryX is its own dot's center (#legend has 3
+  // visually different columns — negative-outlier dot, gradient bar, positive-outlier dot — see
+  // wc2026_map.html — and a dot is a single discrete marker, not a proportional slice of the
+  // domain the way its pixel width might suggest). With _xToValue as that exact inverse,
+  // "v is within [_xToValue(leftBoundaryX), _xToValue(rightBoundaryX)]" and "countryX(v) is
+  // within [leftBoundaryX, rightBoundaryX]" are the same statement, which is exactly the
+  // three-part rule this whole device promises: everything left of the left grip's own right
+  // border excluded, everything right of the right grip's own left border excluded, everything
+  // between included.
+  // Two earlier versions failed this: treating the dot columns as more of the same linear bar
+  // scale (using #legend's raw width) made the boundary reach the true min/max value well before
+  // a grip visually reached the dot that represents it, or vice versa. The fix after that closed
+  // the gap but overcorrected into a hard jump AT the dot's center (flat at the true extreme
+  // right up to the center, then an instant snap to RATIO_MAX_NEG/POS) — continuous only from
+  // the center to the bar, not from the dot to the bar as a whole, so nothing dragged through the
+  // first half of the dot ever counted as "past" it. Ramping continuously across the *entire*
+  // span from each dot's own center to the bar's own edge — matching countryX exactly instead of
+  // discontinuously — is what finally satisfies the contract above with no dead zone at all: a
+  // country right at the boundary is included (inclusive comparison), a hair past it is excluded.
   const _xToValue = xFromDeviceLeft => {
     const [lo, hi] = _rangeDomain();
     const barRect = document.getElementById('legend-bar')?.getBoundingClientRect();
@@ -582,15 +585,19 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     const barLeft = barRect.left - deviceRect.left, barRight = barRect.right - deviceRect.left;
     if (xFromDeviceLeft <= barLeft) {
       const dotRect = document.getElementById('legend-outlier-dot')?.getBoundingClientRect();
-      if (!dotRect) return lo;
-      const dotCenter = (dotRect.left + dotRect.right) / 2 - deviceRect.left;
-      return xFromDeviceLeft >= dotCenter ? -RATIO_MAX_NEG : lo;
+      const dotCenter = dotRect ? (dotRect.left + dotRect.right) / 2 - deviceRect.left : barLeft;
+      if (xFromDeviceLeft <= dotCenter) return lo; // at or short of the outlier's own position — nothing to exclude yet
+      const span = barLeft - dotCenter;
+      const frac = span > 0 ? (xFromDeviceLeft - dotCenter) / span : 1;
+      return lo + frac * (-RATIO_MAX_NEG - lo);
     }
     if (xFromDeviceLeft >= barRight) {
       const dotRect = document.getElementById('legend-outlier-dot-pos')?.getBoundingClientRect();
-      if (!dotRect) return hi;
-      const dotCenter = (dotRect.left + dotRect.right) / 2 - deviceRect.left;
-      return xFromDeviceLeft >= dotCenter ? hi : RATIO_MAX_POS;
+      const dotCenter = dotRect ? (dotRect.left + dotRect.right) / 2 - deviceRect.left : barRight;
+      if (xFromDeviceLeft >= dotCenter) return hi; // at or past the outlier's own position — fully inclusive (resting state)
+      const span = dotCenter - barRight;
+      const frac = span > 0 ? (xFromDeviceLeft - barRight) / span : 0;
+      return RATIO_MAX_POS + frac * (hi - RATIO_MAX_POS);
     }
     const frac = (xFromDeviceLeft - barLeft) / barRect.width; // 0..1 across the bar itself
     return -RATIO_MAX_NEG + frac * (RATIO_MAX_NEG + RATIO_MAX_POS);
@@ -608,18 +615,38 @@ export const wireLegend = ({ getById, onRangeChange }) => {
     // it goes.
     const gripW = document.getElementById('left-grip')?.getBoundingClientRect().width ?? 0;
     const leftBoundaryX = _leftPx + gripW, rightBoundaryX = deviceRect.width - _rightPx - gripW;
+    // Debug aid — the geometry half of the range-filter pipeline (see control_sidebar.js's own
+    // setLegendRange() for the per-country half: what each resulting range value actually
+    // includes/excludes). Logs every input this function's own math runs on, so a confusing
+    // result can be traced back to a specific px→value step instead of guessed at from the
+    // legend's own rendered pixels. barLeft/barRight are re-read here (not reused from
+    // _xToValue, called below) purely for this log — harmless, this whole function only runs
+    // once per drag end / dblclick, never per frame.
+    const barRect = document.getElementById('legend-bar')?.getBoundingClientRect();
+    console.log('[legend-filter] _currentRange', {
+      leftPx: _leftPx, rightPx: _rightPx, gripW,
+      deviceWidth: deviceRect.width,
+      barLeft: barRect ? barRect.left - deviceRect.left : null,
+      barRight: barRect ? barRect.right - deviceRect.left : null,
+      leftBoundaryX, rightBoundaryX,
+      domain: _rangeDomain(),
+    });
     // The two grips have met (a fully squeezed, zero-width #center-included — the drag-clamp
     // in _onGripDown lets them touch but never cross) — every country should read as excluded.
-    // Can't just let this fall through to the interpolation below: whenever both boundaries
-    // land past the SAME end of the bar (in the flat outlier-dot-column zone, where
-    // _xToValue always returns that one exact lo/hi value rather than a range of values —
-    // see _xToValue's own comment), they'd resolve to the identical value on both sides,
-    // and since that value is a real country's own exact METRIC value (the outlier itself),
-    // it alone would satisfy v >= x && v <= x while every other country correctly doesn't —
-    // isolating the one country most in need of excluding instead of excluding everyone.
-    // [hi, lo] (deliberately inverted) can never be satisfied by any real v, unlike [x, x].
-    if (rightBoundaryX <= leftBoundaryX) { const [lo, hi] = _rangeDomain(); return [hi, lo]; }
-    return [_xToValue(leftBoundaryX), _xToValue(rightBoundaryX)];
+    // Can't just let this fall through to the interpolation below: leftBoundaryX and
+    // rightBoundaryX are then the exact same x, so _xToValue resolves them to the exact same
+    // value — and since the filter is inclusive (v >= x && v <= x), whichever real country
+    // happens to sit exactly at that one value would still pass, isolating the one country most
+    // in need of excluding instead of excluding everyone. [hi, lo] (deliberately inverted) can
+    // never be satisfied by any real v, unlike [x, x].
+    if (rightBoundaryX <= leftBoundaryX) {
+      const [lo, hi] = _rangeDomain();
+      console.log('[legend-filter] grips met — excluding everyone', [hi, lo]);
+      return [hi, lo];
+    }
+    const range = [_xToValue(leftBoundaryX), _xToValue(rightBoundaryX)];
+    console.log('[legend-filter] resolved range', range);
+    return range;
   };
   const _emitRange = () => {
     onRangeChange(_leftPx === 0 && _rightPx === 0 ? null : _currentRange());
