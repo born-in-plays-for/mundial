@@ -121,9 +121,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   border-bottom-right-radius: var(--bs-nav-tabs-border-radius);
 }
 /* #tab-connector — see its own HTML comment. position:relative here is what its absolute
-   left/width (set in JS, js/wc2026_map.js's _updateTabConnector) is measured against.
-   z-index:-1 (against this rule's own stacking context) keeps the dotted line behind the
-   buttons' own icons rather than drawn on top of them. */
+   left/width (set in JS, js/wc2026_map.js's _updateTabConnector) is measured against. */
 #bottomTabList { position: relative; }
 #tab-connector {
   position: absolute;
@@ -132,7 +130,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   border-top: 2px dotted var(--text-muted);
   transform: translateY(-50%);
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 #bottomTabContent {
     padding-left: var(--vert-gutter) !important;
