@@ -41,7 +41,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
 | `data/` | Git submodule → `mundial-data` repo. Contains only frontend-consumed data, nothing pipeline-internal: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5, `status.json` — tournament elimination status), `elo_rank.json`, `uk-nations.geojson`. (`r32_teams.json` was removed — superseded by `v2/live.json`'s `teams` key. `countries.json` moved out to `mundial-build/pipeline/countries.json` — a pipeline build input, never a frontend asset.) |
-| `wc2026_og_v7.jpg` | 4320×2430 Open Graph preview image for LinkedIn/social — France dim/arc mode + tooltip (1440×810 viewport, dpr=3). Regenerate with `tools/regenerate_og_image.py` — **never hand-roll this script inline**, see that section below. |
+| `wc2026_og_v8.jpg` | 1600×1081 Open Graph preview image for LinkedIn/social — Spain dim/arc mode + tooltip, group-stage sort by delta/pop, all player roles shown (1700px-wide capture, measured/trimmed height, dpr=3, downsampled from the raw capture — see `tools/regenerate_og_image.py`'s own docstring for why). Regenerate with `tools/regenerate_og_image.py` — **never hand-roll this script inline**, see that section below. |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
 | `insights/discipline.html` | Standalone fouls/cards table, one row per team, with the same stage carousel widget (`js/stage_carousel.js`) as `<elo-ranking>`. Reads `data/v2/discipline.json` (iso2-keyed). Restored from the "drop nice-to-have pages" cleanup — the only one of that batch whose feature (fouls/cards discipline stats) has no equivalent anywhere in `index.html`, unlike the others below. |
@@ -130,18 +130,19 @@ All frontend `fetch()` calls reference `data/` paths (e.g. `fetch('data/v2/map.j
 
 ### Regenerating the OG image
 
-Run **`tools/regenerate_og_image.py`** (requires `http://localhost:4040/` — the local dev server, see "Running locally" above). This is the single source of truth for the generation recipe — do not recreate the Playwright script inline from memory or from an old CLAUDE.md diff; past regenerations have silently regressed resolution/quality that way (see script docstring for the incident history: v5 shipped at dpr=1 and looked soft, fixed at dpr=2 in commit `fbab53d`; the same blurriness recurred on the Facebook Sharing Debugger at dpr=2 and was fixed again at dpr=3 for v7).
+Run **`tools/regenerate_og_image.py`** (requires `http://localhost:4040/` — the local dev server, see "Running locally" above). This is the single source of truth for the generation recipe — do not recreate the Playwright script inline from memory or from an old CLAUDE.md diff; past regenerations have silently regressed resolution/quality that way (see script docstring for the full incident history: v5 shipped at dpr=1 and looked soft, fixed at dpr=2 in commit `fbab53d`; the same blurriness recurred on the Facebook Sharing Debugger at dpr=2 and was fixed again at dpr=3 for v7; v8 switched composition to Spain and moved to a wider, measured-then-trimmed capture — see the script's own docstring for why margins/height are computed rather than fixed constants).
 
 ```bash
-python3 tools/regenerate_og_image.py v8   # bump the version each time
+python3 tools/regenerate_og_image.py v9   # bump the version each time
 ```
 
-Output: 4320×2430 JPEG (1440×810 viewport × device_scale_factor=3, quality=95). The script clicks the France flag to activate dim/arc mode and hovers the France path center to show the combined tooltip, matching the composition documented in the "Key architecture decisions" quote-of-the-day / dim-arc sections above.
+Output: ~1600×1081 JPEG, quality=95 (height is measured per run, not a fixed constant — see script docstring). Captured at 1700px-wide viewport × device_scale_factor=3, then downsampled with Pillow. The script dim-selects Spain and applies sort/filter state via URL query params (`?select=es&sort=delta,pop&...`), clicks `#zoom-span` to fit every visible flag, and hovers the Spain flag to show its own two-column export+import tooltip.
 
 After running it, by hand:
 1. Update `og:image` / `og:image:url` / `og:image:secure_url` / `og:image:width` / `og:image:height` in `index.html`
 2. `git rm` the previous `wc2026_og_v<N-1>.jpg`
-3. After deploy, re-scrape the previews:
+3. Update this file's own `wc2026_og_v<N>.jpg` row above (dimensions + composition description)
+4. After deploy, re-scrape the previews:
    - **LinkedIn**: https://www.linkedin.com/post-inspector/
    - **Facebook**: https://developers.facebook.com/tools/debug/
 
