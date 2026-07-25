@@ -2,21 +2,21 @@
 body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 
 /* legend outlier dots — Curaçao and France, either side of the diverging bar — see
-   #legend-outlier-pos-wrap in wc2026_map.html / _updateLegendOutlier(). */
+   #legend-outlier-pos-wrap in index.html / _updateLegendOutlier(). */
 .legend-outlier-wrap { height: 10px; }
 .legend-outlier-dot { width: 10px; height: 10px; border-radius: 50%; background: #000; }
 #legend-outlier-count, #legend-outlier-count-pos { font-size: 9px; color: var(--color-dim); margin-top: 3px; }
 
 /* Same --exp-accent/--imp-accent tokens the elo-ranking pills use (css/taxonomy.css's :root
-   block) — js/wc2026_map.js reads them back via getComputedStyle for the arcs themselves, so
+   block) — js/index.js reads them back via getComputedStyle for the arcs themselves, so
    this page's map arcs, tooltip counts, and player-table headers all agree on one color pair. */
 .color-exp { color: var(--exp-accent); }
 .color-imp { color: var(--imp-accent); }
 
-/* page header — #sidebar-host is position:absolute (see wc2026_map.html), taken out of the
+/* page header — #sidebar-host is position:absolute (see index.html), taken out of the
    grid flow so it can overlap the map when collapsed instead of pushing it down. That leaves
    #page-heading-sub as the grid's only real item; its own height drives #page-header's — see
-   js/wc2026_map.js's _computeHeaderHeight()/--page-header-h. */
+   js/index.js's _computeHeaderHeight()/--page-header-h. */
 #page-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--fixed-element-bg); padding: 0; display: grid; }
 #page-header ~ * { user-select: none; -webkit-user-select: none; }
 #page-heading-sub { grid-row: 1; grid-column: 1; padding: 0.4rem 1.5rem; padding-left: var(--vert-gutter); padding-right: var(--vert-gutter); align-self: stretch; margin: 0 !important; position: relative; display: flex; flex-direction: column; }
@@ -31,7 +31,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 .pq-prev { position: absolute; top: 0; left: 0; transform: translateX(-100%); }
 .pq-cur { position: relative; }
 .pq-icons { position: relative; z-index: 2; }
-/* margin-top:auto is the natural-height default (no extra push); js/wc2026_map.js's
+/* margin-top:auto is the natural-height default (no extra push); js/index.js's
    _computeHeaderHeight() overrides it inline with a definite px value whenever the sidebar is
    expanded and taller than the quote, so this row sits flush against the map instead of a gap.
    0.4s to match #map-container's own top transition (map-container.css) — same duration so the
@@ -53,8 +53,8 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   display: flex; flex-direction: column;
 }
 #selection-panel { order: 2; background-color: transparent; border-bottom: none; }
-/* Fixture selection (js/wc2026_map.js's _updateSelectionPanel) renders two .nav-item — one per
-   team. justify-content-evenly (wc2026_map.html) is what centers a lone .nav-item in the
+/* Fixture selection (js/index.js's _updateSelectionPanel) renders two .nav-item — one per
+   team. justify-content-evenly (index.html) is what centers a lone .nav-item in the
    single-team case, but with two, it can't be trusted to butt them together at exactly the
    panel's own center: it distributes free space, so unless both pills happen to render at the
    exact same width, the gap between them (and so their shared edge) drifts off-center. Giving
@@ -81,7 +81,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #selection-panel:has(.nav-item + .nav-item) .nav-item:last-child { justify-content: flex-start; }
 #selection-panel:has(.nav-item + .nav-item) .selection-panel-row { min-width: 0; }
 /* .selection-panel-row is itself a flex row of exactly 2 children now: .sp-text (the truncatable
-   name/capital/[population] '·'-joined text) and the close ✕ (js/wc2026_map.js's
+   name/capital/[population] '·'-joined text) and the close ✕ (js/index.js's
    _updateSelectionPanel) — flex-shrink:0 on the close button (below) is what this buys over the
    row's own previous single-inline-flow approach: before, the close ✕ was just the last inline
    node in the same truncating flow as the text, so once that text overflowed, the ✕ itself ended
@@ -95,7 +95,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    (text run, button), not one flex child per name/separator/capital/population piece. */
 .selection-panel-row { display: flex; align-items: center; }
 .selection-panel-row .sp-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1 1 auto; text-align: center; }
-/* Left pill only (js/wc2026_map.js's own field-order reversal, see _updateSelectionPanel's
+/* Left pill only (js/index.js's own field-order reversal, see _updateSelectionPanel's
    comment: population · capital · name, so the country name — the field that matters most, right
    on the boundary shared with the other pill — sits at the very end of the string). Plain
    text-overflow:ellipsis always truncates the *end* of a line, which for this pill specifically
@@ -135,7 +135,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
   border-bottom-right-radius: var(--bs-nav-tabs-border-radius);
 }
 /* #tab-connector — see its own HTML comment. position:relative here is what its absolute
-   left/width (set in JS, js/wc2026_map.js's _updateTabConnector) is measured against. */
+   left/width (set in JS, js/index.js's _updateTabConnector) is measured against. */
 #bottomTabList { position: relative; }
 #tab-connector {
   position: absolute;
@@ -225,7 +225,7 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #tab-teams-btn, #tab-tournament-btn, #tab-players-btn { min-width: 0; justify-content: center; display: flex; align-items: center; gap: 4px; cursor: pointer; padding: 2px 0;}
 /* White requires BOTH: #tab-players-btn is the tab currently being viewed (.active, Bootstrap's
    own Tab-managed class) AND there's a selection to show (.tpb-selection-open, toggled by
-   js/wc2026_map.js's _updateSelectionPanel — dim mode or a fixture selection alike, tracked
+   js/index.js's _updateSelectionPanel — dim mode or a fixture selection alike, tracked
    there since that's the one place already computing "is there a selection to show" for every
    path that can change it). Neither alone is enough: .active alone (an earlier version of this
    rule) painted it white even with nothing selected (the ambient "N countries" idle view);
@@ -238,30 +238,30 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    specificity, so this wins even when every class is present at once. */
 #tab-players-btn.active.tpb-selection-open { background-color: white; }
 /* "Caps" column — the players table's own 4th column beyond css/wc2026_players.css's
-   name/born-in/plays-for three (see js/wc2026_map.js's _playersTableTemplate), so it lives
+   name/born-in/plays-for three (see js/index.js's _playersTableTemplate), so it lives
    here rather than in that shared stylesheet. Narrow and non-wrapping, like .pt-born/.pt-caps'
    own treatment there. */
 .pt-num { width: 10%; white-space: nowrap; }
 
-/* "born in" cell, only when its birthplace actually geocoded (js/wc2026_map.js's
+/* "born in" cell, only when its birthplace actually geocoded (js/index.js's
    _allPlayersRow) — click pans/zooms the map to that city at max zoom and shows its tooltip
    (_zoomToCity). No visual affordance beyond the cursor — .pt-born's existing muted styling
    already reads as secondary/interactive-adjacent next to the name column's own Wikipedia link. */
 .pt-born--clickable { cursor: pointer; }
 
-/* "plays for" cell, only when that team is a qualified country (js/wc2026_map.js's
+/* "plays for" cell, only when that team is a qualified country (js/index.js's
    _allPlayersRow) — click selects it via activateCountry, same as clicking its flag on the map
    or its Elo pill. Non-qualified nations (p.nation with no QUALIFIED_BY_NAME entry) aren't
    selectable, so the cell stays inert there — same reasoning as .pt-born--clickable above. */
 .pt-caps--clickable { cursor: pointer; }
 
-/* Birth-city dots (js/wc2026_map.js's _updatePlayerCityDots) — hover shows a tooltip, click
+/* Birth-city dots (js/index.js's _updatePlayerCityDots) — hover shows a tooltip, click
    selects the matching table row(s) below; a plain pointer signals that without needing to
    touch .standalone-dot's own (unstyled) default, which is also reused by Cape Verde/Curaçao's
    unrelated country markers. */
 .city-dots circle { cursor: pointer; }
 
-/* Persistent "selected" row(s) in #tab-players' table (js/wc2026_map.js's _selectedPids,
+/* Persistent "selected" row(s) in #tab-players' table (js/index.js's _selectedPids,
    rendered declaratively per-row by _allPlayersRow — not toggled imperatively, so a re-render
    for any other reason never drops it). Clicking a "born in" cell selects just that one row (and
    pans/zooms the map there); clicking a city dot on the map selects every row sharing that city
@@ -277,12 +277,12 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 #tab-players .pt-table tbody tr.pt-row-selected > td:first-child { box-shadow: inset 3px 0 0 #7c3aed; }
 
 /* #bottomTabContent panes — shown/hidden purely off the .active class Bootstrap's Tab component
-   toggles on data-bs-target (js/wc2026_map.js's show.bs.tab listener), replacing the old
+   toggles on data-bs-target (js/index.js's show.bs.tab listener), replacing the old
    pane.hidden attribute toggle. */
 #bottomTabContent > [id] { display: none; }
 #bottomTabContent > [id].active { display: block; }
 
-/* #tab-players active (js/wc2026_map.js's _playersMapActive) — hides every country flag and the
+/* #tab-players active (js/index.js's _playersMapActive) — hides every country flag and the
    dim-mode arcs group, whether or not a selection is active underneath; the map is birth-city
    dots only while this tab is showing. Deliberately a plain display:none via a class toggle on
    the zoom transform group, NOT animateFlagHidden's visibility/data-hidden-target mechanism:

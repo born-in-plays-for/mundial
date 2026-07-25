@@ -1,7 +1,7 @@
 /* Taxonomy — canonical pill styling for country badges */
 
 
-/* --exp-accent/--imp-accent live at :root, not .taxonomy — js/wc2026_map.js's arc drawing
+/* --exp-accent/--imp-accent live at :root, not .taxonomy — js/index.js's arc drawing
    (outside any .taxonomy-classed ancestor: the tooltip and player table aren't under #tab-teams/#tab-tournament)
    reads them too, via getComputedStyle(document.documentElement). One shared export/import
    color pair for the whole page instead of the map maintaining its own separate hardcoded

@@ -13,7 +13,7 @@ export const loadJSON = key => {
 
 // Several modules persist under this one shared key, each owning its own top-level slice —
 // control_sidebar.js's 'shared' (order/dir/stage/conf) and 'countries' (checks/display),
-// group_stage.js's 'groupStage' (selected), wc2026_map.js's 'bottomTab' (active) — see each
+// group_stage.js's 'groupStage' (selected), index.js's 'bottomTab' (active) — see each
 // file's own comments for what its own fields mean. A shallow merge on save means writing one
 // slice never clobbers another.
 const _SHARED_STATE_KEY = 'mundial-state';

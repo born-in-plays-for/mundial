@@ -8,13 +8,12 @@ Static frontend for the [Born In, Plays For](https://github.com/born-in-plays-fo
 
 | URL | Description |
 |---|---|
-| [/](https://mundial.cthiebaud.com/) | Entry point — redirects to the map |
-| [/wc2026_map.html](https://mundial.cthiebaud.com/wc2026_map.html) | Main choropleth map (countries + tournament + players, all in one page) |
+| [/](https://mundial.cthiebaud.com/) | Main choropleth map (countries + tournament + players, all in one page) — `index.html` is the entry point directly, no redirect |
 | [/wc2026_live.html](https://mundial.cthiebaud.com/wc2026_live.html) | Live game tracking (requires backend) |
 | [/chains/wc2026_chain_longest.html](https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html) | Export chain snake renderer |
 | [/insights/discipline.html](https://mundial.cthiebaud.com/insights/discipline.html) | Fouls/cards discipline table, one row per team |
 
-A handful of standalone pages that predated `wc2026_map.html` absorbing their functionality
+A handful of standalone pages that predated `index.html` absorbing their functionality
 (countries/players reference tables, a France departments choropleth, an elimination-status chart,
 a talent-intensity heatmap, a country-taxonomy explainer) have been retired. They may return later
 under `insights/`, rebuilt against the current codebase.
@@ -111,7 +110,7 @@ UI language follows the browser locale. Supported: French, German, Italian, Span
 
 ## Control bar state
 
-`wc2026_map.html`'s `#control-sidebar` (`js/control_sidebar.js`) drives both split tabs
+`index.html`'s `#control-sidebar` (`js/control_sidebar.js`) drives both split tabs
 (tab-teams / tab-tournament). It persists to `localStorage` and is deep-linkable via URL params,
 across two slices:
 

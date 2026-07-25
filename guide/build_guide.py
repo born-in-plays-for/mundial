@@ -88,7 +88,7 @@ def take_screenshots():
             )
             page = context.new_page()
             page.goto(
-                f'{BASE_URL}/wc2026_map.html',
+                f'{BASE_URL}/index.html',
                 wait_until='networkidle',
                 timeout=30_000,
             )
@@ -132,7 +132,7 @@ def take_map_and_legend_screenshots(browser):
     # reference) — narrows the filter to just the 48 qualified teams (the default load shows
     # every FIFA-member exporter too, ~67 countries per the infobar). No clicks needed, the
     # filter state is driven entirely by the URL param.
-    page.goto(f'{BASE_URL}/wc2026_map.html?show=QB', wait_until='networkidle', timeout=30_000)
+    page.goto(f'{BASE_URL}/index.html?show=QB', wait_until='networkidle', timeout=30_000)
     page.wait_for_timeout(3_000)
 
     # The collapsed control-sidebar's own footer strip (country count) is fixed-position and
@@ -179,7 +179,7 @@ def take_bubbles_screenshot(browser):
     Used to also capture an "Intensity" toggle state (heatmap.png) here, back when
     #tab-players had a Bubbles/Intensity toggle — that raster layer moved permanently to its
     own standalone page (insights/heat-map.html) and #tab-players became "bubbles, always"
-    with no toggle at all (see js/wc2026_map.js's own comment on _updateAllPlayersMapLayer),
+    with no toggle at all (see js/index.js's own comment on _updateAllPlayersMapLayer),
     so there's no second mode left to capture here; guide-map.md's own "The Player Table"
     section only ever described/embedded the bubbles view anyway.
     """
@@ -189,7 +189,7 @@ def take_bubbles_screenshot(browser):
     # screenshot.
     context = browser.new_context(viewport={'width': 1280, 'height': 1000}, device_scale_factor=2)
     page = context.new_page()
-    page.goto(f'{BASE_URL}/wc2026_map.html', wait_until='networkidle', timeout=30_000)
+    page.goto(f'{BASE_URL}/index.html', wait_until='networkidle', timeout=30_000)
     page.wait_for_timeout(3_000)
 
     page.locator('#tab-players-btn img').click()

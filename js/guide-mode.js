@@ -145,7 +145,7 @@ function _ensureLink(href) {
 }
 
 function _injectStyles() {
-  _ensureLink('/css/wc2026_map.css');
+  _ensureLink('/css/index.css');
   _ensureLink('/css/taxonomy.css');
   if (document.getElementById('mundial-guide-panel-styles')) return;
   const s = document.createElement('style');

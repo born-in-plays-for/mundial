@@ -62,7 +62,7 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
   };
 
   // Numeric ids (not iso2) — what the map's own flag/country elements are keyed by
-  // (data-id — see wc2026_map.js's applyFlagFilter/renderWorld). eloItemsByIso2's items carry
+  // (data-id — see index.js's applyFlagFilter/renderWorld). eloItemsByIso2's items carry
   // buildEloItems's own `id` field, so no separate iso2→id table is needed here.
   const _teamIdsForGroup = letter => (fixturesData?.standings?.[letter] ?? [])
     .map(t => eloItemsByIso2.get(t.iso2)?.id)
@@ -122,7 +122,7 @@ export const initGroupStage = ({ container, fixturesData, T, regionName, eloItem
   // side effects can't drift out of sync with what a real click does.
   const _saved = loadSlice('groupStage')?.selected;
   _select(_GROUP_LETTERS.includes(_saved) ? _saved : null);
-  // Exposed so wc2026_map.js can re-sync the map's own group-focus filter whenever this view
+  // Exposed so index.js can re-sync the map's own group-focus filter whenever this view
   // becomes visible/hidden again (switching #bottomTabList tabs) — WITHOUT going through
   // _select/onGroupSelect (which also clears an active dim selection and re-persists): tab
   // navigation isn't the user picking a new group, it's the same selection becoming visible or

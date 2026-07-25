@@ -361,7 +361,7 @@
 
 /* ── "filter players" / "filter countries" table headers ──────────────────
    The plain "filter" label reused for both tables gets a small disambiguating icon right after
-   it — same icon players already use elsewhere (wc2026_map.js's #tab-players-btn) for
+   it — same icon players already use elsewhere (index.js's #tab-players-btn) for
    "players", a flag for "countries" (this table's cells are literally country-category pills).
    The row's own title tooltip still carries the full description. */
 #control-sidebar .csb-header-icon { vertical-align: -2px; margin-left: 3px; opacity: 0.6; }

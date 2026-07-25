@@ -177,7 +177,7 @@ class EloRanking extends HTMLElement {
     // carousel element itself and bubbles up through wrap/this, so external listeners attached
     // to this <elo-ranking> instance (e.g. control_sidebar.js's
     // eloMain.addEventListener('stage-change', ...)) still receive it unchanged.
-    // `all-stages` (a plain boolean attribute set by wc2026_map.js — see that file's own comment)
+    // `all-stages` (a plain boolean attribute set by index.js — see that file's own comment)
     // opts into a leading "Whole competition" slide ahead of CAROUSEL_STAGES[0] (js/fixture_list.js's
     // whole-tournament view).
     this.#carousel = createStageCarousel(T, this.hasAttribute('all-stages') ? { leadingLabel: T.allStagesLabel } : undefined);
@@ -272,7 +272,7 @@ class EloRanking extends HTMLElement {
     }
   }
 
-  // linkedIds: Set of ids to keep at full opacity alongside `id` itself (wc2026_map.js's
+  // linkedIds: Set of ids to keep at full opacity alongside `id` itself (index.js's
   // dimState.destIds/importIds — the same export/import partners the map's own flag dimming
   // uses), or null/undefined when there's no active selection to dim against. Every pill
   // persists in #itemById across renders (see `set items` above), so toggling a class here
@@ -464,7 +464,7 @@ export const initEloRanking = ({ el, sidebar, buildArgs, fmtPop, onRender, eloDa
   el.items = rawItems;
 
   // Build stable #elo-meta structure once: players/coaches span (left, filled in by
-  // wc2026_map.js's _playersTableTemplate — see that function's own comment) + count span
+  // index.js's _playersTableTemplate — see that function's own comment) + count span
   // + source span (dynamic content, toggled) — see css/control-sidebar.css's #elo-meta flex
   // rule. #elo-meta-source is CSS-hidden (display:none) — kept in the DOM/JS below rather
   // than ripped out in case it's needed again.

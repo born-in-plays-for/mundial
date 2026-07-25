@@ -58,7 +58,7 @@ export const wikiUrlEn = pid => _resolveWiki(_wikiEn ?? _wikiPrimary, pid);
 // import chain by definition, so they're not searched) and resolves their Wikipedia
 // link. { href, fallback: true } means the current-language article is missing and
 // href points at the English one instead — see "Wikipedia links in player table" in
-// CLAUDE.md. Shared by wc2026_map.js's chain tab and the standalone chain page
+// CLAUDE.md. Shared by index.js's chain tab and the standalone chain page
 // (chains/wc2026_chain_longest.html), both of which pass renderChain()'s own byId as
 // getPlayerWikiUrl: name => findPlayerWikiUrl(name, byId).
 export const findPlayerWikiUrl = (name, byId) => {

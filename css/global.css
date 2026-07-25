@@ -211,7 +211,7 @@ body { background: var(--page-bg); color: var(--color-default); }
    treatment as the kickoff date above it: small and muted, since the score line stays the
    primary, larger-emphasis result. */
 .elo-pair-sep-pens { font-size: 9px; color: var(--color-default); font-variant-numeric: tabular-nums; }
-/* Fixture selection (activateFixture in wc2026_map.js, click on the separator) — whole-row
+/* Fixture selection (activateFixture in index.js, click on the separator) — whole-row
    highlight, the .elo-pair equivalent of .elo-item--active below. Background rather than a
    border/outline so it doesn't nudge the subgrid's column widths; row-gap around it already
    gives the highlight visual breathing room without extra padding. */
@@ -232,7 +232,7 @@ background: linear-gradient(to right,
 }
 .elo-item--zoomable { cursor: pointer; }
 .elo-item--zoomable:hover { background: var(--bg-hover); border-color: var(--border-strong); }
-/* Pill-list counterpart to the map's own flag dimming during dim mode (js/wc2026_map.js's
+/* Pill-list counterpart to the map's own flag dimming during dim mode (js/index.js's
    applyDim/animateFlagOpacity, DURATION_MS=180 in js/flag_visibility.js) — set by
    EloRanking.update()'s linkedIds param. Dims the whole pill, not just the flag: dim state is
    inherently transient (cleared on the next click/Escape), so legibility of the dimmed pills

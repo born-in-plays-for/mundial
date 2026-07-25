@@ -1,6 +1,6 @@
 // js/map-container.js
 // Shared map infrastructure: <world-map> web component + exported constants.
-// Both wc2026_map.js and insights pages import this to share the projection,
+// Both index.js and insights pages import this to share the projection,
 // zoom behaviour, and choropleth colour scale.
 //
 // Usage in HTML:
@@ -43,13 +43,13 @@ import { T, countryName } from './i18n.js';
 // doesn't vary with the land palette.
 //
 // `rec` (as seen by `METRIC`) is an app.byId[] entry — see buildIndices() in
-// wc2026_map.js for exactly which fields it carries (count/nativeCount/
+// index.js for exactly which fields it carries (count/nativeCount/
 // importCount today). Falls back to 0 for a missing field rather than
 // throwing, defensively — a byId built some other way than buildChoroplethIndex()
 // (below) might not compute every field the main map does.
 // ── Diverging scale — EASY TWEAKS ───────────────────────────────────────────
 // Live-tunable at runtime via setDivergingParams()/getDivergingParams() below
-// (see the #diverging-debug panel in wc2026_map.html for a slider/color-picker
+// (see the #diverging-debug panel in index.html for a slider/color-picker
 // UI over this exact API) — not baked-in constants, and no pre-baked gradient
 // data (no array of hand-picked intermediate hex stops) backing this theme the
 // way the sequential ramps below have either. The color for a given value v is
@@ -145,7 +145,7 @@ export const normalize = v => {
   // would read as visually "as extreme" as Netherlands at +42 (maxed out on RATIO_MAX_POS), even
   // though 42 is well past 26 in real terms. A shared max means equal color intensity = equal
   // real magnitude on either side. RATIO_MAX_POS/NEG themselves are unchanged and still drive
-  // the legend's own tick *labels* and gradient domain (wc2026_map.js) — only the color mapping
+  // the legend's own tick *labels* and gradient domain (index.js) — only the color mapping
   // uses the shared value.
   if (v === 0) return 0; // the only value that renders as pure `neutral` — see floorLeft/Right above
   const neg = v < 0;
@@ -186,7 +186,7 @@ export const DOT_R = 2;
 export const FLAG_SIZE_ZOOM_EXP   = 1/3;
 // How much leader-line offset grows with zoom
 export const FLAG_OFFSET_ZOOM_EXP = 2/3;
-// Birth-city dots (js/wc2026_map.js's _updatePlayerCityDots, marked with the .city-dot class
+// Birth-city dots (js/index.js's _updatePlayerCityDots, marked with the .city-dot class
 // alongside .standalone-dot): same 0=fixed/1=fully-proportional scale as FLAG_SIZE_ZOOM_EXP
 // above, and same direction (grows with zoom) — start small at rest (whole-map view, many dots
 // close together) and grow as you zoom into one city, rather than staying a constant pixel size.
@@ -226,7 +226,7 @@ class WorldMap extends HTMLElement {
     // width:100%/height:auto in normal layout, so its box already matches the viewBox's own
     // aspect ratio there (nothing to crop or letterbox either way) — 'meet' only actually
     // does anything once something (the drag handle, or a restored localStorage height)
-    // gives #map an explicit height. wc2026_map.js's resize listener switches this back to
+    // gives #map an explicit height. index.js's resize listener switches this back to
     // 'slice' for the landscape-mobile fullscreen map (css/map-container.css forces #map to
     // width:100%/height:100% of a box with its own, unrelated aspect ratio there — deliberate
     // full-bleed cover, not the "user shrank the map" case this default is about).
@@ -235,11 +235,11 @@ class WorldMap extends HTMLElement {
     this.g      = this.svg.append('g');
     this.onZoom = null;
     // Fires before the generic per-flag resize below — lets page code recompute a
-    // flag's data-cx/data-cy for the CURRENT tick's k (e.g. wc2026_map.js's Cape
+    // flag's data-cx/data-cy for the CURRENT tick's k (e.g. index.js's Cape
     // Verde inset, whose anchor point is itself a function of k) with no 1-frame lag.
     this.onZoomPre = null;
 
-    // Upper bound raised (was 18) to let birth-city dot clusters (js/wc2026_map.js's
+    // Upper bound raised (was 18) to let birth-city dot clusters (js/index.js's
     // _updatePlayerCityDots) be pulled apart further — dot/flag on-screen size stays
     // constant (counter-scaled each tick below), only their world-space spacing grows
     // with k, so deeper zoom is what actually separates two cities sitting close together.
@@ -248,7 +248,7 @@ class WorldMap extends HTMLElement {
       this.g.attr('transform', e.transform);
 
       const s = FLAG / Math.pow(e.transform.k, 1 - FLAG_SIZE_ZOOM_EXP);
-      // .flag-fixed opts out — it lives inside a fixed-zoom inset (see wc2026_map.js's
+      // .flag-fixed opts out — it lives inside a fixed-zoom inset (see index.js's
       // buildFixedInset) that already counter-scales itself; x/y/width there are
       // local badge coordinates, not data-cx/data-cy world coordinates.
       this.svg.selectAll('.flag-qualified:not(.flag-fixed)')
@@ -298,7 +298,7 @@ customElements.define('world-map', WorldMap);
 // ── Choropleth data index ───────────────────────────────────────────────────────
 // Pure function: rawData (data/v2/map.json shape: {data, natives, pop, capital}) → the
 // byId/nativeByCountry/importByCountry indices choroFill()/METRIC read (count/
-// nativeCount/importCount). Extracted from wc2026_map.js's buildIndices(), which layers
+// nativeCount/importCount). Extracted from index.js's buildIndices(), which layers
 // more on top afterward (pop, totalCount, and the eloRank/capital fields the tooltip/
 // player-table UI needs — none of that is choropleth-coloring-relevant, so it stays
 // there rather than growing this function's contract). `rawData.data[]` entries are
@@ -339,7 +339,7 @@ export const UK_GU_TO_ID = { ENG: 8260, SCT: 8261, WLS: 8262, NIR: 8263 };
 // plus the two feature arrays (worldFeatures/ukFeatures) callers need for
 // centroid/bounds lookups (zoomToCentroid below, flag placement). Deliberately just
 // the drawing calls — no mousemove/click/cursor/dim wiring, which stays with the
-// caller (chain onto the returned selections; see wc2026_map.js's renderWorld for
+// caller (chain onto the returned selections; see index.js's renderWorld for
 // the pattern) since that's all page-specific (tooltips, dim mode, sidebar filters)
 // with nothing generic left to share. `topojson` is read as a global (script tag),
 // same convention <world-map> itself uses for `d3`.
@@ -454,14 +454,14 @@ export const zoomToCentroid = (ctx, id, duration = 2000) => {
 
 // ── Legend gradient + ticks + outlier count + range filter ─────────────────────
 // Wires up #legend-bar/#legend-ticks/#legend-outlier-*/#legend-born-*/#legend-filter-device
-// (the markup block in wc2026_map.html and chains/wc2026_chain_longest.html — same ids on
-// both pages, though only wc2026_map.html carries #legend-filter-device and passes
+// (the markup block in index.html and chains/wc2026_chain_longest.html — same ids on
+// both pages, though only index.html carries #legend-filter-device and passes
 // onRangeChange; the chain page has no category-filter system for a range selection to plug
 // into, so its legend stays read-only, same as before this feature existed), self-registering
 // an onPaletteChange listener so every piece repaints after a live #diverging-debug tweak.
 // `getById()` is called lazily on every repaint (not read once) so callers can
 // populate/replace their byId index after wireLegend() runs (map data loads
-// asynchronously) — see refresh() below. Extracted from wc2026_map.js's
+// asynchronously) — see refresh() below. Extracted from index.js's
 // _buildLegendGradient/_updateLegendTicks/_updateLegendOutlier/_updateLegendBorn.
 export const wireLegend = ({ getById, onRangeChange }) => {
   const els = {
@@ -479,7 +479,7 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   };
 
   // Bar position (0-1) for a value v — proportional to the *combined*
-  // -RATIO_MAX_NEG..RATIO_MAX_POS domain (see the original comment history in wc2026_map.js
+  // -RATIO_MAX_NEG..RATIO_MAX_POS domain (see the original comment history in index.js
   // for why: giving each side equal pixel width regardless of its own span made 0 sit at
   // the visual midpoint while the two sides silently ran at different units-per-pixel).
   const _divergingPos = v => (v + RATIO_MAX_NEG) / (RATIO_MAX_NEG + RATIO_MAX_POS);
@@ -646,7 +646,7 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   // is its proportional spot on #legend-bar (linear across [-RATIO_MAX_NEG, RATIO_MAX_POS] — see
   // buildGradient() above); each outlier's countryX is its own dot's center (#legend has 3
   // visually different columns — negative-outlier dot, gradient bar, positive-outlier dot — see
-  // wc2026_map.html — and a dot is a single discrete marker, not a proportional slice of the
+  // index.html — and a dot is a single discrete marker, not a proportional slice of the
   // domain the way its pixel width might suggest). With _xToValue as that exact inverse,
   // "v is within [_xToValue(leftBoundaryX), _xToValue(rightBoundaryX)]" and "countryX(v) is
   // within [leftBoundaryX, rightBoundaryX]" are the same statement, which is exactly the
@@ -790,7 +790,7 @@ export const wireLegend = ({ getById, onRangeChange }) => {
   };
   if (els.filterDevice && onRangeChange) {
     els.filterDevice.addEventListener('dblclick', () => {
-      // Same "eases back to rest" treatment as js/wc2026_map.js's own map-height resize bar
+      // Same "eases back to rest" treatment as js/index.js's own map-height resize bar
       // dblclick reset — snapping straight to 0/0 (the old behavior) reads as abrupt for a
       // gesture that isn't itself a drag. Eases _leftPx/_rightPx down to 0 over a fixed
       // duration, re-rendering every frame (cheap: a handful of style writes, same as every
@@ -821,7 +821,7 @@ export const wireLegend = ({ getById, onRangeChange }) => {
 };
 
 // ── Dim/arc mode — export/import connection arcs ────────────────────────────────
-// Extracted from wc2026_map.js's arc drawing (module-level arcOffset/arrowPoints/
+// Extracted from index.js's arc drawing (module-level arcOffset/arrowPoints/
 // ARC_EXPORT_COLOR/ARC_IMPORT_COLOR + applyDim's drawArc/onZoom's arc-rescale block)
 // — now shared with the chain page's own dim/arc click handling. Only the arc
 // geometry/painting is here: the "which flags dim to 35% opacity" decision and the
@@ -933,12 +933,12 @@ export const rescaleArcs = (g, k) => {
 // A handful of export-record country names have no numeric id of their own (id=null
 // in the raw data — ambiguous/historical names) but DO correspond to a real qualified
 // country for arc-drawing purposes; maps those specific names to the id whose
-// centroid an import arc should actually point at. Same table wc2026_map.js's own
+// centroid an import arc should actually point at. Same table index.js's own
 // tooltip birth-country resolution uses.
 export const _NULL_CENTROID_ID = { 'Democratic Republic of the Congo': 180, 'U.S.': 840, 'Kingdom of the Netherlands': 528 };
 
 // Builds sourceId's import-arc data: Map<birthCountryId, playerCount> from
-// importByCountry[sourceId] (buildChoroplethIndex's own return, or wc2026_map.js's
+// importByCountry[sourceId] (buildChoroplethIndex's own return, or index.js's
 // app.importByCountry — same shape either way).
 export const computeImportIds = (sourceId, importByCountry) => {
   const importIds = new Map();

@@ -9,7 +9,7 @@ Technical reference for the app's URL query parameter API — how to link direct
 <!-- i18n:api_url_params -->
 ## URL query parameters
 
-The Map page's filter/sort sidebar (`js/control_sidebar.js`) reads its whole configuration from a handful of URL query parameters: `?explain`, `?sort=`, `?dir=`, `?stage=`, `?fifaconf=`, `?show=`, `?pshow=`. Two more, `?bottomtab=` and `?select=`, are read directly by `js/wc2026_map.js` itself rather than the sidebar, to reproduce a full click path (which tab you land on, which country ends up dim-selected) from a URL alone. All are optional and independent; an omitted parameter just keeps the app's own default for that setting.
+The Map page's filter/sort sidebar (`js/control_sidebar.js`) reads its whole configuration from a handful of URL query parameters: `?explain`, `?sort=`, `?dir=`, `?stage=`, `?fifaconf=`, `?show=`, `?pshow=`. Two more, `?bottomtab=` and `?select=`, are read directly by `js/index.js` itself rather than the sidebar, to reproduce a full click path (which tab you land on, which country ends up dim-selected) from a URL alone. All are optional and independent; an omitted parameter just keeps the app's own default for that setting.
 
 ### `?explain` — inspect the current configuration
 

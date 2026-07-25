@@ -370,7 +370,7 @@ _eloMain.addEventListener('stage-change', e => {
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
 const _pageHeadingSub = document.getElementById('page-heading-sub');
-// #sidebar-host is position:absolute (see wc2026_map.html) so it never affects #page-header's
+// #sidebar-host is position:absolute (see index.html) so it never affects #page-header's
 // own (quote-only) box — when collapsed it just overlaps the map below, as intended. When
 // expanded, the map still needs to make room for it, so the target height is computed here
 // as max(quote bottom, sidebar bottom) rather than left to grid auto-sizing.
@@ -398,7 +398,7 @@ const _computeHeaderHeight = () => {
   // the value actually set (~32px overshoot, reproduced with min-height and with height alike).
   // Overriding the margin directly sidesteps grid item sizing entirely. Always a definite px
   // value (never '' / the CSS auto default) — transitioning to/from auto doesn't animate (see
-  // .pq-dots' own transition in wc2026_map.css), so this needs a real number even at 0.
+  // .pq-dots' own transition in index.css), so this needs a real number even at 0.
   const extra = Math.max(0, target - quoteBottom);
   _pqDotsEl.style.marginTop = extra + 'px';
   return target;
@@ -473,7 +473,7 @@ const _syncPaddingTop = () => {
 };
 requestAnimationFrame(_syncPaddingTop);
 
-// Map show/hide — a real Bootstrap Collapse (#map-collapse, see wc2026_map.html).
+// Map show/hide — a real Bootstrap Collapse (#map-collapse, see index.html).
 // #map-container itself stays position:fixed and is never touched here; only its
 // inner wrapper collapses, so #map-container's own rect shrinks like any other
 // resize and _syncPaddingTop's normal read of it (above) already tracks the result.
@@ -492,7 +492,7 @@ const _pollPaddingDuringMapToggle = () => { _syncPaddingTop(); _mapToggleRaf = r
 if (_mapCollapseEl) {
   const _paintMapToggleChevron = expanded => { if (_mapToggleBar) _mapToggleBar.textContent = expanded ? '⌄' : '⌃'; };
   _paintMapToggleChevron(_mapCollapseEl.classList.contains('show'));
-  // body's own `transition: padding-top 0.4s ease` (css/wc2026_map.css) exists for the
+  // body's own `transition: padding-top 0.4s ease` (css/index.css) exists for the
   // single-shot onSidebarToggle path — driving padding-top every rAF frame here too would
   // double-animate it (body keeps easing toward each frame's already-eased target),
   // visibly lagging #bottomTabContent behind the map. Suspend it for the transition only.
@@ -557,7 +557,7 @@ window.addEventListener('resize', () => {
   }
 });
 // Tracks #page-header's own live height (the quote block — #sidebar-host is position:absolute
-// and never affects it, see wc2026_map.html), e.g. when a longer/shorter quote is paged in.
+// and never affects it, see index.html), e.g. when a longer/shorter quote is paged in.
 if (_pageHeader) new ResizeObserver(() => {
   document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
   _syncPaddingTop();
@@ -896,9 +896,9 @@ if (typeof ResizeObserver !== 'undefined') {
   if (_playersBtnEl) new ResizeObserver(_updateTabConnector).observe(_playersBtnEl);
 }
 
-// Bootstrap's own Tab component (data-bs-toggle="tab" on each button, see wc2026_map.html) now
+// Bootstrap's own Tab component (data-bs-toggle="tab" on each button, see index.html) now
 // owns activating/deactivating both the trigger buttons' .active class and their data-bs-target
-// pane's .active class (css/wc2026_map.css shows/hides #bottomTabContent panes off that same
+// pane's .active class (css/index.css shows/hides #bottomTabContent panes off that same
 // class) — no more manual class-toggling, pane.hidden flips, or a custom sliding indicator/swipe
 // gesture to keep in sync with them. All the side effects that used to live inline in a single
 // _switchTab function now hang off the 'show.bs.tab' event instead, so they fire uniformly
@@ -1085,7 +1085,7 @@ const _playersMapActive = () => _playersTabActive;
 // for free, only r/stroke-width get counter-scaled each tick to stay a constant size) —
 // data-r-base lets each dot request its own radius instead of that mechanism's single global default.
 // While tab-players is active, every country flag AND the dim-mode arcs group are hidden via the
-// g.city-mode CSS class (see css/wc2026_map.css) — a plain display:none, deliberately NOT
+// g.city-mode CSS class (see css/index.css) — a plain display:none, deliberately NOT
 // animateFlagHidden's own visibility/data-hidden-target mechanism: that pair of attributes is
 // also _visibleQualifiedIds()'s source of truth for "which teams currently pass the sidebar
 // filter" (read by the ambient player table too) — routing this hide through it would zero out
@@ -1243,7 +1243,7 @@ _sidebarCallbacks.scrollToActiveElo = _scrollToActiveElo;
 // every later run which is safely post-load.)
 _sidebarCallbacks.afterFlagFilter = () => { _applyGroupFocus(); _applyDimFocus(); };
 // Sidebar collapse/expand no longer affects #page-header's own box (it's position:absolute —
-// see wc2026_map.html), so the map's push-down amount must be recomputed explicitly here.
+// see index.html), so the map's push-down amount must be recomputed explicitly here.
 _sidebarCallbacks.onSidebarToggle = () => {
   if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
   _syncPaddingTop();
@@ -1339,7 +1339,7 @@ const _updateSelectionPanel = (onCollapsed) => {
   if (!_selectionPanelEl) return;
   const ids = _activeFixture ? [_activeFixture.idA, _activeFixture.idB] : dimState.sourceId ? [dimState.sourceId] : [];
   // #tab-players-btn's own background depends on whether #selection-panel is showing
-  // (css/wc2026_map.css) — toggled right here since this is the one place that already computes
+  // (css/index.css) — toggled right here since this is the one place that already computes
   // "is there a selection to show" for every path that can change it (dim mode, fixture
   // selection, and both being cleared). Safe against #tab-players-btn's own className
   // reassignments elsewhere (applySelection, activateFixture, _renderPlayersTabIdle): the first
@@ -1353,7 +1353,7 @@ const _updateSelectionPanel = (onCollapsed) => {
   }
   // Per-country [name, capital, population] triple, '·'-joined within a country. One .nav-item
   // per country — a fixture selection (ids.length === 2) renders two, each its own independent
-  // flex:1 1 50% box (css/wc2026_map.css) rather than sharing one continuous row, both carrying
+  // flex:1 1 50% box (css/index.css) rather than sharing one continuous row, both carrying
   // .active (nothing here is a real Bootstrap Tab wired via data-bs-toggle, just borrowed
   // nav/nav-link/nav-item styling — so nothing enforces "only one .active" the way an actual
   // Bootstrap tab group would; two active-looking pills at once is intentional, both teams are
@@ -2570,7 +2570,7 @@ topojson.feature(world, world.objects.countries).features
 
 };
 
-// #app-loading (wc2026_map.html) — covers the whole viewport from first paint until the initial
+// #app-loading (index.html) — covers the whole viewport from first paint until the initial
 // data-driven render below (map + legend + sidebar) actually finishes, replacing what used to be
 // several independent things popping in at different times with one deliberate loading→ready
 // transition. Also called from the Promise.all().then() chain's own .catch() further down — a
@@ -2592,7 +2592,7 @@ const _appLoadingLog = msg => {
   const el = document.getElementById('app-loading-log');
   if (!el) return;
   el.textContent = msg;
-  el.style.visibility = 'visible'; // starts visibility:hidden (wc2026_map.html) so its
+  el.style.visibility = 'visible'; // starts visibility:hidden (index.html) so its
   // reserved-height placeholder doesn't flash text before the first real message
 };
 const _loggedFetch = (url, label) => {
@@ -2744,7 +2744,7 @@ Promise.all([
 
   // ── ?bottomtab= / ?select= — replicate a real click path from a URL alone ────────────────
   // Not part of _paramTable (control_sidebar.js) — that table owns the sidebar's own sort/
-  // filter state; tab selection and dim-mode country selection are wc2026_map.js's own
+  // filter state; tab selection and dim-mode country selection are index.js's own
   // top-level state (_activeTab, dimState), so they're read directly here instead.
   //
   // ?select=<iso2>[:teams|:tournament] dim-selects a country exactly as clicking its pill/flag
@@ -2809,7 +2809,7 @@ Promise.all([
     // Used to need extra left clearance here: the zoom-reset/zoom-span stack used to float
     // directly over the map's bottom-left corner, and without it "fit everything" could
     // zoom in just far enough to tuck a flag right behind those buttons.
-    // They're normal flex children of #map-controls now (wc2026_map.html, inside
+    // They're normal flex children of #map-controls now (index.html, inside
     // #legend-parent, above the map rather than overlapping it), so a plain symmetric fit
     // has nothing left to avoid.
     const k = Math.max(1, Math.min(12, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
@@ -2829,7 +2829,7 @@ Promise.all([
     _hideAppLoading(); // last step on purpose — map, legend, sidebar, and layout are all settled by now
   });
 }).catch(err => {
-  console.error('[wc2026_map] initial data load failed', err);
+  console.error('[index] initial data load failed', err);
   _appLoadingLog('failed — see console');
   _hideAppLoading();
 });
@@ -2848,7 +2848,7 @@ onPaletteChange(() => {
   g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
 });
 
-// ── Diverging scale debug panel (#diverging-debug, wc2026_map.html) ─────────
+// ── Diverging scale debug panel (#diverging-debug, index.html) ─────────
 // Live-tunes map-container.js's _divergingParams via getDivergingParams()/
 // setDivergingParams() — the latter already notifies onPaletteChange()'s listener above,
 // so every input here just needs to call it; the repaint above happens for free.

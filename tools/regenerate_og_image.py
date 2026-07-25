@@ -8,7 +8,7 @@ Usage:
   python3 tools/regenerate_og_image.py v7
 
 After running, you still need to (not done by this script):
-  1. Update og:image / og:image:url / og:image:secure_url in index.html and wc2026_map.html
+  1. Update og:image / og:image:url / og:image:secure_url in index.html
   2. git rm the previous wc2026_og_v<N-1>.jpg
   3. Re-scrape the LinkedIn Post Inspector and Facebook Sharing Debugger after deploy
 
@@ -36,7 +36,7 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport=VIEWPORT, device_scale_factor=DEVICE_SCALE_FACTOR)
-        page.goto("http://localhost:4040/wc2026_map.html", wait_until="load", timeout=30000)
+        page.goto("http://localhost:4040/index.html", wait_until="load", timeout=30000)
         page.wait_for_timeout(4000)
 
         # Select quote index 1 ("Heureux qui, comme Olise, a fait un beau voyage.")

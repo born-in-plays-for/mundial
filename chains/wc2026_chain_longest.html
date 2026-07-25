@@ -16,22 +16,22 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
 #container { width: 100%; }
-/* Duplicated from css/wc2026_map.css (.legend-outlier-wrap/.legend-outlier-dot/
+/* Duplicated from css/index.css (.legend-outlier-wrap/.legend-outlier-dot/
    #legend-outlier-count) rather than linking that whole stylesheet — it's the main
    map page's primary CSS file, full of #page-header/tooltip/dim/sidebar rules with
    global selectors (body, etc.) that don't apply here and could collide with this
    page's own simpler body layout above. See the duplication report (PR description)
    for the full accounting. --text-muted substituted for --color-dim, which isn't
-   defined anywhere reachable on this page (nor, actually, on wc2026_map.html itself). */
+   defined anywhere reachable on this page (nor, actually, on index.html itself). */
 .legend-outlier-wrap { height: 10px; }
 .legend-outlier-dot { width: 10px; height: 10px; border-radius: 50%; background: #000; }
 #legend-outlier-count, #legend-outlier-count-pos { font-size: 9px; color: var(--text-muted); margin-top: 3px; }
-/* #chain-panel — moved here from wc2026_map.html (cut, not shared/duplicated), where it
+/* #chain-panel — moved here from index.html (cut, not shared/duplicated), where it
    was one of #bottom-panel's collapsible .tab-footer-panel children, expanding only
    while the chain tab was active. Here it's the only footer on the page, so it's just
    its own always-visible position:fixed bar — no .tab-footer-panel/.collapsed max-height
    transition, no tab list to sit alongside. Styling mirrors #bottom-panel's own
-   (css/wc2026_map.css) rather than linking that stylesheet wholesale (same reasoning as
+   (css/index.css) rather than linking that stylesheet wholesale (same reasoning as
    the legend-outlier rules just above). Holds wc2026_chain_render.js's own header
    (né en/joue pour legend + subtitle + prev/next nav buttons) via renderChain's
    headerContainer option — see the module script below. */
@@ -42,17 +42,17 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
   border-top: 1px solid var(--border);
   padding: 4px var(--vert-gutter);
 }
-/* #chain-mode-toggle (fwd/bwd/both) — moved here from wc2026_map.js/css/wc2026_map.css
+/* #chain-mode-toggle (fwd/bwd/both) — moved here from index.js/css/index.css
    (cut, not duplicated). Copied as its own small rule rather than linking
-   css/wc2026_map.css wholesale, same reasoning as the legend-outlier rules above. */
+   css/index.css wholesale, same reasoning as the legend-outlier rules above. */
 .chain-mode-btn { border: 1px solid #dee2e6; border-radius: 16px; padding: 2px 12px; font-size: 11px; background: #fff; color: #888; cursor: pointer; transition: all .15s; }
 .chain-mode-btn:hover { border-color: #999; }
 .chain-mode-btn.active { background: #1C274C; color: #fff; border-color: #1C274C; }
 /* .chain-hit / [data-nav] — wc2026_chain_render.js's own per-country hit circles and
    prev/next nav buttons (both rendered into #chain-content/#chain-panel below), not
-   styled by that shared module itself. Moved here from css/wc2026_map.css now that
+   styled by that shared module itself. Moved here from css/index.css now that
    this is the only page still using wc2026_chain_render.js's interactive output —
-   wc2026_map.html's own chain tab was removed entirely. */
+   index.html's own chain tab was removed entirely. */
 .chain-hit:hover { fill: rgba(0,0,0,.06) !important; }
 [data-nav]:hover:not(:disabled) { background: var(--bg-hover) !important; }
 </style>
@@ -60,7 +60,7 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
 <body>
 <script type="module" src="../js/auth-bar.js"></script>
 <mundial-auth-bar></mundial-auth-bar>
-<!-- #map-container — same markup/CSS (css/map-container.css) as wc2026_map.html's own,
+<!-- #map-container — same markup/CSS (css/map-container.css) as index.html's own,
      so mundial-auth-bar's _offsetSibling() positions it below the 32px navbar the same
      way. See the second module script below for what's wired to it: a trimmed,
      tooltip/dim/sidebar-free choropleth (world + UK nations + qualified flags only). -->
@@ -115,13 +115,13 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
 // above it are interlinked — clicking a flag in the snake dims/arcs and pans/zooms
 // the map — so both need to share scope (byId/importByCountry/centroids/
 // worldFeatures/ukFeatures, the chain's own render/selection state). A trimmed copy
-// of wc2026_map.html's own map widget: world choropleth + zoom controls + legend +
+// of index.html's own map widget: world choropleth + zoom controls + legend +
 // collapsible/draggable-resize bar + dim/arc mode, with no tooltips, player table,
 // or Elo sidebar (none of that applies to this page — its only per-country
 // interaction is "click a flag in the snake, or on the map itself, to dim+arc and
 // zoom there"). Everything importable from shared modules is imported, not copied;
 // the rest (not exported anywhere) is a deliberate, small duplication of pieces of
-// js/wc2026_map.js (documented inline where it happens below).
+// js/index.js (documented inline where it happens below).
 import { renderChain } from './wc2026_chain_render.js';
 import { choroFill, onPaletteChange, FLAG_CDN, FLAG,
          buildChoroplethIndex, paintChoropleth, wireLegend,
@@ -146,18 +146,18 @@ const [mapData, eloData, ukNations, world] = await Promise.all([
 
 // byId/importByCountry — only what choroFill()/METRIC and the dim/arc mode
 // below actually read; see map-container.js's buildChoroplethIndex for what it
-// deliberately leaves out (pop/totalCount/tooltip indices — wc2026_map.js-only concerns).
+// deliberately leaves out (pop/totalCount/tooltip indices — index.js-only concerns).
 const { byId, importByCountry } = buildChoroplethIndex(mapData);
 
 // World choropleth + mesh borders + UK home nations (Kosovo id patch included) —
-// same shared painter wc2026_map.js's renderWorld() now calls too. No mousemove/
+// same shared painter index.js's renderWorld() now calls too. No mousemove/
 // click/cursor wiring chained on afterward (no tooltip or dim mode on this page).
 const { worldFeatures, ukFeatures } = paintChoropleth(g, path, world, ukNations, byId);
 
 // ── Centroids (for zoomToCentroid — flags below, and chain-flag clicks further
-// down) — dotCentroid applies the same France/USA/Croatia overrides wc2026_map.js's
+// down) — dotCentroid applies the same France/USA/Croatia overrides index.js's
 // own flag placement does; UK features go through their own direct CENTROID_OVERRIDE
-// lookup by _id instead (dotCentroid only checks .id), mirroring wc2026_map.js. ─────
+// lookup by _id instead (dotCentroid only checks .id), mirroring index.js. ─────
 const centroids = {};
 worldFeatures.forEach(f => { if (f.id) centroids[+f.id] = dotCentroid(f, projection, path); });
 ukFeatures.forEach(f => {
@@ -170,7 +170,7 @@ ukFeatures.forEach(f => {
 // ordering in renderWorld"). Filled in by _applyDim() below, once a flag is clicked.
 const arcsGroup = g.append('g').attr('class', 'arcs-group');
 
-// ── Qualified-country flags only — deliberately simplified vs. wc2026_map.js's own
+// ── Qualified-country flags only — deliberately simplified vs. index.js's own
 // full flag set: no non-qualified exporters, no Cape Verde/Curaçao fixed-zoom insets. ─
 const ALL_QUALIFIED = eloData.rankings
   .filter(r => QUALIFIED_NAMES[r.id] && r.iso2)
@@ -192,7 +192,7 @@ ALL_QUALIFIED.forEach(({ id, iso2 }) => {
     .on('click', event => { event.stopPropagation(); _zoomAndSelect(id); });
 });
 
-// ── Zoom controls — trimmed js/wc2026_map.js (#zoom-reset wiring + a dim-mode-free
+// ── Zoom controls — trimmed js/index.js (#zoom-reset wiring + a dim-mode-free
 // #zoom-span/_zoomToVisibleFlags: fit every qualified flag instead of "visible" ones,
 // since nothing on this page ever hides a flag). ──────────────────────────────────
 const _zoomResetBtn = document.getElementById('zoom-reset');
@@ -230,9 +230,9 @@ _zoomSpanBtn.addEventListener('click', e => {
     d3.zoomIdentity.translate(vbX + vbW / 2 - k * (x0 + x1) / 2, vbY + vbH / 2 - k * (y0 + y1) / 2).scale(k));
 });
 
-// ── Legend — map-container.js's wireLegend() (shared with wc2026_map.js). The map's
+// ── Legend — map-container.js's wireLegend() (shared with index.js). The map's
 // own repaint (not the legend widget) is this page's own onPaletteChange listener,
-// fired after a live #diverging-debug tweak, same split wc2026_map.js uses. ─────────
+// fired after a live #diverging-debug tweak, same split index.js uses. ─────────
 const legend = wireLegend({ getById: () => byId });
 onPaletteChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(+d.id, byId); });
@@ -240,13 +240,13 @@ onPaletteChange(() => {
 });
 
 // ── Chain snake ← → map: click a flag (in the snake, on the map above, or via the
-// ocean/Escape to clear) to dim+arc and pan/zoom there, mirroring wc2026_map.js's own
+// ocean/Escape to clear) to dim+arc and pan/zoom there, mirroring index.js's own
 // _chainOnClick/activateCountry/_zoomToActiveDimFlags/clearDim — minus the tooltip/
 // player-table/Elo-sidebar integration those pull in, none of which exists on this
 // page. Dim (opacity fade on non-linked flags) and arcs (one per
 // export destination + import origin, from byId[id].nations/importByCountry) reuse
 // map-container.js's drawCountryArcs/computeImportIds — the same data + arc geometry
-// wc2026_map.js's own dim mode uses, just without its sidebar/tooltip-aware flag
+// index.js's own dim mode uses, just without its sidebar/tooltip-aware flag
 // visibility layer (nothing on this page ever hides a flag outright). ─────────────
 let chainData = null, _chainUpdate = null, _selectedId = null, resizeTimer = null;
 const _getSelectedIndex = () => {
@@ -297,7 +297,7 @@ const container = document.getElementById('container');
 // renderChain() clears whatever container it's given (container.innerHTML = '') on
 // every render — a dedicated child holds the SVG so the fwd/bwd/both toggle below,
 // inserted as its sibling, survives every re-render (mode switch, resize). Same
-// #chain-content/outer-tab split js/wc2026_map.js's own chain tab uses.
+// #chain-content/outer-tab split js/index.js's own chain tab uses.
 const chainContent = document.createElement('div');
 chainContent.id = 'chain-content';
 container.appendChild(chainContent);
@@ -307,13 +307,13 @@ const _renderChainOpts = {
   onCountryClick:   _chainOnClick,
   getSelectedIndex: _getSelectedIndex,
   headerContainer:  chainPanelEl,
-  // Player name → {href, fallback}, shared with wc2026_map.js's own chain tab via
+  // Player name → {href, fallback}, shared with index.js's own chain tab via
   // i18n.js's findPlayerWikiUrl (app.byId there, local byId here).
   getPlayerWikiUrl: name => findPlayerWikiUrl(name, byId),
 };
 const _renderChainNow = () => { if (chainData) _chainUpdate = renderChain(chainData, chainContent, _renderChainOpts); };
 
-// ── fwd/bwd/both direction toggle — moved here from js/wc2026_map.js's chain tab
+// ── fwd/bwd/both direction toggle — moved here from js/index.js's chain tab
 // (cut, not duplicated: that tab now always shows just the "both" variant). Only
 // shown when ?data= names one of the three precomputed longest-chain variants below,
 // or is left off entirely (defaulting to "both") — an arbitrary ?data= file (e.g.
@@ -376,13 +376,13 @@ window.addEventListener('resize', () => {
 // #map-container's own _syncBodyPadding (above) already applies at the top.
 new ResizeObserver(() => { document.body.style.paddingBottom = chainPanelEl.getBoundingClientRect().height + 'px'; }).observe(chainPanelEl);
 
-// ── Map-toggle-bar collapse + body padding-top sync — trimmed js/wc2026_map.js
+// ── Map-toggle-bar collapse + body padding-top sync — trimmed js/index.js
 // (Bootstrap Collapse wiring + _syncPaddingTop). This page has no bottom-tab-bar/
 // landscape-mobile special case, so a plain ResizeObserver on #map-container stands
-// in for wc2026_map.js's own rAF-polling-during-transition loop — simpler because
+// in for index.js's own rAF-polling-during-transition loop — simpler because
 // the need here is simpler, not a byte-for-byte copy. Own localStorage keys
 // (mundial-chain-map-* rather than mundial-map-*) so this page's map preferences
-// stay independent of wc2026_map.html's. ──────────────────────────────────────────
+// stay independent of index.html's. ──────────────────────────────────────────
 const _mc = document.getElementById('map-container');
 const _mapCollapseEl = document.getElementById('map-collapse');
 const _mapToggleBar  = document.getElementById('map-toggle-bar');
@@ -405,7 +405,7 @@ if (localStorage.getItem(_MAP_COLLAPSED_KEY) === '1') {
 _syncBodyPadding();
 
 // ── #legend-parent drag-resize + grip icon — same behavior just added to
-// wc2026_map.html/js/wc2026_map.js (own localStorage key; not exported there either). ──
+// index.html/js/index.js (own localStorage key; not exported there either). ──
 const _MAP_HEIGHT_KEY = 'mundial-chain-map-height';
 const _legendParent = document.getElementById('legend-parent');
 const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));
@@ -440,7 +440,7 @@ if (_storedMapHeight) document.getElementById('map').style.height = _storedMapHe
 
 // #legend-grip's top:50% centers it vertically across the whole #legend-parent, which is fine on
 // one line but lands in the gap between lines once #legend wraps onto its own full-width line at
-// max-width:500px (css/map-container.css) — same fix as wc2026_map.js's own
+// max-width:500px (css/map-container.css) — same fix as index.js's own
 // _syncLegendGripTop(), see that function's comment for the full reasoning.
 const _legendGrip = document.getElementById('legend-grip');
 const _legendEl = document.getElementById('legend');

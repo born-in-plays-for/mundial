@@ -3,7 +3,7 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 #map-container { position: fixed !important; top: var(--page-header-h, var(--csb-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: var(--vert-gutter) !important; padding-right: var(--vert-gutter) !important; display: flex; justify-content: center; align-items: flex-start; background: var(--fixed-element-bg); transition: top 0.4s ease; }
 @media (max-width: 500px) {
   #map-container { padding: 0 !important; margin: 0 !important;}
-  /* #legend-parent (wc2026_map.html) stays the same single flex container, no DOM change — just
+  /* #legend-parent (index.html) stays the same single flex container, no DOM change — just
      reflowed onto 2 lines here. flex-wrap:wrap is what allows a 2nd line to exist at all (the
      base rule is a single nowrap row); #legend at width:100% is what forces it onto a line by
      itself (nothing else can share a line with a 100%-wide item, before or after). order:-1
@@ -38,7 +38,7 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
      top:50% is the one piece that's still wrong here, though — it centers vertically across the
      *whole*, now 2-line-tall, #legend-parent, landing in the gap between the lines rather than on
      either one. There's no pure-CSS anchor for "line 2's own vertical center" (flex lines aren't
-     addressable boxes), so js/wc2026_map.js's _syncLegendGripTop() measures #legend's own real
+     addressable boxes), so js/index.js's _syncLegendGripTop() measures #legend's own real
      rendered height at this breakpoint and sets an explicit top in px — see that function's own
      comment. */
   /* #legend's own margin (base rule: 1rem both sides, below — just enough to keep a grip from
@@ -55,7 +55,7 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
   #legend { margin: 0 2rem !important; }
 }
 
-/* Ctrl-M / #map-toggle-bar (js/wc2026_map.js) — a real Bootstrap Collapse
+/* Ctrl-M / #map-toggle-bar (js/index.js) — a real Bootstrap Collapse
    (#map-collapse) now owns the show/hide animation and #bottomTabContent stays in
    sync via #map-container's own live height (see _syncPaddingTop), same as any other
    resize. This bar itself never collapses — mirrors .csb-toggle (control-sidebar.css)
@@ -78,7 +78,7 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 /* Wraps just <world-map>+#zoom-hint (not #legend-parent) — the positioning context
    #zoom-hint anchors to below, and its own clip-path crops the hint to exactly #map's
    rendered height (whatever that is: aspect-ratio auto, or the #legend-parent
-   drag-resize's inline px override — js/wc2026_map.js) with no JS needed to measure
+   drag-resize's inline px override — js/index.js) with no JS needed to measure
    it. A percentage height on #zoom-hint itself couldn't do this instead: this wrapper's
    own CSS height is 'auto' (content-driven), and percentage heights against an
    auto-height containing block resolve to nothing per spec — the same restriction
@@ -99,18 +99,18 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 body.dim-active #map, body.dim-active #map * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><line x1='4' y1='4' x2='16' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/><line x1='16' y1='4' x2='4' y2='16' stroke='%23555' stroke-width='2.5' stroke-linecap='round'/></svg>") 10 10, auto !important; }
 body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 /* left:100%/bottom:0 (relative to #map-frame, which wraps exactly #map) replace what
-   used to be js/wc2026_map.js's _syncMapHeight computing the same two offsets every
+   used to be js/index.js's _syncMapHeight computing the same two offsets every
    resize/collapse/drag tick via getBoundingClientRect — pure layout now, always live,
    no recompute trigger needed. One behavior change: without a JS-measured max-height,
    #zoom-hint's own text-overflow:ellipsis never actually engages (nothing makes IT
    overflow) — on a very short dragged-down map, #map-frame's overflow:hidden still
    crops the hint at the right height, just as a hard cut instead of an ellipsis. */
 #zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; left: 100%; bottom: 0; overflow: hidden; text-overflow: ellipsis; }
-/* #zoom-reset/#zoom-span are normal flex children of #map-controls (wc2026_map.html,
+/* #zoom-reset/#zoom-span are normal flex children of #map-controls (index.html,
    inside #legend-parent) now, not JS-positioned floats — no more position:absolute/z-index,
-   no more per-frame left/bottom writes (removed from js/wc2026_map.js's _syncMapHeight).
+   no more per-frame left/bottom writes (removed from js/index.js's _syncMapHeight).
    #scroll-top-btn is unrelated (lives in #bottom-panel, its own position/icon —
-   css/wc2026_map.css) but shares the same button chrome, so it stays in this shared list;
+   css/index.css) but shares the same button chrome, so it stays in this shared list;
    it keeps its own position:absolute separately below. */
 #zoom-reset, #zoom-span, #scroll-top-btn { cursor: pointer; border: 1px solid var(--border); border-radius: 6px; background: rgba(245,242,236,.4); color: var(--text-muted); line-height: 1; font-size: 14px; width: 30px; height: 30px; padding: 2px; display: flex; align-items: center; justify-content: center; }
 #scroll-top-btn { position: absolute; z-index: 10; }
@@ -125,7 +125,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 /* Never grows past one line: nowrap (cascades to #legend-born/#legend's text
    children) plus clipping instead of letting an overlong description push
    the row wider or wrap onto a second line. */
-/* Vertical-only drag handle (js/wc2026_map.js) — resizes #map's own height (not
+/* Vertical-only drag handle (js/index.js) — resizes #map's own height (not
    width: #map stays width:100%, only height gets an inline px override). row-resize
    signals the affordance; touch-action:none stops touch drags from scrolling the page
    instead. user-select:none mirrors #map-toggle-bar's own guard against accidental text
@@ -139,7 +139,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    to #legend-parent and its real children. Opacity ~0.4 over the bar's own light
    background approximates var(--text-muted) (#999) without recoloring the (solid black
    fill) source SVG. width/height overrides the <img>'s own width="20" height="20" HTML
-   attributes (wc2026_map.html) with a wide-short box instead of its native square one —
+   attributes (index.html) with a wide-short box instead of its native square one —
    object-fit:cover then zooms the horizontal dot pattern (which only occupies a thin
    strip of its own square viewBox) to actually fill that box, the same treatment
    #left-grip/#right-grip's own img give the vertical dot pattern to fill their own
@@ -150,14 +150,14 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #legend-grip { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 2rem; height: 1rem; object-fit: cover; opacity: 0.4; pointer-events: none; }
 #legend-parent:hover #legend-grip { opacity: 0.7; }
 /* cursor:default overrides #legend-parent's own row-resize (inherited otherwise) — #legend no
-   longer participates in that drag (js/wc2026_map.js's pointerdown handler now excludes it
+   longer participates in that drag (js/index.js's pointerdown handler now excludes it
    entirely, see that file's own comment), so the resize cursor over it would be misleading. */
 /* width: 1/3 of #legend-parent (2/3 of its own half — #legend-parent's other flex children sit
-   to its left, this is the last one) — #legend-parent's own justify-content-between (wc2026_map.
+   to its left, this is the last one) — #legend-parent's own justify-content-between (index.
    html) already keeps the last flex child flush against the right edge regardless of its width,
    so no extra alignment rule is needed here, just the width itself. Percentage resolves cleanly
    against #legend-parent's own definite width (w-100) since #legend is a direct flex item of it. */
-/* padding/margin used to live as an inline style (wc2026_map.html) with !important — moved here
+/* padding/margin used to live as an inline style (index.html) with !important — moved here
    so the @media (max-width:500px) block below can actually override margin. Inline !important
    beats *any* external stylesheet rule regardless of specificity or !important, so as long as it
    stayed inline, no media query could ever touch it — which is exactly why the left grip kept
@@ -175,12 +175,12 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #legend { font-size: 11px; color: var(--text-muted); position: relative; cursor: default; width: 40%; padding: .5rem .5rem 0 .5rem; margin: 0 1rem; }
 #legend-countries { font-size: 11px; color: #bbb; }
 #legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }
-/* Describes what the map's shading means (js/wc2026_map.js's _updateLegendBorn() —
+/* Describes what the map's shading means (js/index.js's _updateLegendBorn() —
    see map-container.js's wireLegend()/updateBorn() / i18n.js's T.legendMetric.balance,
    a {full, brief} pair — #legend-born-full/-brief swap via Bootstrap's d-none/d-md-* rather than one
    span with two possible strings, so no JS resize listener is needed). Now
    display:none below (see that rule's own comment) — #legend-parent switched
-   from justify-content-between to -end in wc2026_map.html accordingly, so
+   from justify-content-between to -end in index.html accordingly, so
    #legend still sits on the right with this no longer there to balance against.
    min-width:0 overrides flexbox's default min-width:auto — without it a flex
    item won't shrink below its content's natural width, so text-overflow can
@@ -199,7 +199,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
      this against the taller #legend (gradient bar + ticks stacked) beside it. */
   align-self: flex-start;
 }
-/* wc2026_map.html's #legend uses align-items-start (not Bootstrap's default -center) —
+/* index.html's #legend uses align-items-start (not Bootstrap's default -center) —
    its 3 children (negative-outlier-dot column, gradient-bar column, positive-outlier-dot
    column) each stack a fixed-height top row (dot or bar, both 10px) over a shorter/taller
    text row below (#legend-outlier-count's auto height from a 9px font vs #legend-ticks'
@@ -227,7 +227,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    point instead of starting a hard edge exactly there. */
 .legend-rug-tick { position: absolute; top: 1px; bottom: 1px; width: 1px; transform: translateX(-50%); pointer-events: none; }
 #legend-ticks, #legend-outlier-count, #legend-outlier-count-pos { font-family: var(--bs-font-monospace); }
-/* position:relative + explicit height — js/wc2026_map.js's _updateLegendTicks() absolutely
+/* position:relative + explicit height — js/index.js's _updateLegendTicks() absolutely
    positions each <span> by percent (matching #legend-bar's own gradient stop positions), so
    this container needs to establish both the positioning context and its own height (nothing
    in normal flow left to size it once children are taken out of flow). */
@@ -301,7 +301,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
      (the "still not taking the full available width" bug this replaced). font-size shrinks the
      tick labels only — a real narrow-screen readability tweak, unrelated to the width bug. */
   #legend-ticks { font-size: 8px; }
-  /* wc2026_map.html's pt-1 is a Bootstrap spacing utility (!important) — needs
+  /* index.html's pt-1 is a Bootstrap spacing utility (!important) — needs
      matching !important to actually override it here. Without this, the gap
      above #legend-born reads as if it weren't top-aligned at all. */
   #legend-parent { padding-top: 0 !important; }
@@ -334,7 +334,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
   #page-heading-sub { display: none !important; }
   #control-sidebar { pointer-events: auto; }
   /* Landscape mobile is always immersive-map — no room to show #bottomTabContent instead, so
-     there's no toggle control at all here (js/wc2026_map.js also force-expands #map-collapse
+     there's no toggle control at all here (js/index.js also force-expands #map-collapse
      whenever this mode becomes active, in case it was left collapsed from portrait). */
   #map-toggle-bar { display: none; }
 }

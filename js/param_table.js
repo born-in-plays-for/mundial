@@ -135,7 +135,7 @@ export function sortEntry(key, {
 
 // ── setConfFilter factory — extracted from control_sidebar.js's own hand-written setConfFilter
 // (assign ids/key, sync the radio UI, notify, persist, dispatch mundial-conf-changed for
-// wc2026_map.js's own listener — see that event's own comment at the call site).
+// index.js's own listener — see that event's own comment at the call site).
 // setState/syncRadio/notify/saveState are the only page-specific parts left to the caller. ──
 export function createConfFilterSetter({ setState, syncRadio, notify, saveState }) {
   return (ids, key = null) => {

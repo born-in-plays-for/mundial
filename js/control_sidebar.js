@@ -245,7 +245,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   // Player/coach — a second, orthogonal axis on the same row (which *person type* shows, not
   // which role earned them a place in the union). Kept separate from _pfEls/_roles below rather
   // than folded into the same OR-filter: a coach still carries its own export/native/import role
-  // (see _focusedPlayers in wc2026_map.js), so this has to AND against that result, not join it.
+  // (see _focusedPlayers in index.js), so this has to AND against that result, not join it.
   const _pfPlayer = _panel.querySelector('#csb-pf-player');
   const _pfCoach = _panel.querySelector('#csb-pf-coach');
   // ── Stage carousel (Qualified → Round of 32 → … → Winner) ──────────────
@@ -407,7 +407,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     }
     updateVisibleCountryCount();
     // Lets a caller layer an additional visibility rule on top of this one — e.g.
-    // wc2026_map.js's group-stage "focus on these 4 flags only" override — without this module
+    // index.js's group-stage "focus on these 4 flags only" override — without this module
     // needing to know that concern exists. Fires every time this function runs, from whatever
     // triggered it (checkbox, sort, stage change, ...), so the override can never go stale.
     callbacks.afterFlagFilter?.();
@@ -519,7 +519,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   };
 
   // Reconfigures this same shared sidebar + eloMain for one of the map's two split tabs
-  // (tab-teams / tab-tournament — see wc2026_map.js's _switchTab, which calls this once early,
+  // (tab-teams / tab-tournament — see index.js's _switchTab, which calls this once early,
   // synchronously, before any data has loaded, and again on every tab switch thereafter).
   const setMode = newMode => {
     if (newMode === _mode && _modeEverSet) return;
@@ -542,7 +542,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     // see MODE_BEHAVIOR's own comment), with nothing else having already decided _stage (no
     // restore, no prior user click — _stageEverSet, set by _restoreState/_setStage). A later
     // re-entry into this same mode never re-applies it, so a real user choice always sticks.
-    // This can fire BEFORE _restoreState ever runs — wc2026_map.js restores the last-active
+    // This can fire BEFORE _restoreState ever runs — index.js restores the last-active
     // #bottomTabList tab synchronously, at module top level, while sidebar.applyParams (→
     // _restoreState) only runs later, once the async data Promise.all resolves — so a returning
     // visitor whose last tab was tab-tournament hits this branch first. _restoringState (below)
@@ -670,7 +670,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
 
   // Re-renders #tab-players' actual content (unlike the category checkboxes above, which only
   // apply cross-tab and don't live-refresh the table while it's already open — see
-  // wc2026_map.js's _visiblePlayerEntries comment): these 3 checkboxes are only ever
+  // index.js's _visiblePlayerEntries comment): these 3 checkboxes are only ever
   // interactive while that table is already on screen, so toggling one should be felt
   // immediately, not wait for the next tab switch.
   _panel.querySelector('.csb-native-table').addEventListener('change', e => {
@@ -1460,7 +1460,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     _saveState();
   };
 
-  // mundial-conf-changed: only wc2026_map.js listens today (highlights the confederation's
+  // mundial-conf-changed: only index.js listens today (highlights the confederation's
   // boundary and zooms to fit) — harmless no-op on countries/players pages.
   const setConfFilter = createConfFilterSetter({
     setState: (ids, key) => { _confIds = ids; _confKey = key; },
@@ -1511,7 +1511,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     sortFns: _sortFns,
     // Orders any fixture's own two teams by the sort table's current leading criterion — see
     // _orderPair's own comment. js/group_stage.js and js/fixture_list.js both read this (via
-    // wc2026_map.js) so their own fixture rows stay consistent with the knockout match-display
+    // index.js) so their own fixture rows stay consistent with the knockout match-display
     // pairs' ordering above, live (re-derived on every render, not cached), so a sort-column
     // change reorders every fixture's two teams everywhere at once.
     orderPair: _orderPair,
@@ -1535,7 +1535,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     setPlayersTabActive,
     playersFilterChecked,
     playerKindChecked,
-    // Called by wc2026_map.js's own _ptSetSort after a direct player-table column-header click
+    // Called by index.js's own _ptSetSort after a direct player-table column-header click
     // (which flips _ptSortDir without going through .csb-sort-dir) — keeps that shared button's
     // glyph and the alpha item's own "A–Z"/"Z–A" label honest either way, since
     // callbacks.getPlayersSortDir now backs both while this tab is active (see _updateSortDirUI).

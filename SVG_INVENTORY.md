@@ -36,7 +36,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 3. Inline SVG — `wc2026_map.html`
+## 3. Inline SVG — `index.html`
 
 | Location | Description | Source file |
 |---|---|---|
@@ -44,7 +44,7 @@ Custom geometric shapes, no source file.
 
 ---
 
-## 4. `<img>` tags — `wc2026_map.html`
+## 4. `<img>` tags — `index.html`
 
 | Element | Source file | Description |
 |---|---|---|

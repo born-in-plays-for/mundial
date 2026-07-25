@@ -120,7 +120,7 @@ class MundialAuthBar extends HTMLElement {
     // 'auth' (offline/no-server-connection help) is separate — it's reachable via the profile
     // icon on any page, not tied to a page at all.
     const _guideIdMap = {
-      '': 'map', 'index.html': 'map', 'wc2026_map.html': 'map',
+      '': 'map', 'index.html': 'map',
       'wc2026_players.html': 'map',
       'discipline.html': 'discipline',
     };
@@ -170,7 +170,7 @@ class MundialAuthBar extends HTMLElement {
       </nav>`, this);
 
     const navLinks = {
-      '/': ['index.html', 'wc2026_map.html', ''],
+      '/': ['index.html', ''],
       '/insights/discipline.html': ['discipline.html'],
       '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
       '/wc2026_live.html': ['wc2026_live.html'],

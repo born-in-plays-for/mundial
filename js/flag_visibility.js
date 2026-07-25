@@ -1,5 +1,5 @@
 // Shared "show/hide and dim/undim a flag" animation, used everywhere a flag's visibility or
-// brightness changes: control_sidebar.js's category filter, wc2026_map.js's group focus, dim
+// brightness changes: control_sidebar.js's category filter, index.js's group focus, dim
 // focus, and dim-mode's own opacity fade. A set of flags sweeps in/out one after another rather
 // than snapping instantly, via a small per-flag start delay — capped so a large batch (e.g.
 // every flag on the map, ~230 of them, toggled by the sidebar's "show all" checkbox) never
