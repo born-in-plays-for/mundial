@@ -2584,16 +2584,32 @@ const _hideAppLoading = () => {
   el.addEventListener('transitionend', () => el.remove(), { once: true });
 };
 
+// Purely cosmetic activity feed under the "Loading...." text — doesn't need to be readable
+// (messages can fly by faster than anyone could read them), it just needs to keep changing so
+// the overlay reads as "busy", not "stuck". Overwrites a single line rather than appending, so
+// it never grows or reflows the fixed-width box above it.
+const _appLoadingLog = msg => {
+  const el = document.getElementById('app-loading-log');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.visibility = 'visible'; // starts visibility:hidden (wc2026_map.html) so its
+  // reserved-height placeholder doesn't flash text before the first real message
+};
+const _loggedFetch = (url, label) => {
+  _appLoadingLog(`fetching ${label}…`);
+  return fetch(url).then(r => { _appLoadingLog(`${label} ✓`); return r; });
+};
+
 Promise.all([
-  fetch('data/v2/map.json').then(r => r.json()),
-  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
-  fetch('data/uk-nations.geojson').then(r => r.json()),
-  loadEloData(),
-  loadWikiData(),
-  fetch('data/fixtures.json').then(r => r.json()).catch(() => null),
-  fetch('geo/cape-verde.geojson').then(r => r.json()).catch(() => null),
-  fetch('geo/curacao.geojson').then(r => r.json()).catch(() => null),
-  fetch('data/v2/birthplace.json').then(r => r.json()).catch(() => ({})),
+  _loggedFetch('data/v2/map.json', 'map.json').then(r => r.json()),
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r => { _appLoadingLog('world atlas ✓'); return r; }),
+  _loggedFetch('data/uk-nations.geojson', 'uk-nations.geojson').then(r => r.json()),
+  loadEloData().then(r => { _appLoadingLog('elo rankings ✓'); return r; }),
+  loadWikiData().then(r => { _appLoadingLog('wiki data ✓'); return r; }),
+  _loggedFetch('data/fixtures.json', 'fixtures.json').then(r => r.json()).catch(() => null),
+  _loggedFetch('geo/cape-verde.geojson', 'cape-verde.geojson').then(r => r.json()).catch(() => null),
+  _loggedFetch('geo/curacao.geojson', 'curacao.geojson').then(r => r.json()).catch(() => null),
+  _loggedFetch('data/v2/birthplace.json', 'birthplace.json').then(r => r.json()).catch(() => ({})),
 ]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData, capeVerdeGeo, curacaoGeo, birthplaceByPid]) => {
   _birthplaceByPid = birthplaceByPid;
   _worldTopo = world;
@@ -2602,6 +2618,7 @@ Promise.all([
     eloData.rankings.flatMap(({id, rank}) => { const n = QUALIFIED_NAMES[id]; return n ? [[n, rank]] : []; })
   );
   eloData.rankings.forEach(r => { if (r.fifaMember) _fifaMemberIds.add(r.id); if (r.id != null) _eloRankedIds.add(r.id); });
+  _appLoadingLog('building indices…');
   buildIndices(rawData);
   // Pre-populate _eloItemsById (without centroids) so renderWorld can filter flags by elo membership
   buildEloItems({
@@ -2609,6 +2626,7 @@ Promise.all([
     nativeByCountry: app.nativeByCountry,
     fifaMemberIds: _fifaMemberIds, countryNameFn: countryName, pop: app.pop, statusByIso2,
   }).forEach(item => _eloItemsById.set(item.id, item));
+  _appLoadingLog('rendering map…');
   renderWorld(world, ukNations, capeVerdeGeo, curacaoGeo);
   // First real paint of #tab-players — until now it's been empty (no synchronous render at
   // module load; see the comment near the top of the file). Needs to run after renderWorld
@@ -2631,6 +2649,7 @@ Promise.all([
   // (see control_sidebar.js's _buildGroups/_pairId) — tab-teams has no fixture concept, so this
   // wiring is a no-op there without needing its own tab check.
   _eloMain.onFixtureClick = activateFixture;
+  _appLoadingLog('populating rankings…');
   const { rawItems: _eloRawItems, render: _eloRender } = initEloRanking({
     el: _eloMain, sidebar,
     buildArgs: { rankings: eloData.rankings, byId: app.byId, importByCountry: app.importByCountry, nativeByCountry: app.nativeByCountry, countryNameFn: countryName, centroids, pop: app.pop, statusByIso2 },
@@ -2806,10 +2825,12 @@ Promise.all([
     if (_pageHeader) document.documentElement.style.setProperty('--page-header-h', _computeHeaderHeight() + 'px');
     _syncPaddingTop();
     _syncMapHeight();
+    _appLoadingLog('ready');
     _hideAppLoading(); // last step on purpose — map, legend, sidebar, and layout are all settled by now
   });
 }).catch(err => {
   console.error('[wc2026_map] initial data load failed', err);
+  _appLoadingLog('failed — see console');
   _hideAppLoading();
 });
 
