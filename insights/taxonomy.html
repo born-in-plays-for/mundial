@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Country Categories — World Cup 2026</title>
 <link rel="stylesheet" href="../css/bootstrap-custom.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <link rel="stylesheet" href="../css/global.css">
 <style>
   :root {
@@ -148,6 +149,30 @@
   }
   .footnote b { color: var(--ink); font-weight: 650; }
 
+  /* Bootstrap's default carousel icons/indicators are white — built for a dark photo backdrop,
+     invisible against this page's pale card background. Invert to dark instead of recoloring
+     the icon's own baked-in SVG fill. */
+  .carousel-control-prev-icon, .carousel-control-next-icon {
+    filter: invert(1) grayscale(1);
+    opacity: .5;
+  }
+  .carousel-control-prev:hover .carousel-control-prev-icon,
+  .carousel-control-next:hover .carousel-control-next-icon {
+    opacity: .9;
+  }
+  /* Give the prev/next controls their own gutter instead of overlapping the disc — Bootstrap's
+     controls are position:absolute against the padding edge, so padding the carousel itself
+     (rather than sizing the svg down) pushes the disc inward while the controls land exactly
+     in the freed-up space. */
+  #wheel-carousel { padding: 0 44px; }
+  .carousel-indicators [data-bs-target] {
+    background-color: var(--ink);
+    opacity: .35;
+  }
+  .carousel-indicators [data-bs-target].active {
+    opacity: .9;
+  }
+
   .draft-tag {
     display: inline-block;
     font-size: .68rem;
@@ -168,218 +193,248 @@
 
 <div id="main-content" class="container-xxl">
 <div class="wrap">
-  <span class="draft-tag">Draft — for review</span>
-  <p class="eyebrow">Country Categories · combined view</p>
-  <h1>Every way a country gets classified here, on one diagram</h1>
-  <p class="intro">Nested rings for the strict hierarchy — <b>every country the map lists at all</b> is either <b style="color:var(--confed-line)">FIFA</b> or not; every FIFA member sits in exactly one of six <b style="color:var(--confed-line)">confederations</b>; the 48 <b style="color:var(--qualified)">qualified</b> teams are scattered across those confederations, not confined to one. A fine hatch marks which countries are <b>on the map</b> at all. <b style="color:var(--exp)">Export</b> and <b style="color:var(--imp)">import</b> get their own diagram further down — they're not a confederation-shaped question, so they don't live on this wheel.</p>
-  <p class="caveat" style="border-color:var(--faint)">Deliberately <b>not</b> called "Elo-rated" — two of the countries listed here (Kosovo, a FIFA/UEFA member; Isle of Man, non-FIFA) have never actually been given a rating by eloratings.net. They're listed anyway, with a placeholder instead of a real score, purely so they can still appear as ordinary countries.</p>
-  <p class="caveat">This is deliberately an <b>Euler diagram, not a Venn diagram</b>: regions are sized and nested to match which combinations actually occur (qualified ⊆ FIFA ⊆ has-confederation), not drawn as equal independent circles. A true flat Venn across all six dimensions would draw regions — "qualified, non-FIFA" — that are structurally impossible.</p>
+  <h1>239 Countries. 8 Billion People. One World Cup.</h1>
+  <p class="intro">This radial chart shows every one of the 239 countries and territories the app tracks for World Cup 2026, grouped into pie wedges by confederation (UEFA, CAF, AFC, CONCACAF, CONMEBOL, OFC) sized proportionally to how many teams each governs, with a small "off-map" note for FIFA non-members like Vatican City. Within each wedge, a brown inner zone — scaled so its area matches the true proportion — marks the share of that confederation's teams that qualified for the tournament.</p>
 
-  <div class="diagram-shell">
-    <svg viewBox="0 0 900 980" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Combined Euler diagram of every country classification used across the app">
-      <defs>
-        <pattern id="hatch" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-          <line x1="0" y1="0" x2="0" y2="9" stroke="var(--hatch)" stroke-width="2.4"></line>
-        </pattern>
-        <radialGradient id="confedShade" cx="30%" cy="30%" r="80%">
-          <stop offset="0%" stop-color="var(--confed)" stop-opacity=".16"></stop>
-          <stop offset="100%" stop-color="var(--confed)" stop-opacity=".05"></stop>
-        </radialGradient>
-      </defs>
-
-      <!-- ============ universe ring : every country the map lists (239) ============ -->
-      <circle cx="450" cy="470" r="400" fill="url(#hatch)"></circle>
-      <circle cx="450" cy="470" r="400" fill="none" stroke="var(--faint-strong)" stroke-width="1.5"></circle>
-
-      <!-- non-FIFA band (annulus 375.84-400) — inner radius solved so the disc/ring area split
-           matches the actual 211/239 country split (400² × 211/239 → r≈375.84), not a fixed
-           cosmetic margin. (FIFA membership is 211, not the 213 the six wedges sum to — see
-           the legend's own "FIFA disc" entry for why: a couple of geography-only outliers get
-           counted in two confederations for wedge-sizing purposes.) -->
-      <path d="M450,70 A400,400 0 1,1 449.99,70 Z M450,94.16 A375.84,375.84 0 1,0 450.01,94.16 Z"
-            fill-rule="evenodd" fill="var(--faint)" fill-opacity=".55"></path>
-
-      <!-- ============ FIFA disc + confederation wedges ============ -->
-      <!-- Every wedge/qualified-sector coordinate below was solved for the old r=378 outer
-           radius; rather than re-deriving each one by hand for r=375.84, the whole group is
-           scaled down by that exact ratio (375.84/378 = 0.994286) around the shared center —
-           mathematically identical to redrawing them, without the transcription risk. -->
-      <g transform="translate(450,470) scale(0.994286) translate(-450,-470)">
-      <circle cx="450" cy="470" r="378" fill="url(#confedShade)"></circle>
-
-      <!-- UEFA -->
-      <path d="M450.0,470.0 L450.00,92.00 A378,378 0 0 1 827.50,489.50 Z" fill="var(--confed)" fill-opacity=".10" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M450,470 L450.00,360.02 A110.0,110.0 0 0 1 559.81,475.67 Z" fill="var(--qualified)" fill-opacity=".55"></path>
-
-      <!-- CAF -->
-      <path d="M450.0,470.0 L827.50,489.50 A378,378 0 0 1 422.15,846.97 Z" fill="var(--confed)" fill-opacity=".16" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M450,470 L519.91,473.61 A70.0,70.0 0 0 1 444.84,539.81 Z" fill="var(--qualified)" fill-opacity=".55"></path>
-
-      <!-- AFC -->
-      <path d="M450.0,470.0 L422.15,846.97 A378,378 0 0 1 75.70,522.79 Z" fill="var(--confed)" fill-opacity=".10" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M450,470 L444.55,543.75 A74.0,74.0 0 0 1 376.76,480.33 Z" fill="var(--qualified)" fill-opacity=".55"></path>
-
-      <!-- CONCACAF -->
-      <path d="M450.0,470.0 L75.70,522.79 A378,378 0 0 1 230.53,162.24 Z" fill="var(--confed)" fill-opacity=".16" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M450,470 L389.30,478.56 A61.3,61.3 0 0 1 414.41,420.10 Z" fill="var(--qualified)" fill-opacity=".55"></path>
-
-      <!-- OFC -->
-      <path d="M450.0,470.0 L230.53,162.24 A378,378 0 0 1 340.11,108.33 Z" fill="var(--confed)" fill-opacity=".10" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M450,470 L430.05,442.02 A34.4,34.4 0 0 1 440.01,437.12 Z" fill="var(--qualified)" fill-opacity=".55"></path>
-
-      <!-- CONMEBOL -->
-      <path d="M450.0,470.0 L340.11,108.33 A378,378 0 0 1 450.00,92.00 Z" fill="var(--confed)" fill-opacity=".16" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M450,470 L384.07,253.00 A226.8,226.8 0 0 1 450.00,243.20 Z" fill="var(--qualified)" fill-opacity=".55"></path>
-
-      <!-- structural circle on top of fills -->
-      <circle cx="450" cy="470" r="378" fill="none" stroke="var(--confed-line)" stroke-width="1.6"></circle>
-      </g>
-
-      <!-- ================= LABELS ================= -->
-
-      <!-- overall title + qualified/non-qualified key (top of the disk) — no text on the
-           squares themselves, that's fully spelled out in the legend below the diagram. -->
-      <text x="450" y="20" text-anchor="middle" class="center-label">EVERY COUNTRY THE APP LISTS — <tspan class="count-mono">239</tspan></text>
-      <rect x="397" y="38" width="16" height="16" fill="url(#hatch)"></rect>
-      <rect x="397" y="38" width="16" height="16" fill="var(--confed)" fill-opacity=".13"></rect>
-      <rect x="413" y="38" width="16" height="16" fill="var(--qualified)" fill-opacity=".55"></rect>
-      <rect x="397" y="38" width="32" height="16" fill="none" stroke="var(--faint-strong)" stroke-width="1"></rect>
-      <text x="441" y="50" class="band-tag">FIFA — 211</text>
-
-      <!-- non-FIFA band label (bottom of the disk) -->
-      <rect x="395" y="896" width="16" height="16" fill="url(#hatch)"></rect>
-      <rect x="395" y="896" width="16" height="16" fill="var(--faint)" fill-opacity=".55"></rect>
-      <rect x="395" y="896" width="16" height="16" fill="none" stroke="var(--faint-strong)" stroke-width="1"></rect>
-      <text x="423" y="908" class="band-tag">NON-FIFA — 28</text>
-
-      <!-- non-FIFA examples -->
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gl.svg" x="560" y="90" width="20" height="20"></image>
-      <text x="586" y="104" class="flag-name">Greenland</text>
-
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/va.svg" x="306" y="826" width="18" height="18"></image>
-      <text x="315" y="865" text-anchor="middle" class="flag-name">Vatican City</text>
-      <text x="315" y="876" text-anchor="middle" class="flag-name">(off-map)</text>
-
-      <!-- Same wedge-boundary scale as the disc itself (see the g transform above), so these
-           stay pinned to their (now slightly smaller) wedges. -->
-      <g transform="translate(450,470) scale(0.994286) translate(-450,-470)">
-      <!-- UEFA (brown zone r<110 · grey zone r>110) -->
-      <text x="618" y="300" class="wedge-label">UEFA</text>
-      <text x="618" y="315" class="wedge-count">55 · 16 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/is.svg" x="533" y="372" width="18" height="18"></image>
-      <text x="558" y="385" class="flag-name">Iceland</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" x="488" y="416" width="18" height="18"></image>
-      <text x="513" y="429" class="flag-name">France</text>
-
-      <!-- CAF (brown zone r<70 · grey zone r>70) -->
-      <text x="603" y="638" class="wedge-label">CAF</text>
-      <text x="603" y="653" class="wedge-count">54 · 10 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ke.svg" x="525" y="560" width="18" height="18"></image>
-      <text x="550" y="573" class="flag-name">Kenya</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" x="471" y="495" width="18" height="18"></image>
-      <text x="496" y="508" class="flag-name">Morocco</text>
-
-      <!-- AFC (brown zone r<74 · grey zone r>74) -->
-      <text x="291" y="633" text-anchor="end" class="wedge-label">AFC</text>
-      <text x="291" y="648" text-anchor="end" class="wedge-count">46 · 9 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/th.svg" x="333" y="557" width="18" height="18"></image>
-      <text x="358" y="570" class="flag-name">Thailand</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" x="407" y="495" width="18" height="18"></image>
-      <text x="432" y="508" class="flag-name">Iran</text>
-
-      <!-- CONCACAF (brown zone r<61.3 · grey zone r>61.3) -->
-      <text x="237" y="372" text-anchor="end" class="wedge-label">CONCACAF</text>
-      <text x="237" y="387" text-anchor="end" class="wedge-count">37 · 6 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/jm.svg" x="323" y="411" width="18" height="18"></image>
-      <text x="348" y="424" class="flag-name">Jamaica</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" x="410" y="448" width="18" height="18"></image>
-      <text x="419" y="479" text-anchor="middle" class="flag-name">Curaçao</text>
-
-      <!-- OFC (brown zone r<34.4 — no grey example) -->
-      <text x="308" y="223" text-anchor="middle" class="wedge-label">OFC</text>
-      <text x="308" y="238" text-anchor="middle" class="wedge-count">11 · 1 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/nz.svg" x="432" y="429" width="16" height="16"></image>
-      <text x="440" y="423" text-anchor="middle" class="flag-name">New Zealand</text>
-
-      <!-- CONMEBOL (brown zone r<226.8 · grey zone r>226.8) -->
-      <text x="416" y="255" text-anchor="middle" class="wedge-label">CONMEBOL</text>
-      <text x="416" y="270" text-anchor="middle" class="wedge-count">10 · 6 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ve.svg" x="399" y="185" width="16" height="16"></image>
-      <text x="420" y="197" class="flag-name">Venezuela</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/br.svg" x="419" y="313" width="18" height="18"></image>
-      <text x="441" y="326" class="flag-name">Brazil</text>
-      </g>
-    </svg>
+  <!-- Wedge angles/radii below are computed at load time from the same real data the rest of
+       the app reads — js/conf.js's CONF_IDS (confederation membership), js/qualified.js's
+       QUALIFIED_NAMES, data/elo_rank.json (fifaMember/weirdo/iso2 per country), and
+       data/v2/map.json's own population figures — not hand-typed, so this can't silently drift
+       out of sync with the live data the way the original draft did. Two carousel slides share
+       one render function (renderDiagram), swapping only which "weight" a country contributes:
+       one team, or its population. -->
+  <div id="wheel-carousel" class="carousel slide diagram-shell" data-bs-ride="false">
+    <div class="carousel-indicators">
+      <button type="button" data-bs-target="#wheel-carousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="By team count"></button>
+      <button type="button" data-bs-target="#wheel-carousel" data-bs-slide-to="1" aria-label="By population"></button>
+    </div>
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <svg id="wheel-svg-count" viewBox="0 0 900 980" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Combined Euler diagram, wedges sized by number of teams per confederation"></svg>
+      </div>
+      <div class="carousel-item">
+        <svg id="wheel-svg-pop" viewBox="0 0 900 980" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Combined Euler diagram, wedges sized by population per confederation"></svg>
+      </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#wheel-carousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">By team count</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#wheel-carousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">By population</span>
+    </button>
   </div>
 
-  <p class="eyebrow" style="margin-top:34px">Export / import — a different lens on the same 239</p>
-  <p class="intro">This has nothing to do with confederation — it's a split of <b>where a country sits relative to qualification</b>, so it gets its own diagram instead of sitting on top of one wedge. <b>Left:</b> inside the 48 qualified teams, three concentric groups. <b>Right:</b> the other 191, where only "exports or not" applies (no squad to import into).</p>
+  <script type="module">
+    import { CONF_IDS } from '../js/conf.js';
+    import { QUALIFIED_NAMES } from '../js/qualified.js';
+    import { cachedFetchJson } from '../js/cached_fetch.js';
 
-  <div class="diagram-shell">
-    <svg viewBox="0 0 900 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Export and import breakdown, separate from the confederation wheel">
-      <!-- ============ panel A: within the 48 qualified teams ============ -->
-      <circle cx="230" cy="205" r="150" fill="var(--qualified)" fill-opacity=".07" stroke="var(--qualified)" stroke-width="1.6"></circle>
-      <circle cx="230" cy="205" r="120" fill="var(--imp)" fill-opacity=".16" stroke="var(--imp)" stroke-opacity=".55" stroke-width="1"></circle>
-      <circle cx="230" cy="205" r="76" fill="var(--exp)" fill-opacity=".22" stroke="var(--exp)" stroke-opacity=".6" stroke-width="1"></circle>
+    const [eloData, mapData] = await Promise.all([
+      cachedFetchJson('../data/elo_rank.json'),
+      cachedFetchJson('../data/v2/map.json'),
+    ]);
+    const byId = new Map(eloData.rankings.filter(r => r.id != null).map(r => [r.id, r]));
+    const popOf = id => mapData.pop[byId.get(id)?.iso2] ?? 0;
 
-      <text x="230" y="42" text-anchor="middle" class="wedge-label">QUALIFIED — 48</text>
+    const CONF_ORDER = ['uefa', 'caf', 'afc', 'concacaf', 'ofc', 'conmebol'];
+    const CONF_LABEL = { uefa: 'UEFA', caf: 'CAF', afc: 'AFC', concacaf: 'CONCACAF', ofc: 'OFC', conmebol: 'CONMEBOL' };
+    // One illustrative qualified (+ non-qualified, where there's room) example flag per
+    // confederation — real ids cross-checked against data/elo_rank.json, not hand-picked pixel
+    // positions like the original static version. OFC has no non-qualified example (same
+    // choice the hand-drawn version made — its wedge is too narrow for two flags anyway).
+    const EXAMPLES = {
+      uefa:     { qualified: 250, nonQualified: 352 },  // France, Iceland
+      caf:      { qualified: 504, nonQualified: 404 },  // Morocco, Kenya
+      afc:      { qualified: 364, nonQualified: 764 },  // Iran, Thailand
+      concacaf: { qualified: 531, nonQualified: 388 },  // Curaçao, Jamaica
+      ofc:      { qualified: 554, nonQualified: null }, // New Zealand
+      conmebol: { qualified: 76,  nonQualified: 862 },  // Brazil, Venezuela
+    };
 
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cz.svg" x="288" y="90" width="18" height="18"></image>
-      <text x="314" y="80" class="flag-name">Czech Republic — 1 team,</text>
-      <text x="314" y="92" class="flag-name">fully closed: no imports, no exports</text>
-      <line x1="285" y1="98" x2="255" y2="130" stroke="var(--faint-strong)" stroke-width="1"></line>
+    // CONF_IDS geographically buckets a couple of non-FIFA overseas territories into a
+    // confederation too (for the main map's own confederation filter) — filtered out here via
+    // fifaMember so each confed's own count/population is exactly its real FIFA membership,
+    // summing to exactly 211 across all six (see the legend's "FIFA disc" entry).
+    const confs = CONF_ORDER.map(key => {
+      const ids = [...CONF_IDS[key]].filter(id => byId.get(id)?.fifaMember);
+      const qualifiedIds = ids.filter(id => QUALIFIED_NAMES[id] !== undefined);
+      return {
+        key, label: CONF_LABEL[key],
+        count: ids.length, qualifiedCount: qualifiedIds.length,
+        pop: ids.reduce((s, id) => s + popOf(id), 0),
+        qualifiedPop: qualifiedIds.reduce((s, id) => s + popOf(id), 0),
+      };
+    });
 
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" x="88" y="270" width="18" height="18"></image>
-      <text x="113" y="283" class="flag-name" fill="var(--imp)">Curaçao — import only</text>
-      <text x="113" y="296" class="flag-name">15 teams, no emigrant players of their own</text>
+    const fifaEntries = eloData.rankings.filter(r => r.fifaMember && r.id != null);
+    const nonFifaEntries = eloData.rankings.filter(r => !r.fifaMember && !r.weirdo);
+    const fifaCount = fifaEntries.length;
+    const nonFifaCount = nonFifaEntries.length;
+    const fifaPop = fifaEntries.reduce((s, r) => s + (mapData.pop[r.iso2] ?? 0), 0);
+    const nonFifaPop = nonFifaEntries.reduce((s, r) => s + (r.iso2 ? (mapData.pop[r.iso2] ?? 0) : 0), 0);
 
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" x="221" y="196" width="18" height="18"></image>
-      <text x="230" y="235" text-anchor="middle" class="flag-name" font-weight="700">both — 32</text>
-      <text x="230" y="248" text-anchor="middle" class="flag-name">e.g. France</text>
+    // ── Geometry — same math used to hand-derive the original static coordinates, now solved
+    // fresh per mode instead of typed once and frozen. ──────────────────────────────────────
+    const CX = 450, CY = 470, R_OUTER = 400;
+    const toXY = (angleDeg, r) => [CX + r * Math.sin(angleDeg * Math.PI / 180), CY - r * Math.cos(angleDeg * Math.PI / 180)];
+    const f2 = n => n.toFixed(2);
+    const sectorPath = (a0, a1, r) => {
+      const [x0, y0] = toXY(a0, r), [x1, y1] = toXY(a1, r);
+      const large = (a1 - a0) > 180 ? 1 : 0;
+      return `M${CX},${CY} L${f2(x0)},${f2(y0)} A${f2(r)},${f2(r)} 0 ${large} 1 ${f2(x1)},${f2(y1)} Z`;
+    };
+    const annulusPath = (rOuter, rInner) =>
+      `M${CX},${f2(CY - rOuter)} A${f2(rOuter)},${f2(rOuter)} 0 1,1 ${f2(CX - 0.01)},${f2(CY - rOuter)} Z ` +
+      `M${CX},${f2(CY - rInner)} A${f2(rInner)},${f2(rInner)} 0 1,0 ${f2(CX + 0.01)},${f2(CY - rInner)} Z`;
+    const fmtCount = n => Math.round(n).toString();
+    const fmtPop = n => n >= 1000 ? (n / 1000).toFixed(1) + 'B' : Math.round(n) + 'M';
+    // Anchor the wedge label away from the disc's center so it reads outward, matching the
+    // hand-picked start/end/middle choices the original page made per confederation's position.
+    const anchorFor = mid => {
+      const s = Math.sin(mid * Math.PI / 180);
+      return s > 0.35 ? 'start' : s < -0.35 ? 'end' : 'middle';
+    };
 
-      <!-- ============ panel B: the other 191 (non-qualified) ============ -->
-      <circle cx="670" cy="205" r="150" fill="var(--faint)" fill-opacity=".35" stroke="var(--faint-strong)" stroke-width="1.6"></circle>
-      <circle cx="615" cy="245" r="58" fill="var(--exp)" fill-opacity=".22" stroke="var(--exp)" stroke-opacity=".6" stroke-width="1"></circle>
+    function computeWedges(mode) {
+      const weight = c => mode === 'pop' ? c.pop : c.count;
+      const qWeight = c => mode === 'pop' ? c.qualifiedPop : c.qualifiedCount;
+      const total = confs.reduce((s, c) => s + weight(c), 0);
+      let angle = 0;
+      return confs.map(c => {
+        const w = weight(c);
+        const width = total ? (w / total) * 360 : 0;
+        const start = angle;
+        angle += width;
+        return { ...c, start, end: angle, mid: start + width / 2, width, weight: w, qWeight: qWeight(c) };
+      });
+    }
 
-      <text x="670" y="42" text-anchor="middle" class="wedge-label">NON-QUALIFIED — 191</text>
+    function renderDiagram(svgEl, mode) {
+      const fifaTotal = mode === 'pop' ? fifaPop : fifaCount;
+      const nonFifaTotal = mode === 'pop' ? nonFifaPop : nonFifaCount;
+      const grand = fifaTotal + nonFifaTotal;
+      const rFifa = R_OUTER * Math.sqrt(fifaTotal / grand);
+      const fmt = mode === 'pop' ? fmtPop : fmtCount;
 
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/im.svg" x="587" y="238" width="18" height="18"></image>
-      <text x="612" y="252" class="flag-name" fill="var(--exp)">Isle of Man</text>
-      <text x="580" y="322" text-anchor="middle" class="flag-name" font-weight="700">exports — 19</text>
+      // Sector AREA, not radius, is what a reader actually compares — for a fixed-angle
+      // sub-sector, area ∝ r², so radius must be rFifa·√(fraction) for the brown patch's area
+      // to honestly represent the qualified share. A linear r ∝ fraction (the classic
+      // Nightingale/coxcomb convention) looks intuitive but systematically understates every
+      // fraction once you're actually comparing areas — e.g. UEFA's real 29% would render as
+      // only ~8.5% of the wedge's area at r/R=0.29.
+      const wedges = computeWedges(mode).map(w => ({ ...w, qRadius: w.weight ? rFifa * Math.sqrt(w.qWeight / w.weight) : 0 }));
 
-      <text x="740" y="120" text-anchor="middle" class="flag-name" font-style="italic">no squad to import into —</text>
-      <text x="740" y="132" text-anchor="middle" class="flag-name" font-style="italic">"import" is meaningless here</text>
+      const wedgeMarkup = wedges.map((w, i) => {
+        const shade = (i % 2 === 0) ? '.10' : '.16';
+        const anchor = anchorFor(w.mid);
+        // Same radius fraction for every wedge, matching where the original hand-placed
+        // labels actually sat (~0.6·rFifa) — narrow wedges can spill their label into a
+        // neighbor's territory rather than floating outside the disc, EXCEPT genuinely
+        // razor-thin ones (<10°): population mode can squeeze OFC (Pacific island nations)
+        // down to under half a degree, at which point "spill into the neighbor" becomes
+        // "sit directly on top of the neighbor's own label" — those still get pushed past
+        // the rim instead.
+        const labelR = w.width < 10 ? rFifa + 24 : rFifa * 0.62;
+        const [lx, ly] = toXY(w.mid, labelR);
+        const ex = EXAMPLES[w.key];
+        const qR = Math.max(w.qRadius * 0.55, 9);
+        const nqR = (w.qRadius + rFifa) / 2;
+        const [qx, qy] = toXY(w.start + w.width * 0.35, qR);
+        const qEntry = byId.get(ex.qualified);
+        // Flag label sits on whichever side of the disc's own center still has room to run
+        // outward — same idea as anchorFor above, just per-flag instead of per-wedge, since a
+        // qualified/non-qualified example can land on either side depending on the mode.
+        const sideOf = x => x < CX ? { anchor: 'end', dx: -12 } : { anchor: 'start', dx: 12 };
+        const qSide = sideOf(qx);
+        let nonQualifiedMarkup = '';
+        if (ex.nonQualified) {
+          const [nqx, nqy] = toXY(w.start + w.width * 0.65, nqR);
+          const nqEntry = byId.get(ex.nonQualified);
+          const nqSide = sideOf(nqx);
+          nonQualifiedMarkup = `
+            <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${nqEntry.iso2}.svg" x="${f2(nqx - 9)}" y="${f2(nqy - 9)}" width="18" height="18"></image>
+            <text x="${f2(nqx + nqSide.dx)}" y="${f2(nqy + 4)}" text-anchor="${nqSide.anchor}" class="flag-name">${nqEntry.name}</text>`;
+        }
+        return `
+          <path d="${sectorPath(w.start, w.end, rFifa)}" fill="var(--confed)" fill-opacity="${shade}" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
+          <path d="${sectorPath(w.start, w.end, w.qRadius)}" fill="var(--qualified)" fill-opacity=".55"></path>
+          <text x="${f2(lx)}" y="${f2(ly)}" text-anchor="${anchor}" class="wedge-label">${w.label}</text>
+          <text x="${f2(lx)}" y="${f2(ly + 15)}" text-anchor="${anchor}" class="wedge-count">${fmt(w.weight)} · ${fmt(w.qWeight)} qualified</text>
+          <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${qEntry.iso2}.svg" x="${f2(qx - 9)}" y="${f2(qy - 9)}" width="18" height="18"></image>
+          <text x="${f2(qx + qSide.dx)}" y="${f2(qy + 4)}" text-anchor="${qSide.anchor}" class="flag-name">${qEntry.name}</text>
+          ${nonQualifiedMarkup}
+        `;
+      }).join('');
 
-      <text x="742" y="330" text-anchor="middle" class="flag-name">neither — 172</text>
-    </svg>
-  </div>
+      // Off-map non-FIFA examples sit at the midpoint of whatever the (mode-specific) non-FIFA
+      // ring actually is, not a fixed pixel position — in population mode that ring is a
+      // sliver (non-FIFA territory population is negligible next to ~8B FIFA-member humans),
+      // so a fixed radius would land them inside the FIFA disc instead.
+      const ringMidR = (rFifa + R_OUTER) / 2;
+      const [glx, gly] = toXY(16, ringMidR);
+      const [vax, vay] = toXY(200, ringMidR);
+
+      svgEl.innerHTML = `
+        <defs>
+          <pattern id="hatch-${mode}" width="9" height="9" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="9" stroke="var(--hatch)" stroke-width="2.4"></line>
+          </pattern>
+          <radialGradient id="confedShade-${mode}" cx="30%" cy="30%" r="80%">
+            <stop offset="0%" stop-color="var(--confed)" stop-opacity=".16"></stop>
+            <stop offset="100%" stop-color="var(--confed)" stop-opacity=".05"></stop>
+          </radialGradient>
+        </defs>
+
+        <circle cx="${CX}" cy="${CY}" r="${R_OUTER}" fill="url(#hatch-${mode})"></circle>
+        <circle cx="${CX}" cy="${CY}" r="${R_OUTER}" fill="none" stroke="var(--faint-strong)" stroke-width="1.5"></circle>
+
+        <path d="${annulusPath(R_OUTER, rFifa)}" fill-rule="evenodd" fill="var(--faint)" fill-opacity=".55"></path>
+
+        <circle cx="${CX}" cy="${CY}" r="${f2(rFifa)}" fill="url(#confedShade-${mode})"></circle>
+        ${wedgeMarkup}
+        <circle cx="${CX}" cy="${CY}" r="${f2(rFifa)}" fill="none" stroke="var(--confed-line)" stroke-width="1.6"></circle>
+
+        <text x="${CX}" y="20" text-anchor="middle" class="center-label">${mode === 'pop' ? `EVERY HUMAN ON EARTH PLAYING FOOTBALL — <tspan class="count-mono">${fmtPop(grand)}</tspan>` : `EVERY COUNTRY PLAYING FOOTBALL — <tspan class="count-mono">239</tspan>`}</text>
+        <rect x="397" y="38" width="16" height="16" fill="url(#hatch-${mode})"></rect>
+        <rect x="397" y="38" width="16" height="16" fill="var(--confed)" fill-opacity=".13"></rect>
+        <rect x="413" y="38" width="16" height="16" fill="var(--qualified)" fill-opacity=".55"></rect>
+        <rect x="397" y="38" width="32" height="16" fill="none" stroke="var(--faint-strong)" stroke-width="1"></rect>
+        <text x="441" y="50" class="band-tag">FIFA — ${fmt(fifaTotal)}</text>
+
+        <rect x="395" y="896" width="16" height="16" fill="url(#hatch-${mode})"></rect>
+        <rect x="395" y="896" width="16" height="16" fill="var(--faint)" fill-opacity=".55"></rect>
+        <rect x="395" y="896" width="16" height="16" fill="none" stroke="var(--faint-strong)" stroke-width="1"></rect>
+        <text x="423" y="908" class="band-tag">NON-FIFA — ${fmt(nonFifaTotal)}</text>
+
+        <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gl.svg" x="${f2(glx - 10)}" y="${f2(gly - 10)}" width="20" height="20"></image>
+        <text x="${f2(glx + 16)}" y="${f2(gly + 4)}" class="flag-name">Greenland</text>
+
+        <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/va.svg" x="${f2(vax - 9)}" y="${f2(vay - 9)}" width="18" height="18"></image>
+        <text x="${f2(vax)}" y="${f2(vay + 25)}" text-anchor="middle" class="flag-name">Vatican City</text>
+        <text x="${f2(vax)}" y="${f2(vay + 36)}" text-anchor="middle" class="flag-name">(off-map)</text>
+      `;
+    }
+
+    // Both diagrams are fully rendered up front (cheap — a few hundred rows of arithmetic, no
+    // re-fetching); the carousel itself just swaps which pre-rendered slide is visible, nothing
+    // left to wire on slide change.
+    renderDiagram(document.getElementById('wheel-svg-count'), 'count');
+    renderDiagram(document.getElementById('wheel-svg-pop'), 'pop');
+  </script>
 
   <div class="legend">
     <div class="legend-item">
       <div class="swatch" style="background:var(--confed);opacity:.5"></div>
-      <div class="legend-text"><span class="t">FIFA disc → confederation wedges.</span><span class="m"> Six wedges, angularly sized by real member count (213 total across the six sets, vs. <span class="num">211</span> FIFA members — a couple of geography-only outliers double-count harmlessly). Non-FIFA countries sit outside the disc entirely — no confederation.</span></div>
+      <div class="legend-text"><span class="t">FIFA disc → confederation wedges.</span><span class="m"> Six wedges, one per confederation, sized by real member count (or population, via the toggle above). Non-FIFA countries sit outside the disc — they don't belong to a confederation.</span></div>
     </div>
     <div class="legend-item">
       <div class="swatch" style="background:var(--qualified);opacity:.6"></div>
-      <div class="legend-text"><span class="t">Qualified — <span class="num">48</span>.</span><span class="m"> Drawn as its own center-to-rim sector inside each wedge (not a separate nested ring), sized to that confederation's own share of the 48 — because that's what actually happens: qualified teams are FIFA members first, and only incidentally grouped by confederation.</span></div>
-    </div>
-    <div class="legend-item">
-      <div class="swatch" style="background:var(--exp);opacity:.4"></div>
-      <div class="legend-text"><span class="t">Exports — <span class="num">51</span>.</span><span class="m"> Any country with a player who left, qualified or not — <span class="num">32</span> also import, <span class="num">19</span> don't have a squad to import into at all. See the separate diagram below, not tied to any wedge.</span></div>
-    </div>
-    <div class="legend-item">
-      <div class="swatch" style="background:var(--imp);opacity:.45"></div>
-      <div class="legend-text"><span class="t">Imports — <span class="num">47</span>.</span><span class="m"> Only possible for a qualified team — <span class="num">32</span> also export, <span class="num">15</span> import only, and exactly one qualified team (Czech Republic) does neither at all.</span></div>
-    </div>
-    <div class="legend-item">
-      <div class="swatch" style="background:var(--ink);opacity:.06;background-image:repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 4px)"></div>
-      <div class="legend-text"><span class="t">On the map.</span><span class="m"> Fine hatch across almost everything; Vatican City is the rare off-map exception — non-FIFA, too small to have its own geometry in the underlying map data, so only its flag is shown.</span></div>
+      <div class="legend-text"><span class="t">Qualified — <span class="num">48</span>.</span><span class="m"> Each wedge has its own inner sector showing how many of its members qualified. The sector's radius is scaled by the square root of that share, so its area — not just its reach — honestly reflects the confederation's qualification rate.</span></div>
     </div>
   </div>
 
-  <div class="footnote">
-    <b>The uncolored majority is the point.</b> <span class="num">172</span> of the <span class="num">239</span> countries here — <span class="num">72%</span> — sit outside every colored band: non-qualified, and with zero players in this dataset. That's not a gap in the diagram; it's the actual shape of global football talent flow. The <span class="num">67</span> countries touched by qualification, export, or import are the whole visible story — everything else is quiet by default, not by omission.
-  </div>
 </div>
 </div>
 </body>
