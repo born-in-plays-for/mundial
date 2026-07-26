@@ -11,7 +11,7 @@ import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
 import { CONF_BOUNDS } from './conf.js';
 import { iso2ForId, _NULL_CODE } from './iso2.js';
-import { choroFill,
+import { choroFill, mapContainerTemplate, wireMapHeightDrag,
          FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT, W, H,
          buildChoroplethIndex, paintChoropleth,
          CENTROID_OVERRIDE, dotCentroid, zoomToCentroid as _sharedZoomToCentroid,
@@ -24,6 +24,10 @@ const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
   selection: true,  // #selection-panel — capital/pop for active dim country
 };
+
+// #map-container's own inner DOM — see map-container.js's mapContainerTemplate()
+// header comment. Rendered before anything below queries world-map/#map-frame/etc.
+render(mapContainerTemplate({ withRangeFilter: true }), document.getElementById('map-container'));
 
 // Map infrastructure from <world-map> web component (defined in map-container.js)
 const _wm       = document.querySelector('world-map');
@@ -430,25 +434,6 @@ const _syncMapFit = () => {
 };
 _syncMapFit();
 _landscapeMQ.addEventListener('change', _syncMapFit);
-// The height at which #map's box aspect ratio matches the viewBox's (W/H, see map-container.js)
-// at its current rendered width — i.e. the full-width "contain" point. Past this, taller is
-// just empty letterbox space (once preserveAspectRatio is 'meet'); the drag handle and the
-// localStorage-restored height (below) both cap themselves here so dragging can't overshoot
-// into that dead zone.
-const _mapNaturalHeight = () => document.getElementById('map').getBoundingClientRect().width * (H / W);
-const _MAP_HEIGHT_KEY = 'mundial-map-height';
-// Shrinks a previously-set explicit height back down if it now overshoots the natural
-// full-width height (e.g. the window narrowed since it was set, or since it was restored
-// from localStorage on load) — a no-op once #map is back to its default height:auto.
-const _clampMapHeight = () => {
-  const mapEl = document.getElementById('map');
-  if (!mapEl.style.height) return;
-  const natural = _mapNaturalHeight();
-  if (parseFloat(mapEl.style.height) > natural) {
-    mapEl.style.height = natural + 'px';
-    localStorage.setItem(_MAP_HEIGHT_KEY, natural);
-  }
-};
 const _syncPaddingTop = () => {
   if (_isLandscapeMobile()) {
     document.body.style.paddingTop    = '0';
@@ -577,91 +562,20 @@ if (_bottomPanel) new ResizeObserver(() => {
 }).observe(_bottomPanel);
 _syncMapHeight();
 
-// #map-footer drag-resize — vertical only. #map is width:100%/height:auto by default
-// (css/map-container.css); dragging sets an explicit inline px height on the SVG, which
-// letterboxes (shrinks the whole map, empty space above/below) rather than cropping/zooming,
-// since map-container.js's preserveAspectRatio defaults to "xMidYMid meet" — see its own
-// comment. Width is never touched, and dragging taller than the full-width natural height
-// (_mapNaturalHeight above) is capped there, since past that point there's nothing left to
-// reveal — only more letterbox. Reuses _syncMapHeight/_syncPaddingTop (above) to keep body
-// padding in sync during the drag, same as the map-collapse toggle does — #zoom-hint's own
-// position is plain CSS now (#map-frame/#zoom-hint, css/map-container.css) and needs no JS
-// at all.
+// #map-footer drag-resize — shared with the chain page now (map-container.js's
+// wireMapHeightDrag()), which had drifted behind this (missing dblclick-to-reset and
+// the natural-height drag cap). onDrag reuses _syncMapHeight (rAF-deferred, for the
+// high-frequency pointermove case); onSettle reuses _syncPaddingTop directly, since
+// the dblclick reset's own poll loop is already rAF-driven. skipRestore: landscape
+// mobile is always immersive-map (map-container.css forces #map to width/height:100%
+// there), so a stored explicit height from portrait mode shouldn't apply.
+const { clampMapHeight: _clampMapHeight } = wireMapHeightDrag({
+  storageKey: 'mundial-map-height',
+  onDrag: _syncMapHeight,
+  onSettle: _syncPaddingTop,
+  skipRestore: _isLandscapeMobile(),
+});
 const _mapFooter = document.getElementById('map-footer');
-const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));
-if (_storedMapHeight && !_isLandscapeMobile()) document.getElementById('map').style.height = _storedMapHeight + 'px';
-_clampMapHeight();
-if (_mapFooter) {
-  let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
-  _mapFooter.addEventListener('pointerdown', e => {
-    // #zoom-reset/#zoom-span keep their own click behavior; #legend keeps its own — the
-    // range-filter grips' pointerdown/pointermove/pointerup drag (map-container.js's
-    // wireLegend()) would otherwise also bubble up here and fight with the map-height
-    // drag-resize below, both racing to handle the same gesture.
-    if (e.target.closest('button') || e.target.closest('#legend')) return;
-    const mapEl = document.getElementById('map');
-    _dragging = true;
-    _dragStartY = e.clientY;
-    _dragStartHeight = mapEl.getBoundingClientRect().height;
-    // Everything else stacked inside #map-container (toggle bar + map-footer itself) —
-    // held constant for the drag so the map's max height never pushes the bar off-screen.
-    _dragOtherHeight = _mc.getBoundingClientRect().height - _dragStartHeight;
-    _mapFooter.setPointerCapture(e.pointerId);
-  });
-  _mapFooter.addEventListener('pointermove', e => {
-    if (!_dragging) return;
-    const minH = 120;
-    const maxH = Math.min(
-      window.innerHeight - _mc.getBoundingClientRect().top - _dragOtherHeight - 20,
-      _mapNaturalHeight(),
-    );
-    const h = Math.max(minH, Math.min(maxH, _dragStartHeight + (e.clientY - _dragStartY)));
-    document.getElementById('map').style.height = h + 'px';
-    _syncMapHeight();
-  });
-  const _endMapDrag = () => {
-    if (!_dragging) return;
-    _dragging = false;
-    localStorage.setItem(_MAP_HEIGHT_KEY, parseFloat(document.getElementById('map').style.height));
-  };
-  _mapFooter.addEventListener('pointerup', _endMapDrag);
-  _mapFooter.addEventListener('pointercancel', _endMapDrag);
-  // Double-click to reset back to the natural (full-width, no explicit override) height —
-  // same reset gesture js/map-container.js's own #legend-filter-device grips use, and the
-  // same button/#legend exclusion as the drag above (a double-click on the zoom buttons or
-  // inside #legend has its own meaning, not this). Animated: jumping straight to height:''
-  // (the drag's own live-update path, no transition) reads as an abrupt snap for a gesture
-  // that isn't itself a drag — a real `height` transition eases it back, same rAF-polling
-  // pattern the map-collapse toggle uses (_pollPaddingDuringMapToggle, above) to keep
-  // #bottomTabContent tracking the animating edge instead of jumping once at the end. `#map`
-  // has no transition of its own (css/map-container.css: height:auto by default), so one is
-  // added here only for the duration of this animation and removed once it settles — nothing
-  // else on the page reads or relies on it.
-  _mapFooter.addEventListener('dblclick', e => {
-    if (e.target.closest('button') || e.target.closest('#legend')) return;
-    const mapEl = document.getElementById('map');
-    const from = mapEl.getBoundingClientRect().height;
-    const to = _mapNaturalHeight();
-    localStorage.removeItem(_MAP_HEIGHT_KEY);
-    if (Math.abs(from - to) < 0.5) { mapEl.style.height = ''; _syncMapHeight(); return; }
-    let raf = null;
-    const poll = () => { _syncPaddingTop(); raf = requestAnimationFrame(poll); };
-    const onEnd = ev => {
-      if (ev.propertyName !== 'height') return;
-      mapEl.removeEventListener('transitionend', onEnd);
-      cancelAnimationFrame(raf);
-      mapEl.style.transition = '';
-      mapEl.style.height = ''; // back to responsive height:auto, not pinned at the natural px value
-      _syncPaddingTop();
-    };
-    mapEl.style.height = from + 'px'; // pin the live px height so the transition has a real start point
-    void mapEl.offsetHeight; // force reflow — otherwise the two writes coalesce and nothing animates
-    mapEl.style.transition = 'height .3s ease';
-    mapEl.addEventListener('transitionend', onEnd);
-    poll();
-    mapEl.style.height = to + 'px';
-  });
-}
 
 // #map-grip's own centering (position:absolute; left/top:50%; translate(-50%,-50%), css/
 // map-container.css) is a direct child of #map-footer, deliberately never wrapped in anything

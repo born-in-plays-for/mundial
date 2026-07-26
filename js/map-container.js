@@ -17,7 +17,7 @@
 //   .zoom       — D3 zoom behaviour (already called on svg)
 //   .onZoom     — optional callback(e) for extra page-level zoom work
 
-import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME, buildImportByCountry } from './qualified.js';
 import { countryName } from './i18n.js';
 import {
@@ -156,6 +156,192 @@ class WorldMap extends HTMLElement {
 }
 
 customElements.define('world-map', WorldMap);
+
+// ── #map-container's inner DOM ───────────────────────────────────────────────
+// index.html and chains/wc2026_chain_longest.html were hand-duplicating this whole
+// block (map frame, zoom controls, grip, legend) — identical apart from the asset
+// path prefix and whether the legend's drag-to-filter range device is present
+// (index.html only; the chain page has no category-filter system for a range
+// selection to plug into — see legend.js's wireLegend() header comment). Templated
+// once here instead. Each page keeps its own real, empty `#map-container` div in
+// its static HTML (not a generic placeholder) and renders this INTO it — see
+// index.js's and the chain page's own module scripts, right after their imports.
+// Deliberately *not* including the `#map-container` div itself: `<mundial-auth-bar>`'s
+// own _offsetSibling() (js/auth-bar.js) reads its nextElementSibling's computed
+// `position` to decide how to offset it below the fixed navbar (top vs marginTop),
+// and on the chain page that sibling IS `#map-container` (`position:fixed`) —
+// wrapping it in an extra JS-rendered placeholder div would make that check see a
+// plain `position:static` wrapper instead and offset the wrong element.
+export const mapContainerTemplate = ({ basePath = '', withRangeFilter = false } = {}) => html`
+  <button id="map-toggle-bar" type="button" class="map-toggle-bar" data-bs-toggle="collapse" data-bs-target="#map-collapse" aria-expanded="true" aria-controls="map-collapse">⌄</button>
+  <div id="map-collapse" class="collapse show w-100">
+    <div id="map-frame">
+      <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
+      <span id="zoom-hint"></span>
+    </div>
+    <div id="map-footer" class="d-flex align-items-center justify-content-between w-100 pt-1">
+      <div id="map-controls" class="d-flex align-items-center gap-1">
+        <button id="zoom-reset" type="button" aria-label="Reset zoom">
+          <img src="${basePath}images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+        </button>
+        <button id="zoom-span" type="button" aria-label="Span all visible countries">
+          <img src="${basePath}images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+        </button>
+      </div>
+      <!-- Centered over #map-footer via CSS (position:absolute, left/top:50%) — JS for mobile. -->
+      <img id="map-grip" src="${basePath}images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
+      <div id="legend" class="d-flex align-items-start">
+        <!-- Hidden via legend.js's wireLegend()/updateOutlier() whenever OUTLIER_IDS_NEG is
+             empty (no country carved out as its own standalone dot on the negative side — see
+             that Set's own comment on why Curaçao no longer gets one). -->
+        <div id="legend-outlier-neg-wrap" class="d-flex flex-column pe-2">
+          <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+            <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
+          </div>
+          <div id="legend-outlier-count" class="text-center"></div>
+        </div>
+        <div id="legend-bar-col">
+          <div id="legend-bar" class="overflow-hidden rounded-2"></div>
+          <div id="legend-ticks"></div>
+        </div>
+        <!-- The positive-side outlier (negative's is the block above, reused; see
+             legend.js's wireLegend()/updateOutlier). -->
+        <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2">
+          <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+            <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
+          </div>
+          <div id="legend-outlier-count-pos" class="text-center"></div>
+        </div>
+        ${withRangeFilter ? html`
+          <!-- Range-filter device — see legend.js's wireLegend()/renderRange(). Covers the
+               whole #legend (both outlier columns + the gradient bar + the text rows below),
+               plus a bit of side margin for the grip handles to rest in — rendered into by JS
+               only once wired with an onRangeChange callback (index.html only — see
+               wireLegend's own header comment for why the chain page doesn't get this). -->
+          <div id="legend-filter-device"></div>
+        ` : nothing}
+      </div>
+    </div>
+  </div>
+`;
+
+// ── #map-footer drag-resize ──────────────────────────────────────────────────
+// index.html and the chain page each hand-maintained their own copy of this — the
+// chain page's had drifted behind index.js's (missing the dblclick-to-reset gesture
+// entirely, and missing the natural-height cap on the drag itself, so it could be
+// dragged into pure letterboxed empty space with nothing left to reveal). One
+// shared implementation now; the two pages differ only in their storage key and
+// what "keep body padding in sync" means for them (index.html: the more elaborate
+// _syncMapHeight/_syncPaddingTop, landscape-mobile-aware; the chain page: its own
+// simpler _syncBodyPadding) — passed in rather than assumed, since neither belongs
+// in this shared, page-agnostic module.
+//
+// Vertical only. #map is width:100%/height:auto by default (css/map-container.css);
+// dragging sets an explicit inline px height on the SVG, which letterboxes (shrinks
+// the whole map, empty space above/below) rather than cropping/zooming, since
+// map-container.js's own preserveAspectRatio defaults to "xMidYMid meet" — see the
+// WorldMap class's own comment. Width is never touched, and dragging taller than
+// the full-width natural height (mapNaturalHeight below) is capped there, since
+// past that point there's nothing left to reveal — only more letterbox.
+//
+// Returns { mapNaturalHeight, clampMapHeight } — both callers need these beyond
+// this wiring too (index.js's own window resize handler re-clamps on viewport
+// change; mapNaturalHeight is the same "full-width contain point" used elsewhere).
+export const wireMapHeightDrag = ({ storageKey, onDrag, onSettle, skipRestore = false }) => {
+  const mapFooter = document.getElementById('map-footer');
+  const mapContainer = document.getElementById('map-container');
+  const mapEl = () => document.getElementById('map');
+
+  const mapNaturalHeight = () => mapEl().getBoundingClientRect().width * (H / W);
+  // Shrinks a previously-set explicit height back down if it now overshoots the natural
+  // full-width height (e.g. the window narrowed since it was set, or since it was restored
+  // from localStorage on load) — a no-op once #map is back to its default height:auto.
+  const clampMapHeight = () => {
+    const el = mapEl();
+    if (!el.style.height) return;
+    const natural = mapNaturalHeight();
+    if (parseFloat(el.style.height) > natural) {
+      el.style.height = natural + 'px';
+      localStorage.setItem(storageKey, natural);
+    }
+  };
+
+  const storedHeight = parseFloat(localStorage.getItem(storageKey));
+  if (storedHeight && !skipRestore) mapEl().style.height = storedHeight + 'px';
+  clampMapHeight();
+
+  if (mapFooter) {
+    let dragStartY = 0, dragStartHeight = 0, dragOtherHeight = 0, dragging = false;
+    mapFooter.addEventListener('pointerdown', e => {
+      // #zoom-reset/#zoom-span keep their own click behavior; #legend keeps its own — the
+      // range-filter grips' pointerdown/pointermove/pointerup drag (legend.js's wireLegend())
+      // would otherwise also bubble up here and fight with the map-height drag-resize below,
+      // both racing to handle the same gesture.
+      if (e.target.closest('button') || e.target.closest('#legend')) return;
+      dragging = true;
+      dragStartY = e.clientY;
+      dragStartHeight = mapEl().getBoundingClientRect().height;
+      // Everything else stacked inside #map-container (toggle bar + map-footer itself) —
+      // held constant for the drag so the map's max height never pushes the bar off-screen.
+      dragOtherHeight = mapContainer.getBoundingClientRect().height - dragStartHeight;
+      mapFooter.setPointerCapture(e.pointerId);
+    });
+    mapFooter.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const minH = 120;
+      const maxH = Math.min(
+        window.innerHeight - mapContainer.getBoundingClientRect().top - dragOtherHeight - 20,
+        mapNaturalHeight(),
+      );
+      const h = Math.max(minH, Math.min(maxH, dragStartHeight + (e.clientY - dragStartY)));
+      mapEl().style.height = h + 'px';
+      onDrag?.();
+    });
+    const endDrag = () => {
+      if (!dragging) return;
+      dragging = false;
+      localStorage.setItem(storageKey, parseFloat(mapEl().style.height));
+    };
+    mapFooter.addEventListener('pointerup', endDrag);
+    mapFooter.addEventListener('pointercancel', endDrag);
+    // Double-click to reset back to the natural (full-width, no explicit override) height —
+    // same reset gesture legend.js's own #legend-filter-device grips use, and the same
+    // button/#legend exclusion as the drag above (a double-click on the zoom buttons or inside
+    // #legend has its own meaning, not this). Animated: jumping straight to height:'' (the
+    // drag's own live-update path, no transition) reads as an abrupt snap for a gesture that
+    // isn't itself a drag — a real `height` transition eases it back, polled every frame via
+    // rAF so a caller's own padding-sync tracks the animating edge instead of jumping once at
+    // the end. `#map` has no transition of its own (css/map-container.css: height:auto by
+    // default), so one is added here only for the duration of this animation and removed once
+    // it settles — nothing else on the page reads or relies on it.
+    mapFooter.addEventListener('dblclick', e => {
+      if (e.target.closest('button') || e.target.closest('#legend')) return;
+      const el = mapEl();
+      const from = el.getBoundingClientRect().height;
+      const to = mapNaturalHeight();
+      localStorage.removeItem(storageKey);
+      if (Math.abs(from - to) < 0.5) { el.style.height = ''; onSettle?.(); return; }
+      let raf = null;
+      const poll = () => { onSettle?.(); raf = requestAnimationFrame(poll); };
+      const onEnd = ev => {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', onEnd);
+        cancelAnimationFrame(raf);
+        el.style.transition = '';
+        el.style.height = ''; // back to responsive height:auto, not pinned at the natural px value
+        onSettle?.();
+      };
+      el.style.height = from + 'px'; // pin the live px height so the transition has a real start point
+      void el.offsetHeight; // force reflow — otherwise the two writes coalesce and nothing animates
+      el.style.transition = 'height .3s ease';
+      el.addEventListener('transitionend', onEnd);
+      poll();
+      el.style.height = to + 'px';
+    });
+  }
+
+  return { mapNaturalHeight, clampMapHeight };
+};
 
 // ── Choropleth data index ───────────────────────────────────────────────────────
 // Pure function: rawData (data/v2/map.json shape: {data, natives, pop, capital}) → the

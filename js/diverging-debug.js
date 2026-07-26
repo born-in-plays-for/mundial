@@ -1,19 +1,73 @@
 // js/diverging-debug.js
-// Dev-only live-tuning panel for diverging-scale.js's color params (#diverging-debug,
-// index.html) — hidden by default (the panel's own inline style="display:none"),
-// shown only when the URL carries a ?debug param. Kept separate from
-// diverging-scale.js itself (a pure, DOM-free math module) so neither
-// map-container.js nor legend.js pays for this UI just by importing the color math.
-// Live-tunes diverging-scale.js's _divergingParams via getDivergingParams()/
-// setDivergingParams() — the latter already notifies onPaletteChange()'s listeners
-// (map-container.js's repaint, legend.js's rebuild), so every input here just needs
-// to call it; both repaints happen for free.
+// Dev-only live-tuning panel for diverging-scale.js's color params — markup and
+// wiring both live here now (previously just the wiring, with the <details> block
+// hand-written in index.html; moved in for consistency with map-container.js's own
+// mapContainerTemplate()/legend.js split). Hidden by default (inline style="display:
+// none" in the template below), shown only when the URL carries a ?debug param.
+// Kept separate from diverging-scale.js itself (a pure, DOM-free math module) so
+// neither map-container.js nor legend.js pays for this UI just by importing the
+// color math. Live-tunes diverging-scale.js's _divergingParams via
+// getDivergingParams()/setDivergingParams() — the latter already notifies
+// onPaletteChange()'s listeners (map-container.js's repaint, legend.js's rebuild),
+// so every input here just needs to call it; both repaints happen for free.
 
+import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
 import { getDivergingParams, setDivergingParams } from './diverging-scale.js';
 
+const _divergingDebugTemplate = () => html`
+  <details id="diverging-debug" class="container-xxl my-2 sub" open style="display:none">
+    <summary style="cursor:pointer;">Diverging scale debug</summary>
+    <div class="d-flex flex-wrap gap-3 align-items-end py-2">
+      <label class="d-flex flex-column">Neutral (v = 0)
+        <input type="color" id="dbg-neutral">
+      </label>
+      <label class="d-flex flex-column">Left color — negative / "plays for"
+        <input type="color" id="dbg-easy-left">
+      </label>
+      <label class="d-flex flex-column">Right color — positive / "born in"
+        <input type="color" id="dbg-easy-right">
+      </label>
+      <label class="d-flex flex-column">Left outlier dot
+        <input type="color" id="dbg-outlier-left">
+      </label>
+      <label class="d-flex flex-column">Right outlier dot
+        <input type="color" id="dbg-outlier-right">
+      </label>
+      <label class="d-flex flex-column">Left algo
+        <select id="dbg-algo-left">
+          <option value="power">power</option>
+          <option value="smoothstep">smoothstep</option>
+        </select>
+      </label>
+      <label class="d-flex flex-column">Left ease (power only) <span id="dbg-ease-left-val"></span>
+        <input type="range" id="dbg-ease-left" min="0.2" max="3" step="0.1">
+      </label>
+      <label class="d-flex flex-column">Right algo
+        <select id="dbg-algo-right">
+          <option value="power">power</option>
+          <option value="smoothstep">smoothstep</option>
+        </select>
+      </label>
+      <label class="d-flex flex-column">Right ease (power only) <span id="dbg-ease-right-val"></span>
+        <input type="range" id="dbg-ease-right" min="0.2" max="3" step="0.1">
+      </label>
+      <label class="d-flex flex-column">Left floor (v≠0 min) <span id="dbg-floor-left-val"></span>
+        <input type="range" id="dbg-floor-left" min="0" max="0.5" step="0.01">
+      </label>
+      <label class="d-flex flex-column">Right floor (v≠0 min) <span id="dbg-floor-right-val"></span>
+        <input type="range" id="dbg-floor-right" min="0" max="0.5" step="0.01">
+      </label>
+      <button id="dbg-reset" type="button" class="btn btn-sm btn-outline-secondary">Reset</button>
+    </div>
+  </details>
+`;
+
 export const initDivergingDebug = () => {
+  const slot = document.getElementById('diverging-debug-slot');
+  if (!slot) return;
+  render(_divergingDebugTemplate(), slot);
+
   const panel = document.getElementById('diverging-debug');
-  if (!panel) return;
   if (new URLSearchParams(location.search).has('debug')) panel.style.display = '';
 
   const _dbgDefaults = getDivergingParams();

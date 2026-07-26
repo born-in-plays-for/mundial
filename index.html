@@ -155,106 +155,18 @@
   </div>
   <div id="sidebar-host" style="position:absolute;top:0;right:0;z-index:10"></div>
 </header>
-<div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative">
-  <button id="map-toggle-bar" type="button" class="map-toggle-bar" data-bs-toggle="collapse" data-bs-target="#map-collapse" aria-expanded="true" aria-controls="map-collapse">⌄</button>
-  <div id="map-collapse" class="collapse show w-100">
-    <div id="map-frame">
-      <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
-      <span id="zoom-hint">scroll to zoom · drag to pan</span>
-    </div>
-    <div id="map-footer" class="d-flex align-items-center justify-content-between w-100 pt-1">
-      <div id="map-controls" class="d-flex align-items-center gap-1">
-        <button id="zoom-reset" type="button" aria-label="Reset zoom">
-          <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-        </button>
-        <button id="zoom-span" type="button" aria-label="Span all visible countries">
-          <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-        </button>
-      </div>
-      <!-- Centered over #map-footer via CSS (position:absolute, left/top:50%) — JS for mobile. -->
-      <img id="map-grip" src="images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
-      <div id="legend" class="d-flex align-items-start">
-        <!-- Hidden via legend.js's wireLegend()/updateOutlier() whenever OUTLIER_IDS_NEG is
-             empty (no country carved out as its own standalone dot on the negative side — see that
-             Set's own comment on why Curaçao no longer gets one). -->
-        <div id="legend-outlier-neg-wrap" class="d-flex flex-column pe-2">
-          <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
-            <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
-          </div>
-          <div id="legend-outlier-count" class="text-center"></div>
-        </div>
-        <div id="legend-bar-col">
-          <div id="legend-bar" class="overflow-hidden rounded-2"></div>
-          <div id="legend-ticks"></div>
-        </div>
-        <!-- The positive-side outlier (negative's is the block above, reused; see
-             legend.js's wireLegend()/updateOutlier). -->
-        <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2">
-          <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
-            <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
-          </div>
-          <div id="legend-outlier-count-pos" class="text-center"></div>
-        </div>
-        <!-- Range-filter device — see legend.js's wireLegend()/renderRange(). Covers the
-             whole #legend (both outlier columns + the gradient bar + the text rows below), plus a
-             bit of side margin for the grip handles to rest in — rendered into by JS only once
-             wired with an onRangeChange callback (index.js only — see wireLegend's own header
-             comment for why the chain page doesn't get this). -->
-        <div id="legend-filter-device"></div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- #map-container's own inner DOM (map frame, zoom controls, grip, legend) is
+     rendered here by js/index.js at load time, via map-container.js's
+     mapContainerTemplate() — shared with chains/wc2026_chain_longest.html rather
+     than hand-duplicated across both files. See that function's own header
+     comment for why this div itself (not a placeholder) stays static. -->
+<div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative"></div>
 
-<!-- Debug tool for tuning the map's diverging color scale live — wiring in
-     diverging-debug.js (getDivergingParams()/setDivergingParams(), diverging-scale.js).
-     Hidden by default via this inline style — diverging-debug.js clears it when the
-     URL carries a ?debug param. -->
-<details id="diverging-debug" class="container-xxl my-2 sub" open style="display:none">
-  <summary style="cursor:pointer;">Diverging scale debug</summary>
-  <div class="d-flex flex-wrap gap-3 align-items-end py-2">
-    <label class="d-flex flex-column">Neutral (v = 0)
-      <input type="color" id="dbg-neutral">
-    </label>
-    <label class="d-flex flex-column">Left color — negative / "plays for"
-      <input type="color" id="dbg-easy-left">
-    </label>
-    <label class="d-flex flex-column">Right color — positive / "born in"
-      <input type="color" id="dbg-easy-right">
-    </label>
-    <label class="d-flex flex-column">Left outlier dot
-      <input type="color" id="dbg-outlier-left">
-    </label>
-    <label class="d-flex flex-column">Right outlier dot
-      <input type="color" id="dbg-outlier-right">
-    </label>
-    <label class="d-flex flex-column">Left algo
-      <select id="dbg-algo-left">
-        <option value="power">power</option>
-        <option value="smoothstep">smoothstep</option>
-      </select>
-    </label>
-    <label class="d-flex flex-column">Left ease (power only) <span id="dbg-ease-left-val"></span>
-      <input type="range" id="dbg-ease-left" min="0.2" max="3" step="0.1">
-    </label>
-    <label class="d-flex flex-column">Right algo
-      <select id="dbg-algo-right">
-        <option value="power">power</option>
-        <option value="smoothstep">smoothstep</option>
-      </select>
-    </label>
-    <label class="d-flex flex-column">Right ease (power only) <span id="dbg-ease-right-val"></span>
-      <input type="range" id="dbg-ease-right" min="0.2" max="3" step="0.1">
-    </label>
-    <label class="d-flex flex-column">Left floor (v≠0 min) <span id="dbg-floor-left-val"></span>
-      <input type="range" id="dbg-floor-left" min="0" max="0.5" step="0.01">
-    </label>
-    <label class="d-flex flex-column">Right floor (v≠0 min) <span id="dbg-floor-right-val"></span>
-      <input type="range" id="dbg-floor-right" min="0" max="0.5" step="0.01">
-    </label>
-    <button id="dbg-reset" type="button" class="btn btn-sm btn-outline-secondary">Reset</button>
-  </div>
-</details>
+<!-- Debug tool for tuning the map's diverging color scale live — markup and wiring
+     both live in diverging-debug.js's initDivergingDebug() now (getDivergingParams()/
+     setDivergingParams(), diverging-scale.js). Hidden by default (that template's own
+     inline display:none) — cleared only when the URL carries a ?debug param. -->
+<div id="diverging-debug-slot"></div>
 
 <main id="bottomTabContent" class="container-xxl px-4">
   <div id="tab-teams" class="taxonomy" role="tabpanel" tabindex="0" aria-labelledby="tab-teams-btn"></div>
