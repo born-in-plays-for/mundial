@@ -423,6 +423,17 @@
     // or read as crossing the wedge boundary between them.
     const SIL_PAD_DEG = 1.5;
     const SIL_PAD_R = 6;
+    // Per-confederation size exception, applied after the maximal-extent calc below — CAF's own
+    // wide angular span already lets it size up to the wedge's full radius, reading as more
+    // dominant than the others at the same "faint hint" weight, so it's scaled down; UEFA is
+    // scaled up (deliberately zoomed in past its own clip radius — the clip crops the excess,
+    // there's no overflow risk, just a closer/larger-reading crop of the shape).
+    const SIL_SCALE = { caf: 0.65, uefa: 1.5 };
+    // Per-confederation pixel nudge applied to the anchor point after sizing — UEFA's own
+    // silhouette, once scaled up past its wedge's own clip radius, reads better shifted away
+    // from the wedge's outer edge (toward the disc's own center) rather than centered on the
+    // wedge's mid-angle like every other confederation.
+    const SIL_OFFSET = { uefa: { dx: -50, dy: -10 } };
 
     // Builds one clipped, projected continent contour filling a single wedge's own full sector
     // (center to rFifa) — sized for the sector's own maximal extent, not confined to the
@@ -438,7 +449,7 @@
       if (!(clipEnd > clipStart) || !(clipR > 0)) return '';
       const clipWidth = clipEnd - clipStart;
       const chordWidth = 2 * clipR * Math.sin((clipWidth * Math.PI / 180) / 2);
-      const size = Math.min(clipR, chordWidth);
+      const size = Math.min(clipR, chordWidth) * (SIL_SCALE[w.key] ?? 1);
       // Centroid/scale come from the real solid landmass (reliable, area-weighted); only the
       // actual drawn path comes from the gapped mesh — see confSilhouettes' own comment above.
       const center = d3.geoCentroid(entry.solid);
@@ -448,7 +459,8 @@
       // Anchored at the same radius fraction as the wedge's own label (~0.6·rFifa) — roughly
       // where the sector is already comfortably wide, not the narrow tip near the center.
       const [mx, my] = toXY(w.mid, clipR * 0.6);
-      const tx = mx - size / 2, ty = my - size / 2;
+      const offset = SIL_OFFSET[w.key] ?? { dx: 0, dy: 0 };
+      const tx = mx - size / 2 + offset.dx, ty = my - size / 2 + offset.dy;
       const clipId = `sil-clip-${mode}-${w.key}`;
       // clip-path's own userSpaceOnUse coordinates are resolved in the SAME local space as the
       // referencing element's children — i.e. AFTER that element's own `transform` is applied.
