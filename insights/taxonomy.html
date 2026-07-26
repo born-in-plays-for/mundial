@@ -6,6 +6,8 @@
 <title>Country Categories — World Cup 2026</title>
 <link rel="stylesheet" href="../css/bootstrap-custom.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
 <link rel="stylesheet" href="../css/global.css">
 <style>
   :root {
@@ -111,6 +113,16 @@
   .count-mono {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     fill: var(--muted);
+  }
+
+  /* Faint continent contour sitting behind each wedge's own colored fill — decorative only,
+     not geographically registered to the wedge's angle/position (see the module script's own
+     comment on renderSilhouette). Just a border, no fill, per the request that spawned this. */
+  .conf-silhouette {
+    fill: none;
+    stroke: var(--confed-line);
+    stroke-width: 1;
+    stroke-opacity: .3;
   }
 
   /* ---- legend ---- */
@@ -232,9 +244,10 @@
     import { QUALIFIED_NAMES } from '../js/qualified.js';
     import { cachedFetchJson } from '../js/cached_fetch.js';
 
-    const [eloData, mapData] = await Promise.all([
+    const [eloData, mapData, worldTopo] = await Promise.all([
       cachedFetchJson('../data/elo_rank.json'),
       cachedFetchJson('../data/v2/map.json'),
+      cachedFetchJson('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
     ]);
     const byId = new Map(eloData.rankings.filter(r => r.id != null).map(r => [r.id, r]));
     const popOf = id => mapData.pop[byId.get(id)?.iso2] ?? 0;
@@ -268,6 +281,90 @@
         qualifiedPop: qualifiedIds.reduce((s, id) => s + popOf(id), 0),
       };
     });
+
+    // Per-confederation continent contour — a faint decorative watermark sitting behind each
+    // wedge's own colored fill, purely so "CAF"/"AFC"/"CONCACAF" (confederation acronyms nobody
+    // outside football administration actually recognizes) get a shape a reader instantly reads
+    // as "Africa"/"Asia"/"North America" instead. Deliberately NOT a real geographic projection
+    // of the wheel itself — the wedge's angle/radius already encode team-count/population, not
+    // geography, so bolting real lon/lat positioning onto that would just be a false precision.
+    // Each confed's own merged landmass is projected independently (own centroid, own scale) —
+    // see renderSilhouette below for how it's sized/placed within its own wedge. Orthographic
+    // (not Mercator) avoids antimeridian artifacts for OFC's Pacific spread (e.g. Fiji straddles
+    // ±180°) by simply clipping the far hemisphere away rather than plotting raw unwrapped
+    // longitude.
+    // Excluded from a confederation's own merged silhouette only — real membership (CONF_IDS,
+    // team counts, population) is untouched. Russia's landmass alone dwarfs the rest of UEFA's
+    // combined area, so including it turns the "Europe" contour into "Russia, plus a smudge" —
+    // the other ex-USSR republics (Baltics, Belarus, Ukraine, Moldova, Caucasus, Kazakhstan) are
+    // dropped for the same reason, trimming the shape down to a recognizable Western/Central
+    // Europe rather than sprawling toward Central Asia. Turkey stays — it's a real, visually
+    // distinct anchor on Europe's own southeastern edge, not part of the ex-Soviet sprawl.
+    const SIL_EXCLUDE_IDS = {
+      uefa: new Set(['643', '051', '031', '112', '233', '268', '398', '428', '440', '498', '804']),
+    };
+    // Two ids CONF_IDS itself uses that world-atlas's own topology doesn't recognize the same
+    // way (see CLAUDE.md's "UK home nations" / "Kosovo" sections): the 4 UK home nations use
+    // synthetic ids (8260-8263) with no world-atlas geometry of their own, so the silhouette
+    // needs the topology's own "826" (United Kingdom, undivided) added in instead; Kosovo's
+    // topology feature has no `id` at all (patched here the same way index.js's renderWorld
+    // does for the real map). Without both, UEFA's own silhouette shows a Britain/Ireland- and
+    // Balkans-shaped hole.
+    const SIL_EXTRA_IDS = { uefa: ['826'] };
+    worldTopo.objects.countries.geometries.forEach(g => {
+      if (!g.id && g.properties?.name === 'Kosovo') g.id = '383';
+    });
+    // world-atlas's own ids are zero-padded to 3 digits ("004" for Afghanistan, "032" for
+    // Argentina) — a plain String(id) left every country under numeric id 100 unmatched,
+    // punching holes in several confederations' own silhouettes (Afghanistan missing from AFC's
+    // was the visible one, but Algeria/CAF, Argentina/CONMEBOL, Austria+Belgium/UEFA etc. were
+    // silently affected the same way).
+    const padId = id => String(id).padStart(3, '0');
+    // Built via topojson.mesh (NOT merge) so the outline drawn is exactly each confederation's
+    // own true coastline/external edges. merge() only receives the already-filtered "kept"
+    // geometries, so it has no idea Russia/Georgia/Ukraine/etc. exist at all — any border
+    // touching one of them gets treated exactly like open ocean, drawing a fake straight
+    // "coastline" right along the old political border (Finland-Russia, Turkey-Georgia,
+    // Romania-Ukraine, ...). mesh's own per-arc filter walks the FULL world topology instead, so
+    // it knows what's really on the other side of every arc — a genuine foreign border (e.g.
+    // Turkey/Iran, never part of UEFA to begin with) or true coastline still renders normally;
+    // only arcs bordering one of THIS confed's own excluded neighbors are suppressed, leaving an
+    // open gap there instead of a fake edge.
+    // Each entry carries TWO features: `solid` (a real merge()d polygon of the kept countries)
+    // and `mesh` (the gapped-at-exclusions outline actually drawn). `solid` exists purely so
+    // d3.geoCentroid/fitSize have a real, reliably-weighted shape to center and scale against —
+    // geoCentroid computed directly on `mesh` (a sparse collection of disconnected line
+    // segments, by design missing whatever borders an excluded neighbor) is only length-weighted
+    // over whatever coastline happens to survive the filter, which can skew it far from the
+    // confederation's true center; orthographic then rotates the "wrong" hemisphere into view,
+    // hiding most of the real coastline on the invisible far side of the globe and leaving only
+    // a few stray fragments on screen (exactly the "undecipherable" breakage this replaced).
+    const confSilhouettes = Object.fromEntries(CONF_ORDER.map(key => {
+      const keptIds = new Set([...CONF_IDS[key]].map(padId).concat(SIL_EXTRA_IDS[key] ?? []));
+      const excludeIds = SIL_EXCLUDE_IDS[key] ?? new Set();
+      for (const id of excludeIds) keptIds.delete(id);
+      if (!keptIds.size) return [key, null];
+      const keptGeoms = worldTopo.objects.countries.geometries.filter(g => keptIds.has(g.id));
+      if (!keptGeoms.length) return [key, null];
+      const solid = topojson.merge(worldTopo, keptGeoms);
+      // mesh's filter(a, b): a true single-owner boundary (coastline) arc is reported as
+      // filter(g, g) — the SAME geometry reference for both sides, not (g, undefined) as the
+      // docs' informal description might suggest. Checking `a === b` first (verified empirically
+      // against the real topojson-client output — see conversation) was the actual bug behind
+      // the "only a few stray fragments" breakage: `b ? ... : false` treated every true coastline
+      // arc as "b not kept," which agreed with aKept only when aKept was false, backwards from
+      // what was intended, discarding almost the entire real coastline.
+      const filter = (a, b) => {
+        const aKept = keptIds.has(a.id);
+        if (a === b) return aKept;
+        const bKept = keptIds.has(b.id);
+        if (aKept === bKept) return false;
+        const otherId = aKept ? b.id : a.id;
+        return !(otherId != null && excludeIds.has(otherId));
+      };
+      const mesh = topojson.mesh(worldTopo, worldTopo.objects.countries, filter);
+      return [key, mesh.coordinates.length ? { solid, mesh } : null];
+    }));
 
     const fifaEntries = eloData.rankings.filter(r => r.fifaMember && r.id != null);
     const nonFifaEntries = eloData.rankings.filter(r => !r.fifaMember && !r.weirdo);
@@ -310,6 +407,63 @@
         angle += width;
         return { ...c, start, end: angle, mid: start + width / 2, width, weight: w, qWeight: qWeight(c) };
       });
+    }
+
+    // Confederations skipped outright, per mode — a hand-picked list rather than a derived
+    // size/legibility heuristic. OFC's own wedge is too thin in both modes; CONMEBOL is skipped
+    // in both too; CONCACAF and UEFA are additionally skipped in population mode, where their
+    // own qualified share is high enough to leave little non-qualified margin.
+    const SIL_SKIP = {
+      count: new Set(['ofc', 'conmebol']),
+      pop: new Set(['ofc', 'conmebol', 'concacaf', 'uefa']),
+    };
+
+    // Small inset applied only to the silhouette's own clip sector (never to the wedge's real
+    // colored fill/proportions) so two adjacent confederations' silhouettes don't visually touch
+    // or read as crossing the wedge boundary between them.
+    const SIL_PAD_DEG = 1.5;
+    const SIL_PAD_R = 6;
+
+    // Builds one clipped, projected continent contour filling a single wedge's own full sector
+    // (center to rFifa) — sized for the sector's own maximal extent, not confined to the
+    // non-qualified ring, so it can run across the qualified patch too. The clip (to that
+    // wedge's own sectorPath, inset by SIL_PAD_DEG/SIL_PAD_R) still confines it to that one
+    // confederation's own slice, with a small margin so it doesn't hug the wedge's own edges.
+    function renderSilhouette(w, mode, rFifa) {
+      if (SIL_SKIP[mode].has(w.key)) return '';
+      const entry = confSilhouettes[w.key];
+      if (!entry) return '';
+      const clipStart = w.start + SIL_PAD_DEG, clipEnd = w.end - SIL_PAD_DEG;
+      const clipR = rFifa - SIL_PAD_R;
+      if (!(clipEnd > clipStart) || !(clipR > 0)) return '';
+      const clipWidth = clipEnd - clipStart;
+      const chordWidth = 2 * clipR * Math.sin((clipWidth * Math.PI / 180) / 2);
+      const size = Math.min(clipR, chordWidth);
+      // Centroid/scale come from the real solid landmass (reliable, area-weighted); only the
+      // actual drawn path comes from the gapped mesh — see confSilhouettes' own comment above.
+      const center = d3.geoCentroid(entry.solid);
+      const projection = d3.geoOrthographic().rotate([-center[0], -center[1]]).fitSize([size, size], entry.solid);
+      const d = d3.geoPath(projection)(entry.mesh);
+      if (!d) return '';
+      // Anchored at the same radius fraction as the wedge's own label (~0.6·rFifa) — roughly
+      // where the sector is already comfortably wide, not the narrow tip near the center.
+      const [mx, my] = toXY(w.mid, clipR * 0.6);
+      const tx = mx - size / 2, ty = my - size / 2;
+      const clipId = `sil-clip-${mode}-${w.key}`;
+      // clip-path's own userSpaceOnUse coordinates are resolved in the SAME local space as the
+      // referencing element's children — i.e. AFTER that element's own `transform` is applied.
+      // sectorPath's coordinates are in the disc's global space, so the clip has to sit on a
+      // group with no transform of its own; the translate that positions the (locally
+      // 0..size-sized) silhouette path goes on a nested inner group instead. Putting both on one
+      // <g> silently clips everything away (the global-space clip shape gets reinterpreted
+      // inside the translated local space, missing the actual geometry entirely).
+      return `
+        <clipPath id="${clipId}"><path d="${sectorPath(clipStart, clipEnd, clipR)}"></path></clipPath>
+        <g clip-path="url(#${clipId})">
+          <g transform="translate(${f2(tx)},${f2(ty)})">
+            <path d="${d}" class="conf-silhouette"></path>
+          </g>
+        </g>`;
     }
 
     function renderDiagram(svgEl, mode) {
@@ -369,6 +523,8 @@
         `;
       }).join('');
 
+      const silhouetteMarkup = wedges.map(w => renderSilhouette(w, mode, rFifa)).join('');
+
       // Off-map non-FIFA examples sit at the midpoint of whatever the (mode-specific) non-FIFA
       // ring actually is, not a fixed pixel position — in population mode that ring is a
       // sliver (non-FIFA territory population is negligible next to ~8B FIFA-member humans),
@@ -394,6 +550,7 @@
         <path d="${annulusPath(R_OUTER, rFifa)}" fill-rule="evenodd" fill="var(--faint)" fill-opacity=".55"></path>
 
         <circle cx="${CX}" cy="${CY}" r="${f2(rFifa)}" fill="url(#confedShade-${mode})"></circle>
+        ${silhouetteMarkup}
         ${wedgeMarkup}
         <circle cx="${CX}" cy="${CY}" r="${f2(rFifa)}" fill="none" stroke="var(--confed-line)" stroke-width="1.6"></circle>
 
