@@ -195,6 +195,7 @@
 <div class="wrap">
   <h1>239 Countries. 8 Billion People. One World Cup.</h1>
   <p class="intro">This radial chart shows every one of the 239 countries and territories the app tracks for World Cup 2026, grouped into pie wedges by confederation (UEFA, CAF, AFC, CONCACAF, CONMEBOL, OFC) sized proportionally to how many teams each governs, with a small "off-map" note for FIFA non-members like Vatican City. Within each wedge, a brown inner zone — scaled so its area matches the true proportion — marks the share of that confederation's teams that qualified for the tournament.</p>
+  <p class="intro">Flip through the two views below: first the 2026 World Cup seen by country (FIFA confederations, qualified vs. non-qualified, non-FIFA), then seen by the population of those same confederations and underlying countries.</p>
 
   <!-- Wedge angles/radii below are computed at load time from the same real data the rest of
        the app reads — js/conf.js's CONF_IDS (confederation membership), js/qualified.js's
@@ -433,6 +434,16 @@
       <div class="swatch" style="background:var(--qualified);opacity:.6"></div>
       <div class="legend-text"><span class="t">Qualified — <span class="num">48</span>.</span><span class="m"> Each wedge has its own inner sector showing how many of its members qualified. The sector's radius is scaled by the square root of that share, so its area — not just its reach — honestly reflects the confederation's qualification rate.</span></div>
     </div>
+  </div>
+
+  <div class="footnote">
+    <p><b>A few observations</b></p>
+    <p><b>CONCACAF</b> flirts with 100% qualified, population-wise: the US + Mexico + Canada (co-hosts) so outweigh the Caribbean islands, Costa Rica, and their likes that the confederation is ~87% qualified by population... although only 6 countries out of 35 are actually qualified for the confederation.</p>
+    <p><b>CONMEBOL</b>: same story — Brazil alone is nearly half of South America's population — no surprise its qualified zone tops 75%. But it's actually a different story: Brazil is the only country in World Cup history to have never missed a single edition, and 6 of CONMEBOL's 10 members regularly qualify, so the gap between the country vs. population charts is not as striking as with CONCACAF.</p>
+    <p><b>AFC</b> (Asian Football Confederation), on the other hand, is the most populous confederation by far (4.7 billion!) yet only ~9% of that population qualifies — China, India, Indonesia are sitting this one out.</p>
+    <p><b>OFC</b> (Oceania Football Confederation) is so small in population — 19 million people across 11 countries — that its wedge barely registers next to Asia's 4.7 billion. Worth noting though: New Zealand's qualification came right after FIFA expanded the tournament to 48 teams, handing Oceania a guaranteed direct slot for the first time — before that it was just a playoff shot. So New Zealand may well become CONMEBOL's Brazil, but for OFC: the one team that's always there.</p>
+    <p><b>Non-FIFA countries</b>: even OFC's 19 million people look enormous next to non-FIFA countries: 28 of them (Vatican and friends) add up to just 8 million people out of 8.1 billion — practically invisible on the population chart.</p>
+    <p><b>CAF</b>: whether you look at it by country (10 qualified out of 54) or by population (472M qualified out of 1.5 billion), CAF is the worst-off confederation at the World Cup. What's striking is that this has nothing to do with a lack of interest in the sport. Unlike Asia, where giants like China or India largely sit football out, the game is hugely popular and widespread across Africa. Another striking point: CAF is a net importer of talent trained in Europe, players who almost entirely correspond to the diaspora resulting from colonization, born and developed there rather than at home. Bottom line: the human potential is there in Africa, gigantic even. What's still missing is the economic power the old colonial countries have to develop it.</p>
   </div>
 
 </div>
