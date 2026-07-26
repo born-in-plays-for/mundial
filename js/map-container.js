@@ -158,7 +158,7 @@ class WorldMap extends HTMLElement {
 customElements.define('world-map', WorldMap);
 
 // ── #map-container's inner DOM ───────────────────────────────────────────────
-// index.html and chains/wc2026_chain_longest.html were hand-duplicating this whole
+// index.html and chains/index.html were hand-duplicating this whole
 // block (map frame, zoom controls, grip, legend) — identical apart from the asset
 // path prefix and whether the legend's drag-to-filter range device is present
 // (index.html only; the chain page has no category-filter system for a range

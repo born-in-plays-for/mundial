@@ -1558,7 +1558,7 @@ const _allPlayersRow = p => {
       <td>${nameCell}${p.role === 'coach' ? html` <span class="coach-badge">${T.coach}</span>` : nothing}</td>
       <td class="pt-born${birthCity ? ' pt-born--clickable' : ''}" title=${bornInLabel} @click=${onBornInClick}>${_allPlayersFlag(birthIso2)}${bornInLabel}</td>
       <td class="pt-caps${teamId != null ? ' pt-caps--clickable' : ''}" title=${p.nation} @click=${onPlaysForClick}>${_allPlayersFlag(teamIso2)}${p.nation}</td>
-      <td class="pt-num text-end">${p.role === 'coach' ? nothing : p.caps}</td>
+      <td class="pt-num">${p.role === 'coach' ? nothing : p.caps}</td>
     </tr>`;
 };
 
@@ -1682,9 +1682,9 @@ const _playersTableTemplate = (focusIds = null) => {
   const _metaPlayersEl = document.getElementById('elo-meta-players');
   if (_metaPlayersEl) _metaPlayersEl.textContent = `${filtered.length - coachCount} players · ${coachCount} coaches`;
   return html`
-    <table class="table table-sm table-striped table-hover pt-table" style="font-size:12px">
+    <table class="table table-sm table-striped table-hover pt-table">
       <thead><tr>
-        ${_ptTh('name', T.psbLabels.byPlayer)}${_ptTh('bornIn', T.chainLegend.bornIn, 'pt-born')}${_ptTh('playsFor', T.chainLegend.playsFor, 'pt-caps')}${_ptTh('caps', T.caps, 'pt-num text-end')}
+        ${_ptTh('name', T.psbLabels.byPlayer)}${_ptTh('bornIn', T.chainLegend.bornIn, 'pt-born')}${_ptTh('playsFor', T.chainLegend.playsFor, 'pt-caps')}${_ptTh('caps', T.caps, 'pt-num')}
       </tr></thead>
       <tbody>${filtered.map(_allPlayersRow)}</tbody>
     </table>`;

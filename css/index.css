@@ -236,12 +236,6 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
    them overrides either. #id + 2 classes beats Bootstrap's own .nav-tabs .nav-link.active on
    specificity, so this wins even when every class is present at once. */
 #tab-players-btn.active.tpb-selection-open { background-color: white; }
-/* "Caps" column — the players table's own 4th column beyond css/wc2026_players.css's
-   name/born-in/plays-for three (see js/index.js's _playersTableTemplate), so it lives
-   here rather than in that shared stylesheet. Narrow and non-wrapping, like .pt-born/.pt-caps'
-   own treatment there. */
-.pt-num { width: 10%; white-space: nowrap; }
-
 /* "born in" cell, only when its birthplace actually geocoded (js/index.js's
    _allPlayersRow) — click pans/zooms the map to that city at max zoom and shows its tooltip
    (_zoomToCity). No visual affordance beyond the cursor — .pt-born's existing muted styling

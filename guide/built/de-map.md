@@ -389,5 +389,5 @@ Fahren Sie mit der Maus über einen Punkt für Stadtname und die dort geborenen 
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Ketten
 
-Sequenzen von Ländern, die durch geboren-hier / spielt-für-Verbindungen verknüpft sind — ein Spieler, der in A geboren wurde, spielt für B, ein Spieler, der in B geboren wurde, spielt für C, und so weiter, und bildet eine Kette von Nationalitäten durch das Turnier — werden auf einer eigenen [separaten Seite](/chains/wc2026_chain_longest.html) erkundet.
+Sequenzen von Ländern, die durch geboren-hier / spielt-für-Verbindungen verknüpft sind — ein Spieler, der in A geboren wurde, spielt für B, ein Spieler, der in B geboren wurde, spielt für C, und so weiter, und bildet eine Kette von Nationalitäten durch das Turnier — werden auf einer eigenen [separaten Seite](/chains/) erkundet.
 <!-- /i18n:bottom_panel -->

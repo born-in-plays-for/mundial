@@ -10,7 +10,7 @@ Static frontend for the [Born In, Plays For](https://github.com/born-in-plays-fo
 |---|---|
 | [/](https://mundial.cthiebaud.com/) | Main choropleth map (countries + tournament + players, all in one page) — `index.html` is the entry point directly, no redirect |
 | [/wc2026_live.html](https://mundial.cthiebaud.com/wc2026_live.html) | Live game tracking (requires backend) |
-| [/chains/wc2026_chain_longest.html](https://mundial.cthiebaud.com/chains/wc2026_chain_longest.html) | Export chain snake renderer |
+| [/chains/](https://mundial.cthiebaud.com/chains/) | Export chain snake renderer |
 | [/insights/discipline.html](https://mundial.cthiebaud.com/insights/discipline.html) | Fouls/cards discipline table, one row per team |
 
 A handful of standalone pages that predated `index.html` absorbing their functionality

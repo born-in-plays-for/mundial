@@ -347,5 +347,5 @@ Hover a dot for the city name and the players born there.
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Chains
 
-Sequences of countries linked by born-in / plays-for connections — a player born in A plays for B, a player born in B plays for C, and so on, forming a chain of nationalities across the tournament — are explored on their own [standalone page](/chains/wc2026_chain_longest.html).
+Sequences of countries linked by born-in / plays-for connections — a player born in A plays for B, a player born in B plays for C, and so on, forming a chain of nationalities across the tournament — are explored on their own [standalone page](/chains/).
 <!-- /i18n:bottom_panel -->

@@ -49,7 +49,7 @@
        shrink-wrapped box would resize (and get re-centered by the parent's
        justify-content:center) on every single update — a visible jump/flicker each time. */
     width: 320px;
-    border: 1px dotted gray;
+    border: .5px dotted gray;
     padding: .5rem;
     background: rgb(253,253,253);
   }
@@ -90,7 +90,7 @@
 <meta property="og:url"         content="https://mundial.cthiebaud.com/">
 <meta property="og:type"        content="website">
 <meta name="twitter:card"       content="summary_large_image">
-<link rel="stylesheet" href="css/bootstrap-custom.min.css"><!-- test swap, see css/bootstrap-custom.scss -->
+<link rel="stylesheet" href="css/bootstrap-custom.min.css"><!-- see css/bootstrap-custom.scss -->
 <link rel="stylesheet" href="css/global.css">
 <link rel="stylesheet" href="css/index.css">
 <link rel="stylesheet" href="css/player.css">
@@ -157,7 +157,7 @@
 </header>
 <!-- #map-container's own inner DOM (map frame, zoom controls, grip, legend) is
      rendered here by js/index.js at load time, via map-container.js's
-     mapContainerTemplate() — shared with chains/wc2026_chain_longest.html rather
+     mapContainerTemplate() — shared with chains/index.html rather
      than hand-duplicated across both files. See that function's own header
      comment for why this div itself (not a placeholder) stays static. -->
 <div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative"></div>

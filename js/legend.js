@@ -11,7 +11,7 @@ import {
 
 // ── Legend gradient + ticks + outlier count + range filter ─────────────────────
 // Wires up #legend-bar/#legend-ticks/#legend-outlier-*/#legend-filter-device
-// (the markup block in index.html and chains/wc2026_chain_longest.html — same ids on
+// (the markup block in index.html and chains/index.html — same ids on
 // both pages, though only index.html carries #legend-filter-device and passes
 // onRangeChange; the chain page has no category-filter system for a range selection to plug
 // into, so its legend stays read-only, same as before this feature existed), self-registering

@@ -15,7 +15,7 @@ A LinkedIn video in **two acts**:
 ### Act 2 — The Chain (slow, narrative)
 The screen is divided into **three panels**:
 1. **Left or top** — the world map (D3 choropleth)
-2. **Center or bottom** — the chain snake visualization (similar to `wc2026_chain_render.js` but animated step by step)
+2. **Center or bottom** — the chain snake visualization (similar to `chain_render.js` but animated step by step)
 3. **Right** — the current player's photo + name
 
 **Per-step narration rhythm** (slow, one step at a time):
@@ -85,7 +85,7 @@ OR a two-panel layout (map left 60%, player+chain right 40%) — TBD.
 - Arc drawn between birth and plays-for (curved SVG path, animated stroke-dashoffset)
 
 ### Chain snake panel
-- Reuse/adapt `chains/wc2026_chain_render.js`
+- Reuse/adapt `chains/chain_render.js`
 - Current node highlighted (existing `elo-item--active` style equivalent)
 - Previous links greyed out, current link brightly colored
 - Auto-scrolls to keep current node visible
@@ -134,7 +134,7 @@ Expected coverage:
 
 | File | Status | Notes |
 |------|--------|-------|
-| `chains/wc2026_chain_video.html` | ❌ To do | Main animated page |
+| `chains/chain_video.html` | ❌ To do | Main animated page |
 | `pipeline/fetch_chain_photos.py` | ❌ To do | Wikidata photo downloader |
 | `chains/record_chain_video.py` | ❌ To do | Playwright recorder |
 | `chains/player_photos/` | ❌ To do | Downloaded photos dir |
@@ -144,7 +144,7 @@ Expected coverage:
 | File | Notes |
 |------|-------|
 | `chains/subgraphs/longest_both.json` | Chain data ✅ |
-| `chains/wc2026_chain_render.js` | Chain SVG renderer ✅ — adapt for animation |
+| `chains/chain_render.js` | Chain SVG renderer ✅ — adapt for animation |
 | `uk-nations.geojson` | UK home nation polygons ✅ |
 | `index.js` | Reference for D3 zoom patterns ✅ |
 

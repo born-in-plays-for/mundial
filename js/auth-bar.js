@@ -108,24 +108,30 @@ class MundialAuthBar extends HTMLElement {
   }
 
   connectedCallback() {
-    const page = location.pathname.split('/').pop() || 'index.html';
+    // Keyed by full pathname now, not just the trailing basename — chains/index.html
+    // (see map-container.js's mapContainerTemplate() era CLAUDE.md notes) made basename
+    // alone ambiguous: both '/' and '/chains/' resolve to an 'index.html' document, so a
+    // basename-only lookup couldn't tell them apart. Each real page gets 2 entries here
+    // (bare directory form + explicit .../index.html) since either can appear in
+    // location.pathname depending on how the user actually navigated/typed the URL.
+    const page = location.pathname;
     // 'map' (the User's Guide, off the home icon) is the only real, page-tied guide topic —
     // the API Guide (the app's URL query parameter API, off the Players icon; see
     // guide/guide-api.md's own header comment) and Data Sources are both tabs *within* 'map' now
     // (see js/guide-mode.js's _TAB_CONFIG), not independent topics of their own — reached via
     // _guideTabMap, below, rather than their own _guideIdMap entry. Any page with no entry
     // here falls back to 'default' (a single shared "nothing here yet" placeholder) rather
-    // than disabling the guide button — covers wc2026_live.html, chains/wc2026_chain_longest.html,
+    // than disabling the guide button — covers wc2026_live.html, chains/index.html,
     // and anything added later without needing its own explicit mapping.
     // 'auth' (offline/no-server-connection help) is separate — it's reachable via the profile
     // icon on any page, not tied to a page at all.
     const _guideIdMap = {
-      '': 'map', 'index.html': 'map',
-      'wc2026_players.html': 'map',
-      'discipline.html': 'discipline',
+      '/': 'map', '/index.html': 'map',
+      '/wc2026_players.html': 'map',
+      '/insights/discipline.html': 'discipline',
     };
     const _guideTabMap = {
-      'wc2026_players.html': 'api',
+      '/wc2026_players.html': 'api',
     };
     this._currentGuideId = _guideIdMap[page] ?? 'default';
     this._currentGuideTab = _guideTabMap[page] ?? 'guide';
@@ -149,7 +155,7 @@ class MundialAuthBar extends HTMLElement {
             </a>
             <ul class="dropdown-menu dropdown-menu-start" style="min-width:0">
               ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD, 'discipline')}
-              ${_dropdownItem('/chains/wc2026_chain_longest.html', _t.navChain, ICON_CHAIN)}
+              ${_dropdownItem('/chains/', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
           <div class="vr" style="margin: 0 -0.5rem;"></div>
@@ -170,10 +176,10 @@ class MundialAuthBar extends HTMLElement {
       </nav>`, this);
 
     const navLinks = {
-      '/': ['index.html', ''],
-      '/insights/discipline.html': ['discipline.html'],
-      '/chains/wc2026_chain_longest.html': ['wc2026_chain_longest.html'],
-      '/wc2026_live.html': ['wc2026_live.html'],
+      '/': ['/', '/index.html'],
+      '/insights/discipline.html': ['/insights/discipline.html'],
+      '/chains/': ['/chains/', '/chains/index.html'],
+      '/wc2026_live.html': ['/wc2026_live.html'],
     };
     this.querySelectorAll('nav a[href]').forEach(a => {
       const href = a.getAttribute('href');

@@ -389,5 +389,5 @@ Passa il mouse su un punto per vedere il nome della città e i giocatori nati l�
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Catene
 
-Sequenze di paesi collegate da relazioni nato-qui / gioca-per — un giocatore nato in A gioca per B, un giocatore nato in B gioca per C, e così via, formando una catena di nazionalità attraverso il torneo — vengono esplorate nella loro [pagina dedicata](/chains/wc2026_chain_longest.html).
+Sequenze di paesi collegate da relazioni nato-qui / gioca-per — un giocatore nato in A gioca per B, un giocatore nato in B gioca per C, e così via, formando una catena di nazionalità attraverso il torneo — vengono esplorate nella loro [pagina dedicata](/chains/).
 <!-- /i18n:bottom_panel -->

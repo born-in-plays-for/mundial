@@ -389,5 +389,5 @@ Survolez un point pour voir le nom de la ville et les joueurs qui y sont nés.
 
 ## <img class="gp-icon" src="images/wc2026.svg" alt=""> Chaînes
 
-Des séquences de pays reliés par des connexions né ici / joue pour — un joueur né en A joue pour B, un joueur né en B joue pour C, et ainsi de suite, formant une chaîne de nationalités à travers le tournoi — sont explorées sur leur propre [page dédiée](/chains/wc2026_chain_longest.html).
+Des séquences de pays reliés par des connexions né ici / joue pour — un joueur né en A joue pour B, un joueur né en B joue pour C, et ainsi de suite, formant une chaîne de nationalités à travers le tournoi — sont explorées sur leur propre [page dédiée](/chains/).
 <!-- /i18n:bottom_panel -->
