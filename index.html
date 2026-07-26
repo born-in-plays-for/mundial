@@ -120,6 +120,24 @@
      really is what the browser is doing at this exact point — parsing the HTML that follows. -->
 <script>
   (function () {
+    // Skip the whole overlay on a warm cache — same-tab navigation between this page and
+    // chains/insights/live (js/cached_fetch.js's sessionStorage cache, shared across all of
+    // them by absolute URL) means map.json et al. resolve instantly, so there's nothing
+    // meaningful left to cover up. map.json's own cache key is checked directly (not some
+    // separate "is this a repeat visit" flag) since it's populated in the exact same
+    // Promise.all batch as world-atlas/elo_rank/uk-nations/wiki — if it's warm, that whole
+    // batch is too. Removed outright (not just hidden) — this runs before the browser has
+    // painted a frame with it visible, so there's no fade needed, and _hideAppLoading()
+    // (js/index.js) already null-guards a missing #app-loading, so removing it early here
+    // is safe even though that function still runs later regardless.
+    try {
+      var mapJsonKey = 'cachedFetch:' + new URL('data/v2/map.json', location.href).href;
+      if (sessionStorage.getItem(mapJsonKey)) {
+        var warmEl = document.getElementById('app-loading');
+        if (warmEl) warmEl.remove();
+      }
+    } catch (e) { /* sessionStorage unavailable (private browsing etc.) — just show it as normal */ }
+
     var el = document.getElementById('app-loading-log');
     if (el) { el.textContent = 'parsing HTML…'; el.style.visibility = 'visible'; }
     // document.readyState hits 'interactive' the instant parsing finishes — which is *before*

@@ -44,7 +44,8 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `css/taxonomy.css` | Canonical pill styling (borders, text colors, dots via CSS) |
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
 | `css/map-container.css` | Map container and dim-mode cursor styles |
-| `data/` | Git submodule → `mundial-data` repo. Contains only frontend-consumed data, nothing pipeline-internal: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5, `status.json` — tournament elimination status), `elo_rank.json`, `uk-nations.geojson`. (`r32_teams.json` was removed — superseded by `v2/live.json`'s `teams` key. `countries.json` moved out to `mundial-build/pipeline/countries.json` — a pipeline build input, never a frontend asset.) |
+| `data/` | Git submodule → `mundial-data` repo. Contains only frontend-consumed data, nothing pipeline-internal: `data/v2/` (pid-keyed frontend files: `map.json`, `live.json`, `wiki_<lang>.json` ×5, `status.json` — tournament elimination status), `elo_rank.json`. (`r32_teams.json` was removed — superseded by `v2/live.json`'s `teams` key. `countries.json` moved out to `mundial-build/pipeline/countries.json` — a pipeline build input, never a frontend asset. `uk-nations.geojson` moved out to this repo's own `geo/uk-nations.geojson` — permanently static, no pipeline script ever regenerated it, so routing it through the data submodule/pipeline at all bought nothing; see `geo/` row below.) |
+| `geo/` | Static frontend-only geometry, never touched by the `mundial-build` pipeline: `cape-verde.geojson`, `curacao.geojson` (both absent from the 110m world-atlas topojson, drawn as standalone insets — see "Small island countries" below; source: [geoBoundaries](https://www.geoboundaries.org/) ADM0 boundaries, ring winding manually corrected for d3-geo's convention — see commits `825728a`/`e25c4b6`), `uk-nations.geojson` (the 4 UK home nations' polygons — see CLAUDE.md's own "UK home nations" section; source: Natural Earth 1:10m Admin 0 – Map Subunits (naturalearthdata.com), filtered to the 4 UK subunits — confirmed by matching NE_ID/WOE_ID/WIKIDATAID against the upstream dataset — moved here from the `data/` submodule, where it always was pipeline-untouched static geometry anyway) |
 | `wc2026_og_v8.jpg` | 1600×1081 Open Graph preview image for LinkedIn/social — Spain dim/arc mode + tooltip, group-stage sort by delta/pop, all player roles shown (1700px-wide capture, measured/trimmed height, dpr=3, downsampled from the raw capture — see `tools/regenerate_og_image.py`'s own docstring for why). Regenerate with `tools/regenerate_og_image.py` — **never hand-roll this script inline**, see that section below. |
 | `chains/` | Export chain infographics — see section below |
 | `pages/` | Standalone analysis pages (correlation scatter plot, Elo history bar chart race) |
@@ -187,7 +188,7 @@ The four home nations (England, Scotland, Wales, Northern Ireland) are handled a
 - `wc2026_players.csv` birth countries: all resolved from city lookup — no "United Kingdom" entries
 - Synthetic IDs (no ISO 3166-1 numeric): `8260=England`, `8261=Scotland`, `8262=Wales`, `8263=Northern Ireland`
 - ISO2 flag codes: `gb-eng`, `gb-sct`, `gb-wls`, `gb-nir`
-- Map rendering: world atlas feature 826 (UK) is **skipped** (flags are filtered by `_eloItemsById.has(id)` — only countries in the Elo rankings get a flag); `data/uk-nations.geojson` renders the 4 nations as separate polygons
+- Map rendering: world atlas feature 826 (UK) is **skipped** (flags are filtered by `_eloItemsById.has(id)` — only countries in the Elo rankings get a flag); `geo/uk-nations.geojson` renders the 4 nations as separate polygons
 - All 4 UK nations render their flag on the map — the UK nation filter covers all four: `f._id === 8260 || f._id === 8261 || f._id === 8262 || f._id === 8263`
 - Scotland centroid manually overridden to `[-4.2, 56.8]` (island bias in auto-centroid)
 - All flags (qualified + non-qualified) placed in a single `forEach` loop filtered by Elo membership
@@ -439,7 +440,7 @@ A persistent two-state switch (`.csb-display-toggle`, bottom of the sort column,
 Order matters for SVG z-layering:
 1. World choropleth paths (skip 826)
 2. Mesh borders
-3. UK nation paths (from `data/uk-nations.geojson`)
+3. UK nation paths (from `geo/uk-nations.geojson`)
 4. `arcsGroup` (below all flags)
 5. Leader lines (ocean-clipped)
 6. All flags via unified `forEach` (filtered by `_eloItemsById`)

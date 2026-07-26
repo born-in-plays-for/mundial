@@ -19,6 +19,7 @@ import { choroFill, mapContainerTemplate, wireMapHeightDrag,
 import { onPaletteChange, PLACEHOLDER_FILL, PLACEHOLDER_STROKE, GRATICULE_COLOR } from './diverging-scale.js';
 import { wireLegend } from './legend.js';
 import { initDivergingDebug } from './diverging-debug.js';
+import { cachedFetchJson } from './cached_fetch.js';
 
 const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
@@ -2511,19 +2512,19 @@ const _appLoadingLog = msg => {
 };
 const _loggedFetch = (url, label) => {
   _appLoadingLog(`fetching ${label}…`);
-  return fetch(url).then(r => { _appLoadingLog(`${label} ✓`); return r; });
+  return cachedFetchJson(url).then(data => { _appLoadingLog(`${label} ✓`); return data; });
 };
 
 Promise.all([
-  _loggedFetch('data/v2/map.json', 'map.json').then(r => r.json()),
-  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r => { _appLoadingLog('world atlas ✓'); return r; }),
-  _loggedFetch('data/uk-nations.geojson', 'uk-nations.geojson').then(r => r.json()),
+  _loggedFetch('/data/v2/map.json', 'map.json'),
+  cachedFetchJson('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r => { _appLoadingLog('world atlas ✓'); return r; }),
+  _loggedFetch('/geo/uk-nations.geojson', 'uk-nations.geojson'),
   loadEloData().then(r => { _appLoadingLog('elo rankings ✓'); return r; }),
   loadWikiData().then(r => { _appLoadingLog('wiki data ✓'); return r; }),
-  _loggedFetch('data/fixtures.json', 'fixtures.json').then(r => r.json()).catch(() => null),
-  _loggedFetch('geo/cape-verde.geojson', 'cape-verde.geojson').then(r => r.json()).catch(() => null),
-  _loggedFetch('geo/curacao.geojson', 'curacao.geojson').then(r => r.json()).catch(() => null),
-  _loggedFetch('data/v2/birthplace.json', 'birthplace.json').then(r => r.json()).catch(() => ({})),
+  _loggedFetch('/data/fixtures.json', 'fixtures.json').catch(() => null),
+  _loggedFetch('/geo/cape-verde.geojson', 'cape-verde.geojson').catch(() => null),
+  _loggedFetch('/geo/curacao.geojson', 'curacao.geojson').catch(() => null),
+  _loggedFetch('/data/v2/birthplace.json', 'birthplace.json').catch(() => ({})),
 ]).then(([rawData, world, ukNations, { eloData, statusByIso2 }, , fixturesData, capeVerdeGeo, curacaoGeo, birthplaceByPid]) => {
   _birthplaceByPid = birthplaceByPid;
   _worldTopo = world;

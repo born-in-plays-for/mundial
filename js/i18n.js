@@ -1,4 +1,5 @@
 import { whereNumeric } from 'https://cdn.jsdelivr.net/npm/iso-3166-1@2/+esm';
+import { cachedFetchJson } from './cached_fetch.js';
 
 export const LOCALE = navigator.languages?.[0] ?? navigator.language ?? 'en';
 export const _LANG = LOCALE.toLowerCase().startsWith('fr') ? 'fr'
@@ -36,11 +37,11 @@ const _NULL_CODE = { 'Democratic Republic of the Congo':'cd', 'U.S.':'us', 'Isle
 // every article has a translated edition) — never all 5.
 let _wikiPrimary = null;
 let _wikiEn = null;
-export const loadWikiData = async (basePath = '') => {
+export const loadWikiData = async () => {
   if (_wikiPrimary) return;
   const [primary, en] = await Promise.all([
-    fetch(`${basePath}data/v2/wiki_${_LANG}.json`).then(r => r.json()),
-    _LANG === 'en' ? null : fetch(`${basePath}data/v2/wiki_en.json`).then(r => r.json()),
+    cachedFetchJson(`/data/v2/wiki_${_LANG}.json`),
+    _LANG === 'en' ? null : cachedFetchJson('/data/v2/wiki_en.json'),
   ]);
   _wikiPrimary = primary;
   _wikiEn = en;

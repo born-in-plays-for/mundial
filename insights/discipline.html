@@ -50,10 +50,11 @@ import { html, render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.j
 import { T, countryName } from '../js/i18n.js';
 import { QUALIFIED_NAMES, ELIM_ROUNDS, reachesStage, loadEloData, buildEloItems } from '../js/qualified.js';
 import { createStageCarousel, maxReachableStage } from '../js/stage_carousel.js';
+import { cachedFetchJson } from '../js/cached_fetch.js';
 
 const [{ eloData, statusByIso2 }, discData] = await Promise.all([
-  loadEloData('../'),
-  fetch('../data/v2/discipline.json').then(r => r.json()),
+  loadEloData(),
+  cachedFetchJson('/data/v2/discipline.json'),
 ]);
 
 // iso2 -> {id, name} — discipline.json is iso2-keyed, everything else in this app (and

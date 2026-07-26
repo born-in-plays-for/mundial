@@ -41,6 +41,7 @@
 
 <script type="module">
 import { T, wikiUrl, wikiUrlEn, loadWikiData, regionName } from './js/i18n.js';
+import { cachedFetchJson } from './js/cached_fetch.js';
 
 document.getElementById('live-title').textContent = T.liveTitle(0);
 document.getElementById('live-subtitle').textContent = T.liveSubtitle;
@@ -198,8 +199,8 @@ PROXY = backend;
 // Fetch elo rankings + WC2026 team list + player/coach wiki-birthCountry data for iso2 and
 // player-identity lookups (all resolved once upstream through mundial-data's shared resolvers)
 const [eloData, playerWiki] = await Promise.all([
-  fetch('./data/elo_rank.json').then(r => r.json()),
-  fetch('./data/v2/live.json').then(r => r.json()),
+  cachedFetchJson('/data/elo_rank.json'),
+  cachedFetchJson('/data/v2/live.json'),
   loadWikiData(),
 ]);
 

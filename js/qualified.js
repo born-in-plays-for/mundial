@@ -1,3 +1,5 @@
+import { cachedFetchJson } from './cached_fetch.js';
+
 export const QUALIFIED_NAMES = {
   12:'Algeria', 32:'Argentina', 36:'Australia', 40:'Austria',
   56:'Belgium', 70:'Bosnia and Herzegovina', 76:'Brazil', 124:'Canada',
@@ -64,10 +66,10 @@ export const CAROUSEL_STAGES = ['group', 'r32', 'r16', 'qf', 'sf', 'final', 'win
 
 export const reachesStage = (eliminatedAtIndex, stagePos) => (eliminatedAtIndex ?? Infinity) >= stagePos;
 
-export const loadEloData = async (basePath = '') => {
+export const loadEloData = async () => {
   const [eloData, statusByIso2] = await Promise.all([
-    fetch(`${basePath}data/elo_rank.json`).then(r => r.json()),
-    fetch(`${basePath}data/v2/status.json`).then(r => r.json()).catch(() => null),
+    cachedFetchJson('/data/elo_rank.json'),
+    cachedFetchJson('/data/v2/status.json').catch(() => null),
   ]);
   return { eloData, statusByIso2: statusByIso2 ?? {} };
 };

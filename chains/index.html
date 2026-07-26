@@ -95,6 +95,7 @@ import { animateFlagOpacity } from '../js/flag_visibility.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME } from '../js/qualified.js';
 import { T, loadWikiData, findPlayerWikiUrl } from '../js/i18n.js';
 import { ISO2_REVERSE } from '../js/iso2.js';
+import { cachedFetchJson } from '../js/cached_fetch.js';
 
 // #map-container's own inner DOM — see map-container.js's mapContainerTemplate()
 // header comment. Rendered before anything below queries world-map/#map-frame/etc.
@@ -105,11 +106,11 @@ const { svg, g, projection, path, zoom } = _wm;
 document.getElementById('zoom-hint').textContent = T.zoomHint;
 
 const [mapData, eloData, ukNations, world] = await Promise.all([
-  fetch('../data/v2/map.json').then(r => r.json()),
-  fetch('../data/elo_rank.json').then(r => r.json()),
-  fetch('../data/uk-nations.geojson').then(r => r.json()),
-  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
-  loadWikiData('../'),
+  cachedFetchJson('/data/v2/map.json'),
+  cachedFetchJson('/data/elo_rank.json'),
+  cachedFetchJson('/geo/uk-nations.geojson'),
+  cachedFetchJson('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
+  loadWikiData(),
 ]);
 
 // byId/importByCountry — only what choroFill()/METRIC and the dim/arc mode
@@ -313,9 +314,9 @@ const _initialMode = _dataParam ? (_VARIANT_MODE_BY_FILE[_dataParam] ?? null) : 
 
 if (_initialMode) {
   Promise.all([
-    fetch('subgraphs/longest_both.json').then(r => r.json()),
-    fetch('subgraphs/longest_fwd.json').then(r => r.json()),
-    fetch('subgraphs/longest_bwd.json').then(r => r.json()),
+    cachedFetchJson('subgraphs/longest_both.json'),
+    cachedFetchJson('subgraphs/longest_fwd.json'),
+    cachedFetchJson('subgraphs/longest_bwd.json'),
   ]).then(([both, fwd, bwd]) => {
     chainVariants.both = both;
     chainVariants.fwd = fwd;
@@ -329,8 +330,7 @@ if (_initialMode) {
     });
   }).catch(e => { chainContent.textContent = 'Error: ' + e.message; });
 } else {
-  fetch(_dataParam)
-    .then(r => r.json())
+  cachedFetchJson(_dataParam)
     .then(chain => { chainData = chain; _renderChainNow(); })
     .catch(e => { chainContent.textContent = 'Error: ' + e.message; });
 }

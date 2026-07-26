@@ -41,7 +41,7 @@ This eliminates the need to manually run `git submodule update` after each pull.
 
 ## Data
 
-All data files live in the `data/` directory, which is a git submodule pointing to [mundial-data](https://github.com/born-in-plays-for/mundial-data). The submodule holds only the pid-keyed `v2/` files consumed by the frontend, plus two top-level files — nothing pipeline-internal is published here anymore (see below):
+All data files live in the `data/` directory, which is a git submodule pointing to [mundial-data](https://github.com/born-in-plays-for/mundial-data). The submodule holds only the pid-keyed `v2/` files consumed by the frontend, plus one top-level file — nothing pipeline-internal is published here anymore (see below):
 
 | File | Contents |
 |---|---|
@@ -50,9 +50,8 @@ All data files live in the `data/` directory, which is a git submodule pointing 
 | `v2/status.json` | Tournament elimination status per team — eliminating round, date, and who knocked them out |
 | `v2/wiki_<lang>.json` ×5 | Wikipedia URL templates + per-pid article titles, one file per UI language |
 | `elo_rank.json` | Elo rankings for all 48 qualified countries |
-| `uk-nations.geojson` | England, Scotland, Wales, Northern Ireland polygons |
 
-`r32_teams.json` (Round-of-32 squad data) has been removed — superseded by `v2/live.json`'s `teams` key. `countries.json` (population/capital lookups) has moved out of this submodule entirely, into `pipeline/countries.json` in [mundial-build](https://github.com/born-in-plays-for/mundial-build) — it's a pipeline build input, not a frontend asset; population/capital already end up baked into `v2/map.json`.
+`r32_teams.json` (Round-of-32 squad data) has been removed — superseded by `v2/live.json`'s `teams` key. `countries.json` (population/capital lookups) has moved out of this submodule entirely, into `pipeline/countries.json` in [mundial-build](https://github.com/born-in-plays-for/mundial-build) — it's a pipeline build input, not a frontend asset; population/capital already end up baked into `v2/map.json`. `uk-nations.geojson` (England/Scotland/Wales/Northern Ireland polygons) has moved out too, into this repo's own `geo/uk-nations.geojson` — it was always permanently-static, pipeline-untouched geometry, same as `geo/cape-verde.geojson`/`geo/curacao.geojson`, so routing it through the data submodule never bought anything.
 
 Data is updated daily by the [mundial-build](https://github.com/born-in-plays-for/mundial-build) pipeline and automatically deployed via GitHub Actions.
 
