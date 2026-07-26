@@ -133,6 +133,16 @@
     gap: 10px 28px;
   }
   @media (max-width: 620px) { .legend { grid-template-columns: 1fr; } }
+  /* Second row (glossary/caveat) is its own grid, not more columns on the same one — its own
+     column ratio (glossary wider, caveat narrower) shouldn't force the row above to match it,
+     the way sharing one grid's column tracks would. */
+  .legend-row2 {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 10px 28px;
+  }
+  @media (max-width: 620px) { .legend-row2 { grid-template-columns: 1fr; } }
   .legend-item {
     display: flex;
     gap: 12px;
@@ -140,6 +150,9 @@
     padding: 10px 0;
     border-top: 1px solid var(--faint);
   }
+  /* No swatch/icon column — used for cells (glossary, caveat) that aren't a color-keyed legend
+     entry but still belong in the same 2x2 grid. */
+  .legend-item--plain { display: block; }
   .swatch {
     flex: none;
     width: 16px; height: 16px;
@@ -160,6 +173,25 @@
     color: var(--muted);
   }
   .footnote b { color: var(--ink); font-weight: 650; }
+
+  .conf-glossary {
+    max-width: 62ch;
+    font-size: .82rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .conf-glossary .term { color: var(--ink); font-weight: 650; }
+
+  /* Superscript "renvoi" (cross-reference) mark — e.g. the intro's own confederation acronyms
+     link down to #conf-glossary, where they're spelled out in full. */
+  .renvoi {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .7em;
+    vertical-align: super;
+    margin-left: 1px;
+  }
+  .renvoi:hover { color: var(--ink); text-decoration: underline; }
 
   /* Bootstrap's default carousel icons/indicators are white — built for a dark photo backdrop,
      invisible against this page's pale card background. Invert to dark instead of recoloring
@@ -206,7 +238,7 @@
 <div id="main-content" class="container-xxl">
 <div class="wrap">
   <h1>239 Countries. 8 Billion People. One World Cup.</h1>
-  <p class="intro">This radial chart shows every one of the 239 countries and territories the app tracks for World Cup 2026, grouped into pie wedges by confederation (UEFA, CAF, AFC, CONCACAF, CONMEBOL, OFC) sized proportionally to how many teams each governs, with a small "off-map" note for FIFA non-members like Vatican City. Within each wedge, a brown inner zone — scaled so its area matches the true proportion — marks the share of that confederation's teams that qualified for the tournament.</p>
+  <p class="intro">This radial chart shows every one of the 239 countries and territories the app tracks for World Cup 2026, grouped into pie wedges by confederation (UEFA, CAF, AFC, CONCACAF, CONMEBOL, OFC)<a href="#conf-glossary" class="renvoi" title="Confederation names spelled out below">*</a> sized proportionally to how many teams each governs, with a small "off-map" note for FIFA non-members like Vatican City. Within each wedge, a brown inner zone — scaled so its area matches the true proportion — marks the share of that confederation's teams that qualified for the tournament.</p>
   <p class="intro">Flip through the two views below: first the 2026 World Cup seen by country (FIFA confederations, qualified vs. non-qualified, non-FIFA), then seen by the population of those same confederations and underlying countries.</p>
 
   <!-- Wedge angles/radii below are computed at load time from the same real data the rest of
@@ -565,11 +597,16 @@
         // otherwise fall back to the original arbitrary percentage-of-wedge placement.
         const [qx, qy] = snapFlagPos(ex.qualified, layout) ?? toXY(w.start + w.width * 0.35, qR);
         const qEntry = byId.get(ex.qualified);
-        // Flag label sits on whichever side of the disc's own center still has room to run
-        // outward — same idea as anchorFor above, just per-flag instead of per-wedge, since a
-        // qualified/non-qualified example can land on either side depending on the mode.
-        const sideOf = x => x < CX ? { anchor: 'end', dx: -12 } : { anchor: 'start', dx: 12 };
-        const qSide = sideOf(qx);
+        // Name sits centered under the flag by default — simpler and more consistent than the
+        // old left/right-of-center split, which needed a side-detection rule per flag. CONCACAF's
+        // two count-mode examples (Haiti, Costa Rica) are the one exception: both sit low enough
+        // in the wheel that a name below would run into the disc's own outer rim/labels, so their
+        // names go above instead.
+        const FLAG_R = 9;
+        const labelBelow = (fx, fy) => ({ x: fx, y: fy + FLAG_R + 12, anchor: 'middle' });
+        const labelAbove = (fx, fy) => ({ x: fx, y: fy - FLAG_R - 4, anchor: 'middle' });
+        const nameAbove = mode === 'count' && w.key === 'concacaf';
+        const qLabel = nameAbove ? labelAbove(qx, qy) : labelBelow(qx, qy);
         let nonQualifiedMarkup = '';
         if (ex.nonQualified) {
           // CONCACAF's own non-qualified example (Costa Rica, count mode) is deliberately placed
@@ -587,13 +624,10 @@
             ? toXY(w.start + w.width * 0.5, nqR_ofc)
             : snapFlagPos(ex.nonQualified, layout) ?? toXY(w.start + w.width * 0.65, nqR);
           const nqEntry = byId.get(ex.nonQualified);
-          // Costa Rica's own corner placement sits well left of disc-center, where sideOf would
-          // normally anchor the label to its left (running further into the corner, cramped) —
-          // forced to the right instead, same as any right-of-center flag.
-          const nqSide = forceOutside ? { anchor: 'start', dx: 12 } : sideOf(nqx);
+          const nqLabel = nameAbove ? labelAbove(nqx, nqy) : labelBelow(nqx, nqy);
           nonQualifiedMarkup = `
             <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${nqEntry.iso2}.svg" x="${f2(nqx - 9)}" y="${f2(nqy - 9)}" width="18" height="18"></image>
-            <text x="${f2(nqx + nqSide.dx)}" y="${f2(nqy + 4)}" text-anchor="${nqSide.anchor}" class="flag-name">${nqEntry.name}</text>`;
+            <text x="${f2(nqLabel.x)}" y="${f2(nqLabel.y)}" text-anchor="${nqLabel.anchor}" class="flag-name">${nqEntry.name}</text>`;
         }
         return `
           <path d="${sectorPath(w.start, w.end, rFifa)}" fill="var(--confed)" fill-opacity="${shade}" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
@@ -601,7 +635,7 @@
           <text x="${f2(lx)}" y="${f2(ly)}" text-anchor="${anchor}" class="wedge-label">${w.label}</text>
           <text x="${f2(lx)}" y="${f2(ly + 15)}" text-anchor="${anchor}" class="wedge-count">${fmt(w.weight)} · ${fmt(w.qWeight)} qualified</text>
           <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${qEntry.iso2}.svg" x="${f2(qx - 9)}" y="${f2(qy - 9)}" width="18" height="18"></image>
-          <text x="${f2(qx + qSide.dx)}" y="${f2(qy + 4)}" text-anchor="${qSide.anchor}" class="flag-name">${qEntry.name}</text>
+          <text x="${f2(qLabel.x)}" y="${f2(qLabel.y)}" text-anchor="${qLabel.anchor}" class="flag-name">${qEntry.name}</text>
           ${nonQualifiedMarkup}
         `;
       }).join('');
@@ -650,7 +684,7 @@
         <text x="423" y="908" class="band-tag">NON-FIFA — ${fmt(nonFifaTotal)}</text>
 
         <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gl.svg" x="${f2(glx - 10)}" y="${f2(gly - 10)}" width="20" height="20"></image>
-        <text x="${f2(glx + 16)}" y="${f2(gly + 4)}" class="flag-name">Greenland</text>
+        <text x="${f2(glx)}" y="${f2(gly - 14)}" text-anchor="middle" class="flag-name">Greenland</text>
 
         <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/va.svg" x="${f2(vax - 9)}" y="${f2(vay - 9)}" width="18" height="18"></image>
         <text x="${f2(vax)}" y="${f2(vay + 25)}" text-anchor="middle" class="flag-name">Vatican City</text>
@@ -676,7 +710,22 @@
     </div>
   </div>
 
-  <p class="caveat">The flag(s) shown inside each wedge — one qualified, and where there's room, one non-qualified — are just an arbitrary example per confederation, picked to put a face on the numbers. They might not be the biggest, most notable, or otherwise "representative" country in any way.</p>
+  <div class="legend-row2">
+    <div class="legend-item legend-item--plain">
+      <p class="eyebrow" style="margin:0 0 8px">Confederations, spelled out</p>
+      <div id="conf-glossary" class="conf-glossary">
+        <div><span class="term">UEFA</span> — Union of European Football Associations</div>
+        <div><span class="term">CAF</span> — Confédération Africaine de Football (Confederation of African Football)</div>
+        <div><span class="term">AFC</span> — Asian Football Confederation</div>
+        <div><span class="term">CONCACAF</span> — Confederation of North, Central America and Caribbean Association Football</div>
+        <div><span class="term">CONMEBOL</span> — Confederación Sudamericana de Fútbol (South American Football Confederation)</div>
+        <div><span class="term">OFC</span> — Oceania Football Confederation</div>
+      </div>
+    </div>
+    <div class="legend-item legend-item--plain">
+      <p class="caveat" style="margin:0">The flag(s) shown inside each wedge — one qualified, and where there's room, one non-qualified — are just an arbitrary example per confederation, picked to put a face on the numbers. They might not be the biggest, most notable, or otherwise "representative" country in any way.</p>
+    </div>
+  </div>
 
   <div class="footnote">
     <p><b>A few observations</b></p>
