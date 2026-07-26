@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joueurs nés en France par département</title>
+<link rel="stylesheet" href="../css/bootstrap-custom.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<link rel="stylesheet" href="../css/global.css">
+<style>
+/* Page content stays French-only (matching the original — see CLAUDE.md's own note on this
+   page) — only the navbar's own link label goes through the T/i18n system, like every other
+   nav item. */
+.dept { stroke: #b0a99e; stroke-width: 0.4; cursor: pointer; transition: stroke-width 0.15s; }
+.dept:hover { stroke: #333; stroke-width: 1.5; }
+#tooltip {
+  position: fixed; pointer-events: none; z-index: 1080; display: none; max-width: 320px;
+}
+#tooltip .tt-name { font-weight: 700; }
+#tooltip .tt-count { color: #1d4ed8; font-weight: 700; }
+#tooltip .tt-players { line-height: 1.5; }
+#legend .bar { height: 10px; border-radius: 2px; flex: 1; max-width: 200px; }
+#pc-btn { position: absolute; z-index: 10; transform: translateX(-50%); }
+#pc-tip {
+  position: fixed; z-index: 1090; display: none;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  max-width: 90vw; max-height: 80vh; overflow-y: auto;
+}
+#pc-tip-content {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 1.5rem;
+}
+#pc-tip .pc-dept { border-left: 3px solid #3b82f6; padding-left: 0.75rem; }
+</style>
+</head>
+<body>
+<script type="module" src="../js/auth-bar.js"></script>
+<mundial-auth-bar></mundial-auth-bar>
+
+<div id="main-content" class="container-xxl">
+  <div class="d-flex align-items-start gap-2 pt-4 pb-1">
+    <h1 class="fs-5 fw-bold mb-0">Joueurs nés en France par département</h1>
+  </div>
+  <p id="subtitle" class="text-muted small pb-3">Toutes sélections confondues</p>
+  <div id="map" class="position-relative"></div>
+  <div id="legend" class="d-flex align-items-center gap-2 py-2 small text-muted">
+    <span>0</span>
+    <div class="bar" style="background: linear-gradient(to right, #eff6ff, #3b82f6, #1e3a5f)"></div>
+    <span id="legend-max"></span>
+    <span class="ms-2">joueurs</span>
+  </div>
+  <p class="text-muted small pb-4">
+    Source : <a href="https://github.com/Kaosamami/france-geojson" target="_blank" rel="noopener">Kaosamami/france-geojson</a>
+    (GPL-3.0, simplified for this page) · effectifs Mondial 2026 (Wikipédia) · naissances
+    géolocalisées via <a href="https://nominatim.org/" target="_blank" rel="noopener">OpenStreetMap Nominatim</a>
+  </p>
+</div>
+
+<div id="tooltip" class="bg-white border rounded-3 shadow-sm px-3 py-2 small">
+  <div class="tt-name fs-6"></div>
+  <div class="tt-count"></div>
+  <div class="tt-players text-secondary" style="font-size: 0.7rem"></div>
+</div>
+
+<div id="pc-tip" class="bg-white border rounded-3 shadow px-3 py-2">
+  <div id="pc-tip-content"></div>
+</div>
+
+<script type="module">
+import { html, render, nothing } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { join } from 'https://cdn.jsdelivr.net/npm/lit-html@3/directives/join.js';
+import { loadWikiData, wikiUrl, wikiUrlEn } from '../js/i18n.js';
+import { cachedFetchJson } from '../js/cached_fetch.js';
+
+const [mapData, birthplaceByPid, geo] = await Promise.all([
+  cachedFetchJson('/data/v2/map.json'),
+  cachedFetchJson('/data/v2/birthplace.json'),
+  cachedFetchJson('/geo/france-departments.geojson'),
+  loadWikiData(),
+]);
+
+// Same reconstruction index.js's own buildIndices() does — export records (data[].players,
+// each already tagged with its own birth country via rec.country) plus native records
+// (natives[nation], birth country === nation by definition).
+const allPlayers = [
+  ...mapData.data.flatMap(rec => rec.players.map(p => ({ ...p, birth_country: rec.country }))),
+  ...Object.entries(mapData.natives).flatMap(([nation, ps]) => ps.map(p => ({ ...p, nation, birth_country: nation }))),
+];
+const franceBorn = allPlayers.filter(p => p.birth_country === 'France');
+
+// ── Département join — point-in-polygon from real geocoded coordinates (data/v2/birthplace.json,
+// pid-keyed), not a hand-maintained name→département list (the original page's own PLAYER_DEPT,
+// which both matched by name — exactly what this app's pid convention exists to avoid — and
+// silently went stale as squads changed). A player with no birthplace.json entry (not yet
+// geocoded) is simply excluded — an honest gap, not a guess, same as wc2026_live.html's own
+// missing-wiki-link handling.
+//
+// Overseas départements (971 Guadeloupe/972 Martinique/973 Guyane/974 La Réunion/976 Mayotte)
+// need a separate check: the vendored geo/france-departments.geojson repositions their polygons
+// next to mainland France purely for display (its own source filename says as much —
+// "rapprochée", brought closer) — real birthplace coordinates for someone actually born there
+// never fall inside that repositioned shape. These 5 bounding boxes are real-world geography
+// (stable facts, not per-player data) used only for the join; OVERSEAS_FEATURES (the repositioned
+// shapes) still render normally on the map.
+const OVERSEAS_CODES = new Set(['971', '972', '973', '974', '976']);
+const OVERSEAS_BBOX = {
+  971: { lonMin: -61.9, lonMax: -60.8, latMin: 15.8,  latMax: 16.6  }, // Guadeloupe
+  972: { lonMin: -61.3, lonMax: -60.7, latMin: 14.3,  latMax: 14.9  }, // Martinique
+  973: { lonMin: -54.7, lonMax: -51.5, latMin: 2.0,   latMax: 5.9   }, // Guyane
+  974: { lonMin: 55.1,  lonMax: 55.9,  latMin: -21.5, latMax: -20.7 }, // La Réunion
+  976: { lonMin: 44.9,  lonMax: 45.4,  latMin: -13.1, latMax: -12.5 }, // Mayotte
+};
+const metroFeatures = geo.features.filter(f => !OVERSEAS_CODES.has(f.properties.code));
+const findDeptCode = (lon, lat) => {
+  const metro = metroFeatures.find(f => d3.geoContains(f, [lon, lat]));
+  if (metro) return metro.properties.code;
+  for (const [code, b] of Object.entries(OVERSEAS_BBOX)) {
+    if (lon >= b.lonMin && lon <= b.lonMax && lat >= b.latMin && lat <= b.latMax) return code;
+  }
+  return null;
+};
+
+const deptPlayers = {};
+for (const p of franceBorn) {
+  const bp = p.pid != null ? birthplaceByPid[p.pid] : null;
+  if (!bp) continue;
+  const code = findDeptCode(bp.lon, bp.lat);
+  if (!code) continue;
+  (deptPlayers[code] ??= []).push({ name: p.name, nation: p.nation, export: p.birth_country !== p.nation, role: p.role, pid: p.pid });
+}
+
+const allDeptPlayers = Object.values(deptPlayers).flat();
+const nCoaches = allDeptPlayers.filter(p => p.role === 'coach').length;
+const nPlayers = allDeptPlayers.length - nCoaches;
+document.getElementById('subtitle').textContent =
+  `${allDeptPlayers.length} : ${nPlayers} joueurs et ${nCoaches} sélectionneurs · toutes sélections confondues`;
+
+const maxCount = Math.max(1, ...Object.values(deptPlayers).map(a => a.length));
+document.getElementById('legend-max').textContent = maxCount;
+
+const color = d3.scaleSequential()
+  .domain([0, maxCount])
+  .interpolator(t => d3.interpolateBlues(0.15 + t * 0.85));
+
+const container = document.getElementById('map');
+let W, H;
+
+const projection = d3.geoConicConformal().center([2.5, 46.5]);
+const path = d3.geoPath(projection);
+
+const svg = d3.select('#map').append('svg');
+const mapG = svg.append('g');
+
+const zoom = d3.zoom()
+  .scaleExtent([1, 12])
+  .on('zoom', ({ transform }) => { mapG.attr('transform', transform); });
+svg.call(zoom);
+svg.on('dblclick.zoom', () => svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity));
+
+const fillFn = d => {
+  const n = (deptPlayers[d.properties.code] ?? []).length;
+  return n > 0 ? color(n) : '#e0ddd8';
+};
+
+// Player name + Wikipedia link (pid-based, js/i18n.js) — modernization over the original,
+// which had no player links at all. { fallback: true } (current UI language's article missing)
+// gets the same "(en)" suffix convention as every other player list in the app.
+const playerLink = p => {
+  const primary = wikiUrl(p.pid);
+  const href = primary ?? wikiUrlEn(p.pid);
+  if (!href) return html`${p.name}`;
+  return html`<a href=${href} target="_blank" rel="noopener">${p.name}</a>${!primary ? html` <span class="text-muted" style="font-size:9px">(en)</span>` : nothing}`;
+};
+const playerRow = p => html`${playerLink(p)}${p.role === 'coach' ? html` <span class="badge text-bg-warning" style="font-size:9px">coach</span>` : nothing}${p.export ? html` <span class="text-danger">→ ${p.nation}</span>` : nothing}`;
+const sortExportFirst = players => [...players].sort((a, b) => (a.export === b.export ? 0 : a.export ? -1 : 1));
+
+const tt = document.getElementById('tooltip');
+const onMove = (event, d) => {
+  const code = d.properties.code;
+  const name = d.properties.nom;
+  const players = deptPlayers[code] ?? [];
+  render(html`
+    <div class="tt-name fs-6">${name} (${code})</div>
+    <div class="tt-count">${players.length === 0 ? 'Aucun joueur' : `${players.length} joueur${players.length > 1 ? 's' : ''}`}</div>
+    <div class="tt-players text-secondary" style="font-size:0.7rem">${join(sortExportFirst(players).map(playerRow), html`<br>`)}</div>
+  `, tt);
+  tt.style.display = 'block';
+  const ttW = tt.offsetWidth, ttH = tt.offsetHeight;
+  let left = event.clientX + 12;
+  if (left + ttW + 8 > window.innerWidth) left = event.clientX - ttW - 12;
+  let top = event.clientY - ttH - 8;
+  if (top < 8) top = event.clientY + 16;
+  tt.style.left = Math.max(8, left) + 'px';
+  tt.style.top = Math.max(8, Math.min(top, window.innerHeight - ttH - 8)) + 'px';
+};
+const onLeave = () => { tt.style.display = 'none'; };
+
+const PC_CODES = new Set(['75', '92', '93', '94']);
+const PC_CONTEXT = new Set(['75', '92', '93', '94', '77', '78', '91', '95']);
+const pcFeatures = geo.features.filter(f => PC_CONTEXT.has(f.properties.code));
+const pcProj = d3.geoConicConformal().center([2.35, 48.86]);
+const pcPath = d3.geoPath(pcProj);
+let pcG;
+
+const resize = () => {
+  W = container.clientWidth;
+  H = W * 0.85;
+
+  svg.attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+  svg.call(zoom.transform, d3.zoomIdentity);
+
+  projection.scale(W * 3.2).translate([W / 2, H / 2]);
+  mapG.selectAll('path')
+    .data(geo.features)
+    .join('path')
+    .attr('class', 'dept')
+    .attr('d', path)
+    .attr('fill', fillFn)
+    .on('mousemove', onMove)
+    .on('mouseleave', onLeave);
+
+  // Petite couronne inset
+  const pcSize = Math.min(W * 0.18, 150);
+  const pcPad = 4;
+  const pcX = W - pcSize - pcPad - 30, pcY = 16;
+
+  if (pcG) pcG.remove();
+  svg.select('defs').remove();
+  pcG = svg.append('g');
+
+  const clipId = 'pc-clip';
+  svg.append('defs').append('clipPath').attr('id', clipId)
+    .append('rect').attr('x', pcX).attr('y', pcY).attr('width', pcSize).attr('height', pcSize).attr('rx', 6);
+
+  pcG.append('rect')
+    .attr('x', pcX - pcPad).attr('y', pcY - pcPad)
+    .attr('width', pcSize + pcPad * 2).attr('height', pcSize + pcPad * 2)
+    .attr('rx', 6).attr('fill', '#fff').attr('stroke', '#ccc').attr('stroke-width', 0.8);
+
+  pcProj.scale(W * 28).translate([pcX + pcSize / 2, pcY + pcSize / 2]);
+  pcG.append('g').attr('clip-path', `url(#${clipId})`)
+    .selectAll('path')
+    .data(pcFeatures)
+    .join('path')
+    .attr('class', 'dept')
+    .attr('d', pcPath)
+    .attr('fill', fillFn)
+    .attr('stroke', d => PC_CODES.has(d.properties.code) ? '#b0a99e' : '#d0ccc6')
+    .attr('stroke-width', d => PC_CODES.has(d.properties.code) ? 0.6 : 0.3)
+    .on('mousemove', onMove)
+    .on('mouseleave', onLeave);
+
+  // HTML button overlay for "Petite couronne" label
+  let pcBtn = document.getElementById('pc-btn');
+  if (!pcBtn) {
+    pcBtn = document.createElement('button');
+    pcBtn.id = 'pc-btn';
+    pcBtn.className = 'btn btn-light btn-sm text-muted';
+    pcBtn.style.fontSize = '9px';
+    pcBtn.textContent = 'Petite couronne';
+    container.appendChild(pcBtn);
+  }
+  pcBtn.style.left = (pcX + pcSize / 2) + 'px';
+  pcBtn.style.top = (pcY + pcSize + pcPad + 4) + 'px';
+};
+
+resize();
+window.addEventListener('resize', resize);
+
+// Petite couronne summary popup
+const PC_NAMES = { 75: 'Paris', 92: 'Hauts-de-Seine', 93: 'Seine-Saint-Denis', 94: 'Val-de-Marne' };
+const pcTip = document.getElementById('pc-tip');
+let pcTipVisible = false;
+
+const renderPcTip = () => {
+  const depts = ['93', '75', '94', '92'];
+  let total = 0;
+  const sections = depts.map(code => {
+    const players = deptPlayers[code] ?? [];
+    total += players.length;
+    return html`<div class="pc-dept py-2">
+      <div class="fw-bold">${PC_NAMES[code]} (${code})</div>
+      <div class="text-primary fw-bold">${players.length} joueur${players.length > 1 ? 's' : ''}</div>
+      <div class="text-secondary" style="font-size:0.75rem">${join(sortExportFirst(players).map(playerRow), html`<br>`)}</div>
+    </div>`;
+  });
+  render(html`
+    <div class="fw-bold fs-6 pb-2 border-bottom mb-2">Paris et petite couronne · ${total} joueurs</div>
+    ${sections}
+  `, document.getElementById('pc-tip-content'));
+};
+renderPcTip();
+
+const showPcTip = () => { pcTipVisible = true; pcTip.style.display = 'block'; };
+const hidePcTip = () => { pcTipVisible = false; pcTip.style.display = 'none'; };
+
+// pcBtn is created once inside resize() (reused, just repositioned, on subsequent resizes) —
+// resize() already ran above, so it's guaranteed to exist here.
+const pcBtn = document.getElementById('pc-btn');
+pcBtn.addEventListener('click', () => { pcTipVisible ? hidePcTip() : showPcTip(); });
+pcBtn.addEventListener('mouseenter', showPcTip);
+pcBtn.addEventListener('mouseleave', hidePcTip);
+document.addEventListener('click', e => { if (pcTipVisible && !pcTip.contains(e.target) && e.target !== pcBtn) hidePcTip(); });
+</script>
+</body>
+</html>
