@@ -1,0 +1,16 @@
+/* birth-lottery/style.css — page-specific rules only. css/global.css and css/map-container.css
+   (linked before this file, see index.html) already supply the shared #page body background,
+   #zoom-reset/#map-toggle-bar styling, and #legend-bar-col layout — nothing here duplicates it. */
+
+#main-content { max-width: 640px; }
+
+/* #zoom-span ("span all visible countries") is meaningless here — this page has no flags to
+   span, only a fixed KDE raster — so it's dropped rather than wired to a no-op or duplicate
+   of #zoom-reset. */
+#zoom-span { display: none; }
+
+/* The diverging-scale outlier columns (#legend-outlier-neg-wrap/-pos-wrap, from the shared
+   mapContainerTemplate()) are that system's own France/Curaçao carve-outs — this page's legend
+   is a wholly separate KDE color scale (kde.js's kdeLegendTicks) with no outlier concept of its
+   own, so both wraps are hidden rather than left to render empty. */
+#legend-outlier-neg-wrap, #legend-outlier-pos-wrap { display: none; }

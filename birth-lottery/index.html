@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Birth Lottery — World Cup 2026</title>
+<link rel="stylesheet" href="../css/bootstrap-custom.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/map-container.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script type="module" src="../js/auth-bar.js"></script>
+<mundial-auth-bar></mundial-auth-bar>
+
+<div id="main-content" class="container-xxl">
+  <div class="pt-4 pb-1">
+    <h1 class="fs-5 fw-bold mb-0">The Birth Lottery</h1>
+  </div>
+  <p class="text-muted small fst-italic mb-2">Où naître pour maximiser ses chances de jouer un mondial ?</p>
+  <p class="text-muted small pb-3">
+    Not "where were the most players born" — a raw density map like that would just track
+    megacity population. This asks a different question: does a place produce <em>more</em>
+    World Cup 2026 talent than its population alone would predict? Purple means well above the
+    global average, teal means below it, pale means roughly what you'd expect — normalised by
+    population, not a raw player count, which is why the result isn't simply dominated by the
+    biggest cities.
+  </p>
+</div>
+
+<!-- #map-container's own inner DOM is rendered here by the module script below, via
+     map-container.js's mapContainerTemplate() — shared with index.html/chains/index.html
+     rather than hand-duplicated. See that function's own header comment for why this div
+     itself (not a placeholder) stays static markup. -->
+<div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script type="module">
+// A trimmed copy of the same scaffolding chains/index.html uses for its own standalone
+// <world-map> page: world choropleth (borders only here — see below) + zoom + legend, no
+// tooltips/dim-mode/flags/player table, none of which this page needs. kde.js (this folder) is
+// the same raster-KDE engine that used to live at js/kde_layer.js, before this page — its one and
+// only consumer — moved into its own folder.
+import { render } from 'https://cdn.jsdelivr.net/npm/lit-html@3/lit-html.js';
+import { mapContainerTemplate, wireMapHeightDrag, paintChoropleth } from '../js/map-container.js';
+import { loadKdeData, makeKdeColorScale, buildKdeRaster, kdeLegendTicks } from './kde.js';
+import { T } from '../js/i18n.js';
+import { cachedFetchJson } from '../js/cached_fetch.js';
+
+// #map-container's own inner DOM — see map-container.js's mapContainerTemplate() header comment.
+// Rendered before anything below queries world-map/#map-frame/etc.
+render(mapContainerTemplate({ basePath: '../' }), document.getElementById('map-container'));
+
+const _wm = document.querySelector('world-map');
+const { svg, g, projection, path, zoom } = _wm;
+document.getElementById('zoom-hint').textContent = T.zoomHint;
+
+const [world, ukNations, { kde, posMax, negMin }] = await Promise.all([
+  cachedFetchJson('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
+  cachedFetchJson('../geo/uk-nations.geojson'),
+  // Not routed through cachedFetchJson — data/kde_risk.json is a multi-MB raster grid, page-local
+  // to this one page, so there's no cross-page cache benefit worth risking sessionStorage's own
+  // (much smaller) quota over.
+  loadKdeData('../'),
+]);
+
+// byId is deliberately {} — paintChoropleth's own initial fill (choroFill against an empty
+// index resolves to the neutral "no data" color for every country) is immediately overridden
+// below, so there's no need to fetch/build the real country-export index this page never uses.
+paintChoropleth(g, path, world, ukNations, {});
+
+// Country fills suppressed — the KDE raster (inserted below, right under the .country layer) is
+// the map's only fill; borders are the sole remaining geography cue, so drawn bolder than the
+// normal fill-backed weight and in a color that reads against the raster without competing with
+// its own purple/teal palette.
+const KDE_BORDER_COLOR = '#918f8b';
+const KDE_BORDER_STROKE_W = 1.0;
+g.selectAll('.country').style('fill', 'none');
+g.selectAll('.country, .mesh-border').style('stroke', KDE_BORDER_COLOR);
+
+const colorScale = makeKdeColorScale(negMin, posMax);
+const raster = await buildKdeRaster({ projection, svg, kde, colorScale });
+g.insert('image', '.country')
+  .attr('class', 'kde-raster')
+  .attr('href', raster.url)
+  .attr('x', raster.x).attr('y', raster.y)
+  .attr('width', raster.width).attr('height', raster.height)
+  .attr('preserveAspectRatio', 'none');
+
+// ── Legend — kdeLegendTicks' own ×N-factor ticks. This page's legend is a wholly separate KDE
+// color scale from map-container.js/legend.js's diverging one, so it's built directly here
+// rather than through legend.js's wireLegend(); the two outlier columns wireLegend would
+// otherwise drive are hidden outright (style.css). ─────────────────────────────────────────────
+const _legendBar = document.getElementById('legend-bar');
+const _legendTicksEl = document.getElementById('legend-ticks');
+const ticks = kdeLegendTicks(negMin, posMax);
+const pct = log2 => ((log2 - negMin) / (posMax - negMin) * 100).toFixed(2);
+const factorLabel = f => f >= 1 ? `×${Math.round(f)}` : `×${f.toFixed(2)}`;
+_legendBar.style.background = `linear-gradient(to right, ${ticks.map(t => `${t.color} ${pct(t.log2)}%`).join(',')})`;
+_legendBar.style.borderRadius = '5px';
+_legendTicksEl.innerHTML = ticks.map(t =>
+  `<span style="position:absolute; left:${pct(t.log2)}%; transform:translateX(-50%)">${factorLabel(t.factor)}</span>`
+).join('');
+
+// ── Zoom — reset only; no flags/selection on this page for "span" to fit to (#zoom-span is
+// hidden via style.css). ────────────────────────────────────────────────────────────────────
+const _initialTransform = d3.zoomIdentity;
+const _zoomResetBtn = document.getElementById('zoom-reset');
+const _syncResetBtn = t => {
+  _zoomResetBtn.disabled = Math.abs(t.k - _initialTransform.k) < 0.001
+    && Math.abs(t.x - _initialTransform.x) < 0.5
+    && Math.abs(t.y - _initialTransform.y) < 0.5;
+};
+_syncResetBtn(_initialTransform);
+// Borders would otherwise get linearly thicker while zooming in, same as everything else inside
+// `g` — counter-scale by 1/k to keep them a near-constant screen weight instead, same technique
+// index.js's own onZoom uses for its (fill-backed, thinner) country borders.
+g.selectAll('.country, .mesh-border').attr('stroke-width', KDE_BORDER_STROKE_W / _initialTransform.k);
+_wm.onZoom = e => {
+  _syncResetBtn(e.transform);
+  g.selectAll('.country, .mesh-border').attr('stroke-width', KDE_BORDER_STROKE_W / e.transform.k);
+};
+_zoomResetBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  svg.transition().duration(600).call(zoom.transform, _initialTransform);
+});
+
+// ── Map-toggle-bar collapse + body padding-top sync — trimmed js/index.js (Bootstrap Collapse
+// wiring + _syncPaddingTop), same pattern as chains/index.html. Own localStorage keys
+// (mundial-birth-lottery-*) so this page's map preferences stay independent of the other pages'. ─
+const _mc = document.getElementById('map-container');
+const _mapCollapseEl = document.getElementById('map-collapse');
+const _mapToggleBar = document.getElementById('map-toggle-bar');
+const _mapCollapse = bootstrap.Collapse.getOrCreateInstance(_mapCollapseEl, { toggle: false });
+const _MAP_COLLAPSED_KEY = 'mundial-birth-lottery-collapsed';
+const _paintMapToggleChevron = expanded => { _mapToggleBar.textContent = expanded ? '⌄' : '⌃'; };
+const _syncBodyPadding = () => { document.body.style.paddingTop = _mc.getBoundingClientRect().bottom + 'px'; };
+new ResizeObserver(_syncBodyPadding).observe(_mc);
+_mapCollapseEl.addEventListener('show.bs.collapse', () => _paintMapToggleChevron(true));
+_mapCollapseEl.addEventListener('hide.bs.collapse', () => _paintMapToggleChevron(false));
+_mapCollapseEl.addEventListener('shown.bs.collapse', () => localStorage.setItem(_MAP_COLLAPSED_KEY, '0'));
+_mapCollapseEl.addEventListener('hidden.bs.collapse', () => localStorage.setItem(_MAP_COLLAPSED_KEY, '1'));
+_mapToggleBar.title = T.sortLabels.mapHint;
+_mapToggleBar.setAttribute('aria-label', T.sortLabels.map);
+if (localStorage.getItem(_MAP_COLLAPSED_KEY) === '1') {
+  _mapCollapseEl.classList.remove('show');
+  _paintMapToggleChevron(false);
+  _mapToggleBar.setAttribute('aria-expanded', 'false');
+}
+_syncBodyPadding();
+
+// ── #map-footer drag-resize — shared with index.js/chains (map-container.js's
+// wireMapHeightDrag()). Own storage key; onDrag/onSettle both just reuse this page's own
+// _syncBodyPadding (no landscape-mobile concept here to complicate it). ────────────────────────
+wireMapHeightDrag({
+  storageKey: 'mundial-birth-lottery-height',
+  onDrag: _syncBodyPadding,
+  onSettle: _syncBodyPadding,
+});
+const _mapFooter = document.getElementById('map-footer');
+
+// #map-grip's top:50% centers it vertically across the whole #map-footer, which is fine on one
+// line but lands in the gap between lines once #legend wraps onto its own full-width line at
+// max-width:500px (css/map-container.css) — same fix as index.js's own _syncMapGripTop(),
+// see that function's comment for the full reasoning.
+const _mapGrip = document.getElementById('map-grip');
+const _legendEl = document.getElementById('legend');
+const _syncMapGripTop = () => {
+  if (!_mapGrip || !_legendEl || !_mapFooter) return;
+  if (window.matchMedia('(max-width: 500px)').matches) {
+    const line1H = _legendEl.getBoundingClientRect().height;
+    const totalH = _mapFooter.getBoundingClientRect().height;
+    _mapGrip.style.top = (line1H + (totalH - line1H) / 2) + 'px';
+  } else {
+    _mapGrip.style.top = '';
+  }
+};
+window.addEventListener('resize', _syncMapGripTop);
+_syncMapGripTop();
+</script>
+</body>
+</html>

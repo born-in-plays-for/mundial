@@ -17,6 +17,10 @@ const ICON_CHAIN = `<svg class="chain-icon" width="24" height="24" viewBox="62 4
   </g>
 </svg>`;
 const ICON_FRANCE = `<svg width="24" height="24" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke="#1C274C" stroke-width="24" stroke-linejoin="round" d="M283.4 19.83c-3.2 0-31.2 5.09-31.2 5.09-1.3 41.61-30.4 78.48-90.3 84.88l-12.8-23.07-25.1 2.48 11.3 60.09-113.79-4.9 12.2 41.5C156.3 225.4 150.7 338.4 124 439.4c47 53 141.8 47.8 186 43.1 3.1-62.2 52.4-64.5 135.9-32.2 11.3-17.6 18.8-36 44.6-50.7l-46.6-139.5-27.5 6.2c11-21.1 32.2-49.9 50.4-63.4l15.6-86.9c-88.6-6.3-146.4-46.36-199-96.17z"/></svg>`;
+// The Birth Lottery — talent-production intensity map (birth-lottery/) — the same solar_linear icon
+// #map-controls' own #zoom-span button uses elsewhere in the app, reused here as an <img> rather
+// than an inline path since it's only ever loaded once, in this one dropdown item.
+const ICON_HEATMAP = `<img src="/images/solar_linear/graph-up-svgrepo-com.svg" width="24" height="24" alt="">`;
 const ICON_LOGIN = _icon(`<path d="M12.9999 21.9994C17.055 21.9921 19.1784 21.8926 20.5354 20.5355C21.9999 19.0711 21.9999 16.714 21.9999 12C21.9999 7.28595 21.9999 4.92893 20.5354 3.46447C19.071 2 16.714 2 11.9999 2C7.28587 2 4.92884 2 3.46438 3.46447C2.10734 4.8215 2.00779 6.94493 2.00049 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M3 21L11 13M11 13H5M11 13V19" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 const ICON_LOGOUT = _icon(`<path d="M12.9999 21.9994C17.055 21.9921 19.1784 21.8926 20.5354 20.5355C21.9999 19.0711 21.9999 16.714 21.9999 12C21.9999 7.28595 21.9999 4.92893 20.5354 3.46447C19.071 2 16.714 2 11.9999 2C7.28587 2 4.92884 2 3.46438 3.46447C2.10734 4.8215 2.00779 6.94493 2.00049 11" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/><path d="M11 13L3 21M3 21H9M3 21V15" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`);
 const WA_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#25D366" style="width:18px;height:18px;vertical-align:-3px;display:inline-block"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
@@ -157,6 +161,7 @@ class MundialAuthBar extends HTMLElement {
             <ul class="dropdown-menu dropdown-menu-start" style="min-width:0">
               ${_dropdownItem('/insights/discipline.html', _t.navDiscipline, ICON_CARD, 'discipline')}
               ${_dropdownItem('/insights/france.html', _t.navFrance, ICON_FRANCE)}
+              ${_dropdownItem('/birth-lottery/', _t.navHeatmap, ICON_HEATMAP)}
               ${_dropdownItem('/chains/', _t.navChain, ICON_CHAIN)}
             </ul>
           </div>
@@ -182,6 +187,7 @@ class MundialAuthBar extends HTMLElement {
       '/insights/discipline.html': ['/insights/discipline.html'],
       '/chains/': ['/chains/', '/chains/index.html'],
       '/insights/france.html': ['/insights/france.html'],
+      '/birth-lottery/': ['/birth-lottery/', '/birth-lottery/index.html'],
       '/wc2026_live.html': ['/wc2026_live.html'],
     };
     this.querySelectorAll('nav a[href]').forEach(a => {
