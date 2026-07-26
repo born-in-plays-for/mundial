@@ -105,6 +105,11 @@
     font-weight: 600;
     letter-spacing: .05em;
     fill: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .count-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    fill: var(--muted);
   }
 
   /* ---- legend ---- */
@@ -167,7 +172,7 @@
   <p class="eyebrow">Country Categories · combined view</p>
   <h1>Every way a country gets classified here, on one diagram</h1>
   <p class="intro">Nested rings for the strict hierarchy — <b>every country the map lists at all</b> is either <b style="color:var(--confed-line)">FIFA</b> or not; every FIFA member sits in exactly one of six <b style="color:var(--confed-line)">confederations</b>; the 48 <b style="color:var(--qualified)">qualified</b> teams are scattered across those confederations, not confined to one. A fine hatch marks which countries are <b>on the map</b> at all. <b style="color:var(--exp)">Export</b> and <b style="color:var(--imp)">import</b> get their own diagram further down — they're not a confederation-shaped question, so they don't live on this wheel.</p>
-  <p class="caveat" style="border-color:var(--faint)">Deliberately <b>not</b> called "Elo-rated" — two of the countries listed here (Kosovo, a FIFA/UEFA member; Isle of Man, non-FIFA) have never actually been given a rating by eloratings.net. They're listed anyway, with a placeholder instead of a real score, purely so they can still appear as ordinary countries — a different situation from the 6-country "oddities" pocket below, which do have real ratings, just no official country code.</p>
+  <p class="caveat" style="border-color:var(--faint)">Deliberately <b>not</b> called "Elo-rated" — two of the countries listed here (Kosovo, a FIFA/UEFA member; Isle of Man, non-FIFA) have never actually been given a rating by eloratings.net. They're listed anyway, with a placeholder instead of a real score, purely so they can still appear as ordinary countries.</p>
   <p class="caveat">This is deliberately an <b>Euler diagram, not a Venn diagram</b>: regions are sized and nested to match which combinations actually occur (qualified ⊆ FIFA ⊆ has-confederation), not drawn as equal independent circles. A true flat Venn across all six dimensions would draw regions — "qualified, non-FIFA" — that are structurally impossible.</p>
 
   <div class="diagram-shell">
@@ -186,122 +191,124 @@
       <circle cx="450" cy="470" r="400" fill="url(#hatch)"></circle>
       <circle cx="450" cy="470" r="400" fill="none" stroke="var(--faint-strong)" stroke-width="1.5"></circle>
 
-      <!-- non-FIFA band (annulus 378-400) -->
-      <path d="M450,70 A400,400 0 1,1 449.99,70 Z M450,92 A378,378 0 1,0 450.01,92 Z"
+      <!-- non-FIFA band (annulus 375.84-400) — inner radius solved so the disc/ring area split
+           matches the actual 211/239 country split (400² × 211/239 → r≈375.84), not a fixed
+           cosmetic margin. (FIFA membership is 211, not the 213 the six wedges sum to — see
+           the legend's own "FIFA disc" entry for why: a couple of geography-only outliers get
+           counted in two confederations for wedge-sizing purposes.) -->
+      <path d="M450,70 A400,400 0 1,1 449.99,70 Z M450,94.16 A375.84,375.84 0 1,0 450.01,94.16 Z"
             fill-rule="evenodd" fill="var(--faint)" fill-opacity=".55"></path>
 
       <!-- ============ FIFA disc + confederation wedges ============ -->
+      <!-- Every wedge/qualified-sector coordinate below was solved for the old r=378 outer
+           radius; rather than re-deriving each one by hand for r=375.84, the whole group is
+           scaled down by that exact ratio (375.84/378 = 0.994286) around the shared center —
+           mathematically identical to redrawing them, without the transcription risk. -->
+      <g transform="translate(450,470) scale(0.994286) translate(-450,-470)">
       <circle cx="450" cy="470" r="378" fill="url(#confedShade)"></circle>
 
       <!-- UEFA -->
       <path d="M450.0,470.0 L450.00,92.00 A378,378 0 0 1 827.50,489.50 Z" fill="var(--confed)" fill-opacity=".10" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M450.00,144.00 L450.00,92.00 A378,378 0 0 1 621.86,133.33 L598.22,179.64 A326,326 0 0 0 450.00,144.00 Z" fill="var(--qualified)" fill-opacity=".55"></path>
+      <path d="M450,470 L450.00,360.02 A110.0,110.0 0 0 1 559.81,475.67 Z" fill="var(--qualified)" fill-opacity=".55"></path>
 
       <!-- CAF -->
       <path d="M450.0,470.0 L827.50,489.50 A378,378 0 0 1 422.15,846.97 Z" fill="var(--confed)" fill-opacity=".16" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M775.57,486.82 L827.50,489.50 A378,378 0 0 1 805.52,598.41 L756.61,580.75 A326,326 0 0 0 775.57,486.82 Z" fill="var(--qualified)" fill-opacity=".55"></path>
+      <path d="M450,470 L519.91,473.61 A70.0,70.0 0 0 1 444.84,539.81 Z" fill="var(--qualified)" fill-opacity=".55"></path>
 
       <!-- AFC -->
       <path d="M450.0,470.0 L422.15,846.97 A378,378 0 0 1 75.70,522.79 Z" fill="var(--confed)" fill-opacity=".10" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M425.98,795.11 L422.15,846.97 A378,378 0 0 1 324.22,826.46 L341.52,777.42 A326,326 0 0 0 425.98,795.11 Z" fill="var(--qualified)" fill-opacity=".55"></path>
+      <path d="M450,470 L444.55,543.75 A74.0,74.0 0 0 1 376.76,480.33 Z" fill="var(--qualified)" fill-opacity=".55"></path>
 
       <!-- CONCACAF -->
       <path d="M450.0,470.0 L75.70,522.79 A378,378 0 0 1 230.53,162.24 Z" fill="var(--confed)" fill-opacity=".16" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M127.19,515.53 L75.70,522.79 A378,378 0 0 1 72.26,456.07 L124.22,457.98 A326,326 0 0 0 127.19,515.53 Z" fill="var(--qualified)" fill-opacity=".55"></path>
+      <path d="M450,470 L389.30,478.56 A61.3,61.3 0 0 1 414.41,420.10 Z" fill="var(--qualified)" fill-opacity=".55"></path>
 
       <!-- OFC -->
       <path d="M450.0,470.0 L230.53,162.24 A378,378 0 0 1 340.11,108.33 Z" fill="var(--confed)" fill-opacity=".10" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M260.72,204.58 L230.53,162.24 A378,378 0 0 1 239.70,155.90 L268.63,199.11 A326,326 0 0 0 260.72,204.58 Z" fill="var(--qualified)" fill-opacity=".55"></path>
+      <path d="M450,470 L430.05,442.02 A34.4,34.4 0 0 1 440.01,437.12 Z" fill="var(--qualified)" fill-opacity=".55"></path>
 
       <!-- CONMEBOL -->
       <path d="M450.0,470.0 L340.11,108.33 A378,378 0 0 1 450.00,92.00 Z" fill="var(--confed)" fill-opacity=".16" stroke="var(--confed-line)" stroke-opacity=".45" stroke-width="1"></path>
-      <path d="M355.22,158.08 L340.11,108.33 A378,378 0 0 1 405.50,94.63 L411.62,146.27 A326,326 0 0 0 355.22,158.08 Z" fill="var(--qualified)" fill-opacity=".55"></path>
+      <path d="M450,470 L384.07,253.00 A226.8,226.8 0 0 1 450.00,243.20 Z" fill="var(--qualified)" fill-opacity=".55"></path>
 
-      <!-- structural circles on top of fills -->
+      <!-- structural circle on top of fills -->
       <circle cx="450" cy="470" r="378" fill="none" stroke="var(--confed-line)" stroke-width="1.6"></circle>
-      <circle cx="450" cy="470" r="326" fill="none" stroke="var(--qualified)" stroke-opacity=".35" stroke-width="1" stroke-dasharray="2 4"></circle>
-
-      <!-- ============ off-map holes (punched through the hatch) ============ -->
-      <circle cx="382" cy="853" r="15" fill="var(--hole)" stroke="var(--faint-strong)" stroke-width="1.3" stroke-dasharray="3 3"></circle>
-      <circle cx="256" cy="807" r="13" fill="var(--hole)" stroke="var(--faint-strong)" stroke-width="1.3" stroke-dasharray="3 3"></circle>
-
-      <!-- ============ weirdo pocket (id-less, non-FIFA) ============ -->
-      <ellipse cx="583" cy="836" rx="46" ry="15" transform="rotate(18 583 836)" fill="none" stroke="var(--faint-strong)" stroke-width="1.3" stroke-dasharray="3 3"></ellipse>
+      </g>
 
       <!-- ================= LABELS ================= -->
 
-      <!-- center -->
-      <text x="450" y="463" text-anchor="middle" class="center-label">EVERY COUNTRY THE MAP LISTS</text>
-      <text x="450" y="490" text-anchor="middle" class="center-count">239</text>
+      <!-- overall title + qualified/non-qualified key (top of the disk) — no text on the
+           squares themselves, that's fully spelled out in the legend below the diagram. -->
+      <text x="450" y="20" text-anchor="middle" class="center-label">EVERY COUNTRY THE APP LISTS — <tspan class="count-mono">239</tspan></text>
+      <rect x="397" y="38" width="16" height="16" fill="url(#hatch)"></rect>
+      <rect x="397" y="38" width="16" height="16" fill="var(--confed)" fill-opacity=".13"></rect>
+      <rect x="413" y="38" width="16" height="16" fill="var(--qualified)" fill-opacity=".55"></rect>
+      <rect x="397" y="38" width="32" height="16" fill="none" stroke="var(--faint-strong)" stroke-width="1"></rect>
+      <text x="441" y="50" class="band-tag">FIFA — 211</text>
 
-      <!-- non-FIFA band label -->
-      <text x="450" y="60" text-anchor="middle" class="band-tag">NON-FIFA — 28 listed (+ 6 more with no official country code)</text>
+      <!-- non-FIFA band label (bottom of the disk) -->
+      <rect x="395" y="896" width="16" height="16" fill="url(#hatch)"></rect>
+      <rect x="395" y="896" width="16" height="16" fill="var(--faint)" fill-opacity=".55"></rect>
+      <rect x="395" y="896" width="16" height="16" fill="none" stroke="var(--faint-strong)" stroke-width="1"></rect>
+      <text x="423" y="908" class="band-tag">NON-FIFA — 28</text>
 
       <!-- non-FIFA examples -->
       <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/gl.svg" x="560" y="90" width="20" height="20"></image>
       <text x="586" y="104" class="flag-name">Greenland</text>
 
-      <text x="583" y="833" text-anchor="middle" class="flag-name" font-style="italic">6 oddities</text>
-      <text x="583" y="845" text-anchor="middle" class="flag-name" font-style="italic">no country code</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/va.svg" x="306" y="826" width="18" height="18"></image>
+      <text x="315" y="865" text-anchor="middle" class="flag-name">Vatican City</text>
+      <text x="315" y="876" text-anchor="middle" class="flag-name">(off-map)</text>
 
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/mc.svg" x="372" y="843" width="18" height="18"></image>
-      <text x="382" y="882" text-anchor="middle" class="flag-name">Monaco</text>
-      <text x="382" y="893" text-anchor="middle" class="flag-name">off-map</text>
-
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/sg.svg" x="247" y="797" width="18" height="18"></image>
-      <text x="256" y="836" text-anchor="middle" class="flag-name">Singapore</text>
-      <text x="256" y="847" text-anchor="middle" class="flag-name">off-map</text>
-
-      <!-- UEFA -->
+      <!-- Same wedge-boundary scale as the disc itself (see the g transform above), so these
+           stay pinned to their (now slightly smaller) wedges. -->
+      <g transform="translate(450,470) scale(0.994286) translate(-450,-470)">
+      <!-- UEFA (brown zone r<110 · grey zone r>110) -->
       <text x="618" y="300" class="wedge-label">UEFA</text>
       <text x="618" y="315" class="wedge-count">55 · 16 qualified</text>
       <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/is.svg" x="533" y="372" width="18" height="18"></image>
       <text x="558" y="385" class="flag-name">Iceland</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/xk.svg" x="533" y="393" width="18" height="18" stroke-dasharray="2 2"></image>
-      <text x="558" y="406" class="flag-name" font-style="italic">Kosovo — never rated</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" x="695" y="219" width="18" height="18"></image>
-      <text x="720" y="232" class="flag-name">France</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/fr.svg" x="488" y="416" width="18" height="18"></image>
+      <text x="513" y="429" class="flag-name">France</text>
 
-      <!-- CAF -->
+      <!-- CAF (brown zone r<70 · grey zone r>70) -->
       <text x="603" y="638" class="wedge-label">CAF</text>
       <text x="603" y="653" class="wedge-count">54 · 10 qualified</text>
       <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ke.svg" x="525" y="560" width="18" height="18"></image>
       <text x="550" y="573" class="flag-name">Kenya</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" x="673" y="725" width="18" height="18"></image>
-      <text x="698" y="738" class="flag-name">Morocco</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ma.svg" x="471" y="495" width="18" height="18"></image>
+      <text x="496" y="508" class="flag-name">Morocco</text>
 
-      <!-- AFC -->
+      <!-- AFC (brown zone r<74 · grey zone r>74) -->
       <text x="291" y="633" text-anchor="end" class="wedge-label">AFC</text>
       <text x="291" y="648" text-anchor="end" class="wedge-count">46 · 9 qualified</text>
       <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/th.svg" x="333" y="557" width="18" height="18"></image>
       <text x="358" y="570" class="flag-name">Thailand</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" x="181" y="718" width="18" height="18"></image>
-      <text x="206" y="731" class="flag-name">Iran</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ir.svg" x="407" y="495" width="18" height="18"></image>
+      <text x="432" y="508" class="flag-name">Iran</text>
 
-      <!-- CONCACAF -->
+      <!-- CONCACAF (brown zone r<61.3 · grey zone r>61.3) -->
       <text x="237" y="372" text-anchor="end" class="wedge-label">CONCACAF</text>
       <text x="237" y="387" text-anchor="end" class="wedge-count">37 · 6 qualified</text>
       <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/jm.svg" x="323" y="411" width="18" height="18"></image>
       <text x="348" y="424" class="flag-name">Jamaica</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" x="99" y="323" width="18" height="18"></image>
-      <text x="124" y="336" class="flag-name">Curaçao</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/cw.svg" x="410" y="448" width="18" height="18"></image>
+      <text x="419" y="479" text-anchor="middle" class="flag-name">Curaçao</text>
 
-      <!-- OFC -->
-      <text x="348" y="248" text-anchor="middle" class="wedge-label">OFC</text>
-      <text x="348" y="263" text-anchor="middle" class="wedge-count">11 · 1 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/nz.svg" x="291" y="147" width="16" height="16"></image>
-      <text x="313" y="159" class="flag-name">New Zealand</text>
+      <!-- OFC (brown zone r<34.4 — no grey example) -->
+      <text x="308" y="223" text-anchor="middle" class="wedge-label">OFC</text>
+      <text x="308" y="238" text-anchor="middle" class="wedge-count">11 · 1 qualified</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/nz.svg" x="432" y="429" width="16" height="16"></image>
+      <text x="440" y="423" text-anchor="middle" class="flag-name">New Zealand</text>
 
-      <!-- CONMEBOL -->
+      <!-- CONMEBOL (brown zone r<226.8 · grey zone r>226.8) -->
       <text x="416" y="255" text-anchor="middle" class="wedge-label">CONMEBOL</text>
       <text x="416" y="270" text-anchor="middle" class="wedge-count">10 · 6 qualified</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ve.svg" x="422" y="333" width="16" height="16"></image>
-      <text x="443" y="345" class="flag-name">Venezuela</text>
-      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/br.svg" x="390" y="114" width="18" height="18"></image>
-      <text x="412" y="127" class="flag-name">Brazil</text>
-
-      <!-- qualified ring callout -->
-      <text x="450" y="180" text-anchor="middle" class="band-tag" fill="var(--qualified)">QUALIFIED — 48, scattered across all six wedges</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/ve.svg" x="399" y="185" width="16" height="16"></image>
+      <text x="420" y="197" class="flag-name">Venezuela</text>
+      <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/br.svg" x="419" y="313" width="18" height="18"></image>
+      <text x="441" y="326" class="flag-name">Brazil</text>
+      </g>
     </svg>
   </div>
 
@@ -354,7 +361,7 @@
     </div>
     <div class="legend-item">
       <div class="swatch" style="background:var(--qualified);opacity:.6"></div>
-      <div class="legend-text"><span class="t">Qualified — <span class="num">48</span>.</span><span class="m"> Drawn as a band cutting through every wedge rather than nested in one, because that's what actually happens: qualified teams are FIFA members first, and only incidentally grouped by confederation.</span></div>
+      <div class="legend-text"><span class="t">Qualified — <span class="num">48</span>.</span><span class="m"> Drawn as its own center-to-rim sector inside each wedge (not a separate nested ring), sized to that confederation's own share of the 48 — because that's what actually happens: qualified teams are FIFA members first, and only incidentally grouped by confederation.</span></div>
     </div>
     <div class="legend-item">
       <div class="swatch" style="background:var(--exp);opacity:.4"></div>
@@ -366,11 +373,7 @@
     </div>
     <div class="legend-item">
       <div class="swatch" style="background:var(--ink);opacity:.06;background-image:repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 4px)"></div>
-      <div class="legend-text"><span class="t">On the map.</span><span class="m"> Fine hatch across almost everything; the two punched-through circles (Monaco, Singapore) are the rare off-map exceptions — both non-FIFA.</span></div>
-    </div>
-    <div class="legend-item">
-      <div class="swatch" style="background:transparent;border:1.3px dashed var(--faint-strong)"></div>
-      <div class="legend-text"><span class="t">Oddities — <span class="num">6</span>.</span><span class="m"> Kurdistan, Zanzibar, Tibet and 3 others: real Elo ratings, but reported under a made-up code with no official country-code equivalent — so no wedge of their own, just a dashed pocket floating in the non-FIFA band. (Northern Cyprus and Somaliland used to live here too, until each was given a code of its own — now ordinary non-FIFA pills.)</span></div>
+      <div class="legend-text"><span class="t">On the map.</span><span class="m"> Fine hatch across almost everything; Vatican City is the rare off-map exception — non-FIFA, too small to have its own geometry in the underlying map data, so only its flag is shown.</span></div>
     </div>
   </div>
 
