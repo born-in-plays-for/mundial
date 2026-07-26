@@ -256,15 +256,30 @@
     const CONF_LABEL = { uefa: 'UEFA', caf: 'CAF', afc: 'AFC', concacaf: 'CONCACAF', ofc: 'OFC', conmebol: 'CONMEBOL' };
     // One illustrative qualified (+ non-qualified, where there's room) example flag per
     // confederation — real ids cross-checked against data/elo_rank.json, not hand-picked pixel
-    // positions like the original static version. OFC has no non-qualified example (same
-    // choice the hand-drawn version made — its wedge is too narrow for two flags anyway).
+    // positions like the original static version. OFC's own wedge is narrow enough that its
+    // non-qualified example (count mode only — population mode still omits it) is pushed close
+    // to the outer rim rather than sharing the same crowded qualified-radius band as most other
+    // confederations' non-qualified flags.
+    // Kept separately per mode (count vs. population) since the two wheels can call for
+    // different examples — e.g. to match where a confederation's own silhouette (see
+    // renderSilhouette) is actually shown/skipped/scaled in that particular mode.
     const EXAMPLES = {
-      uefa:     { qualified: 250, nonQualified: 352 },  // France, Iceland
-      caf:      { qualified: 504, nonQualified: 404 },  // Morocco, Kenya
-      afc:      { qualified: 364, nonQualified: 764 },  // Iran, Thailand
-      concacaf: { qualified: 531, nonQualified: 388 },  // Curaçao, Jamaica
-      ofc:      { qualified: 554, nonQualified: null }, // New Zealand
-      conmebol: { qualified: 76,  nonQualified: 862 },  // Brazil, Venezuela
+      count: {
+        uefa:     { qualified: 724, nonQualified: 380 },  // Spain, Italy
+        caf:      { qualified: 504, nonQualified: 516 },  // Morocco, Namibia
+        afc:      { qualified: 392, nonQualified: 356 },  // Japan, India
+        concacaf: { qualified: 332, nonQualified: 188 },  // Haiti, Costa Rica
+        ofc:      { qualified: 554, nonQualified: 242 },  // New Zealand, Fiji
+        conmebol: { qualified: 76,  nonQualified: 862 },  // Brazil, Venezuela
+      },
+      pop: {
+        uefa:     { qualified: 250, nonQualified: 352 },  // France, Iceland
+        caf:      { qualified: 384, nonQualified: 894 },  // Ivory Coast, Zambia
+        afc:      { qualified: 392, nonQualified: 356 },  // Japan, India
+        concacaf: { qualified: 531, nonQualified: 388 },  // Curaçao, Jamaica
+        ofc:      { qualified: 554, nonQualified: null }, // New Zealand
+        conmebol: { qualified: 76,  nonQualified: 862 },  // Brazil, Venezuela
+      },
     };
 
     // CONF_IDS geographically buckets a couple of non-FIFA overseas territories into a
@@ -435,18 +450,19 @@
     // wedge's mid-angle like every other confederation.
     const SIL_OFFSET = { uefa: { dx: -50, dy: -10 } };
 
-    // Builds one clipped, projected continent contour filling a single wedge's own full sector
-    // (center to rFifa) — sized for the sector's own maximal extent, not confined to the
-    // non-qualified ring, so it can run across the qualified patch too. The clip (to that
-    // wedge's own sectorPath, inset by SIL_PAD_DEG/SIL_PAD_R) still confines it to that one
-    // confederation's own slice, with a small margin so it doesn't hug the wedge's own edges.
-    function renderSilhouette(w, mode, rFifa) {
-      if (SIL_SKIP[mode].has(w.key)) return '';
+    // Computes (but doesn't render) one wedge's own silhouette geometry — shared by
+    // renderSilhouette (the drawn contour) and snapFlagPos (below, for placing example flags at
+    // their own true position within that same projection) so the two can never drift apart.
+    // Sized for the sector's own maximal extent, not confined to the non-qualified ring, so it
+    // can run across the qualified patch too (clipped, with a small pad margin, to that wedge's
+    // own sectorPath so it stays confined to that one confederation's own slice).
+    function silhouetteLayout(w, mode, rFifa) {
+      if (SIL_SKIP[mode].has(w.key)) return null;
       const entry = confSilhouettes[w.key];
-      if (!entry) return '';
+      if (!entry) return null;
       const clipStart = w.start + SIL_PAD_DEG, clipEnd = w.end - SIL_PAD_DEG;
       const clipR = rFifa - SIL_PAD_R;
-      if (!(clipEnd > clipStart) || !(clipR > 0)) return '';
+      if (!(clipEnd > clipStart) || !(clipR > 0)) return null;
       const clipWidth = clipEnd - clipStart;
       const chordWidth = 2 * clipR * Math.sin((clipWidth * Math.PI / 180) / 2);
       const size = Math.min(clipR, chordWidth) * (SIL_SCALE[w.key] ?? 1);
@@ -455,12 +471,17 @@
       const center = d3.geoCentroid(entry.solid);
       const projection = d3.geoOrthographic().rotate([-center[0], -center[1]]).fitSize([size, size], entry.solid);
       const d = d3.geoPath(projection)(entry.mesh);
-      if (!d) return '';
+      if (!d) return null;
       // Anchored at the same radius fraction as the wedge's own label (~0.6·rFifa) — roughly
       // where the sector is already comfortably wide, not the narrow tip near the center.
       const [mx, my] = toXY(w.mid, clipR * 0.6);
       const offset = SIL_OFFSET[w.key] ?? { dx: 0, dy: 0 };
       const tx = mx - size / 2 + offset.dx, ty = my - size / 2 + offset.dy;
+      return { clipStart, clipEnd, clipR, size, tx, ty, projection, d };
+    }
+
+    function renderSilhouette(layout, w, mode) {
+      if (!layout) return '';
       const clipId = `sil-clip-${mode}-${w.key}`;
       // clip-path's own userSpaceOnUse coordinates are resolved in the SAME local space as the
       // referencing element's children — i.e. AFTER that element's own `transform` is applied.
@@ -470,12 +491,41 @@
       // <g> silently clips everything away (the global-space clip shape gets reinterpreted
       // inside the translated local space, missing the actual geometry entirely).
       return `
-        <clipPath id="${clipId}"><path d="${sectorPath(clipStart, clipEnd, clipR)}"></path></clipPath>
+        <clipPath id="${clipId}"><path d="${sectorPath(layout.clipStart, layout.clipEnd, layout.clipR)}"></path></clipPath>
         <g clip-path="url(#${clipId})">
-          <g transform="translate(${f2(tx)},${f2(ty)})">
-            <path d="${d}" class="conf-silhouette"></path>
+          <g transform="translate(${f2(layout.tx)},${f2(layout.ty)})">
+            <path d="${layout.d}" class="conf-silhouette"></path>
           </g>
         </g>`;
+    }
+
+    // world-atlas geometry lookup, one country at a time — used to place an example flag at its
+    // own true geographic position within a wedge's silhouette (see snapFlagPos).
+    const worldGeomById = new Map(worldTopo.objects.countries.geometries.map(g => [g.id, g]));
+
+    // Projects a single country's real centroid through the SAME projection used to draw that
+    // wedge's silhouette (so the flag lands where that country actually is within the shape),
+    // then checks the result actually falls inside the wedge's own padded clip sector. Returns
+    // null — meaning "snap not possible, caller should fall back to a plain placement" — if the
+    // country has no world-atlas geometry, projects to the invisible far hemisphere (d3's
+    // orthographic returns null past 90° from center), or lands outside this wedge's own visible
+    // footprint (e.g. clipped away, or just geographically off in a part of the confederation
+    // this particular wedge doesn't show).
+    function snapFlagPos(id, layout) {
+      if (!layout || id == null) return null;
+      const geom = worldGeomById.get(padId(id));
+      if (!geom) return null;
+      const centroid = d3.geoCentroid(topojson.feature(worldTopo, geom));
+      const p = layout.projection(centroid);
+      if (!p) return null;
+      const gx = layout.tx + p[0], gy = layout.ty + p[1];
+      const dx = gx - CX, dy = gy - CY;
+      const radius = Math.hypot(dx, dy);
+      if (radius > layout.clipR) return null;
+      let angle = Math.atan2(dx, -dy) * 180 / Math.PI;
+      if (angle < 0) angle += 360;
+      if (angle < layout.clipStart || angle > layout.clipEnd) return null;
+      return [gx, gy];
     }
 
     function renderDiagram(svgEl, mode) {
@@ -493,6 +543,8 @@
       // only ~8.5% of the wedge's area at r/R=0.29.
       const wedges = computeWedges(mode).map(w => ({ ...w, qRadius: w.weight ? rFifa * Math.sqrt(w.qWeight / w.weight) : 0 }));
 
+      const layouts = wedges.map(w => silhouetteLayout(w, mode, rFifa));
+
       const wedgeMarkup = wedges.map((w, i) => {
         const shade = (i % 2 === 0) ? '.10' : '.16';
         const anchor = anchorFor(w.mid);
@@ -505,10 +557,13 @@
         // the rim instead.
         const labelR = w.width < 10 ? rFifa + 24 : rFifa * 0.62;
         const [lx, ly] = toXY(w.mid, labelR);
-        const ex = EXAMPLES[w.key];
+        const ex = EXAMPLES[mode][w.key];
+        const layout = layouts[i];
         const qR = Math.max(w.qRadius * 0.55, 9);
         const nqR = (w.qRadius + rFifa) / 2;
-        const [qx, qy] = toXY(w.start + w.width * 0.35, qR);
+        // Snap to the example's own true position within this wedge's silhouette when possible;
+        // otherwise fall back to the original arbitrary percentage-of-wedge placement.
+        const [qx, qy] = snapFlagPos(ex.qualified, layout) ?? toXY(w.start + w.width * 0.35, qR);
         const qEntry = byId.get(ex.qualified);
         // Flag label sits on whichever side of the disc's own center still has room to run
         // outward — same idea as anchorFor above, just per-flag instead of per-wedge, since a
@@ -517,9 +572,25 @@
         const qSide = sideOf(qx);
         let nonQualifiedMarkup = '';
         if (ex.nonQualified) {
-          const [nqx, nqy] = toXY(w.start + w.width * 0.65, nqR);
+          // CONCACAF's own non-qualified example (Costa Rica, count mode) is deliberately placed
+          // OUTSIDE the silhouette instead of snapped — the segment's own bottom-left corner,
+          // near the outer rim and toward the wedge's start angle (shared with AFC, which sits
+          // below CONCACAF in the wheel's own clockwise layout).
+          const forceOutside = mode === 'count' && w.key === 'concacaf';
+          // OFC's own wedge is narrow enough that its usual non-qualified radius band (nqR,
+          // shared with every other confederation) sits too close to center to read as its own
+          // distinct flag — pushed out near the outer rim instead.
+          const nqR_ofc = rFifa * 0.9;
+          const [nqx, nqy] = forceOutside
+            ? toXY(w.start + w.width * 0.06, rFifa * 0.92)
+            : w.key === 'ofc'
+            ? toXY(w.start + w.width * 0.5, nqR_ofc)
+            : snapFlagPos(ex.nonQualified, layout) ?? toXY(w.start + w.width * 0.65, nqR);
           const nqEntry = byId.get(ex.nonQualified);
-          const nqSide = sideOf(nqx);
+          // Costa Rica's own corner placement sits well left of disc-center, where sideOf would
+          // normally anchor the label to its left (running further into the corner, cramped) —
+          // forced to the right instead, same as any right-of-center flag.
+          const nqSide = forceOutside ? { anchor: 'start', dx: 12 } : sideOf(nqx);
           nonQualifiedMarkup = `
             <image href="https://cdn.jsdelivr.net/npm/circle-flags@2/flags/${nqEntry.iso2}.svg" x="${f2(nqx - 9)}" y="${f2(nqy - 9)}" width="18" height="18"></image>
             <text x="${f2(nqx + nqSide.dx)}" y="${f2(nqy + 4)}" text-anchor="${nqSide.anchor}" class="flag-name">${nqEntry.name}</text>`;
@@ -535,7 +606,7 @@
         `;
       }).join('');
 
-      const silhouetteMarkup = wedges.map(w => renderSilhouette(w, mode, rFifa)).join('');
+      const silhouetteMarkup = wedges.map((w, i) => renderSilhouette(layouts[i], w, mode)).join('');
 
       // Off-map non-FIFA examples sit at the midpoint of whatever the (mode-specific) non-FIFA
       // ring actually is, not a fixed pixel position — in population mode that ring is a
@@ -605,7 +676,7 @@
     </div>
   </div>
 
-  <p class="caveat">The flag(s) shown inside each wedge — one qualified, and where there's room, one non-qualified — are just an arbitrary example per confederation, picked to put a face on the numbers. They're not the biggest, most notable, or otherwise "representative" country in any way.</p>
+  <p class="caveat">The flag(s) shown inside each wedge — one qualified, and where there's room, one non-qualified — are just an arbitrary example per confederation, picked to put a face on the numbers. They might not be the biggest, most notable, or otherwise "representative" country in any way.</p>
 
   <div class="footnote">
     <p><b>A few observations</b></p>
