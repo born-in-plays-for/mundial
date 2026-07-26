@@ -3,7 +3,7 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 #map-container { position: fixed !important; top: var(--page-header-h, var(--csb-h, 8rem)); left: 0; right: 0; z-index: 100; padding-left: var(--vert-gutter) !important; padding-right: var(--vert-gutter) !important; display: flex; justify-content: center; align-items: flex-start; background: var(--fixed-element-bg); transition: top 0.4s ease; }
 @media (max-width: 500px) {
   #map-container { padding: 0 !important; margin: 0 !important;}
-  /* #legend-parent (index.html) stays the same single flex container, no DOM change — just
+  /* #map-footer (index.html) stays the same single flex container, no DOM change — just
      reflowed onto 2 lines here. flex-wrap:wrap is what allows a 2nd line to exist at all (the
      base rule is a single nowrap row); #legend at width:100% is what forces it onto a line by
      itself (nothing else can share a line with a 100%-wide item, before or after). order:-1
@@ -11,45 +11,45 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
      last there — z-index/stacking and #legend-filter-device's own
      position:absolute-against-#legend-relative wiring, js/map-container.js's wireLegend(), don't
      care about DOM order, but nothing here needed changing that just to also flip the visual
-     order). Everything else (#legend-grip, #map-controls, #legend-born, the hidden #zoom-level)
+     order). Everything else (#map-controls, #map-grip)
      wraps onto line 2 together, in their own existing DOM order, at the default order:0 — no
      wrapper element needed for that grouping, plain flex-wrap already does it once line 1 is
      full.
      justify-content:flex-start (overriding the base rule's space-between, which would otherwise
-     spread line 2's own items across the full row width, stranding #legend-grip and
+     spread line 2's own items across the full row width, stranding #map-grip and
      #map-controls far apart instead of side by side) + gap keeps them readably grouped.
-     Both !important overrides here are load-bearing, not defensive: #legend-parent's own
+     Both !important overrides here are load-bearing, not defensive: #map-footer's own
      space-between comes from its justify-content-between HTML class, a Bootstrap utility (always
      !important) — a plain declaration here would lose to it regardless of source order. #legend's
      own width:40% (below, unconditional) sits *later* in this file than this media query block,
      so at equal specificity a plain width here would also lose on source order alone. */
-  #legend-parent { flex-wrap: wrap; justify-content: flex-start !important; gap: .5rem; }
+  #map-footer { flex-wrap: wrap; justify-content: flex-start !important; gap: .5rem; }
   #legend { width: 100% !important; order: -1; }
-  /* #legend-grip's own centering (position:absolute; left/top:50%; translate(-50%,-50%), below)
+  /* #map-grip's own centering (position:absolute; left/top:50%; translate(-50%,-50%), below)
      is intentionally left untouched here, on purpose, not by oversight: it's a direct child of
-     #legend-parent, and per spec an absolutely-positioned flex child isn't a flex item at all —
-     wrap/order have zero effect on it, so left:50% still centers it on #legend-parent's own FULL
+     #map-footer, and per spec an absolutely-positioned flex child isn't a flex item at all —
+     wrap/order have zero effect on it, so left:50% still centers it on #map-footer's own FULL
      width exactly as before, regardless of how many lines its (real, in-flow) siblings wrap
-     into. (An earlier version of this wrapped #legend-grip inside a dedicated flex:1 sibling of
+     into. (An earlier version of this wrapped #map-grip inside a dedicated flex:1 sibling of
      #legend, meaning to give it a stable per-line box to center on — that fixed the vertical
-     axis but broke the horizontal one: the wrapper is narrower than #legend-parent on desktop
+     axis but broke the horizontal one: the wrapper is narrower than #map-footer on desktop
      [only the space left of #legend's own 40%], so left:50% centered it on the wrong, smaller
      box. Reverted.)
      top:50% is the one piece that's still wrong here, though — it centers vertically across the
-     *whole*, now 2-line-tall, #legend-parent, landing in the gap between the lines rather than on
+     *whole*, now 2-line-tall, #map-footer, landing in the gap between the lines rather than on
      either one. There's no pure-CSS anchor for "line 2's own vertical center" (flex lines aren't
-     addressable boxes), so js/index.js's _syncLegendGripTop() measures #legend's own real
+     addressable boxes), so js/index.js's _syncMapGripTop() measures #legend's own real
      rendered height at this breakpoint and sets an explicit top in px — see that function's own
      comment. */
   /* #legend's own margin (base rule: 1rem both sides, below — just enough to keep a grip from
-     clipping past #legend-parent's own edge, see #legend-filter-device's own comment) needs to be
+     clipping past #map-footer's own edge, see #legend-filter-device's own comment) needs to be
      bigger here specifically: #map-container's own padding is stripped to 0 above at this
-     breakpoint, and #legend is 100% wide, so #legend-parent's own edges ARE the window's own
+     breakpoint, and #legend is 100% wide, so #map-footer's own edges ARE the window's own
      edges now — a grip sitting right at that boundary, margin's the bare 1rem clipping minimum,
      is flush against the actual screen edge, which is a real touch-target problem (hard to grab
      reliably, plus it competes with the browser's own edge-swipe gestures). 2rem here — 1rem of
      that is still the clipping floor, the other 1rem is genuinely extra clearance from the
-     window edge specifically, not from #legend-parent's own (here: same thing). No matching
+     window edge specifically, not from #map-footer's own (here: same thing). No matching
      #legend-filter-device override needed: its own inset stays exactly 1rem always, since that
      number is about the grip-to-content gap, a completely different concern from this one. */
   #legend { margin: 0 2rem !important; }
@@ -75,9 +75,9 @@ world-map { display: contents; } /* transparent wrapper — layout sees the inne
 #map-toggle-bar:hover { color: #333; }
 
 /* map */
-/* Wraps just <world-map>+#zoom-hint (not #legend-parent) — the positioning context
+/* Wraps just <world-map>+#zoom-hint (not #map-footer) — the positioning context
    #zoom-hint anchors to below, and its own clip-path crops the hint to exactly #map's
-   rendered height (whatever that is: aspect-ratio auto, or the #legend-parent
+   rendered height (whatever that is: aspect-ratio auto, or the #map-footer
    drag-resize's inline px override — js/index.js) with no JS needed to measure
    it. A percentage height on #zoom-hint itself couldn't do this instead: this wrapper's
    own CSS height is 'auto' (content-driven), and percentage heights against an
@@ -107,7 +107,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    crops the hint at the right height, just as a hard cut instead of an ellipsis. */
 #zoom-hint { font-size: 9px; color: var(--text-muted); pointer-events: none; writing-mode: vertical-rl; white-space: nowrap; position: absolute; left: 100%; bottom: 0; overflow: hidden; text-overflow: ellipsis; }
 /* #zoom-reset/#zoom-span are normal flex children of #map-controls (index.html,
-   inside #legend-parent) now, not JS-positioned floats — no more position:absolute/z-index,
+   inside #map-footer) now, not JS-positioned floats — no more position:absolute/z-index,
    no more per-frame left/bottom writes (removed from js/index.js's _syncMapHeight).
    #scroll-top-btn is unrelated (lives in #bottom-panel, its own position/icon —
    css/index.css) but shares the same button chrome, so it stays in this shared list;
@@ -122,7 +122,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #scroll-top-btn { display: none; }
 #scroll-top-btn.visible { display: flex; }
 #zoom-reset:disabled, #zoom-span:disabled { opacity: 0.3; cursor: default; }
-/* Never grows past one line: nowrap (cascades to #legend-born/#legend's text
+/* Never grows past one line: nowrap (cascades to #legend's text
    children) plus clipping instead of letting an overlong description push
    the row wider or wrap onto a second line. */
 /* Vertical-only drag handle (js/index.js) — resizes #map's own height (not
@@ -131,12 +131,12 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    instead. user-select:none mirrors #map-toggle-bar's own guard against accidental text
    selection while dragging. Buttons inside (#zoom-reset/#zoom-span) are excluded from
    the drag in JS so their own clicks/cursor keep working. */
-#legend-parent { overflow-x: hidden; white-space: nowrap; cursor: row-resize; touch-action: none; user-select: none; -webkit-user-select: none; position: relative; }
+#map-footer { overflow-x: hidden; white-space: nowrap; cursor: row-resize; touch-action: none; user-select: none; -webkit-user-select: none; position: relative; }
 /* Purely decorative grab affordance for the drag-resize above — centered over the bar
    regardless of #map-controls/#legend's own flex widths on either side, so absolute
    positioning (not a flex child) is the only way to keep it centered as those widths
    change. pointer-events:none so it never steals the drag/click handling already wired
-   to #legend-parent and its real children. Opacity ~0.4 over the bar's own light
+   to #map-footer and its real children. Opacity ~0.4 over the bar's own light
    background approximates var(--text-muted) (#999) without recoloring the (solid black
    fill) source SVG. width/height overrides the <img>'s own width="20" height="20" HTML
    attributes (index.html) with a wide-short box instead of its native square one —
@@ -147,16 +147,16 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    without it the two icon families read as different visual weights (a full dot grid
    vs. a faint thin row) despite being the same glyph, just oriented for a different drag
    axis. */
-#legend-grip { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 2rem; height: 1rem; object-fit: cover; opacity: 0.4; pointer-events: none; }
-#legend-parent:hover #legend-grip { opacity: 0.7; }
-/* cursor:default overrides #legend-parent's own row-resize (inherited otherwise) — #legend no
+#map-grip { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 2rem; height: 1rem; object-fit: cover; opacity: 0.4; pointer-events: none; }
+#map-footer:hover #map-grip { opacity: 0.7; }
+/* cursor:default overrides #map-footer's own row-resize (inherited otherwise) — #legend no
    longer participates in that drag (js/index.js's pointerdown handler now excludes it
    entirely, see that file's own comment), so the resize cursor over it would be misleading. */
-/* width: 1/3 of #legend-parent (2/3 of its own half — #legend-parent's other flex children sit
-   to its left, this is the last one) — #legend-parent's own justify-content-between (index.
+/* width: 1/3 of #map-footer (2/3 of its own half — #map-footer's other flex children sit
+   to its left, this is the last one) — #map-footer's own justify-content-between (index.
    html) already keeps the last flex child flush against the right edge regardless of its width,
    so no extra alignment rule is needed here, just the width itself. Percentage resolves cleanly
-   against #legend-parent's own definite width (w-100) since #legend is a direct flex item of it. */
+   against #map-footer's own definite width (w-100) since #legend is a direct flex item of it. */
 /* padding/margin used to live as an inline style (index.html) with !important — moved here
    so the @media (max-width:500px) block below can actually override margin. Inline !important
    beats *any* external stylesheet rule regardless of specificity or !important, so as long as it
@@ -166,7 +166,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    padding-left/right and margin-left/right are deliberately equal on both sides now (an earlier
    version had .5rem/.75rem padding and margin-right only, no margin-left — accumulated one side
    at a time, never revisited as a whole, and it showed: the left grip's own clearance from
-   #legend-parent's edge wasn't engineered at all, just leftover free space from
+   #map-footer's edge wasn't engineered at all, just leftover free space from
    justify-content-between that happened to be enough — not guaranteed the way the right side's
    explicit margin was). One shared formula now drives both #legend's own values and
    #legend-filter-device's own inset (below) together — see that rule's own comment for the
@@ -175,30 +175,6 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #legend { font-size: 11px; color: var(--text-muted); position: relative; cursor: default; width: 40%; padding: .5rem .5rem 0 .5rem; margin: 0 1rem; }
 #legend-countries { font-size: 11px; color: #bbb; }
 #legend-countries::before { content: '←\2009#'; margin-right: 0.25em; }
-/* Describes what the map's shading means (js/index.js's _updateLegendBorn() —
-   see map-container.js's wireLegend()/updateBorn() / i18n.js's T.legendMetric.balance,
-   a {full, brief} pair — #legend-born-full/-brief swap via Bootstrap's d-none/d-md-* rather than one
-   span with two possible strings, so no JS resize listener is needed). Now
-   display:none below (see that rule's own comment) — #legend-parent switched
-   from justify-content-between to -end in index.html accordingly, so
-   #legend still sits on the right with this no longer there to balance against.
-   min-width:0 overrides flexbox's default min-width:auto — without it a flex
-   item won't shrink below its content's natural width, so text-overflow can
-   never kick in no matter how tight the row gets. The full (desktop) string
-   is a real sentence, not a fixed-width label, so ellipsis + the element's own
-   title attribute (set alongside its textContent) is the fallback once the
-   window is too narrow for it to fit next to the gradient bar. */
-#legend-born {
-  /* Low added value for the space it costs — the legend's own gradient/ticks/outlier
-     labels already carry the actual scale. */
-  display: none;
-  font-size: 11px; color: #bbb;
-  flex: 1 1 auto; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  /* #legend-parent's align-items:center would otherwise vertically center
-     this against the taller #legend (gradient bar + ticks stacked) beside it. */
-  align-self: flex-start;
-}
 /* index.html's #legend uses align-items-start (not Bootstrap's default -center) —
    its 3 children (negative-outlier-dot column, gradient-bar column, positive-outlier-dot
    column) each stack a fixed-height top row (dot or bar, both 10px) over a shorter/taller
@@ -206,12 +182,11 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    own explicit 12px, needed for its absolutely-positioned children — see its own comment
    below). Centering columns of different total height shifts their top rows out of
    alignment by that difference/2, which is exactly the "tiny pixelesque" dot-vs-bar
-   misalignment this replaced — same class of bug #legend-born's own align-self:flex-start
-   fixed above, just scoped to the parent since all 3 columns need the same fix here. */
-/* Grows to fill whatever's left of #legend's own (now 33.3333%-of-#legend-parent — see #legend's
+   misalignment this replaced. */
+/* Grows to fill whatever's left of #legend's own (now 33.3333%-of-#map-footer — see #legend's
    own rule above) width once the outlier column(s) beside it take their share — #legend-bar/
    #legend-ticks below both fill this at width:100%, rather than either sizing itself directly
-   against #legend or #legend-parent. min-width:0 overrides the flex default (min-width:auto,
+   against #legend or #map-footer. min-width:0 overrides the flex default (min-width:auto,
    refuses to shrink below content), needed since #legend-ticks' own tick labels have a real
    intrinsic text width that would otherwise stop this column shrinking on a narrow viewport. */
 #legend-bar-col { flex: 1 1 auto; min-width: 0; }
@@ -254,7 +229,7 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
    This depends on #legend's own left/right padding staying equal (.5rem each, see its own rule) —
    re-derive if either changes. #legend's own margin (also equal both sides now, see its own rule)
    needs to be at least this same 1rem so a grip's own far edge lands at or before
-   #legend-parent's own clipped boundary (overflow-x:hidden) instead of past it; the @media
+   #map-footer's own clipped boundary (overflow-x:hidden) instead of past it; the @media
    (max-width:500px) block below pushes #legend's margin further out for a real touch-target
    requirement (grips at least 1rem clear of the window edge, not just clear of clipping), but
    this inset stays exactly 1rem everywhere — nothing about the margin bump changes what it
@@ -271,9 +246,9 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
 #left-excluded, #right-excluded{ width: 0; background: rgba(250,249,246,.8); }
 #center-included { flex: 1 1 auto; background: transparent; }
 /* .5rem wide (matching the device's own side margins above) so a grip parked at rest sits
-   fully in that margin — cursor:grab/:active mirrors #legend-grip's own drag affordance.
+   fully in that margin — cursor:grab/:active mirrors #map-grip's own drag affordance.
    The vertical grip glyph (images/grip-vertical-svgrepo-com.svg) is the transposed twin of
-   #legend-grip's horizontal one — same dot pattern, rotated 90°, for the same reason: this
+   #map-grip's horizontal one — same dot pattern, rotated 90°, for the same reason: this
    handle moves horizontally (left/right, filtering by value) rather than vertically like the
    map-height resize grip does, so the *grip* itself reads as a vertical bar of dots — the
    usual affordance for a horizontally-draggable handle. */
@@ -296,15 +271,15 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
      width:100% of #legend-bar-col now (a flex-grow column inside #legend's own explicit
      percentage width, above), so they already shrink to fit whatever room is actually available
      on a narrow viewport. A leftover fixed 90px cap here fought that: #legend's own share of
-     #legend-parent can easily still be well over 90px even under this breakpoint, so the bar
+     #map-footer can easily still be well over 90px even under this breakpoint, so the bar
      rendered artificially short with dead space after it instead of actually filling its column
      (the "still not taking the full available width" bug this replaced). font-size shrinks the
      tick labels only — a real narrow-screen readability tweak, unrelated to the width bug. */
   #legend-ticks { font-size: 8px; }
   /* index.html's pt-1 is a Bootstrap spacing utility (!important) — needs
      matching !important to actually override it here. Without this, the gap
-     above #legend-born reads as if it weren't top-aligned at all. */
-  #legend-parent { padding-top: 0 !important; }
+     above #legend reads as if it weren't top-aligned at all. */
+  #map-footer { padding-top: 0 !important; }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
@@ -329,9 +304,9 @@ body.dim-active #map [data-dim-visible] { cursor: pointer !important; }
      have an explicit height to resolve against. */
   #map-frame { height: 100%; }
   #map { width: 100% !important; height: 100% !important; }
-  #legend-parent { display: none !important; }
+  #map-footer { display: none !important; }
   #page-header { z-index: 600 !important; background: transparent !important; pointer-events: none; margin-top: 0 !important; top: 0 !important;}
-  #page-heading-sub { display: none !important; }
+  #page-quotes { display: none !important; }
   #control-sidebar { pointer-events: auto; }
   /* Landscape mobile is always immersive-map — no room to show #bottomTabContent instead, so
      there's no toggle control at all here (js/index.js also force-expands #map-collapse

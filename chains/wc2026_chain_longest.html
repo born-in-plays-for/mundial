@@ -71,8 +71,7 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
   <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
   <span id="zoom-hint"></span>
   </div>
-  <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
-    <img id="legend-grip" src="../images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
+  <div id="map-footer" class="d-flex align-items-center justify-content-between w-100 pt-1">
     <div id="map-controls" class="d-flex align-items-center gap-1">
       <button id="zoom-reset" type="button" aria-label="Reset zoom">
         <img src="../images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
@@ -81,10 +80,8 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
         <img src="../images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
       </button>
     </div>
-    <div id="legend-born" class="sub">
-      <span id="legend-born-full" class="d-none d-md-inline"></span>
-      <span id="legend-born-brief" class="d-md-none"></span>
-    </div>
+    <!-- Centered over #map-footer via CSS (position:absolute, left/top:50%) — JS for mobile. -->
+    <img id="map-grip" src="../images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
     <div id="legend" class="d-flex align-items-start">
       <div id="legend-outlier-neg-wrap" class="d-flex flex-column pe-2">
         <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
@@ -123,10 +120,12 @@ body { background: #f5f2ec; min-height: 100vh; display: flex; flex-direction: co
 // the rest (not exported anywhere) is a deliberate, small duplication of pieces of
 // js/index.js (documented inline where it happens below).
 import { renderChain } from './wc2026_chain_render.js';
-import { choroFill, onPaletteChange, FLAG_CDN, FLAG,
-         buildChoroplethIndex, paintChoropleth, wireLegend,
+import { choroFill, FLAG_CDN, FLAG,
+         buildChoroplethIndex, paintChoropleth,
          CENTROID_OVERRIDE, dotCentroid, zoomToCentroid,
          drawCountryArcs, rescaleArcs, computeImportIds } from '../js/map-container.js';
+import { onPaletteChange } from '../js/diverging-scale.js';
+import { wireLegend } from '../js/legend.js';
 import { animateFlagOpacity } from '../js/flag_visibility.js';
 import { QUALIFIED_NAMES, QUALIFIED_BY_NAME } from '../js/qualified.js';
 import { T, loadWikiData, findPlayerWikiUrl } from '../js/i18n.js';
@@ -230,9 +229,10 @@ _zoomSpanBtn.addEventListener('click', e => {
     d3.zoomIdentity.translate(vbX + vbW / 2 - k * (x0 + x1) / 2, vbY + vbH / 2 - k * (y0 + y1) / 2).scale(k));
 });
 
-// ── Legend — map-container.js's wireLegend() (shared with index.js). The map's
-// own repaint (not the legend widget) is this page's own onPaletteChange listener,
-// fired after a live #diverging-debug tweak, same split index.js uses. ─────────
+// ── Legend — legend.js's wireLegend() (shared with index.js). The map's
+// own repaint (not the legend widget) is this page's own onPaletteChange listener
+// (diverging-scale.js), fired after a live #diverging-debug tweak, same split
+// index.js uses. ─────────
 const legend = wireLegend({ getById: () => byId });
 onPaletteChange(() => {
   g.selectAll('.country').attr('fill', function(d) { return choroFill(+d.id, byId); });
@@ -404,24 +404,24 @@ if (localStorage.getItem(_MAP_COLLAPSED_KEY) === '1') {
 }
 _syncBodyPadding();
 
-// ── #legend-parent drag-resize + grip icon — same behavior just added to
+// ── #map-footer drag-resize + grip icon — same behavior just added to
 // index.html/js/index.js (own localStorage key; not exported there either). ──
 const _MAP_HEIGHT_KEY = 'mundial-chain-map-height';
-const _legendParent = document.getElementById('legend-parent');
+const _mapFooter = document.getElementById('map-footer');
 const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));
 if (_storedMapHeight) document.getElementById('map').style.height = _storedMapHeight + 'px';
 {
   let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
-  _legendParent.addEventListener('pointerdown', e => {
+  _mapFooter.addEventListener('pointerdown', e => {
     if (e.target.closest('button')) return;
     const mapEl = document.getElementById('map');
     _dragging = true;
     _dragStartY = e.clientY;
     _dragStartHeight = mapEl.getBoundingClientRect().height;
     _dragOtherHeight = _mc.getBoundingClientRect().height - _dragStartHeight;
-    _legendParent.setPointerCapture(e.pointerId);
+    _mapFooter.setPointerCapture(e.pointerId);
   });
-  _legendParent.addEventListener('pointermove', e => {
+  _mapFooter.addEventListener('pointermove', e => {
     if (!_dragging) return;
     const minH = 120;
     const maxH = window.innerHeight - _mc.getBoundingClientRect().top - _dragOtherHeight - 20;
@@ -434,28 +434,28 @@ if (_storedMapHeight) document.getElementById('map').style.height = _storedMapHe
     _dragging = false;
     localStorage.setItem(_MAP_HEIGHT_KEY, parseFloat(document.getElementById('map').style.height));
   };
-  _legendParent.addEventListener('pointerup', _endMapDrag);
-  _legendParent.addEventListener('pointercancel', _endMapDrag);
+  _mapFooter.addEventListener('pointerup', _endMapDrag);
+  _mapFooter.addEventListener('pointercancel', _endMapDrag);
 }
 
-// #legend-grip's top:50% centers it vertically across the whole #legend-parent, which is fine on
+// #map-grip's top:50% centers it vertically across the whole #map-footer, which is fine on
 // one line but lands in the gap between lines once #legend wraps onto its own full-width line at
 // max-width:500px (css/map-container.css) — same fix as index.js's own
-// _syncLegendGripTop(), see that function's comment for the full reasoning.
-const _legendGrip = document.getElementById('legend-grip');
+// _syncMapGripTop(), see that function's comment for the full reasoning.
+const _mapGrip = document.getElementById('map-grip');
 const _legendEl = document.getElementById('legend');
-const _syncLegendGripTop = () => {
-  if (!_legendGrip || !_legendEl || !_legendParent) return;
+const _syncMapGripTop = () => {
+  if (!_mapGrip || !_legendEl || !_mapFooter) return;
   if (window.matchMedia('(max-width: 500px)').matches) {
     const line1H = _legendEl.getBoundingClientRect().height;
-    const totalH = _legendParent.getBoundingClientRect().height;
-    _legendGrip.style.top = (line1H + (totalH - line1H) / 2) + 'px';
+    const totalH = _mapFooter.getBoundingClientRect().height;
+    _mapGrip.style.top = (line1H + (totalH - line1H) / 2) + 'px';
   } else {
-    _legendGrip.style.top = '';
+    _mapGrip.style.top = '';
   }
 };
-window.addEventListener('resize', _syncLegendGripTop);
-_syncLegendGripTop();
+window.addEventListener('resize', _syncMapGripTop);
+_syncMapGripTop();
 </script>
 </body>
 </html>

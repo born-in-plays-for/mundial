@@ -32,7 +32,7 @@
     width: 4ch;
     overflow: hidden; /* "." advance isn't exactly 1ch in most fonts — without this, the
        ::before content can paint past the 4ch box and throw off left-alignment with
-       .app-loading-log below, even though both boxes measure the same 240px. */
+       .app-loading-log below, even though both boxes measure the same px. */
     vertical-align: bottom;
   }
   #app-loading .app-loading-dots::before {
@@ -48,10 +48,13 @@
     /* Fixed width, not shrink-to-fit: the log line's text changes constantly, and a
        shrink-wrapped box would resize (and get re-centered by the parent's
        justify-content:center) on every single update — a visible jump/flicker each time. */
-    width: 240px;
+    width: 320px;
+    border: 1px dotted gray;
+    padding: .5rem;
+    background: rgb(253,253,253);
   }
   #app-loading .app-loading-log {
-    margin-top: 6px;
+    margin-top: .5rem;
     font: 400 11px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: #aaa;
     white-space: nowrap;
@@ -137,10 +140,8 @@
 <script type="module" src="js/auth-bar.js"></script>
 <mundial-auth-bar id="auth-bar"></mundial-auth-bar>
 <header id="page-header" class="container-xxl px-0" style="margin-top:0">
-  <div id="page-heading-sub" class="mx-3">
-  <div>
-    <div class="pq-wrap">
-  <div class="pq-icons float-end d-flex flex-column align-items-end gap-1 px-2" style="width:34px;height:43px"></div>
+  <div id="page-quotes" class="mx-3">
+    <div id="pq-stage" class="pq-wrap">
       <div class="pq-panel pq-prev">
         <p class="pq-text fst-italic"></p>
         <p class="pq-attr"></p>
@@ -150,68 +151,63 @@
         <p class="pq-attr"></p>
       </div>
     </div>
-  </div>
-  <div class="pq-dots"></div>
+    <div class="pq-dots"></div>
   </div>
   <div id="sidebar-host" style="position:absolute;top:0;right:0;z-index:10"></div>
 </header>
 <div id="map-container" class="flex-column container-xxl px-0 mt-0 position-relative">
   <button id="map-toggle-bar" type="button" class="map-toggle-bar" data-bs-toggle="collapse" data-bs-target="#map-collapse" aria-expanded="true" aria-controls="map-collapse">⌄</button>
   <div id="map-collapse" class="collapse show w-100">
-  <div id="map-frame">
-  <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
-  <span id="zoom-hint">scroll to zoom · drag to pan</span>
-  </div>
-  <div id="legend-parent" class="d-flex align-items-center justify-content-between w-100 pt-1">
-    <img id="legend-grip" src="images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
-    <div id="map-controls" class="d-flex align-items-center gap-1">
-      <button id="zoom-reset" type="button" aria-label="Reset zoom">
-        <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-      </button>
-      <button id="zoom-span" type="button" aria-label="Span all visible countries">
-        <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
-      </button>
+    <div id="map-frame">
+      <world-map id="map" role="img" aria-label="Choropleth map of players born in one country, playing for another"></world-map>
+      <span id="zoom-hint">scroll to zoom · drag to pan</span>
     </div>
-    <div id="legend-born" class="sub">
-      <span id="legend-born-full" class="d-none d-md-inline"></span>
-      <span id="legend-born-brief" class="d-md-none"></span>
-    </div>
-    <span id="zoom-level" hidden></span>
-    <div id="legend" class="d-flex align-items-start">
-      <!-- Hidden via map-container.js's wireLegend()/updateOutlier() whenever OUTLIER_IDS_NEG is
-           empty (no country carved out as its own standalone dot on the negative side — see that
-           Set's own comment on why Curaçao no longer gets one). -->
-      <div id="legend-outlier-neg-wrap" class="d-flex flex-column pe-2">
-        <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
-          <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
+    <div id="map-footer" class="d-flex align-items-center justify-content-between w-100 pt-1">
+      <div id="map-controls" class="d-flex align-items-center gap-1">
+        <button id="zoom-reset" type="button" aria-label="Reset zoom">
+          <img src="images/solar_linear/global-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+        </button>
+        <button id="zoom-span" type="button" aria-label="Span all visible countries">
+          <img src="images/solar_linear/maximize-square-2-svgrepo-com.svg" width="20" height="20" aria-hidden="true">
+        </button>
+      </div>
+      <!-- Centered over #map-footer via CSS (position:absolute, left/top:50%) — JS for mobile. -->
+      <img id="map-grip" src="images/grip-horizontal-svgrepo-com.svg" width="20" height="20" alt="" aria-hidden="true">
+      <div id="legend" class="d-flex align-items-start">
+        <!-- Hidden via legend.js's wireLegend()/updateOutlier() whenever OUTLIER_IDS_NEG is
+             empty (no country carved out as its own standalone dot on the negative side — see that
+             Set's own comment on why Curaçao no longer gets one). -->
+        <div id="legend-outlier-neg-wrap" class="d-flex flex-column pe-2">
+          <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+            <div id="legend-outlier-dot" class="legend-outlier-dot"></div>
+          </div>
+          <div id="legend-outlier-count" class="text-center"></div>
         </div>
-        <div id="legend-outlier-count" class="text-center"></div>
-      </div>
-      <div id="legend-bar-col">
-        <div id="legend-bar" class="overflow-hidden rounded-2"></div>
-        <div id="legend-ticks"></div>
-      </div>
-      <!-- The positive-side outlier (negative's is the block above, reused; see
-           map-container.js's wireLegend()/updateOutlier). -->
-      <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2">
-        <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
-          <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
+        <div id="legend-bar-col">
+          <div id="legend-bar" class="overflow-hidden rounded-2"></div>
+          <div id="legend-ticks"></div>
         </div>
-        <div id="legend-outlier-count-pos" class="text-center"></div>
+        <!-- The positive-side outlier (negative's is the block above, reused; see
+             legend.js's wireLegend()/updateOutlier). -->
+        <div id="legend-outlier-pos-wrap" class="d-flex flex-column ps-2">
+          <div class="d-flex align-items-center justify-content-center legend-outlier-wrap">
+            <div id="legend-outlier-dot-pos" class="legend-outlier-dot"></div>
+          </div>
+          <div id="legend-outlier-count-pos" class="text-center"></div>
+        </div>
+        <!-- Range-filter device — see legend.js's wireLegend()/renderRange(). Covers the
+             whole #legend (both outlier columns + the gradient bar + the text rows below), plus a
+             bit of side margin for the grip handles to rest in — rendered into by JS only once
+             wired with an onRangeChange callback (index.js only — see wireLegend's own header
+             comment for why the chain page doesn't get this). -->
+        <div id="legend-filter-device"></div>
       </div>
-      <!-- Range-filter device — see map-container.js's wireLegend()/renderRange(). Covers the
-           whole #legend (both outlier columns + the gradient bar + the text rows below), plus a
-           bit of side margin for the grip handles to rest in — rendered into by JS only once
-           wired with an onRangeChange callback (index.js only — see wireLegend's own header
-           comment for why the chain page doesn't get this). -->
-      <div id="legend-filter-device"></div>
     </div>
-  </div>
   </div>
 </div>
 
 <!-- Debug tool for tuning the map's diverging color scale live — see
-     map-container.js's getDivergingParams()/setDivergingParams() and the
+     diverging-scale.js's getDivergingParams()/setDivergingParams() and the
      wiring right after the legend setup in js/index.js. -->
 <details id="diverging-debug" class="container-xxl my-2 sub" open style="display:none">
   <summary style="cursor:pointer;">Diverging scale debug</summary>
@@ -261,8 +257,8 @@
 
 <main id="bottomTabContent" class="container-xxl px-4">
   <div id="tab-teams" class="taxonomy" role="tabpanel" tabindex="0" aria-labelledby="tab-teams-btn"></div>
-  <div id="tab-tournament" class="taxonomy" role="tabpanel" tabindex="0" aria-labelledby="tab-tournament-btn"></div>
   <div id="tab-players" role="tabpanel" tabindex="0" aria-labelledby="tab-players-btn"></div>
+  <div id="tab-tournament" class="taxonomy" role="tabpanel" tabindex="0" aria-labelledby="tab-tournament-btn"></div>
 </main>
 
 <footer id="bottom-panel" class="container-xxl">
@@ -278,7 +274,6 @@
          the 3-button justify-content-between spacing. -->
     <div id="tab-connector" aria-hidden="true"></div>
     <div  class="nav-item">
-      
       <button class="nav-link" id="tab-teams-btn" data-tab="tab-teams" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#tab-teams" aria-controls="tab-teams" aria-selected="false"><img class="tab-icon" src="images/solar_linear/flag-svgrepo-com.svg" aria-hidden="true"></button>
     </div>
     <div class="nav-item">

@@ -15,11 +15,11 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 
 /* page header — #sidebar-host is position:absolute (see index.html), taken out of the
    grid flow so it can overlap the map when collapsed instead of pushing it down. That leaves
-   #page-heading-sub as the grid's only real item; its own height drives #page-header's — see
+   #page-quotes as the grid's only real item; its own height drives #page-header's — see
    js/index.js's _computeHeaderHeight()/--page-header-h. */
 #page-header { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--fixed-element-bg); padding: 0; display: grid; }
 #page-header ~ * { user-select: none; -webkit-user-select: none; }
-#page-heading-sub { grid-row: 1; grid-column: 1; padding: 0.4rem 1.5rem; padding-left: var(--vert-gutter); padding-right: var(--vert-gutter); align-self: stretch; margin: 0 !important; position: relative; display: flex; flex-direction: column; }
+#page-quotes { grid-row: 1; grid-column: 1; padding: 0.4rem 1.5rem; padding-left: var(--vert-gutter); padding-right: var(--vert-gutter); align-self: stretch; margin: 0 !important; position: relative; display: flex; flex-direction: column; }
 
 /* page quote (pq-) */
 .pq-text { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; color: #555; margin: 0 0 3px; line-height: 1.45; }
@@ -30,7 +30,6 @@ body { padding-bottom: 48px; transition: padding-top 0.4s ease; }
 .pq-panel { width: 100%; flex-shrink: 0; z-index: 1; }
 .pq-prev { position: absolute; top: 0; left: 0; transform: translateX(-100%); }
 .pq-cur { position: relative; }
-.pq-icons { position: relative; z-index: 2; }
 /* margin-top:auto is the natural-height default (no extra push); js/index.js's
    _computeHeaderHeight() overrides it inline with a definite px value whenever the sidebar is
    expanded and taller than the quote, so this row sits flush against the map instead of a gap.

@@ -4,7 +4,7 @@ import { CAROUSEL_STAGES, ELIM_ROUNDS, reachesStage, teamComparators } from './q
 import { maxReachableStage } from './stage_carousel.js';
 import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden } from './flag_visibility.js';
-import { METRIC } from './map-container.js';
+import { METRIC } from './diverging-scale.js';
 import { createParamTable, stageEntry, dirEntry, sortEntry, createConfFilterSetter, promoteKeys } from './param_table.js';
 import { wireShareButton } from './share_button.js';
 
@@ -333,7 +333,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
   let _confIds = null; // set by setConfFilter(); null = no confederation filter
   let _confKey = null; // confederation key ('uefa' etc.) matching _confIds, for persistence/explain
 
-  // Legend range filter — set by setLegendRange() (js/map-container.js's wireLegend(), driven
+  // Legend range filter — set by setLegendRange() (js/legend.js's wireLegend(), driven
   // by dragging the legend's own two handles). [min, max] in METRIC units, or null = no
   // active selection. A country with no app.byId entry (nothing exported or native-selected —
   // see buildChoroplethIndex) reads as a real 0, the same convention choroFill's own
@@ -1469,7 +1469,7 @@ export function initSidebar({ T, QUALIFIED_NAMES, app, fifaMemberIds, eloMain, c
     saveState: _saveState,
   });
 
-  // Called by map-container.js's wireLegend() (as its onRangeChange callback) every time the
+  // Called by js/legend.js's wireLegend() (as its onRangeChange callback) every time the
   // legend's own drag handles move — range is [min, max] in METRIC units, or null once dragged
   // back out to the full domain (see wireLegend's own _emitRange). Same
   // renderElo+applyFlagFilter notify pattern setConfFilter/_filterToggle/_filterSet all use —

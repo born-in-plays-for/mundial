@@ -11,12 +11,14 @@ import { loadSlice, saveSlice } from './persist.js';
 import { animateFlagHidden, animateFlagOpacity } from './flag_visibility.js';
 import { CONF_BOUNDS } from './conf.js';
 import { iso2ForId, _NULL_CODE } from './iso2.js';
-import { choroFill, getDivergingParams, setDivergingParams, onPaletteChange,
-         PLACEHOLDER_FILL, PLACEHOLDER_STROKE, GRATICULE_COLOR,
+import { choroFill,
          FLAG, FLAG_SIZE_ZOOM_EXP, FLAG_OFFSET_ZOOM_EXP, FLAG_CDN, FLAG_CDN_RECT, W, H,
-         buildChoroplethIndex, paintChoropleth, wireLegend,
+         buildChoroplethIndex, paintChoropleth,
          CENTROID_OVERRIDE, dotCentroid, zoomToCentroid as _sharedZoomToCentroid,
          drawCountryArcs, rescaleArcs, computeImportIds, _NULL_CENTROID_ID, cityDotRadius } from './map-container.js';
+import { getDivergingParams, setDivergingParams, onPaletteChange,
+         PLACEHOLDER_FILL, PLACEHOLDER_STROKE, GRATICULE_COLOR } from './diverging-scale.js';
+import { wireLegend } from './legend.js';
 
 const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
@@ -93,8 +95,6 @@ _wm.onZoom = e => {
   });
   rescaleArcs(g, k);
   _syncResetBtn(e.transform);
-  const zoomEl = document.getElementById('zoom-level');
-  if (zoomEl) zoomEl.textContent = `k=${e.transform.k.toFixed(2)}`;
 };
 
 // Loading placeholder — shown before world.json arrives, then fully covered by
@@ -120,10 +120,10 @@ document.title = DOCUMENT_TITLE;
 document.querySelector('meta[name="description"]')?.setAttribute('content', T.pageDescription);
 const _quotes = T.pageQuotes;
 let _quoteIdx = Math.floor(Math.random() * _quotes.length);
-const _pqWrap = document.querySelector('#page-heading-sub .pq-wrap');
+const _pqWrap = document.querySelector('#page-quotes .pq-wrap');
 const _pqPrev = _pqWrap.querySelector('.pq-prev');
 const _pqCur  = _pqWrap.querySelector('.pq-cur');
-const _pqDotsEl = document.querySelector('#page-heading-sub .pq-dots');
+const _pqDotsEl = document.querySelector('#page-quotes .pq-dots');
 _pqDotsEl.innerHTML = _quotes.map((_, i) => `<span class="pq-dot${i === _quoteIdx ? ' active' : ''}" data-idx="${i}">‹</span>`).join('');
 const _pqDots = _pqDotsEl.querySelectorAll('.pq-dot');
 _pqDotsEl.addEventListener('click', e => {
@@ -226,15 +226,15 @@ _fillPanel(_pqPrev, _prevIdx());
     _pqCur.querySelector('.pq-text').innerHTML = _quotes[_quoteIdx].text;
   };
   const _lpCancel = () => { clearTimeout(_lpTimer); _lpTimer = null; };
-  const phs = document.getElementById('page-heading-sub');
-  phs.addEventListener('touchstart', () => {
+  const pageQuotes = document.getElementById('page-quotes');
+  pageQuotes.addEventListener('touchstart', () => {
     _lpCancel();
     _lpTimer = setTimeout(_lpShow, 500);
   }, { passive: true });
-  phs.addEventListener('contextmenu', e => e.preventDefault());
+  pageQuotes.addEventListener('contextmenu', e => e.preventDefault());
   document.addEventListener('touchend', () => { _lpCancel(); _lpHide(); });
   document.addEventListener('touchcancel', () => { _lpCancel(); _lpHide(); });
-  phs.addEventListener('mousedown', e => {
+  pageQuotes.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
     _lpCancel();
     _lpTimer = setTimeout(_lpShow, 500);
@@ -369,7 +369,7 @@ _eloMain.addEventListener('stage-change', e => {
 });
 // Measure actual header height (offsetHeight forces reflow after CSS var is applied)
 const _pageHeader = document.getElementById('page-header');
-const _pageHeadingSub = document.getElementById('page-heading-sub');
+const _pageQuotes = document.getElementById('page-quotes');
 // #sidebar-host is position:absolute (see index.html) so it never affects #page-header's
 // own (quote-only) box — when collapsed it just overlaps the map below, as intended. When
 // expanded, the map still needs to make room for it, so the target height is computed here
@@ -383,7 +383,7 @@ const _computeHeaderHeight = () => {
   // separated by a forced-layout read, retargets/kills the CSS transition on .pq-dots (it only
   // ever sees a single write per call now, so the transition runs cleanly).
   const dotsHeight = _pqDotsEl.offsetHeight;
-  const paddingBottom = parseFloat(getComputedStyle(_pageHeadingSub).paddingBottom) || 0;
+  const paddingBottom = parseFloat(getComputedStyle(_pageQuotes).paddingBottom) || 0;
   const quoteBottom = _pqWrap.getBoundingClientRect().bottom + dotsHeight + paddingBottom;
   const csb = document.getElementById('control-sidebar');
   let target = quoteBottom;
@@ -392,7 +392,7 @@ const _computeHeaderHeight = () => {
     target = Math.max(quoteBottom, _pageHeader.getBoundingClientRect().top + csbH);
   }
   // Push .pq-dots down to sit flush against the (possibly lower, sidebar-expanded) map instead
-  // of leaving a gap. Tried stretching #page-heading-sub itself first (via height/min-height,
+  // of leaving a gap. Tried stretching #page-quotes itself first (via height/min-height,
   // relying on .pq-dots' CSS margin-top:auto to consume the free space) — grid's "automatic
   // minimum size" for a stretched item with visible overflow made the box render *taller* than
   // the value actually set (~32px overshoot, reproduced with min-height and with height alike).
@@ -577,7 +577,7 @@ if (_bottomPanel) new ResizeObserver(() => {
 }).observe(_bottomPanel);
 _syncMapHeight();
 
-// #legend-parent drag-resize — vertical only. #map is width:100%/height:auto by default
+// #map-footer drag-resize — vertical only. #map is width:100%/height:auto by default
 // (css/map-container.css); dragging sets an explicit inline px height on the SVG, which
 // letterboxes (shrinks the whole map, empty space above/below) rather than cropping/zooming,
 // since map-container.js's preserveAspectRatio defaults to "xMidYMid meet" — see its own
@@ -587,13 +587,13 @@ _syncMapHeight();
 // padding in sync during the drag, same as the map-collapse toggle does — #zoom-hint's own
 // position is plain CSS now (#map-frame/#zoom-hint, css/map-container.css) and needs no JS
 // at all.
-const _legendParent = document.getElementById('legend-parent');
+const _mapFooter = document.getElementById('map-footer');
 const _storedMapHeight = parseFloat(localStorage.getItem(_MAP_HEIGHT_KEY));
 if (_storedMapHeight && !_isLandscapeMobile()) document.getElementById('map').style.height = _storedMapHeight + 'px';
 _clampMapHeight();
-if (_legendParent) {
+if (_mapFooter) {
   let _dragStartY = 0, _dragStartHeight = 0, _dragOtherHeight = 0, _dragging = false;
-  _legendParent.addEventListener('pointerdown', e => {
+  _mapFooter.addEventListener('pointerdown', e => {
     // #zoom-reset/#zoom-span keep their own click behavior; #legend keeps its own — the
     // range-filter grips' pointerdown/pointermove/pointerup drag (map-container.js's
     // wireLegend()) would otherwise also bubble up here and fight with the map-height
@@ -603,12 +603,12 @@ if (_legendParent) {
     _dragging = true;
     _dragStartY = e.clientY;
     _dragStartHeight = mapEl.getBoundingClientRect().height;
-    // Everything else stacked inside #map-container (toggle bar + legend-parent itself) —
+    // Everything else stacked inside #map-container (toggle bar + map-footer itself) —
     // held constant for the drag so the map's max height never pushes the bar off-screen.
     _dragOtherHeight = _mc.getBoundingClientRect().height - _dragStartHeight;
-    _legendParent.setPointerCapture(e.pointerId);
+    _mapFooter.setPointerCapture(e.pointerId);
   });
-  _legendParent.addEventListener('pointermove', e => {
+  _mapFooter.addEventListener('pointermove', e => {
     if (!_dragging) return;
     const minH = 120;
     const maxH = Math.min(
@@ -624,8 +624,8 @@ if (_legendParent) {
     _dragging = false;
     localStorage.setItem(_MAP_HEIGHT_KEY, parseFloat(document.getElementById('map').style.height));
   };
-  _legendParent.addEventListener('pointerup', _endMapDrag);
-  _legendParent.addEventListener('pointercancel', _endMapDrag);
+  _mapFooter.addEventListener('pointerup', _endMapDrag);
+  _mapFooter.addEventListener('pointercancel', _endMapDrag);
   // Double-click to reset back to the natural (full-width, no explicit override) height —
   // same reset gesture js/map-container.js's own #legend-filter-device grips use, and the
   // same button/#legend exclusion as the drag above (a double-click on the zoom buttons or
@@ -637,7 +637,7 @@ if (_legendParent) {
   // has no transition of its own (css/map-container.css: height:auto by default), so one is
   // added here only for the duration of this animation and removed once it settles — nothing
   // else on the page reads or relies on it.
-  _legendParent.addEventListener('dblclick', e => {
+  _mapFooter.addEventListener('dblclick', e => {
     if (e.target.closest('button') || e.target.closest('#legend')) return;
     const mapEl = document.getElementById('map');
     const from = mapEl.getBoundingClientRect().height;
@@ -663,34 +663,34 @@ if (_legendParent) {
   });
 }
 
-// #legend-grip's own centering (position:absolute; left/top:50%; translate(-50%,-50%), css/
-// map-container.css) is a direct child of #legend-parent, deliberately never wrapped in anything
-// — an absolutely-positioned flex child isn't a flex item at all per spec, so #legend-parent's
+// #map-grip's own centering (position:absolute; left/top:50%; translate(-50%,-50%), css/
+// map-container.css) is a direct child of #map-footer, deliberately never wrapped in anything
+// — an absolutely-positioned flex child isn't a flex item at all per spec, so #map-footer's
 // own flex-wrap/order (only active at max-width:500px, where #legend wraps onto its own full-
 // width line above everything else) has zero effect on it either way; left:50% always centers it
-// on #legend-parent's own FULL width, on any breakpoint, with no help needed here.
+// on #map-footer's own FULL width, on any breakpoint, with no help needed here.
 // top:50% is the one axis that doesn't survive the 2-line wrap unassisted: it centers vertically
-// across the *whole* (now taller) #legend-parent, landing in the gap between the two lines rather
+// across the *whole* (now taller) #map-footer, landing in the gap between the two lines rather
 // than on either. There's no pure-CSS anchor for "the 2nd flex line's own vertical center" — flex
 // lines aren't addressable boxes — so this measures #legend's own real rendered height (line 1,
 // exactly, since #legend claims that whole line by itself at this breakpoint) and computes line
 // 2's own center directly: line1Height + (totalHeight − line1Height) / 2. Only active below the
 // same breakpoint the CSS wrap kicks in at; above it, the inline override is cleared so the
-// stylesheet's own top:50% (correct there, #legend-parent is a single line) applies again.
-const _legendGrip = document.getElementById('legend-grip');
+// stylesheet's own top:50% (correct there, #map-footer is a single line) applies again.
+const _mapGrip = document.getElementById('map-grip');
 const _legendEl = document.getElementById('legend');
-const _syncLegendGripTop = () => {
-  if (!_legendGrip || !_legendEl || !_legendParent) return;
+const _syncMapGripTop = () => {
+  if (!_mapGrip || !_legendEl || !_mapFooter) return;
   if (window.matchMedia('(max-width: 500px)').matches) {
     const line1H = _legendEl.getBoundingClientRect().height;
-    const totalH = _legendParent.getBoundingClientRect().height;
-    _legendGrip.style.top = (line1H + (totalH - line1H) / 2) + 'px';
+    const totalH = _mapFooter.getBoundingClientRect().height;
+    _mapGrip.style.top = (line1H + (totalH - line1H) / 2) + 'px';
   } else {
-    _legendGrip.style.top = '';
+    _mapGrip.style.top = '';
   }
 };
-window.addEventListener('resize', _syncLegendGripTop);
-_syncLegendGripTop();
+window.addEventListener('resize', _syncMapGripTop);
+_syncMapGripTop();
 
 const _scrollTopBtn = document.getElementById('scroll-top-btn');
 if (_scrollTopBtn) {
@@ -2810,7 +2810,7 @@ Promise.all([
     // directly over the map's bottom-left corner, and without it "fit everything" could
     // zoom in just far enough to tuck a flag right behind those buttons.
     // They're normal flex children of #map-controls now (index.html, inside
-    // #legend-parent, above the map rather than overlapping it), so a plain symmetric fit
+    // #map-footer, above the map rather than overlapping it), so a plain symmetric fit
     // has nothing left to avoid.
     const k = Math.max(1, Math.min(12, Math.min(vbW / (x1 - x0 + 2 * pad), vbH / (y1 - y0 + 2 * pad))));
     const cx = (x0 + x1) / 2;
@@ -2835,8 +2835,8 @@ Promise.all([
 });
 
 // ── Legend ─────────────────────────────────────────────────────────────────────
-// Gradient/ticks/outlier-count/born-text + the onPaletteChange registration for repainting
-// all of that, now live in map-container.js's wireLegend() (shared with the chain page).
+// Gradient/ticks/outlier-count + the onPaletteChange registration for repainting
+// all of that, now live in legend.js's wireLegend() (shared with the chain page).
 // legend.refresh() is called at the end of buildIndices() (below, once app.byId is
 // populated). The map's own repaint (not the legend widget) stays a separate
 // onPaletteChange listener here, fired after a live #diverging-debug tweak. (The
@@ -2849,7 +2849,7 @@ onPaletteChange(() => {
 });
 
 // ── Diverging scale debug panel (#diverging-debug, index.html) ─────────
-// Live-tunes map-container.js's _divergingParams via getDivergingParams()/
+// Live-tunes diverging-scale.js's _divergingParams via getDivergingParams()/
 // setDivergingParams() — the latter already notifies onPaletteChange()'s listener above,
 // so every input here just needs to call it; the repaint above happens for free.
 {

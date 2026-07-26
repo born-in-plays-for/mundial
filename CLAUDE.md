@@ -36,6 +36,9 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `js/control_sidebar.js` | ES module — filter/sort sidebar logic (imported by `index.js`) |
 | `js/i18n.js` | ES module — language detection, `T` strings (map + auth-bar + live-game), `countryName()`, `regionName()`, `wikiUrl()` |
 | `js/qualified.js` | ES module — `QUALIFIED_NAMES`, `QUALIFIED_BY_NAME`, `buildEloItems`, tournament-stage helpers (`ELIM_ROUNDS`, `CAROUSEL_STAGES`, `reachesStage`, `buildBracketState`) |
+| `js/map-container.js` | ES module — `<world-map>` Web Component, projection/zoom, choropleth painting (`choroFill`, `paintChoropleth`), arc drawing, flag/centroid helpers (shared by `index.js`, `chains/wc2026_chain_longest.html`, insights pages) |
+| `js/diverging-scale.js` | ES module — the map's color-scale math (`getDivergingParams`/`setDivergingParams`/`normalize`/`color`/`RATIO_MAX_*`/`OUTLIER_IDS_*`/`onPaletteChange`), shared by `map-container.js` (applies it) and `legend.js` (visualizes it) — see "Map color scale" |
+| `js/legend.js` | ES module — `wireLegend()`: gradient bar, rug plot, ticks, outlier dots, drag-to-filter range device — see "Legend" |
 | `css/index.css` | All custom styles (map, header, legend, tooltips, Elo list, filter table) |
 | `css/taxonomy.css` | Canonical pill styling (borders, text colors, dots via CSS) |
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
@@ -215,8 +218,6 @@ UI language follows the browser locale (`navigator.languages[0]`). Supported: `f
 
 i18n is extracted into **`i18n.js`** (ES module imported by `index.js`, `auth-bar.js`, and `wc2026_live.html`). It exports `LOCALE`, `_LANG`, `T`, `countryName`, `regionName`, and `wikiUrl`. `T` contains all UI strings: map labels, tooltips, navbar titles (`navMap`, `navLive`, `navSignIn`, etc.), offline modal text (`offlineTitle`, `offlineBody`, etc.), and live-game strings (`liveTitle`, `liveRetrying`, `liveNoBackend`, etc.). Wikipedia links are provided for `en`, `fr`, `de`, `it`, `es`; all other browser locales fall back to the English Wikipedia URL without an `(en)` suffix.
 
-**Gotcha — non-breaking spaces in i18n strings:** French typography uses non-breaking spaces in several places — `\xa0` (regular non-breaking space) before `": Wikipedia"` in `pageSub`, and ` ` (narrow no-break space) at the start of `pageHeadingSub` strings. The Edit tool matches bytes literally and will silently fail if the search string uses a regular space instead. **Always use a Python script** (`open(...).read()` / `str.replace()` / `open(...).write()`) when editing i18n strings in `i18n.js`, and verify suspicious characters with `python3 -c "print(repr(line))"` first.
-
 ### Tooltip — variants and layout
 Tooltips are **disabled on mobile** (`/Mobi/i` UA check). On desktop, hovering a country dispatches to one of five functions:
 
@@ -243,7 +244,7 @@ Players in the dim-mode table link to their Wikipedia page in the UI language wh
 
 ### Fixed header + map architecture
 The page uses two fixed elements:
-- **`#page-header`** (`position: fixed; top: 0; z-index: 200`): CSS grid with two overlapping `grid-row:1 grid-column:1` children — `#page-heading-sub` (quote + legend) on the left, `#sidebar-host / #control-sidebar` on the right (justified-end). Row height = tallest child.
+- **`#page-header`** (`position: fixed; top: 0; z-index: 200`): CSS grid with two overlapping `grid-row:1 grid-column:1` children — `#page-quotes` (quote carousel: `#pq-stage` + `.pq-dots`) on the left, `#sidebar-host / #control-sidebar` on the right (justified-end). Row height = tallest child.
 - **`#map-container`** (`position: fixed !important; top: var(--page-header-h)`): sits immediately below the header. `!important` is required to override Bootstrap's `.position-relative`.
 - **`body.paddingTop`** is set by JS (`_syncPaddingTop`), measuring `map-container.getBoundingClientRect().bottom` — **not** a CSS formula. A `resize` listener keeps it in sync. Do not add a CSS `padding-top` to body; it will conflict.
 - **`--page-header-h`** CSS variable is set once after measuring `_pageHeader.offsetHeight` (forces reflow) so the map's `top` is pixel-accurate.
@@ -258,7 +259,7 @@ The map can be collapsed via a full-width toggle bar (styled like the filter sid
 - **`preserveAspectRatio="xMidYMid slice"`** on the map SVG (set once in `map-container.js`'s `WorldMap.connectedCallback`) — the `object-fit:cover` equivalent for SVG: crops overflow to fill its box instead of the default `"meet"` behavior (letterboxing). Only has a visible effect in landscape, where `#map` is forced to `100%/100%` of a box with its own unrelated aspect ratio; in normal layout `#map` is `width:100%;height:auto`, so its box already matches the viewBox's aspect ratio exactly (nothing to crop).
 
 ### Map color scale
-`js/map-container.js` colors every country by one fixed metric — net talent balance
+The color math itself lives in `js/diverging-scale.js` (`getDivergingParams`/`setDivergingParams`/`normalize`/`color`/`RATIO_MAX_*`/`OUTLIER_IDS_*`/`onPaletteChange`) — shared between `js/map-container.js` (which applies it to real map data via `choroFill`, coloring every country by one fixed metric — net talent balance) and `js/legend.js` (which merely visualizes that same scale: gradient, ticks, outlier dots, rug plot, range filter). Neither of the latter two owns the math; the legend describes the scale, it doesn't define it.
 (`METRIC`: `count − importCount`, i.e. exports minus imports; natives deliberately excluded,
 since a country's own homegrown-and-still-there players don't represent a talent flow either
 way and would just dilute the signal). It's a genuine diverging scale, not a clamped-at-0
@@ -301,17 +302,17 @@ switched to.
   `GRATICULE_COLOR` for the pre-load placeholder sphere) are plain exported constants — the
   ocean itself (real water) stays outside all of this, unaffected by the land palette.
 
-`setDivergingParams()` notifies `onPaletteChange()` listeners (`map-container.js`) so
-`index.js` can repaint (`.country` fills, standalone-dot islands, legend
-gradient/ticks/outlier count) after a live `#diverging-debug` tweak, without `map-container.js`
-knowing about D3 selections.
+`setDivergingParams()` notifies `onPaletteChange()` listeners (`diverging-scale.js`) so
+`index.js` can repaint (`.country` fills, standalone-dot islands) and `legend.js` can rebuild its
+own gradient/ticks/outlier count, after a live `#diverging-debug` tweak — neither `map-container.js`
+nor `legend.js` needs to know about the other.
 
 ### Legend
-The legend (`#legend`) lives as the third child of `#page-heading-sub`, bottom-aligned via `mt-auto` on a `d-flex flex-column h-100` wrapper.
-- **Gradient direction**: `linear-gradient(to right, …)` — negative (red, importers) on the left, 0 in the middle, positive (blue, exporters) on the right, positioned proportionally across the combined `-RATIO_MAX_NEG..RATIO_MAX_POS` domain (not split into two equal-width halves — the two ceilings differ, so equal pixel width per side would put 0 at the visual midpoint while running at different units-per-pixel on each side). Ticks (`#legend-ticks`, lit-html-rendered by `updateTicks()` in `map-container.js`'s `wireLegend()`) read `-RATIO_MAX_NEG, -RATIO_MAX_NEG/2, 0, RATIO_MAX_POS/2, RATIO_MAX_POS`.
+The legend (`#legend`) lives under `#map-container`, as the third and last child of `#map-footer` (after `#map-controls`, `#map-grip`) — **not** inside `#page-quotes` (that div only holds the quote carousel, see "Fixed header + map architecture" above).
+- **Gradient direction**: `linear-gradient(to right, …)` — negative (red, importers) on the left, 0 in the middle, positive (blue, exporters) on the right, positioned proportionally across the combined `-RATIO_MAX_NEG..RATIO_MAX_POS` domain (not split into two equal-width halves — the two ceilings differ, so equal pixel width per side would put 0 at the visual midpoint while running at different units-per-pixel on each side). Ticks (`#legend-ticks`, lit-html-rendered by `updateTicks()` in `legend.js`'s `wireLegend()`) read `-RATIO_MAX_NEG, -RATIO_MAX_NEG/2, 0, RATIO_MAX_POS/2, RATIO_MAX_POS`.
 - **Outliers**: France (right, off-scale positive) renders as a standalone dot instead of on the gradient — `#legend-outlier-count-pos` (`updateOutlier()`) shows its own `METRIC()` value. The negative side's equivalent (`#legend-outlier-neg-wrap`, `#legend-outlier-dot`/`#legend-outlier-count`) is hidden whenever `OUTLIER_IDS_NEG` is empty (currently always — see that constant's own comment on Curaçao).
 - **Rug plot**: one thin tick per real country, overlaid directly on the gradient bar at its own `METRIC()` position (`updateRug()`/`_tickColor()`) — the gradient alone reads as if every value were equally "populated," when countries actually cluster tightly in some spots and leave real gaps in others. Each tick is the gradient's own color at that spot, blended toward that side's extreme (red/blue) by an amount that scales with distance from center (reusing `normalize(v)`, with a nonzero floor so a tick sitting right on the gradient's own near-neutral center point doesn't blend into invisibility).
-- **`#legend`'s own width** is `40%` of `#legend-parent`, always right-aligned via `#legend-parent`'s own `justify-content-between` (the last flex child sits flush against the end edge regardless of its own width) — `#legend-bar-col` (wrapping `#legend-bar`/`#legend-ticks`) fills whatever's left of that after the outlier column(s), both at `width:100%` of it.
+- **`#legend`'s own width** is `40%` of `#map-footer`, always right-aligned via `#map-footer`'s own `justify-content-between` (the last flex child sits flush against the end edge regardless of its own width) — `#legend-bar-col` (wrapping `#legend-bar`/`#legend-ticks`) fills whatever's left of that after the outlier column(s), both at `width:100%` of it.
 - **Range filter** (`#legend-filter-device`, `wireLegend()`) — drag either grip to filter the country list/map down to a sub-range of the legend's own value domain. The two grips' resting-position insets are solved exactly (not eyeballed) from two requirements: each grip is `1rem` wide and sits flush against the device's own edge, and the target gap to whatever it's supposed to clear (the gradient bar on the left, France's own outlier dot on the right) is exactly `.5rem` — see `#legend-filter-device`'s own CSS comment for the derivation. `#legend`'s own left/right padding and right margin are load-bearing inputs to that math, so they live in a real CSS rule now, not an inline style — an inline `!important` style can't be overridden by any external stylesheet rule regardless of specificity, which silently defeated an earlier attempt at a mobile-specific override.
 - On narrow screens (`max-width: 767.98px`), only the tick label font-size shrinks (`8px`) — the bar/ticks themselves are fluid (`width:100%` of `#legend-bar-col`), not fixed-px, so they already size themselves to whatever room is actually available.
 
@@ -319,7 +320,9 @@ The legend (`#legend`) lives as the third child of `#page-heading-sub`, bottom-a
 The fixed header and map are always present on all screen sizes.
 
 ### Legend/map-controls 2-row mobile layout (`@media (max-width: 500px)`)
-`#legend-parent`'s children are wrapped into 2 rows via `flex-wrap` + `order`, no DOM reordering: `#legend` (full width, `order:-1`) forms row 1; `#legend-row2` — a wrapper bundling `#legend-grip`/`#map-controls`/`#legend-born`/`#zoom-level`, added specifically so `#legend-grip`'s own `position:absolute` centering (see below) has a stable box to resolve against — forms row 2 at the default `order:0`. `#legend-grip`'s decorative centering (`left/top:50%; transform:translate(-50%,-50%)`) is positioned against `#legend-row2`, not `#legend-parent` directly, on both breakpoints (desktop: the wrapper is `flex:1`, i.e. everything left of `#legend`'s own fixed width, visually equivalent to before this wrapper existed; mobile: the wrapper *is* row 2, so the grip centers — and vertically positions — correctly on that row alone instead of across the whole, now taller, 2-row box). Same markup mirrored on `chains/wc2026_chain_longest.html`, which shares this stylesheet.
+`#map-footer`'s children are wrapped into 2 rows via `flex-wrap` + `order` alone — **no DOM change, no wrapper element**: the base rule is a single nowrap row, so `flex-wrap:wrap` (added at this breakpoint) is what lets a 2nd line exist at all. `#legend` gets `width:100% !important; order:-1`, which forces it onto a line by itself (nothing else can share a line with a 100%-wide item) and pulls that line ahead of the rest despite `#legend` being last in DOM order — DOM order itself is left untouched since `#legend-filter-device`'s `position:absolute`-against-`#legend`-`position:relative` wiring (`js/legend.js`'s `wireLegend()`) doesn't care about it. Everything else (`#map-controls`, `#map-grip`) wraps onto row 2 together at the default `order:0`, in their existing DOM order — plain `flex-wrap` already groups them once row 1 is full, and `justify-content:flex-start !important` (overriding the base rule's `space-between`) plus a `gap` keeps them close together instead of spread across the full row width.
+
+`#map-grip`'s own decorative centering (`position:absolute; left/top:50%; transform:translate(-50%,-50%)`) is left untouched by all of this on purpose: an absolutely-positioned flex child isn't a flex item per spec, so `left:50%` still centers it on `#map-footer`'s own full width regardless of how many lines its siblings wrap into — correct on both breakpoints, no wrapper needed for the horizontal axis. `top:50%` is the one piece that's still wrong here, though: once `#map-footer` is 2 lines tall, it centers vertically across the *whole* box, landing in the gap between the two lines rather than on either one. There's no pure-CSS anchor for "row 2's own vertical center" (flex lines aren't addressable boxes), so `js/index.js`'s `_syncMapGripTop()` measures `#legend`'s own real rendered height at this breakpoint and sets an explicit `top` in px on `#map-grip` to compensate. Same markup/CSS mirrored on `chains/wc2026_chain_longest.html`, which shares this stylesheet.
 
 ### Mobile portrait sticky layout (`@media (max-width: 767.98px) and (orientation: portrait)`)
 On portrait mobile only (landscape and desktop are unaffected):
