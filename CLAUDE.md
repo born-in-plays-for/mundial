@@ -39,6 +39,7 @@ The backend repo lives at `../mundial-server` and the build repo at `../mundial-
 | `js/map-container.js` | ES module — `<world-map>` Web Component, projection/zoom, choropleth painting (`choroFill`, `paintChoropleth`), arc drawing, flag/centroid helpers (shared by `index.js`, `chains/wc2026_chain_longest.html`, insights pages) |
 | `js/diverging-scale.js` | ES module — the map's color-scale math (`getDivergingParams`/`setDivergingParams`/`normalize`/`color`/`RATIO_MAX_*`/`OUTLIER_IDS_*`/`onPaletteChange`), shared by `map-container.js` (applies it) and `legend.js` (visualizes it) — see "Map color scale" |
 | `js/legend.js` | ES module — `wireLegend()`: gradient bar, rug plot, ticks, outlier dots, drag-to-filter range device — see "Legend" |
+| `js/diverging-debug.js` | ES module — `initDivergingDebug()`: wires the `#diverging-debug` dev panel to `diverging-scale.js`'s live-tunable params; panel only visible with a `?debug` URL param |
 | `css/index.css` | All custom styles (map, header, legend, tooltips, Elo list, filter table) |
 | `css/taxonomy.css` | Canonical pill styling (borders, text colors, dots via CSS) |
 | `css/control-sidebar.css` | Filter/sort sidebar styles |
@@ -293,7 +294,9 @@ switched to.
   designated the same way France already is, without touching any of that logic.
 - **Colors/easing** live in `_divergingParams` (`getDivergingParams()`/`setDivergingParams()`),
   not baked-in constants — live-tunable via the `#diverging-debug` panel (`index.html`,
-  hidden by default: `display:none` on the `<details>`, a dev-only tool) — `neutral` (v=0),
+  wired by `js/diverging-debug.js`; hidden by default via inline `display:none` on the
+  `<details>`, revealed only when the URL carries a `?debug` param — a dev-only tool,
+  kept out of `diverging-scale.js` itself so that pure math module stays DOM-free) — `neutral` (v=0),
   `easyLeft`/`easyRight` (color at each side's extreme), `algoLeft`/`algoRight` (`power` or
   `smoothstep` easing), `easeLeft`/`easeRight` (the power exponent), `outlierLeft`/`outlierRight`
   (independent outlier-dot colors), `floorLeft`/`floorRight` (minimum color strength any nonzero

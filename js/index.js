@@ -16,9 +16,9 @@ import { choroFill,
          buildChoroplethIndex, paintChoropleth,
          CENTROID_OVERRIDE, dotCentroid, zoomToCentroid as _sharedZoomToCentroid,
          drawCountryArcs, rescaleArcs, computeImportIds, _NULL_CENTROID_ID, cityDotRadius } from './map-container.js';
-import { getDivergingParams, setDivergingParams, onPaletteChange,
-         PLACEHOLDER_FILL, PLACEHOLDER_STROKE, GRATICULE_COLOR } from './diverging-scale.js';
+import { onPaletteChange, PLACEHOLDER_FILL, PLACEHOLDER_STROKE, GRATICULE_COLOR } from './diverging-scale.js';
 import { wireLegend } from './legend.js';
+import { initDivergingDebug } from './diverging-debug.js';
 
 const FOOTER_PANELS = {
   eloMeta:   false, // #elo-meta-panel — elo source/date meta
@@ -2848,73 +2848,9 @@ onPaletteChange(() => {
   g.selectAll('.standalone-dot').attr('fill', function() { return choroFill(+this.getAttribute('data-id'), app.byId); });
 });
 
-// ── Diverging scale debug panel (#diverging-debug, index.html) ─────────
-// Live-tunes diverging-scale.js's _divergingParams via getDivergingParams()/
-// setDivergingParams() — the latter already notifies onPaletteChange()'s listener above,
-// so every input here just needs to call it; the repaint above happens for free.
-{
-  const _dbgDefaults = getDivergingParams();
-  const _dbgEls = {
-    neutral:      document.getElementById('dbg-neutral'),
-    easyLeft:     document.getElementById('dbg-easy-left'),
-    easyRight:    document.getElementById('dbg-easy-right'),
-    outlierLeft:  document.getElementById('dbg-outlier-left'),
-    outlierRight: document.getElementById('dbg-outlier-right'),
-    algoLeft:     document.getElementById('dbg-algo-left'),
-    algoRight:    document.getElementById('dbg-algo-right'),
-    easeLeft:     document.getElementById('dbg-ease-left'),
-    easeRight:    document.getElementById('dbg-ease-right'),
-    floorLeft:    document.getElementById('dbg-floor-left'),
-    floorRight:   document.getElementById('dbg-floor-right'),
-  };
-  const _dbgEaseLeftVal  = document.getElementById('dbg-ease-left-val');
-  const _dbgEaseRightVal = document.getElementById('dbg-ease-right-val');
-  const _dbgFloorLeftVal  = document.getElementById('dbg-floor-left-val');
-  const _dbgFloorRightVal = document.getElementById('dbg-floor-right-val');
-  const _dbgSync = params => {
-    _dbgEls.neutral.value      = params.neutral;
-    _dbgEls.easyLeft.value     = params.easyLeft;
-    _dbgEls.easyRight.value    = params.easyRight;
-    _dbgEls.outlierLeft.value  = params.outlierLeft;
-    _dbgEls.outlierRight.value = params.outlierRight;
-    _dbgEls.algoLeft.value     = params.algoLeft;
-    _dbgEls.algoRight.value    = params.algoRight;
-    _dbgEls.easeLeft.value     = params.easeLeft;
-    _dbgEls.easeRight.value    = params.easeRight;
-    _dbgEls.floorLeft.value    = params.floorLeft;
-    _dbgEls.floorRight.value   = params.floorRight;
-    _dbgEaseLeftVal.textContent  = params.easeLeft;
-    _dbgEaseRightVal.textContent = params.easeRight;
-    _dbgFloorLeftVal.textContent  = params.floorLeft;
-    _dbgFloorRightVal.textContent = params.floorRight;
-  };
-  _dbgSync(_dbgDefaults);
-  const _dbgApply = () => {
-    const next = {
-      neutral:      _dbgEls.neutral.value,
-      easyLeft:     _dbgEls.easyLeft.value,
-      easyRight:    _dbgEls.easyRight.value,
-      outlierLeft:  _dbgEls.outlierLeft.value,
-      outlierRight: _dbgEls.outlierRight.value,
-      algoLeft:     _dbgEls.algoLeft.value,
-      algoRight:    _dbgEls.algoRight.value,
-      easeLeft:     +_dbgEls.easeLeft.value,
-      easeRight:    +_dbgEls.easeRight.value,
-      floorLeft:    +_dbgEls.floorLeft.value,
-      floorRight:   +_dbgEls.floorRight.value,
-    };
-    setDivergingParams(next);
-    _dbgEaseLeftVal.textContent  = _dbgEls.easeLeft.value;
-    _dbgEaseRightVal.textContent = _dbgEls.easeRight.value;
-    _dbgFloorLeftVal.textContent  = _dbgEls.floorLeft.value;
-    _dbgFloorRightVal.textContent = _dbgEls.floorRight.value;
-    // eslint-disable-next-line no-console
-    console.log('[diverging-debug]', next);
-  };
-  Object.values(_dbgEls).forEach(el => el.addEventListener('input', _dbgApply));
-  document.getElementById('dbg-reset').addEventListener('click', () => {
-    setDivergingParams(_dbgDefaults);
-    _dbgSync(_dbgDefaults);
-    console.log('[diverging-debug] reset to', _dbgDefaults);
-  });
-}
+// ── Diverging scale debug panel ─────────────────────────────────────────────
+// Wiring lives in diverging-debug.js — separate from diverging-scale.js's own pure
+// math, and from this file, so it stays a one-off dev tool rather than shared infra.
+// setDivergingParams() already notifies onPaletteChange()'s listener above, so the
+// repaint happens for free once a debug input changes.
+initDivergingDebug();

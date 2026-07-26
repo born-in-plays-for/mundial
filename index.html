@@ -206,9 +206,10 @@
   </div>
 </div>
 
-<!-- Debug tool for tuning the map's diverging color scale live — see
-     diverging-scale.js's getDivergingParams()/setDivergingParams() and the
-     wiring right after the legend setup in js/index.js. -->
+<!-- Debug tool for tuning the map's diverging color scale live — wiring in
+     diverging-debug.js (getDivergingParams()/setDivergingParams(), diverging-scale.js).
+     Hidden by default via this inline style — diverging-debug.js clears it when the
+     URL carries a ?debug param. -->
 <details id="diverging-debug" class="container-xxl my-2 sub" open style="display:none">
   <summary style="cursor:pointer;">Diverging scale debug</summary>
   <div class="d-flex flex-wrap gap-3 align-items-end py-2">

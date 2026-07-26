@@ -59,21 +59,21 @@
 let _divergingParams = {
   neutral:      '#e0e0e0',
   easyLeft:     '#ff0000', // negative extreme — "plays for" (import), red
-  easyRight:    '#0000ff', // positive extreme — "born in" (export), blue
-  outlierLeft:  '#bf0000',
-  outlierRight: '#0000bf',
+  easyRight:    '#4242ff', // positive extreme — "born in" (export), blue
+  outlierLeft:  '#ff0000',
+  outlierRight: '#00007a',
   algoLeft:     'power',
   algoRight:    'power',
-  easeLeft:     2.0,
-  easeRight:    2.0,
+  easeLeft:     2,
+  easeRight:    1.5,
   // Two genuinely separate gradients meeting at a hard jump on either side of v=0, not one
   // continuous function that merely approaches neutral as v→0. Without a floor, a power curve
   // is ~flat near x=0 (x=1/42 eased at exponent 2 is ~0.0006 of the way to full color) — v=1
   // and v=-1 were visually indistinguishable from true 0. floorLeft/floorRight is the minimum
   // fraction of the way to the full-strength color that ANY nonzero v on that side starts at,
   // however small — only the exact value 0 itself renders as pure `neutral`.
-  floorLeft:    0.06,
-  floorRight:   0.06,
+  floorLeft:    0.05,
+  floorRight:   0.05,
 };
 export const getDivergingParams = () => ({ ..._divergingParams });
 export const setDivergingParams = patch => {
