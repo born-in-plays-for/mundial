@@ -47,7 +47,7 @@
     margin: 0 0 16px;
   }
   .intro {
-    max-width: 62ch;
+    /* max-width: 62ch; */
     font-size: 1rem;
     line-height: 1.65;
     color: var(--ink);
@@ -55,15 +55,6 @@
   }
   .intro + .intro { margin-top: 10px; }
   .intro b { font-weight: 650; }
-  .caveat {
-    max-width: 62ch;
-    font-size: .875rem;
-    line-height: 1.6;
-    color: var(--muted);
-    border-left: 2px solid var(--faint-strong);
-    padding-left: 14px;
-    margin: 22px 0 32px;
-  }
 
   .num { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
 
@@ -139,7 +130,7 @@
   .legend-row2 {
     margin-top: 10px;
     display: grid;
-    grid-template-columns: 3fr 2fr;
+    grid-template-columns: 2fr 1fr;
     gap: 10px 28px;
   }
   @media (max-width: 620px) { .legend-row2 { grid-template-columns: 1fr; } }
@@ -168,7 +159,7 @@
     padding-top: 18px;
     border-top: 1px solid var(--faint);
     max-width: 62ch;
-    font-size: .85rem;
+    font-size: .9rem;
     line-height: 1.6;
     color: var(--muted);
   }
@@ -208,7 +199,7 @@
      controls are position:absolute against the padding edge, so padding the carousel itself
      (rather than sizing the svg down) pushes the disc inward while the controls land exactly
      in the freed-up space. */
-  #wheel-carousel { padding: 0 44px; }
+  #wheel-carousel { padding: 0 44px; margin-top: 1.5rem; }
   .carousel-indicators [data-bs-target] {
     background-color: var(--ink);
     opacity: .35;
@@ -751,18 +742,18 @@
       </div>
     </div>
     <div class="legend-item legend-item--plain">
-      <p class="caveat" style="margin:0">The flag(s) shown inside each wedge (one qualified, and where there's room, one non-qualified) are just an arbitrary example per confederation, picked to put a face on the areas. They might not be the biggest, most notable, or otherwise "representative" country in any way.</p>
+      <p class="conf-glossary" style="margin:0"><i>The <b>flags</b> shown inside each wedge (one qualified, and where there's room, one non-qualified) are just an arbitrary example per confederation, picked to put a face on the areas. They might not be the biggest, most notable, or otherwise "representative" country in any way.</i></p>
     </div>
   </div>
 
   <div class="footnote">
     <p><b>A few observations</b></p>
     <p><b>CONCACAF</b>: 6 of 35 members qualify by country (17.1%), and 529M of 610 million by population (86.7%). The US + Mexico + Canada (co-hosts) so outweigh the Caribbean islands, Costa Rica, and their likes that the population share rockets far past the country share.</p>
-    <p><b>AFC</b> (Asian Football Confederation): 9 of 46 members qualify by country (19.6%), and 427M of 4.7 billion by population (9.1%), the lowest population share of the six. It's the most populous confederation by far, yet China, India, Indonesia are sitting this one out.</p>
+    <p><b>AFC</b>: 9 of 46 members qualify by country (19.6%), and 427M of 4.7 billion by population (9.1%), the lowest population share of the six. It's the most populous confederation by far, yet China, India, Indonesia are sitting this one out.</p>
     <p><b>CAF</b>: 10 of 54 members qualify by country (18.5%), and 472M of 1.5 billion by population (31%). A country-share close to AFC's own, but well above AFC's much lower population-share. What makes CAF's story more striking than Asia's isn't the raw numbers, it's the reason behind them. AFC's giants, China and India, largely sit football out, so their absence from the qualified column is no surprise. Africa doesn't have that excuse: the game is hugely popular and widespread across the continent, so CAF's slim 18.5% country-qualification share, despite that popularity, is the gap worth noting. Another striking point: CAF is a net importer of talent trained in Europe, players who correspond to the diaspora resulting from colonization, born and developed there rather than at home. Bottom line: the human potential is there in Africa, gigantic even. What's still missing is the economic power the old colonial countries have.</p>
     <p><b>UEFA</b>: 16 of 55 members qualify by country (29.1%), and 441M of 875 million by population (50.4%).</p>
     <p><b>CONMEBOL</b>: 6 of 10 members qualify by country (60%), and 339M of 434 million by population (78.1%). Same story as CONCACAF, Brazil alone is nearly half of South America's population, so no surprise its qualified zone tops 75%-ish. But it's actually a different story: Brazil always qualifies (the only country in World Cup history to have never missed a single edition), and 6 of CONMEBOL's 10 members regularly qualify.</p>
-    <p><b>OFC</b> (Oceania Football Confederation): 1 of 11 members qualifies by country (9.1%), and 5M of 19 million by population (28%). So small in population that its wedge barely registers next to Asia's 4.7 billion. Worth noting though: New Zealand's qualification came right after FIFA expanded the tournament to 48 teams, handing Oceania a guaranteed direct slot for the first time; before that it was just a playoff shot. So New Zealand may well become CONMEBOL's Brazil, but for OFC: the one team that's always there.</p>
+    <p><b>OFC</b>: 1 of 11 members qualifies by country (9.1%), and 5M of 19 million by population (28%). So small in population that its wedge barely registers next to Asia's 4.7 billion. Worth noting though: New Zealand's qualification came right after FIFA expanded the tournament to 48 teams, handing Oceania a guaranteed direct slot for the first time; before that it was just a playoff shot. So New Zealand may well become CONMEBOL's Brazil, but for OFC: the one team that's always there.</p>
     <p><b>Non-FIFA countries</b>: 28 of them (Vatican and friends) add up to 8 million people, roughly half of OFC's own 19 million, but practically invisible out of the world's 8.1 billion on the population-wise chart.</p>
   </div>
 
