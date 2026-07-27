@@ -465,6 +465,32 @@
       pop: new Set(['ofc', 'conmebol', 'concacaf', 'uefa']),
     };
 
+    // anchorFor(mid) — a sin(mid) threshold — decides both the wedge label's and the wedge-count
+    // line's own text-anchor. It's a reasonable default, but a wedge sitting near the wheel's own
+    // top (mid close to 0/360°) can still land just past the ±0.35 cutoff and read as start/end-
+    // anchored instead of centered, even though it visually sits close enough to the top that
+    // centered reads better. Hand-picked override forcing anchorFor's result to middle for those
+    // wedges instead — CONMEBOL/OFC/CONCACAF in count mode, plus UEFA too in population mode
+    // (where UEFA's own wedge shifts closer to the top — see SIL_SKIP.pop above for the same four
+    // being handled specially there for an unrelated reason, the silhouette).
+    const COUNT_CENTER = {
+      count: new Set(['conmebol', 'ofc', 'concacaf']),
+      pop: new Set(['uefa', 'concacaf', 'ofc', 'conmebol']),
+    };
+
+    // Per-confederation label radius nudge, applied after the standard labelR calc below —
+    // CONMEBOL's population-mode label sits at the ordinary 0.62·rFifa radius like every other
+    // wedge, but since its own wedge already sits right at the wheel's top, a slightly larger
+    // radius reads better (closer to the rim) than the standard fraction.
+    const LABEL_R_NUDGE = { pop: { conmebol: 1.08 } };
+
+    // Forces a label past the rim (same treatment as a genuinely razor-thin wedge, see labelR
+    // below) even though its own angular width doesn't cross that threshold — OFC's count-mode
+    // wedge is narrow enough, squeezed between CONCACAF and CONMEBOL near the wheel's own top,
+    // that centering its label on the wedge's own mid-angle (see COUNT_CENTER above) collides
+    // with CONMEBOL's right next to it unless it's pushed further out.
+    const FORCE_RIM = { count: new Set(['ofc']) };
+
     // Small inset applied only to the silhouette's own clip sector (never to the wedge's real
     // colored fill/proportions) so two adjacent confederations' silhouettes don't visually touch
     // or read as crossing the wedge boundary between them.
@@ -579,7 +605,7 @@
 
       const wedgeMarkup = wedges.map((w, i) => {
         const shade = (i % 2 === 0) ? '.10' : '.16';
-        const anchor = anchorFor(w.mid);
+        const anchor = COUNT_CENTER[mode].has(w.key) ? 'middle' : anchorFor(w.mid);
         // Same radius fraction for every wedge, matching where the original hand-placed
         // labels actually sat (~0.6·rFifa) — narrow wedges can spill their label into a
         // neighbor's territory rather than floating outside the disc, EXCEPT genuinely
@@ -587,7 +613,8 @@
         // down to under half a degree, at which point "spill into the neighbor" becomes
         // "sit directly on top of the neighbor's own label" — those still get pushed past
         // the rim instead.
-        const labelR = w.width < 10 ? rFifa + 24 : rFifa * 0.62;
+        const forceRim = w.width < 10 || (FORCE_RIM[mode]?.has(w.key) ?? false);
+        const labelR = (forceRim ? rFifa + 24 : rFifa * 0.62) * (LABEL_R_NUDGE[mode]?.[w.key] ?? 1);
         const [lx, ly] = toXY(w.mid, labelR);
         const ex = EXAMPLES[mode][w.key];
         const layout = layouts[i];
